@@ -54,8 +54,16 @@ namespace Sweetener.Logging.Test
         {
             // Validate Log calls WriteLine appropriately based on the template
             // Logger.Test.cs already validates that Log is called appropriately
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.InvariantCulture, "{l:F} - {msg}"))
+            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(default, CultureInfo.InvariantCulture, "{l:F} - {msg}"))
             {
+                // Trace
+                logger.Trace("0");
+                logger.Trace("0 {0}"                , 1            );
+                logger.Trace("0 {0} {1}"            , 1, 2         );
+                logger.Trace("0 {0} {1} {2}"        , 1, 2, 3      );
+                logger.Trace("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
+                logger.Trace("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
+
                 // Debug
                 logger.Debug("0");
                 logger.Debug("0 {0}"                , 1            );
@@ -96,9 +104,9 @@ namespace Sweetener.Logging.Test
                 logger.Fatal("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
                 logger.Fatal("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
 
-                Assert.AreEqual(30, logger.LogQueue.Count);
+                Assert.AreEqual(36, logger.LogQueue.Count);
 
-                LogLevel level = LogLevel.Debug;
+                LogLevel level = LogLevel.Trace;
                 while (logger.LogQueue.Count > 0)
                 {
                     Assert.IsTrue(logger.LogQueue.Count >= 6);
