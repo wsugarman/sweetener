@@ -1,10 +1,11 @@
-﻿ // Generated from ILogger{T}.tt
+﻿// Generated from ILogger{T}.tt
 using System;
 
 namespace Sweetener.Logging
 {
     /// <summary>
-    /// An interface for loggers that write log entries at a given <see cref="LogLevel"/>.
+    /// Represents a client that can log values with a given <see cref="LogLevel"/>
+    /// based on their purpose or severity.
     /// </summary>
     /// <typeparam name="T">The type of values to be logged.</typeparam>
     public interface ILogger<T> : IDisposable
@@ -12,14 +13,14 @@ namespace Sweetener.Logging
         /// <summary>
         /// Gets a value indicating whether logging is synchronized (thread safe).
         /// </summary>
-        /// <returns><c>true</c> if logging is synchronized (thread safe); otherwise, <c>false</c>.</returns>
+        /// <returns><see langword="true"/> if logging is synchronized (thread safe); otherwise, <see langword="false"/>.</returns>
         bool IsSynchronized { get; }
 
         /// <summary>
         /// Gets the minimum level of log requests that will be fulfilled.
         /// </summary>
         /// <returns>The minimum <see cref="LogLevel"/> that will be fulfilled.</returns>
-        LogLevel MinimumLevel { get; }
+        LogLevel MinLevel { get; }
 
         /// <summary>
         /// Gets an object that can be used to synchronize logging.
@@ -28,87 +29,87 @@ namespace Sweetener.Logging
         object SyncRoot { get; }
 
         /// <summary>
-        /// Request to log the specified value at the <see cref="LogLevel.Trace"/> level.
+        /// Requests that the specified value be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinimumLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
-        /// <param name="obj">The value requested for logging.</param>
+        /// <param name="value">The value requested for logging.</param>
         /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="obj"/> is <c>null</c>.
+        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        void Trace(T obj);
+        void Trace(T value);
 
         /// <summary>
-        /// Request to log the specified value at the <see cref="LogLevel.Debug"/> level.
+        /// Requests that the specified value be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinimumLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
-        /// <param name="obj">The value requested for logging.</param>
+        /// <param name="value">The value requested for logging.</param>
         /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="obj"/> is <c>null</c>.
+        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        void Debug(T obj);
+        void Debug(T value);
 
         /// <summary>
-        /// Request to log the specified value at the <see cref="LogLevel.Info"/> level.
+        /// Requests that the specified value be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinimumLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
-        /// <param name="obj">The value requested for logging.</param>
+        /// <param name="value">The value requested for logging.</param>
         /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="obj"/> is <c>null</c>.
+        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        void Info(T obj);
+        void Info(T value);
 
         /// <summary>
-        /// Request to log the specified value at the <see cref="LogLevel.Warn"/> level.
+        /// Requests that the specified value be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinimumLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
-        /// <param name="obj">The value requested for logging.</param>
+        /// <param name="value">The value requested for logging.</param>
         /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="obj"/> is <c>null</c>.
+        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        void Warn(T obj);
+        void Warn(T value);
 
         /// <summary>
-        /// Request to log the specified value at the <see cref="LogLevel.Error"/> level.
+        /// Requests that the specified value be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinimumLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
-        /// <param name="obj">The value requested for logging.</param>
+        /// <param name="value">The value requested for logging.</param>
         /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="obj"/> is <c>null</c>.
+        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        void Error(T obj);
+        void Error(T value);
 
         /// <summary>
-        /// Request to log the specified value at the <see cref="LogLevel.Fatal"/> level.
+        /// Requests that the specified value be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinimumLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
-        /// <param name="obj">The value requested for logging.</param>
+        /// <param name="value">The value requested for logging.</param>
         /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="obj"/> is <c>null</c>.
+        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        void Fatal(T obj);
+        void Fatal(T value);
     }
 }

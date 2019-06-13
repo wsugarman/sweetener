@@ -4,8 +4,7 @@ using System.Globalization;
 namespace Sweetener.Logging 
 {
     /// <summary>
-    /// A common implementation of the <see cref="ILogger{T}"/> interface that
-    /// logs optionally formattable string messages.
+    /// An <see cref="ILogger{T}"/> for recording formattable <see cref="string"/> values.
     /// </summary>
     public abstract partial class Logger : ILogger<string>
     {
@@ -17,14 +16,14 @@ namespace Sweetener.Logging
         /// <summary>
         /// Gets a value indicating whether logging is synchronized (thread safe).
         /// </summary>
-        /// <returns><c>true</c> if logging is synchronized (thread safe); otherwise, <c>false</c>.</returns>
+        /// <returns><see langword="true"/> if logging is synchronized (thread safe); otherwise, <see langword="false"/>.</returns>
         public virtual bool IsSynchronized => false;
 
         /// <summary>
         /// Gets the minimum level of log requests that will be fulfilled.
         /// </summary>
         /// <returns>The minimum <see cref="LogLevel"/> that will be fulfilled.</returns>
-        public LogLevel MinimumLevel { get; }
+        public LogLevel MinLevel { get; }
 
         /// <summary>
         /// Gets an object that can be used to synchronize logging.
@@ -36,42 +35,44 @@ namespace Sweetener.Logging
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger"/> class for the current
-        /// culture that logs all levels.
+        /// culture that fulfills all logging requests.
         /// </summary>
         protected Logger()
             : this(LogLevel.Trace, null)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class with a minimum
-        /// logging level for the current culture.
+        /// Initializes a new instance of the <see cref="Logger"/> class for the current
+        /// culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/>
         /// </summary>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
-        protected Logger(LogLevel minimumLevel)
-            : this(minimumLevel, null)
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        protected Logger(LogLevel minLevel)
+            : this(minLevel, null)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class with a minimum
-        /// logging level and an <see cref="IFormatProvider"/> object for a specific culture.
+        /// Initializes a new instance of the <see cref="Logger"/> class for a particular
+        /// culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/>
         /// </summary>
         /// <remarks>
-        /// If <paramref name="formatProvider"/> is <c>null</c>, the formatting of the current culture is used.
+        /// If <paramref name="formatProvider"/> is <see langword="null"/>, the formatting of the current culture is used.
         /// </remarks>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
         /// <param name="formatProvider">An <see cref="IFormatProvider"/> object for a specific culture.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
-        protected Logger(LogLevel minimumLevel, IFormatProvider formatProvider)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        protected Logger(LogLevel minLevel, IFormatProvider formatProvider)
         {
-            if (minimumLevel < LogLevel.Trace || minimumLevel > LogLevel.Fatal)
-                throw new ArgumentOutOfRangeException(nameof(minimumLevel), $"Unknown {nameof(LogLevel)} value '{minimumLevel}'");
+            if (minLevel < LogLevel.Trace || minLevel > LogLevel.Fatal)
+                throw new ArgumentOutOfRangeException(nameof(minLevel), $"Unknown {nameof(LogLevel)} value '{minLevel}'");
 
             if (formatProvider == null)
                 formatProvider = CultureInfo.CurrentCulture;
 
             FormatProvider = formatProvider;
-            MinimumLevel   = minimumLevel;
+            MinLevel       = minLevel;
         }
 
         /// <summary>
@@ -100,18 +101,18 @@ namespace Sweetener.Logging
         /// <para>
         /// This method is called by <see cref="Dispose()"/> and possible Finalize in a
         /// derived class. By default, this method specifies the <paramref name="disposing"/>
-        /// parameter as <c>true</c>. Any Finalize implementation specifies the
-        /// <paramref name="disposing"/> parameter as <c>false</c>.
+        /// parameter as <see langword="true"/>. Any Finalize implementation specifies the
+        /// <paramref name="disposing"/> parameter as <see langword="false"/>.
         /// </para>
         /// <para>
-        /// When the <paramref name="disposing"/> parameter is <c>true</c>, this method
+        /// When the <paramref name="disposing"/> parameter is <see langword="true"/>, this method
         /// releases all resources held by any managed objects that this <see cref="Logger"/>
         /// references. This method invokes the <see cref="IDisposable.Dispose"/> method
         /// of each referenced object.
         /// </para>
         /// </remarks>
         /// <param name="disposing">
-        /// <c>true</c> to release both managed and unmanaged resources; <c>false</c>
+        /// <see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/>
         /// to release only unmanaged resources.
         /// </param>
         protected virtual void Dispose(bool disposing)
@@ -134,7 +135,7 @@ namespace Sweetener.Logging
             if (_disposed)
                 ThrowObjectDisposedException();
 
-            void ThrowObjectDisposedException() => throw new ObjectDisposedException(GetType().Name, "Cannot log to a disposed logger.");
+            void ThrowObjectDisposedException() => throw new ObjectDisposedException(GetType().Name, "Cannot log with a disposed logger.");
         }
     }
 }

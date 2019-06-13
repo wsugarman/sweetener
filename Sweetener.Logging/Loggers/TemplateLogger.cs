@@ -3,7 +3,8 @@
 namespace Sweetener.Logging
 {
     /// <summary>
-    /// A <see cref="Logger"/> implementation that writes log entries as templated strings.
+    /// A <see cref="Logger"/> whose messages are enriched with contextual information
+    /// through the use of user-defined templates.
     /// </summary>
     public abstract class TemplateLogger : Logger
     {
@@ -13,51 +14,53 @@ namespace Sweetener.Logging
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
-        /// current culture that logs all levels.
+        /// current culture that fulfills all logging requests using a default template.
         /// </summary>
         protected TemplateLogger()
-            : this(LogLevel.Trace, null)
+            : this(LogLevel.Trace)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class with a
-        /// minimum logging level for the current culture.
+        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// current culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/> using a default template.
         /// </summary>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
-        protected TemplateLogger(LogLevel minimumLevel)
-            : this(minimumLevel, null)
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        protected TemplateLogger(LogLevel minLevel)
+            : this(minLevel, DefaultTemplate)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class with a minimum
-        /// logging level and an <see cref="IFormatProvider"/> object for a specific culture.
+        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// current culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/> using a custom template.
+        /// </summary>
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <param name="template">A format string that describes the layout of each log entry.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="template"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
+        protected TemplateLogger(LogLevel minLevel, string template)
+            : this(minLevel, null, template)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for a
+        /// particular culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/> using a custom template.
         /// </summary>
         /// <remarks>
-        /// If <paramref name="formatProvider"/> is <c>null</c>, the formatting of the current culture is used.
+        /// If <paramref name="formatProvider"/> is <see langword="null"/>, the formatting of the current culture is used.
         /// </remarks>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <param name="formatProvider">An <see cref="IFormatProvider"/> object for a specific culture.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
-        protected TemplateLogger(LogLevel minimumLevel, IFormatProvider formatProvider)
-            : this(minimumLevel, formatProvider, DefaultTemplate)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class with a minimum
-        /// logging level and an <see cref="IFormatProvider"/> object for a specific culture.
-        /// </summary>
-        /// <remarks>
-        /// If <paramref name="formatProvider"/> is <c>null</c>, the formatting of the current culture is used.
-        /// </remarks>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
         /// <param name="formatProvider">An <see cref="IFormatProvider"/> object for a specific culture.</param>
         /// <param name="template">A format string that describes the layout of each log entry.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="template"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="template"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
         /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
-        protected TemplateLogger(LogLevel minimumLevel, IFormatProvider formatProvider, string template)
-            : base(minimumLevel, formatProvider)
+        protected TemplateLogger(LogLevel minLevel, IFormatProvider formatProvider, string template)
+            : base(minLevel, formatProvider)
         {
             TemplateBuilder templateBuilder = new TemplateBuilder(template);
             _template = templateBuilder.Build<string>();
@@ -74,7 +77,7 @@ namespace Sweetener.Logging
         /// Writes the message to the log.
         /// </summary>
         /// <param name="message">The value to be logged.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
         protected abstract void WriteLine(string message);
     }
 }

@@ -17,33 +17,31 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<FormatException            >(() => new MemoryTemplateLogger(LogLevel.Trace, null, "{foobar}"));
 
             // Constructor Overloads
-            CultureInfo frenchFrench   = CultureInfo.GetCultureInfo("fr-FR");
-            CultureInfo spanishSpanish = CultureInfo.GetCultureInfo("es-ES");
-
             using (MemoryTemplateLogger logger = new MemoryTemplateLogger())
             {
-                Assert.AreEqual(LogLevel.Trace                , logger.MinimumLevel        );
+                Assert.AreEqual(LogLevel.Trace                , logger.MinLevel            );
                 Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider      );
                 Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
             }
 
             using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Warn))
             {
-                Assert.AreEqual(LogLevel.Warn                 , logger.MinimumLevel        );
+                Assert.AreEqual(LogLevel.Warn                 , logger.MinLevel            );
                 Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider      );
                 Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
             }
 
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Info, frenchFrench))
+            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Info, "<{pn}|{pid}> - {msg}"))
             {
-                Assert.AreEqual(LogLevel.Info                 , logger.MinimumLevel        );
-                Assert.AreEqual(frenchFrench                  , logger.FormatProvider      );
-                Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
+                Assert.AreEqual(LogLevel.Info             , logger.MinLevel            );
+                Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider      );
+                Assert.AreEqual("<{pn}|{pid}> - {msg}"    , logger._template.ToString());
             }
 
+            CultureInfo spanishSpanish = CultureInfo.GetCultureInfo("es-ES");
             using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Error, spanishSpanish, "[{tid}] {msg}"))
             {
-                Assert.AreEqual(LogLevel.Error , logger.MinimumLevel        );
+                Assert.AreEqual(LogLevel.Error , logger.MinLevel            );
                 Assert.AreEqual(spanishSpanish , logger.FormatProvider      );
                 Assert.AreEqual("[{tid}] {msg}", logger._template.ToString());
             }
@@ -104,18 +102,18 @@ namespace Sweetener.Logging.Test
                 logger.Fatal("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
                 logger.Fatal("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
 
-                Assert.AreEqual(36, logger.LogQueue.Count);
+                Assert.AreEqual(36, logger.Entries.Count);
 
                 LogLevel level = LogLevel.Trace;
-                while (logger.LogQueue.Count > 0)
+                while (logger.Entries.Count > 0)
                 {
-                    Assert.IsTrue(logger.LogQueue.Count >= 6);
-                    Assert.AreEqual($"{level:F} - 0"          , logger.LogQueue.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1"        , logger.LogQueue.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2"      , logger.LogQueue.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3"    , logger.LogQueue.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3 4"  , logger.LogQueue.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3 4 5", logger.LogQueue.Dequeue());
+                    Assert.IsTrue(logger.Entries.Count >= 6);
+                    Assert.AreEqual($"{level:F} - 0"          , logger.Entries.Dequeue());
+                    Assert.AreEqual($"{level:F} - 0 1"        , logger.Entries.Dequeue());
+                    Assert.AreEqual($"{level:F} - 0 1 2"      , logger.Entries.Dequeue());
+                    Assert.AreEqual($"{level:F} - 0 1 2 3"    , logger.Entries.Dequeue());
+                    Assert.AreEqual($"{level:F} - 0 1 2 3 4"  , logger.Entries.Dequeue());
+                    Assert.AreEqual($"{level:F} - 0 1 2 3 4 5", logger.Entries.Dequeue());
 
                     level++;
                 }

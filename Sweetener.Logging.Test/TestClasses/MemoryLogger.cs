@@ -11,45 +11,47 @@ namespace Sweetener.Logging.Test
         /// <summary>
         /// A <see cref="Queue{T}"/> of written log entries.
         /// </summary>
-        public Queue<LogEntry<string>> LogQueue { get; } = new Queue<LogEntry<string>>();
+        public Queue<LogEntry<string>> Entries { get; } = new Queue<LogEntry<string>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemoryLogger"/> class for the current
-        /// culture that logs all levels.
+        /// culture that fulfills all logging requests.
         /// </summary>
         public MemoryLogger()
             : base()
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemoryLogger"/> class with a minimum
-        /// logging level for the current culture.
+        /// Initializes a new instance of the <see cref="MemoryLogger"/> class for the current
+        /// culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/>
         /// </summary>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
-        public MemoryLogger(LogLevel minimumLevel)
-            : base(minimumLevel)
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        public MemoryLogger(LogLevel minLevel)
+            : base(minLevel)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemoryLogger"/> class with a minimum
-        /// logging level and an <see cref="IFormatProvider"/> object for a specific culture.
+        /// Initializes a new instance of the <see cref="MemoryLogger"/> class for a particular
+        /// culture that fulfills all logging requests above a specified minimum
+        /// <see cref="LogLevel"/>
         /// </summary>
         /// <remarks>
-        /// If <paramref name="formatProvider"/> is <c>null</c>, the formatting of the current culture is used.
+        /// If <paramref name="formatProvider"/> is <see langword="null"/>, the formatting of the current culture is used.
         /// </remarks>
-        /// <param name="minimumLevel">The minimum level of log requests that will be fulfilled.</param>
+        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
         /// <param name="formatProvider">An <see cref="IFormatProvider"/> object for a specific culture.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumLevel"/> is unrecognized.</exception>
-        public MemoryLogger(LogLevel minimumLevel, IFormatProvider formatProvider)
-            : base(minimumLevel, formatProvider)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        public MemoryLogger(LogLevel minLevel, IFormatProvider formatProvider)
+            : base(minLevel, formatProvider)
         { }
 
         /// <summary>
-        /// Logs the specified entry to the <see cref="LogQueue"/>.
+        /// Logs the specified entry to the <see cref="Entries"/>.
         /// </summary>
         /// <param name="logEntry">A log entry which consists of the message and its context.</param>
         protected internal override void Log(LogEntry<string> logEntry)
-            => LogQueue.Enqueue(logEntry);
+            => Entries.Enqueue(logEntry);
     }
 }
