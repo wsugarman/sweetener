@@ -1,7 +1,7 @@
 ﻿namespace Sweetener.Logging
 {
     /// <summary>
-    /// Specifies a priority level and semantics associated with a log entry.
+    /// Specifies the priority level and semantics associated with a given log entry.
     /// </summary>
     public enum LogLevel
     {

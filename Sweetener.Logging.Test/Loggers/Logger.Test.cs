@@ -17,7 +17,7 @@ namespace Sweetener.Logging.Test
             // Constructor Overloads
             using (MemoryLogger logger = new MemoryLogger())
             {
-                Assert.AreEqual(LogLevel.Trace            , logger.MinLevel  );
+                Assert.AreEqual(LogLevel.Trace            , logger.MinLevel      );
                 Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
             }
 
