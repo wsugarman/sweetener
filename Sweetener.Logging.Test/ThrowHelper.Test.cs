@@ -27,33 +27,21 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void ThrowArgumentNullException()
         {
-            // args
-            Assert.ThrowsException<ArgumentNullException>(() =>
+            foreach (ExceptionArgument arg in Enum.GetValues(typeof(ExceptionArgument)))
             {
-                try
+                Assert.ThrowsException<ArgumentNullException>(() =>
                 {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
-                }
-                catch (ArgumentNullException ane)
-                {
-                    Assert.AreEqual(ExceptionArgument.args.ToString(), ane.ParamName);
-                    throw ane;
-                }
-            });
-
-            // format
-            Assert.ThrowsException<ArgumentNullException>(() =>
-            {
-                try
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
-                }
-                catch (ArgumentNullException ane)
-                {
-                    Assert.AreEqual(ExceptionArgument.format.ToString(), ane.ParamName);
-                    throw ane;
-                }
-            });
+                    try
+                    {
+                        ThrowHelper.ThrowArgumentNullException(arg);
+                    }
+                    catch (ArgumentNullException ane)
+                    {
+                        Assert.AreEqual(arg.ToString(), ane.ParamName);
+                        throw ane;
+                    }
+                });
+            }
         }
     }
 }

@@ -60,36 +60,4 @@ namespace Sweetener.Logging
             ThreadName = currentThread.Name;
         }
     }
-
-    /// <summary>
-    /// A class for creating new instances of <see cref="LogEntry{T}"/>. 
-    /// </summary>
-    public static class LogEntry
-    {
-        /// <summary>
-        /// Creates a new instance of the <see cref="LogEntry{T}"/> structure with
-        /// the specified level and message.
-        /// </summary>
-        /// <param name="level">The <see cref="LogLevel"/> associated with the <paramref name="message"/>.</param>
-        /// <param name="message">The value to be logged.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is unrecognized.</exception>
-        public static LogEntry<T> Create<T>(LogLevel level, T message)
-            => Create(DateTime.UtcNow, level, message);
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="LogEntry{T}"/> structure with
-        /// the specified level and message.
-        /// </summary>
-        /// <param name="timestamp">The timestamp when the log request was made.</param>
-        /// <param name="level">The <see cref="LogLevel"/> associated with the <paramref name="message"/>.</param>
-        /// <param name="message">The value to be logged.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is unrecognized.</exception>
-        public static LogEntry<T> Create<T>(DateTime timestamp, LogLevel level, T message)
-        {
-            if (level < LogLevel.Trace || level > LogLevel.Fatal)
-                throw new ArgumentOutOfRangeException(nameof(level), $"Unknown {nameof(LogLevel)} value '{level}'");
-
-            return new LogEntry<T>(timestamp, level, message);
-        }
-    }
 }

@@ -33,7 +33,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.<#= level #>)
                 Log(new LogEntry<string>(LogLevel.<#= level #>, message));

@@ -6,68 +6,26 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Logging.Test
 {
     [TestClass]
-    public class LogEntryTest
+    public class LogEntryHelperTest
     {
         [TestMethod]
-        public void CreateThrowIfOutOfRange()
+        public void CreateExceptions()
         {
             DateTime dt = new DateTime(1999, 12, 31);
+
+            // LogLevel out-of-range
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(    (LogLevel)(-1), "Foo"         ));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(dt, (LogLevel)(-1), "Foo"         ));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(    (LogLevel)42  , Guid.NewGuid()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(dt, (LogLevel)42  , Guid.NewGuid()));
-        }
 
-        [TestMethod]
-        public void Constructor()
-        {
-            Task[] tasks = new Task[5];
-            for (int i = 0; i < tasks.Length; i++)
-            {
-                string threadName = $"Task #{i}";
-                tasks[i] = Task.Run(() =>
-                {
-                    DateTime min;
-                    Thread thread = Thread.CurrentThread;
-                    lock (thread)
-                    {
-                        if (thread.Name == null)
-                            thread.Name = threadName;
-                    }
+            // Null value
+            Assert.ThrowsException<ArgumentNullException>(() => LogEntry.Create<string>(    LogLevel.Warn , null));
+            Assert.ThrowsException<ArgumentNullException>(() => LogEntry.Create<object>(dt, LogLevel.Trace, null));
 
-                    int    tid = thread.ManagedThreadId;
-                    string tn  = thread.Name;
-
-                    // Default log entry
-                    AssertLogEntry<string>(default, default, default, default, default, default);
-
-                    // Various message types
-                    min = DateTime.UtcNow;
-                    LogEntry<string> stringEntry = new LogEntry<string>(LogLevel.Warn, "Foo");
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Warn, "Foo", stringEntry);
-
-                    min = DateTime.UtcNow;
-                    LogEntry<int> intEntry = new LogEntry<int>(LogLevel.Fatal, 42);
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Fatal, 42, intEntry);
-
-                    min = DateTime.UtcNow;
-                    LogEntry<LogEntryTest> testEntry = new LogEntry<LogEntryTest>(LogLevel.Debug, this);
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Debug, this, testEntry);
-
-                    min = DateTime.UtcNow;
-                    LogEntry<DateTime> dateTimeEntry = new LogEntry<DateTime>((LogLevel)42, min); // Use invalid LogLevel
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, (LogLevel)42, min, dateTimeEntry);
-
-                    // Various message types with a DateTime
-                    DateTime dt = new DateTime(1999, 12, 31);
-                    AssertLogEntry(tid, tn, dt, LogLevel.Warn , "Foo", new LogEntry<string>      (dt, LogLevel.Warn, "Foo"));
-                    AssertLogEntry(tid, tn, dt, LogLevel.Fatal, 42   , new LogEntry<int>         (dt, LogLevel.Fatal, 42  ));
-                    AssertLogEntry(tid, tn, dt, LogLevel.Debug, this , new LogEntry<LogEntryTest>(dt, LogLevel.Debug, this));
-                    AssertLogEntry(tid, tn, dt, (LogLevel)42  , dt   , new LogEntry<DateTime>    (dt, (LogLevel)42  , dt  ));
-                });
-            }
-
-            Task.WaitAll(tasks);
+            // Value types don't throw!
+            LogEntry.Create(    LogLevel.Warn , default(int     ));
+            LogEntry.Create(dt, LogLevel.Trace, default(DateTime));
         }
 
         [TestMethod]
@@ -100,7 +58,7 @@ namespace Sweetener.Logging.Test
                     AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Fatal, 42, intEntry);
 
                     min = DateTime.UtcNow;
-                    LogEntry<LogEntryTest> testEntry = LogEntry.Create(LogLevel.Debug, this);
+                    LogEntry<LogEntryHelperTest> testEntry = LogEntry.Create(LogLevel.Debug, this);
                     AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Debug, this, testEntry);
 
                     // Various message types with a DateTime
@@ -114,7 +72,7 @@ namespace Sweetener.Logging.Test
             Task.WaitAll(tasks);
         }
 
-        private void AssertLogEntry<T>(
+        internal static void AssertLogEntry<T>(
             int         threadId,
             string      threadName,
             DateTime    timestamp,
@@ -123,7 +81,7 @@ namespace Sweetener.Logging.Test
             LogEntry<T> actual)
             => AssertLogEntry(threadId, threadName, timestamp, timestamp, level, message, actual);
 
-        private void AssertLogEntry<T>(
+        internal static void AssertLogEntry<T>(
             int         threadId,
             string      threadName,
             DateTime    min,

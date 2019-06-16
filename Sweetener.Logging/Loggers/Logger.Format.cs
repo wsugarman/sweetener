@@ -25,7 +25,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.Trace)
                 Log(new LogEntry<string>(LogLevel.Trace, message));
@@ -184,7 +184,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.Debug)
                 Log(new LogEntry<string>(LogLevel.Debug, message));
@@ -343,7 +343,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.Info)
                 Log(new LogEntry<string>(LogLevel.Info, message));
@@ -502,7 +502,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.Warn)
                 Log(new LogEntry<string>(LogLevel.Warn, message));
@@ -661,7 +661,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.Error)
                 Log(new LogEntry<string>(LogLevel.Error, message));
@@ -820,7 +820,7 @@ namespace Sweetener.Logging
             ThrowIfDisposed();
 
             if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
 
             if (MinLevel <= LogLevel.Fatal)
                 Log(new LogEntry<string>(LogLevel.Fatal, message));
