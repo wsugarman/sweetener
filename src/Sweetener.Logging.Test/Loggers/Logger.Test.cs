@@ -15,30 +15,54 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryLogger((LogLevel)27, null));
 
             // Constructor Overloads
-            using (MemoryLogger logger = new MemoryLogger())
+            using (Logger logger = new MemoryLogger())
             {
                 Assert.AreEqual(LogLevel.Trace            , logger.MinLevel      );
                 Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
             }
 
-            using (MemoryLogger logger = new MemoryLogger(LogLevel.Warn))
+            using (Logger logger = new MemoryLogger(LogLevel.Warn))
             {
                 Assert.AreEqual(LogLevel.Warn             , logger.MinLevel      );
                 Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
             }
 
             CultureInfo frFR = CultureInfo.GetCultureInfo("fr-FR");
-            using (MemoryLogger logger = new MemoryLogger(LogLevel.Info, frFR))
+            using (Logger logger = new MemoryLogger(LogLevel.Info, frFR))
             {
                 Assert.AreEqual(LogLevel.Info, logger.MinLevel      );
-                Assert.AreEqual(frFR, logger.FormatProvider);
+                Assert.AreEqual(frFR         , logger.FormatProvider);
             }
+        }
+
+        [TestMethod]
+        public void IsSynchronized()
+        {
+            Assert.IsFalse(new MemoryLogger(                                           ).IsSynchronized);
+            Assert.IsFalse(new MemoryLogger(LogLevel.Info                              ).IsSynchronized);
+            Assert.IsFalse(new MemoryLogger(LogLevel.Warn, CultureInfo.InvariantCulture).IsSynchronized);
+        }
+
+        [TestMethod]
+        public void SyncRoot()
+        {
+            Logger logger0 = new MemoryLogger();
+            Logger logger1 = new MemoryLogger(LogLevel.Info);
+            Logger logger2 = new MemoryLogger(LogLevel.Warn, CultureInfo.InvariantCulture);
+
+            Assert.IsNotNull(logger0.SyncRoot);
+            Assert.IsNotNull(logger1.SyncRoot);
+            Assert.IsNotNull(logger2.SyncRoot);
+
+            Assert.AreEqual(typeof(object), logger0.SyncRoot.GetType());
+            Assert.AreEqual(typeof(object), logger1.SyncRoot.GetType());
+            Assert.AreEqual(typeof(object), logger2.SyncRoot.GetType());
         }
 
         [TestMethod]
         public void LogThrowIfDisposed()
         {
-            MemoryLogger logger = new MemoryLogger();
+            Logger logger = new MemoryLogger();
             logger.Dispose();
 
             // Trace
@@ -93,7 +117,7 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void LogThrowIfNullArgument()
         {
-            using (MemoryLogger logger = new MemoryLogger())
+            using (Logger logger = new MemoryLogger())
             {
                 object[] args = null;
 
@@ -157,7 +181,7 @@ namespace Sweetener.Logging.Test
         public void LogThrowBadFormat()
         {
             // Use an unknown format specifier for numbers
-            using (MemoryLogger logger = new MemoryLogger())
+            using (Logger logger = new MemoryLogger())
             {
                 // Trace
                 Assert.ThrowsException<FormatException>(() => logger.Trace("{0:Y}", 1            ));

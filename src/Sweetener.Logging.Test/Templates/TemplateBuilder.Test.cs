@@ -18,7 +18,7 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<ArgumentNullException>(() => new TemplateBuilder(null));
 
             // Unknown Parameter
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg} {foo}"));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{foo}"));
 
             // Gap In Name
             Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ mess age }"));
@@ -27,9 +27,12 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ msg\t}"));
 
             // String Ends Prematurely
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg"          ));
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg} {tid,3"  ));
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg} {tid,3:X"));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg"    ));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{tid,3"  ));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{tid,3:X"));
+
+            // Unexpected Closed Curly Brace
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("text }"));
             #endregion
 
             #region Invalid Formats in an Item

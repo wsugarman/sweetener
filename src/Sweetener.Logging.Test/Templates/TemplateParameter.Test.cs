@@ -9,6 +9,9 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void ParseExceptions()
         {
+            // Null
+            Assert.ThrowsException<ArgumentNullException>(() => TemplateParameterName.Parse(null));
+
             // Case-sensitive
             Assert.ThrowsException<FormatException>(() => TemplateParameterName.Parse("MSG"));
 
