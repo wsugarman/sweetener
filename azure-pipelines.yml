@@ -16,11 +16,11 @@ steps:
   displayName: Build
   inputs:
     command: 'build'
-    projects: '/src/**.csproj'
+    projects: 'src/**/*.csproj'
     arguments: '-c "$(BuildConfiguration)" -p:Platform:"$(BuildPlatform)"'
 
 - task: DotNetCoreCLI@2
   inputs:
     command: 'test'
-    projects: 'src/**.Test.csproj'
+    projects: 'src/**/*.Test.csproj'
     arguments: '-c "$(BuildConfiguration)" --no-build -v normal'
