@@ -16,11 +16,11 @@ steps:
   inputs:
     command: 'build'
     projects: 'src/**/*.csproj'
-    arguments: '-c $(Configuration)'
+    arguments: '-c $(Configuration) -v normal'
 
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: 'test'
     projects: 'src/**/*.Test.csproj'
-    arguments: '-c $(Configuration) --no-build --collect:"Code Coverage" -s CodeCoverage.runsettings -v normal'
+    arguments: '-c $(Configuration) --no-build --collect:\"Code Coverage\" -s CodeCoverage.runsettings -v normal'
