@@ -27,11 +27,11 @@ namespace Sweetener.Logging.Test
                 Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
             }
 
-            CultureInfo frenchFrench = CultureInfo.GetCultureInfo("fr-FR");
-            using (MemoryLogger logger = new MemoryLogger(LogLevel.Info, frenchFrench))
+            CultureInfo frFR = CultureInfo.GetCultureInfo("fr-FR");
+            using (MemoryLogger logger = new MemoryLogger(LogLevel.Info, frFR))
             {
                 Assert.AreEqual(LogLevel.Info, logger.MinLevel      );
-                Assert.AreEqual(frenchFrench , logger.FormatProvider);
+                Assert.AreEqual(frFR, logger.FormatProvider);
             }
         }
 
@@ -305,114 +305,132 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void LogFormatArg0()
         {
-            using (MemoryLogger logger = new MemoryLogger(default, CultureInfo.GetCultureInfo("ja-JP")))
+            CultureInfo jaJP = CultureInfo.GetCultureInfo("ja-JP");
+            using (MemoryLogger logger = new MemoryLogger(default, jaJP))
             {
-                logger.Trace("{0,8:C}",   4321);
-                logger.Debug("{0,8:C}",  11235);
-                logger.Info ("{0,8:C}",  81321);
-                logger.Warn ("{0,8:C}",   3455);
-                logger.Error("{0,8:C}",  89144);
-                logger.Fatal("{0,8:C}", 233377);
+                string msg = "{0,8:C}";
+
+                logger.Trace(msg,   4321);
+                logger.Debug(msg,  11235);
+                logger.Info (msg,  81321);
+                logger.Warn (msg,   3455);
+                logger.Error(msg,  89144);
+                logger.Fatal(msg, 233377);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, "  ¥4,321", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, " ¥11,235", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , " ¥81,321", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , "  ¥3,455", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, " ¥89,144", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, "¥233,377", logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Trace, string.Format(jaJP, msg,   4321), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Debug, string.Format(jaJP, msg,  11235), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Info , string.Format(jaJP, msg,  81321), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Warn , string.Format(jaJP, msg,   3455), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Error, string.Format(jaJP, msg,  89144), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Fatal, string.Format(jaJP, msg, 233377), logger.Entries.Dequeue());
             }
         }
 
         [TestMethod]
         public void LogFormatArg0Arg1()
         {
-            using (MemoryLogger logger = new MemoryLogger(default, CultureInfo.GetCultureInfo("ja-JP")))
+            CultureInfo jaJP = CultureInfo.GetCultureInfo("ja-JP");
+            using (MemoryLogger logger = new MemoryLogger(default, jaJP))
             {
+                string msg = "On {0:d}, made {1,11:C}";
+
                 DateTime dt = new DateTime(2019, 01, 15);
-                logger.Trace("On {0:d}, made {1,11:C}", dt.AddDays(0),      823);
-                logger.Debug("On {0:d}, made {1,11:C}", dt.AddDays(1),     1234);
-                logger.Info ("On {0:d}, made {1,11:C}", dt.AddDays(2),     5678);
-                logger.Warn ("On {0:d}, made {1,11:C}", dt.AddDays(3),    91011);
-                logger.Error("On {0:d}, made {1,11:C}", dt.AddDays(4),   121314);
-                logger.Fatal("On {0:d}, made {1,11:C}", dt.AddDays(5), 15161718);
+                logger.Trace(msg, dt.AddDays(0),      823);
+                logger.Debug(msg, dt.AddDays(1),     1234);
+                logger.Info (msg, dt.AddDays(2),     5678);
+                logger.Warn (msg, dt.AddDays(3),    91011);
+                logger.Error(msg, dt.AddDays(4),   121314);
+                logger.Fatal(msg, dt.AddDays(5), 15161718);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, "On 2019/01/15, made        ¥823", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, "On 2019/01/16, made      ¥1,234", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , "On 2019/01/17, made      ¥5,678", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , "On 2019/01/18, made     ¥91,011", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, "On 2019/01/19, made    ¥121,314", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, "On 2019/01/20, made ¥15,161,718", logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Trace, string.Format(jaJP, msg, dt.AddDays(0),      823), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Debug, string.Format(jaJP, msg, dt.AddDays(1),     1234), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Info , string.Format(jaJP, msg, dt.AddDays(2),     5678), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Warn , string.Format(jaJP, msg, dt.AddDays(3),    91011), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Error, string.Format(jaJP, msg, dt.AddDays(4),   121314), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Fatal, string.Format(jaJP, msg, dt.AddDays(5), 15161718), logger.Entries.Dequeue());
             }
         }
 
         [TestMethod]
         public void LogFormatArg0Arg1Arg2()
         {
-            using (MemoryLogger logger = new MemoryLogger(default, CultureInfo.GetCultureInfo("es-ES")))
+            CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
+            using (MemoryLogger logger = new MemoryLogger(default, esES))
             {
+                string boughtMsg = "On {0:d}, bought {1,7:F2} units for {2,11:C}";
+                string soldMsg   = "On {0:d}, sold   {1,7:F2} units for {2,11:C}";
+
                 DateTime dt = new DateTime(2019, 01, 15);
-                logger.Trace("On {0:d}, bought {1,7:F2} units for {2,11:C}", dt.AddDays(0),    0.42,    13.37);
-                logger.Debug("On {0:d}, bought {1,7:F2} units for {2,11:C}", dt.AddDays(1),   24.68,    -0.25);
-                logger.Info ("On {0:d}, sold   {1,7:F2} units for {2,11:C}", dt.AddDays(2),   10.12,     1.33);
-                logger.Warn ("On {0:d}, sold   {1,7:F2} units for {2,11:C}", dt.AddDays(3), 1416.00, 11975.31);
-                logger.Error("On {0:d}, bought {1,7:F2} units for {2,11:C}", dt.AddDays(4),   18.20,   -10.00);
-                logger.Fatal("On {0:d}, sold   {1,7:F2} units for {2,11:C}", dt.AddDays(5), 2224.00,   115.00);
+                logger.Trace(boughtMsg, dt.AddDays(0),    0.42,    13.37);
+                logger.Debug(boughtMsg, dt.AddDays(1),   24.68,    -0.25);
+                logger.Info (soldMsg  , dt.AddDays(2),   10.12,     1.33);
+                logger.Warn (soldMsg  , dt.AddDays(3), 1416.00, 11975.31);
+                logger.Error(boughtMsg, dt.AddDays(4),   18.20,   -10.00);
+                logger.Fatal(soldMsg  , dt.AddDays(5), 2224.00,   115.00);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, "On 15/01/2019, bought    0,42 units for     13,37 €", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, "On 16/01/2019, bought   24,68 units for     -0,25 €", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , "On 17/01/2019, sold     10,12 units for      1,33 €", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , "On 18/01/2019, sold   1416,00 units for 11.975,31 €", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, "On 19/01/2019, bought   18,20 units for    -10,00 €", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, "On 20/01/2019, sold   2224,00 units for    115,00 €", logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0),    0.42,    13.37), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1),   24.68,    -0.25), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2),   10.12,     1.33), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), 1416.00, 11975.31), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4),   18.20,   -10.00), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), 2224.00,   115.00), logger.Entries.Dequeue());
             }
         }
 
         [TestMethod]
         public void LogFormatArg0Arg1Arg2Arg3()
         {
-            using (MemoryLogger logger = new MemoryLogger(default, CultureInfo.GetCultureInfo("es-ES")))
+            CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
+            using (MemoryLogger logger = new MemoryLogger(default, esES))
             {
+                string boughtMsg = "On {0:d}, bought {1,7:F2} units for {2,11:C} (Total = {3,15:C})";
+                string soldMsg   = "On {0:d}, sold   {1,7:F2} units for {2,11:C} (Total = {3,15:C})";
+
                 DateTime dt = new DateTime(2019, 01, 15);
-                logger.Trace("On {0:d}, bought {1,7:F2} units for {2,11:C} (Total = {3,15:C})", dt.AddDays(0),    0.42,    13.37,        5.6154);
-                logger.Debug("On {0:d}, bought {1,7:F2} units for {2,11:C} (Total = {3,15:C})", dt.AddDays(1),   24.68,    -0.25,       -6.1700);
-                logger.Info ("On {0:d}, sold   {1,7:F2} units for {2,11:C} (Total = {3,15:C})", dt.AddDays(2),   10.12,     1.33,       13.4596);
-                logger.Warn ("On {0:d}, sold   {1,7:F2} units for {2,11:C} (Total = {3,15:C})", dt.AddDays(3), 1416.00, 11975.31, 16957039.0000);
-                logger.Error("On {0:d}, bought {1,7:F2} units for {2,11:C} (Total = {3,15:C})", dt.AddDays(4),   18.20,   -10.00,     -182.0000);
-                logger.Fatal("On {0:d}, sold   {1,7:F2} units for {2,11:C} (Total = {3,15:C})", dt.AddDays(5), 2224.00,   115.00,   255760.0000);
+                logger.Trace(boughtMsg, dt.AddDays(0),    0.42,    13.37,        5.6154);
+                logger.Debug(boughtMsg, dt.AddDays(1),   24.68,    -0.25,       -6.1700);
+                logger.Info (soldMsg  , dt.AddDays(2),   10.12,     1.33,       13.4596);
+                logger.Warn (soldMsg  , dt.AddDays(3), 1416.00, 11975.31, 16957039.0000);
+                logger.Error(boughtMsg, dt.AddDays(4),   18.20,   -10.00,     -182.0000);
+                logger.Fatal(soldMsg  , dt.AddDays(5), 2224.00,   115.00,   255760.0000);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, "On 15/01/2019, bought    0,42 units for     13,37 € (Total =          5,62 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, "On 16/01/2019, bought   24,68 units for     -0,25 € (Total =         -6,17 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , "On 17/01/2019, sold     10,12 units for      1,33 € (Total =         13,46 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , "On 18/01/2019, sold   1416,00 units for 11.975,31 € (Total = 16.957.039,00 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, "On 19/01/2019, bought   18,20 units for    -10,00 € (Total =       -182,00 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, "On 20/01/2019, sold   2224,00 units for    115,00 € (Total =    255.760,00 €)", logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0),    0.42,    13.37,        5.6154), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1),   24.68,    -0.25,       -6.1700), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2),   10.12,     1.33,       13.4596), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), 1416.00, 11975.31, 16957039.0000), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4),   18.20,   -10.00,     -182.0000), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), 2224.00,   115.00,   255760.0000), logger.Entries.Dequeue());
             }
         }
 
         [TestMethod]
         public void LogFormatParams()
         {
-            using (MemoryLogger logger = new MemoryLogger(default, CultureInfo.GetCultureInfo("es-ES")))
+            CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
+            using (MemoryLogger logger = new MemoryLogger(default, esES))
             {
-                DateTime dt = new DateTime(2019, 01, 15, 16, 17, 18, 19);
-                logger.Trace("On {0:d} {1:g}, bought {2,7:F2} units for {3,11:C} (Total = {4,15:C})", dt.AddDays(0), dt.AddHours(0).TimeOfDay,    0.42,    13.37,        5.6154);
-                logger.Debug("On {0:d} {1:g}, bought {2,7:F2} units for {3,11:C} (Total = {4,15:C})", dt.AddDays(1), dt.AddHours(1).TimeOfDay,   24.68,    -0.25,       -6.1700);
-                logger.Info ("On {0:d} {1:g}, sold   {2,7:F2} units for {3,11:C} (Total = {4,15:C})", dt.AddDays(2), dt.AddHours(2).TimeOfDay,   10.12,     1.33,       13.4596);
-                logger.Warn ("On {0:d} {1:g}, sold   {2,7:F2} units for {3,11:C} (Total = {4,15:C})", dt.AddDays(3), dt.AddHours(3).TimeOfDay, 1416.00, 11975.31, 16957039.0000);
-                logger.Error("On {0:d} {1:g}, bought {2,7:F2} units for {3,11:C} (Total = {4,15:C})", dt.AddDays(4), dt.AddHours(4).TimeOfDay,   18.20,   -10.00,     -182.0000);
-                logger.Fatal("On {0:d} {1:g}, sold   {2,7:F2} units for {3,11:C} (Total = {4,15:C})", dt.AddDays(5), dt.AddHours(5).TimeOfDay, 2224.00,   115.00,   255760.0000);
+                string boughtMsg = "On {0:d} {1:g}, bought {2,7:F2} units for {3,11:C} (Total = {4,15:C})";
+                string soldMsg   = "On {0:d} {1:g}, sold   {2,7:F2} units for {3,11:C} (Total = {4,15:C})";
 
+                DateTime dt = new DateTime(2019, 01, 15, 16, 17, 18, 19);
+                logger.Trace(boughtMsg, dt.AddDays(0), dt.AddHours(0).TimeOfDay,    0.42,    13.37,        5.6154);
+                logger.Debug(boughtMsg, dt.AddDays(1), dt.AddHours(1).TimeOfDay,   24.68,    -0.25,       -6.1700);
+                logger.Info (soldMsg  , dt.AddDays(2), dt.AddHours(2).TimeOfDay,   10.12,     1.33,       13.4596);
+                logger.Warn (soldMsg  , dt.AddDays(3), dt.AddHours(3).TimeOfDay, 1416.00, 11975.31, 16957039.0000);
+                logger.Error(boughtMsg, dt.AddDays(4), dt.AddHours(4).TimeOfDay,   18.20,   -10.00,     -182.0000);
+                logger.Fatal(soldMsg  , dt.AddDays(5), dt.AddHours(5).TimeOfDay, 2224.00,   115.00,   255760.0000);
+                 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, "On 15/01/2019 16:17:18,019, bought    0,42 units for     13,37 € (Total =          5,62 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, "On 16/01/2019 17:17:18,019, bought   24,68 units for     -0,25 € (Total =         -6,17 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , "On 17/01/2019 18:17:18,019, sold     10,12 units for      1,33 € (Total =         13,46 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , "On 18/01/2019 19:17:18,019, sold   1416,00 units for 11.975,31 € (Total = 16.957.039,00 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, "On 19/01/2019 20:17:18,019, bought   18,20 units for    -10,00 € (Total =       -182,00 €)", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, "On 20/01/2019 21:17:18,019, sold   2224,00 units for    115,00 € (Total =    255.760,00 €)", logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0), dt.AddHours(0).TimeOfDay,    0.42,    13.37,        5.6154), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1), dt.AddHours(1).TimeOfDay,   24.68,    -0.25,       -6.1700), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2), dt.AddHours(2).TimeOfDay,   10.12,     1.33,       13.4596), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), dt.AddHours(3).TimeOfDay, 1416.00, 11975.31, 16957039.0000), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4), dt.AddHours(4).TimeOfDay,   18.20,   -10.00,     -182.0000), logger.Entries.Dequeue());
+                AssertLogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), dt.AddHours(5).TimeOfDay, 2224.00,   115.00,   255760.0000), logger.Entries.Dequeue());
             }
         }
 

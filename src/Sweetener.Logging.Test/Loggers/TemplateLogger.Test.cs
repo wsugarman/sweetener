@@ -38,11 +38,11 @@ namespace Sweetener.Logging.Test
                 Assert.AreEqual("<{pn}|{pid}> - {msg}"    , logger._template.ToString());
             }
 
-            CultureInfo spanishSpanish = CultureInfo.GetCultureInfo("es-ES");
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Error, spanishSpanish, "[{tid}] {msg}"))
+            CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
+            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Error, esES, "[{tid}] {msg}"))
             {
                 Assert.AreEqual(LogLevel.Error , logger.MinLevel            );
-                Assert.AreEqual(spanishSpanish , logger.FormatProvider      );
+                Assert.AreEqual(esES           , logger.FormatProvider      );
                 Assert.AreEqual("[{tid}] {msg}", logger._template.ToString());
             }
         }

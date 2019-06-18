@@ -222,16 +222,16 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void FormatCulture()
         {
-            int             tid          = Thread.CurrentThread.ManagedThreadId;
-            DateTime        dateTime     = DateTime.UtcNow;
-            IFormatProvider frenchFrench = CultureInfo.GetCultureInfo("fr-FR");
+            int             tid      = Thread.CurrentThread.ManagedThreadId;
+            DateTime        dateTime = DateTime.UtcNow;
+            IFormatProvider frFR     = CultureInfo.GetCultureInfo("fr-FR");
 
             // Pretend the thread id is a currency for some interesting formatting changes
             // The "d" format string for DateTime is also impacted by the culture
-            string expected = $"{string.Format(frenchFrench, "{0:C}", tid)} {dateTime:dd/MM/yyy} Bonjour de France";
+            string expected = string.Format(frFR, "{0:C} {1:d} Bonjour de France", tid, dateTime);
             string actual   = new TemplateBuilder("{tid:C} {ts:d} {msg}")
                 .Build<string>()
-                .Format(frenchFrench, LogEntry.Create(dateTime, LogLevel.Error, "Bonjour de France"));
+                .Format(frFR, LogEntry.Create(dateTime, LogLevel.Error, "Bonjour de France"));
 
             Assert.AreEqual(expected, actual);
         }
