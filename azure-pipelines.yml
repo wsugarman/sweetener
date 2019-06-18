@@ -22,4 +22,4 @@ steps:
   inputs:
     command: 'test'
     projects: 'src/**.Test.csproj'
-    arguments: '-c "$(Configuration)" --no-build -v normal'
+    arguments: '-c $(Configuration) --no-build -v normal'
