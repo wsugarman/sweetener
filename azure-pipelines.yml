@@ -8,19 +8,18 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  configuration: 'Release'
 
 steps:
 - task: DotNetCoreCLI@2
   displayName: Build
   inputs:
     command: 'build'
-    projects: 'src/**/*.csproj'
-    arguments: '-c "$(BuildConfiguration)" -p:Platform:"$(BuildPlatform)"'
+    projects: '/src/**.csproj'
+    arguments: '-c $(Configuration)'
 
 - task: DotNetCoreCLI@2
   inputs:
     command: 'test'
-    projects: 'src/**/*.Test.csproj'
-    arguments: '-c "$(BuildConfiguration)" --no-build -v normal'
+    projects: 'src/**.Test.csproj'
+    arguments: '-c "$(Configuration)" --no-build -v normal'
