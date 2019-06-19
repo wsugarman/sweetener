@@ -16,15 +16,15 @@ steps:
   displayName: Build
   inputs:
     command: 'build'
-    projects: 'src/**/*.csproj'
+    projects: 'src/Sweetener*/Sweetener*.csproj'
     arguments: '-c $(Configuration) -v normal'
 
-# "-s|--settings" option uses the project directory as the working directory
-# So the below task may not be able to find the .runsettings file if the project is not two levels from the root
+# "-s|--settings" option uses the project directory as the working directory, such that
+# the below task only works for project files 2 directories down from the root of the repository.
 # Note that "Debug" code coverage may insert "code blocks" that are only partially covered
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: 'test'
-    projects: 'src/**/*.Test.csproj'
-    arguments: '-c $(Configuration) --no-build --collect:"Code Coverage" -s ../../CodeCoverage.runsettings -v normal'
+    projects: 'src/Sweetener*.Test/Sweetener*.Test.csproj'
+    arguments: '-c $(Configuration) --no-build --collect "Code Coverage" -s ../../CodeCoverage.runsettings -v normal'
