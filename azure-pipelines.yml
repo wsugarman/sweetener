@@ -30,7 +30,7 @@ steps:
 - task: CopyFiles@2
   displayName: Copy Assemblies
   inputs:
-    SourceFolder: '$(Build.Repository.LocalPath)\src\Sweetener.Logging\obj\Release\netcoreapp2.1'
+    SourceFolder: '$(Build.Repository.LocalPath)\src\Sweetener.Logging\bin\Release\netstandard2.0'
     Contents: '*.dll'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
