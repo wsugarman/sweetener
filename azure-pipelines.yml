@@ -19,24 +19,10 @@ steps:
     projects: 'src/Sweetener*/Sweetener*.csproj'
     arguments: '-c $(BuildConfiguration)'
 
-# Note that "Debug" code coverage may insert "code blocks" that are only partially covered
+# Note that "Debug" code coverage may result in inaccurate code coverage metrics
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: 'test'
     projects: 'src/Sweetener*.Test/Sweetener*.Test.csproj'
-    arguments: '-c $(BuildConfiguration) --no-build --collect "Code Coverage" -s "$(Build.Repository.LocalPath)/CodeCoverage.runsettings"'
-
-- task: CopyFiles@2
-  displayName: Copy Assemblies
-  inputs:
-    SourceFolder: '$(Build.Repository.LocalPath)\src\Sweetener.Logging\bin\Release\netstandard2.0'
-    Contents: '*.dll'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
-- task: PublishBuildArtifacts@1
-  displayName: Publish Artifacts
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+    arguments: '-c $(BuildConfiguration) --no-build --collect "Code Coverage" -s "$(Build.Repository.LocalPath)/CodeCoverage.runsettings" -v normal'

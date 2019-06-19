@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener.Logging
 {
@@ -15,6 +16,10 @@ namespace Sweetener.Logging
 
     internal static class TemplateParameterName
     {
+        // TODO: Re-enable code coverage
+        // The IL generated for switch statements may lead to false negatives
+        // when checking code coverage due to unreachable code blocks
+        [ExcludeFromCodeCoverage]
         public static TemplateParameter Parse(string name)
         {
             if (name == null)
