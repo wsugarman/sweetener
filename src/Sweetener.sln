@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AE0F665-3CE8-4201-9525-DF7CD3573B1C}"
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
+		..\CodeCoverage.runsettings = ..\CodeCoverage.runsettings
 	EndProjectSection
 EndProject
 Global

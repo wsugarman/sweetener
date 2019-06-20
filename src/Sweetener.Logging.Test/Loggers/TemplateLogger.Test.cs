@@ -17,34 +17,62 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<FormatException            >(() => new MemoryTemplateLogger(LogLevel.Trace, null, "{foobar}"));
 
             // Constructor Overloads
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger())
+            using (TemplateLogger logger = new MemoryTemplateLogger())
             {
                 Assert.AreEqual(LogLevel.Trace                , logger.MinLevel            );
                 Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider      );
                 Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
             }
 
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Warn))
+            using (TemplateLogger logger = new MemoryTemplateLogger(LogLevel.Warn))
             {
                 Assert.AreEqual(LogLevel.Warn                 , logger.MinLevel            );
                 Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider      );
                 Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
             }
 
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Info, "<{pn}|{pid}> - {msg}"))
+            using (TemplateLogger logger = new MemoryTemplateLogger(LogLevel.Info, "<{pn}|{pid}> - {msg}"))
             {
                 Assert.AreEqual(LogLevel.Info             , logger.MinLevel            );
                 Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider      );
                 Assert.AreEqual("<{pn}|{pid}> - {msg}"    , logger._template.ToString());
             }
 
-            CultureInfo spanishSpanish = CultureInfo.GetCultureInfo("es-ES");
-            using (MemoryTemplateLogger logger = new MemoryTemplateLogger(LogLevel.Error, spanishSpanish, "[{tid}] {msg}"))
+            CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
+            using (TemplateLogger logger = new MemoryTemplateLogger(LogLevel.Error, esES, "[{tid}] {msg}"))
             {
                 Assert.AreEqual(LogLevel.Error , logger.MinLevel            );
-                Assert.AreEqual(spanishSpanish , logger.FormatProvider      );
+                Assert.AreEqual(esES           , logger.FormatProvider      );
                 Assert.AreEqual("[{tid}] {msg}", logger._template.ToString());
             }
+        }
+
+        [TestMethod]
+        public void IsSynchronized()
+        {
+            Assert.IsFalse(new MemoryTemplateLogger(                                                     ).IsSynchronized);
+            Assert.IsFalse(new MemoryTemplateLogger(LogLevel.Info                                        ).IsSynchronized);
+            Assert.IsFalse(new MemoryTemplateLogger(LogLevel.Warn, "{msg}"                               ).IsSynchronized);
+            Assert.IsFalse(new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.InvariantCulture, "{msg}").IsSynchronized);
+        }
+
+        [TestMethod]
+        public void SyncRoot()
+        {
+            TemplateLogger logger0 = new MemoryTemplateLogger(                                                     );
+            TemplateLogger logger1 = new MemoryTemplateLogger(LogLevel.Info                                        );
+            TemplateLogger logger2 = new MemoryTemplateLogger(LogLevel.Warn, "{msg}"                               );
+            TemplateLogger logger3 = new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.InvariantCulture, "{msg}");
+
+            Assert.IsNotNull(logger0.SyncRoot);
+            Assert.IsNotNull(logger1.SyncRoot);
+            Assert.IsNotNull(logger2.SyncRoot);
+            Assert.IsNotNull(logger3.SyncRoot);
+
+            Assert.AreEqual(typeof(object), logger0.SyncRoot.GetType());
+            Assert.AreEqual(typeof(object), logger1.SyncRoot.GetType());
+            Assert.AreEqual(typeof(object), logger2.SyncRoot.GetType());
+            Assert.AreEqual(typeof(object), logger3.SyncRoot.GetType());
         }
 
         [TestMethod]

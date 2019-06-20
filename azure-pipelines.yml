@@ -1,0 +1,28 @@
+trigger:
+- master
+
+pr:
+- master
+
+# Windows is used for the project because it supports code coverage out-of-the-box
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    command: 'build'
+    projects: 'src/Sweetener*/Sweetener*.csproj'
+    arguments: '-c $(BuildConfiguration)'
+
+# Note that "Debug" code coverage may result in inaccurate code coverage metrics
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: 'test'
+    projects: 'src/Sweetener*.Test/Sweetener*.Test.csproj'
+    arguments: '-c $(BuildConfiguration) --no-build --collect "Code Coverage" -s "$(Build.Repository.LocalPath)/CodeCoverage.runsettings" -v normal'

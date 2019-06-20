@@ -18,7 +18,7 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<ArgumentNullException>(() => new TemplateBuilder(null));
 
             // Unknown Parameter
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg} {foo}"));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{foo}"));
 
             // Gap In Name
             Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ mess age }"));
@@ -27,9 +27,12 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ msg\t}"));
 
             // String Ends Prematurely
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg"          ));
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg} {tid,3"  ));
-            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg} {tid,3:X"));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg"    ));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{tid,3"  ));
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{tid,3:X"));
+
+            // Unexpected Closed Curly Brace
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("text }"));
             #endregion
 
             #region Invalid Formats in an Item
@@ -222,16 +225,16 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void FormatCulture()
         {
-            int             tid          = Thread.CurrentThread.ManagedThreadId;
-            DateTime        dateTime     = DateTime.UtcNow;
-            IFormatProvider frenchFrench = CultureInfo.GetCultureInfo("fr-FR");
+            int             tid      = Thread.CurrentThread.ManagedThreadId;
+            DateTime        dateTime = DateTime.UtcNow;
+            IFormatProvider frFR     = CultureInfo.GetCultureInfo("fr-FR");
 
             // Pretend the thread id is a currency for some interesting formatting changes
             // The "d" format string for DateTime is also impacted by the culture
-            string expected = $"{string.Format(frenchFrench, "{0:C}", tid)} {dateTime:dd/MM/yyy} Bonjour de France";
+            string expected = string.Format(frFR, "{0:C} {1:d} Bonjour de France", tid, dateTime);
             string actual   = new TemplateBuilder("{tid:C} {ts:d} {msg}")
                 .Build<string>()
-                .Format(frenchFrench, LogEntry.Create(dateTime, LogLevel.Error, "Bonjour de France"));
+                .Format(frFR, LogEntry.Create(dateTime, LogLevel.Error, "Bonjour de France"));
 
             Assert.AreEqual(expected, actual);
         }
