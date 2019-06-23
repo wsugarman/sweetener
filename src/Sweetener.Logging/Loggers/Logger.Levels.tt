@@ -2,14 +2,14 @@
 <#@ output extension=".cs" #>
 <#@ assembly name="System" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from Logger.Format.tt
+<#@ include file="..\TextTemplating\Include.t4" #>// Generated from Logger.Levels.tt
 using System;
 
 namespace Sweetener.Logging 
 {
     /// <content>
     /// The portion of the <see cref="Logger"/> class that defines the various formatting
-    /// overloads for its <see cref="ILogger{T}"/> methods.
+    /// overloads for the <see cref="Logger{T}"/> methods.
     /// </content>
     abstract partial class Logger
     {
@@ -19,32 +19,11 @@ namespace Sweetener.Logging
 #>
         #region <#= level #>
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.<#= level #>"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.<#= level #>"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void <#= level #>(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.<#= level #>)
-                Log(new LogEntry<string>(LogLevel.<#= level #>, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.<#= level #>"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.<#= level #>"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -68,7 +47,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.<#= level #>"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.<#= level #>"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -93,7 +72,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.<#= level #>"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.<#= level #>"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -119,7 +98,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.<#= level #>"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.<#= level #>"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -146,7 +125,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.<#= level #>"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.<#= level #>"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>

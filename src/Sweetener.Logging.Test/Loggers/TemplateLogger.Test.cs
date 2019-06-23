@@ -57,25 +57,6 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
-        public void SyncRoot()
-        {
-            TemplateLogger logger0 = new MemoryTemplateLogger(                                                     );
-            TemplateLogger logger1 = new MemoryTemplateLogger(LogLevel.Info                                        );
-            TemplateLogger logger2 = new MemoryTemplateLogger(LogLevel.Warn, "{msg}"                               );
-            TemplateLogger logger3 = new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.InvariantCulture, "{msg}");
-
-            Assert.IsNotNull(logger0.SyncRoot);
-            Assert.IsNotNull(logger1.SyncRoot);
-            Assert.IsNotNull(logger2.SyncRoot);
-            Assert.IsNotNull(logger3.SyncRoot);
-
-            Assert.AreEqual(typeof(object), logger0.SyncRoot.GetType());
-            Assert.AreEqual(typeof(object), logger1.SyncRoot.GetType());
-            Assert.AreEqual(typeof(object), logger2.SyncRoot.GetType());
-            Assert.AreEqual(typeof(object), logger3.SyncRoot.GetType());
-        }
-
-        [TestMethod]
         public void Log()
         {
             // Validate Log calls WriteLine appropriately based on the template
@@ -131,9 +112,7 @@ namespace Sweetener.Logging.Test
                 logger.Fatal("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
 
                 Assert.AreEqual(36, logger.Entries.Count);
-
-                LogLevel level = LogLevel.Trace;
-                while (logger.Entries.Count > 0)
+                for (LogLevel level = LogLevel.Trace; logger.Entries.Count > 0; level++)
                 {
                     Assert.IsTrue(logger.Entries.Count >= 6);
                     Assert.AreEqual($"{level:F} - 0"          , logger.Entries.Dequeue());
@@ -142,8 +121,6 @@ namespace Sweetener.Logging.Test
                     Assert.AreEqual($"{level:F} - 0 1 2 3"    , logger.Entries.Dequeue());
                     Assert.AreEqual($"{level:F} - 0 1 2 3 4"  , logger.Entries.Dequeue());
                     Assert.AreEqual($"{level:F} - 0 1 2 3 4 5", logger.Entries.Dequeue());
-
-                    level++;
                 }
             }
         }

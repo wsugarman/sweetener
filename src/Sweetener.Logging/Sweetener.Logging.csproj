@@ -19,26 +19,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Loggers\ILogger{T}.tt">
+    <None Update="Loggers\Logger.Levels.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ILogger{T}.cs</LastGenOutput>
+      <LastGenOutput>Logger.Levels.cs</LastGenOutput>
     </None>
-    <None Update="Loggers\Logger.Format.tt">
+    <None Update="Loggers\Logger{T}.Levels.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Logger.Format.cs</LastGenOutput>
+      <LastGenOutput>Logger{T}.Levels.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Loggers\ILogger{T}.cs">
+    <Compile Update="Loggers\Logger.Levels.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ILogger{T}.tt</DependentUpon>
+      <DependentUpon>Logger.Levels.tt</DependentUpon>
     </Compile>
-    <Compile Update="Loggers\Logger.Format.cs">
+    <Compile Update="Loggers\Logger{T}.Levels.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Logger.Format.tt</DependentUpon>
+      <DependentUpon>Logger{T}.Levels.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
