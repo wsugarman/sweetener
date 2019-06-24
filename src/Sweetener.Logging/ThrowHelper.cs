@@ -27,6 +27,5 @@ namespace Sweetener.Logging
     {
         args,
         format,
-        message,
     }
 }

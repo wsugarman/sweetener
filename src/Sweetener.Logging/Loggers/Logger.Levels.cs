@@ -1,42 +1,21 @@
-﻿// Generated from Logger.Format.tt
+﻿// Generated from Logger.Levels.tt
 using System;
 
 namespace Sweetener.Logging 
 {
     /// <content>
     /// The portion of the <see cref="Logger"/> class that defines the various formatting
-    /// overloads for its <see cref="ILogger{T}"/> methods.
+    /// overloads for the <see cref="Logger{T}"/> methods.
     /// </content>
     abstract partial class Logger
     {
         #region Trace
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.Trace"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Trace"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry<string>(LogLevel.Trace, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -60,7 +39,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -85,7 +64,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -111,7 +90,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -138,7 +117,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -170,32 +149,11 @@ namespace Sweetener.Logging
 
         #region Debug
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.Debug"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Debug"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry<string>(LogLevel.Debug, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -219,7 +177,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -244,7 +202,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -270,7 +228,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -297,7 +255,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -329,32 +287,11 @@ namespace Sweetener.Logging
 
         #region Info
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.Info"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Info"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry<string>(LogLevel.Info, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -378,7 +315,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -403,7 +340,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -429,7 +366,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -456,7 +393,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -488,32 +425,11 @@ namespace Sweetener.Logging
 
         #region Warn
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.Warn"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Warn"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry<string>(LogLevel.Warn, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -537,7 +453,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -562,7 +478,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -588,7 +504,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -615,7 +531,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -647,32 +563,11 @@ namespace Sweetener.Logging
 
         #region Error
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.Error"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Error"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry<string>(LogLevel.Error, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -696,7 +591,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -721,7 +616,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -747,7 +642,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -774,7 +669,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -806,32 +701,11 @@ namespace Sweetener.Logging
 
         #region Fatal
         /// <summary>
-        /// Requests that the specified message be logged with the level <see cref="LogLevel.Fatal"/>.
-        /// </summary>
-        /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Fatal"/>.
-        /// </remarks>
-        /// <param name="message">The value requested for logging.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string message)
-        {
-            ThrowIfDisposed();
-
-            if (message == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.message);
-
-            if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry<string>(LogLevel.Fatal, message));
-        }
-
-        /// <summary>
         /// Requests that the text representation of the specified object, using the
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -855,7 +729,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -880,7 +754,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -906,7 +780,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>
@@ -933,7 +807,7 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// The log request will only be fulfilled if the <see cref="Logger{T}.MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
         /// <param name="format">A composite format string.</param>

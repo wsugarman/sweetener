@@ -13,9 +13,6 @@ namespace Sweetener.Logging
         /// </summary>
         /// <param name="level">The <see cref="LogLevel"/> associated with the <paramref name="value"/>.</param>
         /// <param name="value">The value to be logged.</param>
-        /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
-        /// </exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is unrecognized.</exception>
         public static LogEntry<T> Create<T>(LogLevel level, T value)
             => Create(DateTime.UtcNow, level, value);
@@ -27,17 +24,11 @@ namespace Sweetener.Logging
         /// <param name="timestamp">The timestamp when the log request was made.</param>
         /// <param name="level">The <see cref="LogLevel"/> associated with the <paramref name="value"/>.</param>
         /// <param name="value">The value to be logged.</param>
-        /// <exception cref="ArgumentNullException">
-        /// <typeparamref name="T"/> is a reference type and <paramref name="value"/> is <see langword="null"/>.
-        /// </exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is unrecognized.</exception>
         public static LogEntry<T> Create<T>(DateTime timestamp, LogLevel level, T value)
         {
             if (level < LogLevel.Trace || level > LogLevel.Fatal)
                 throw new ArgumentOutOfRangeException(nameof(level), $"Unknown {nameof(LogLevel)} value '{level}'");
-
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
 
             return new LogEntry<T>(timestamp, level, value);
         }

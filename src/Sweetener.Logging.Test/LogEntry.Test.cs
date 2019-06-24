@@ -18,14 +18,6 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(dt, (LogLevel)(-1), "Foo"         ));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(    (LogLevel)42  , Guid.NewGuid()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(dt, (LogLevel)42  , Guid.NewGuid()));
-
-            // Null value
-            Assert.ThrowsException<ArgumentNullException>(() => LogEntry.Create<string>(    LogLevel.Warn , null));
-            Assert.ThrowsException<ArgumentNullException>(() => LogEntry.Create<object>(dt, LogLevel.Trace, null));
-
-            // Value types don't throw!
-            LogEntry.Create(    LogLevel.Warn , default(int     ));
-            LogEntry.Create(dt, LogLevel.Trace, default(DateTime));
         }
 
         [TestMethod]
