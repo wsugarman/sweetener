@@ -70,7 +70,7 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void BuildExceptions()
         {
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{ts}").Build<string>());
+            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{ts}").Build());
         }
 
         [TestMethod]
@@ -180,7 +180,7 @@ namespace Sweetener.Logging.Test
             int     pid = currentProcess.Id;
             string  pn  = currentProcess.ProcessName;
 
-            ILogEntryTemplate<string> template = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] {msg}").Build<string>();
+            ILogEntryTemplate template = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] {msg}").Build();
             Task[] tasks = new Task[levels.Length];
 
             for (int i = 0; i < levels.Length; i++)
@@ -201,7 +201,7 @@ namespace Sweetener.Logging.Test
                     }
 
                     string expected = $"[{dateTime:yyyy-MM-ddTHH:mm:ss}] [{level,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] success";
-                    string actual   = template.Format(provider, LogEntry.Create(dateTime, level, "success"));
+                    string actual   = template.Format(provider, new LogEntry(dateTime, level, "success"));
                     Assert.AreEqual(expected, actual);
                 });
             }
@@ -216,8 +216,8 @@ namespace Sweetener.Logging.Test
 
             string expected = $"#Debug# @ {Process.GetCurrentProcess().ProcessName} >> Foo Bar {{Baz}}!";
             string actual   = new TemplateBuilder("#{level:F}# @ {pn} >> {msg}")
-                .Build<string>()
-                .Format(provider, LogEntry.Create(LogLevel.Debug, "Foo Bar {Baz}!"));
+                .Build()
+                .Format(provider, new LogEntry(LogLevel.Debug, "Foo Bar {Baz}!"));
 
             Assert.AreEqual(expected, actual);
         }
@@ -233,8 +233,8 @@ namespace Sweetener.Logging.Test
             // The "d" format string for DateTime is also impacted by the culture
             string expected = string.Format(frFR, "{0:C} {1:d} Bonjour de France", tid, dateTime);
             string actual   = new TemplateBuilder("{tid:C} {ts:d} {msg}")
-                .Build<string>()
-                .Format(frFR, LogEntry.Create(dateTime, LogLevel.Error, "Bonjour de France"));
+                .Build()
+                .Format(frFR, new LogEntry(dateTime, LogLevel.Error, "Bonjour de France"));
 
             Assert.AreEqual(expected, actual);
         }

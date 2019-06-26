@@ -18,7 +18,7 @@ namespace Sweetener.Logging
             _template = template;
         }
 
-        public virtual ILogEntryTemplate<T> Build<T>()
+        public virtual ILogEntryTemplate Build()
         {
             if (!_indices.ContainsKey(TemplateParameter.Message))
                 throw new InvalidOperationException("Template is missing required 'msg' or 'message' parameter");
@@ -26,7 +26,7 @@ namespace Sweetener.Logging
             // The use of an interface will force the template (a struct) to box, but
             // it will provide a hook for polymorphism and further cement the relationship
             // between the builder and the template itself
-            return new LogEntryTemplate<T>(_template, _format);
+            return new LogEntryTemplate(_template, _format);
         }
 
         protected virtual int GetIndex(TemplateParameter parameter)
@@ -211,7 +211,7 @@ namespace Sweetener.Logging
             return null;
         }
 
-        private readonly struct LogEntryTemplate<T> : ILogEntryTemplate<T>
+        private readonly struct LogEntryTemplate : ILogEntryTemplate
         {
             private readonly string _format;
             private readonly string _template;
@@ -228,7 +228,7 @@ namespace Sweetener.Logging
                 _template = template;
             }
 
-            public string Format(IFormatProvider provider, LogEntry<T> logEntry)
+            public string Format(IFormatProvider provider, LogEntry logEntry)
             {
                 // TODO: It seems silly to use the object[] override here when we avoid the
                 //       object[] allocation in the ILogger interface. We should figure out
