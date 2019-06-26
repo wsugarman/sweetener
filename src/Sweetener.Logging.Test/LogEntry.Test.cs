@@ -81,21 +81,21 @@ namespace Sweetener.Logging.Test
         }
 
         internal static void AssertLogEntry(
-            int         threadId,
-            string      threadName,
-            DateTime    timestamp,
-            LogLevel    level,
-            string      message,
+            int      threadId,
+            string   threadName,
+            DateTime timestamp,
+            LogLevel level,
+            string   message,
             LogEntry actual)
             => AssertLogEntry(threadId, threadName, timestamp, timestamp, level, message, actual);
 
         internal static void AssertLogEntry(
-            int         threadId,
-            string      threadName,
-            DateTime    min,
-            DateTime    max,
-            LogLevel    level,
-            string      message,
+            int      threadId,
+            string   threadName,
+            DateTime min,
+            DateTime max,
+            LogLevel level,
+            string   message,
             LogEntry actual)
         {
             Assert.AreEqual(threadId  , actual.ThreadId  );
