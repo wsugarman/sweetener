@@ -10,7 +10,7 @@ namespace Sweetener.Logging
     {
         internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {msg}";
 
-        internal readonly ILogEntryTemplate<string> _template;
+        internal readonly ILogEntryTemplate _template;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
@@ -26,7 +26,7 @@ namespace Sweetener.Logging
         /// <see cref="LogLevel"/> using a default template.
         /// </summary>
         /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
         protected TemplateLogger(LogLevel minLevel)
             : this(minLevel, DefaultTemplate)
         { }
@@ -39,7 +39,7 @@ namespace Sweetener.Logging
         /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
         /// <param name="template">A format string that describes the layout of each log entry.</param>
         /// <exception cref="ArgumentNullException"><paramref name="template"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
         /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
         protected TemplateLogger(LogLevel minLevel, string template)
             : this(minLevel, null, template)
@@ -57,20 +57,20 @@ namespace Sweetener.Logging
         /// <param name="formatProvider">An <see cref="IFormatProvider"/> object for a specific culture.</param>
         /// <param name="template">A format string that describes the layout of each log entry.</param>
         /// <exception cref="ArgumentNullException"><paramref name="template"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is unrecognized.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
         /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
         protected TemplateLogger(LogLevel minLevel, IFormatProvider formatProvider, string template)
             : base(minLevel, formatProvider)
         {
             TemplateBuilder templateBuilder = new TemplateBuilder(template);
-            _template = templateBuilder.Build<string>();
+            _template = templateBuilder.Build();
         }
 
         /// <summary>
         /// Logs the specified entry.
         /// </summary>
         /// <param name="logEntry">A log entry which consists of the message and its context.</param>
-        protected internal override void Log(LogEntry<string> logEntry)
+        protected internal override void Log(LogEntry logEntry)
             => WriteLine(_template.Format(FormatProvider, logEntry));
 
         /// <summary>

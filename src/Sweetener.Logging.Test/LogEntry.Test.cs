@@ -6,30 +6,27 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Logging.Test
 {
     [TestClass]
-    public class LogEntryHelperTest
+    public class LogEntryTest
     {
         [TestMethod]
-        public void CreateExceptions()
+        public void DefaultConstructor()
         {
-            DateTime dt = new DateTime(1999, 12, 31);
-
-            // LogLevel out-of-range
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(    (LogLevel)(-1), "Foo"         ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(dt, (LogLevel)(-1), "Foo"         ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(    (LogLevel)42  , Guid.NewGuid()));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => LogEntry.Create(dt, (LogLevel)42  , Guid.NewGuid()));
+            AssertLogEntry(default, default, default, default, default, default);
         }
 
         [TestMethod]
-        public void Create()
+        public void Constructor()
         {
+            // Throw exception when level is out-of-range
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new LogEntry(DateTime.UtcNow, (LogLevel)(-1), "Foo"));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new LogEntry(DateTime.UtcNow, (LogLevel)  42, "Bar"));
+
             Task[] tasks = new Task[5];
             for (int i = 0; i < tasks.Length; i++)
             {
                 string threadName = $"Task #{i}";
                 tasks[i] = Task.Run(() =>
                 {
-                    DateTime min;
                     Thread thread = Thread.CurrentThread;
                     lock (thread)
                     {
@@ -37,50 +34,69 @@ namespace Sweetener.Logging.Test
                             thread.Name = threadName;
                     }
 
-                    int    tid = thread.ManagedThreadId;
-                    string tn  = thread.Name;
-
-                    // Various message types
-                    min = DateTime.UtcNow;
-                    LogEntry<string> stringEntry = LogEntry.Create(LogLevel.Warn, "Foo");
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Warn, "Foo", stringEntry);
-
-                    min = DateTime.UtcNow;
-                    LogEntry<int> intEntry = LogEntry.Create(LogLevel.Fatal, 42);
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Fatal, 42, intEntry);
-
-                    min = DateTime.UtcNow;
-                    LogEntry<LogEntryHelperTest> testEntry = LogEntry.Create(LogLevel.Debug, this);
-                    AssertLogEntry(tid, tn, min, DateTime.UtcNow, LogLevel.Debug, this, testEntry);
-
-                    // Various message types with a DateTime
-                    DateTime dt = new DateTime(1999, 12, 31);
-                    AssertLogEntry(tid, tn, dt, LogLevel.Warn , "Foo", LogEntry.Create(dt, LogLevel.Warn, "Foo"));
-                    AssertLogEntry(tid, tn, dt, LogLevel.Fatal, 42   , LogEntry.Create(dt, LogLevel.Fatal, 42  ));
-                    AssertLogEntry(tid, tn, dt, LogLevel.Debug, this , LogEntry.Create(dt, LogLevel.Debug, this));
+                    DateTime timestamp = new DateTime(1234, 5, 6);
+                    AssertLogEntry(
+                        thread.ManagedThreadId,
+                        thread.Name,
+                        timestamp,
+                        LogLevel.Warn,
+                        "Foo",
+                        new LogEntry(timestamp, LogLevel.Warn, "Foo"));
                 });
             }
 
             Task.WaitAll(tasks);
         }
 
-        internal static void AssertLogEntry<T>(
+        [TestMethod]
+        public void InternalConstructor()
+        {
+            Task[] tasks = new Task[5];
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                string threadName = $"Task #{i}";
+                tasks[i] = Task.Run(() =>
+                {
+                    Thread thread = Thread.CurrentThread;
+                    lock (thread)
+                    {
+                        if (thread.Name == null)
+                            thread.Name = threadName;
+                    }
+
+                    DateTime min = DateTime.UtcNow;
+                    LogEntry actual = new LogEntry(LogLevel.Info, "Bar");
+                    AssertLogEntry(
+                        thread.ManagedThreadId,
+                        thread.Name,
+                        min,
+                        DateTime.UtcNow,
+                        LogLevel.Info,
+                        "Bar",
+                        actual);
+                });
+            }
+
+            Task.WaitAll(tasks);
+        }
+
+        internal static void AssertLogEntry(
             int         threadId,
             string      threadName,
             DateTime    timestamp,
             LogLevel    level,
-            T           message,
-            LogEntry<T> actual)
+            string      message,
+            LogEntry actual)
             => AssertLogEntry(threadId, threadName, timestamp, timestamp, level, message, actual);
 
-        internal static void AssertLogEntry<T>(
+        internal static void AssertLogEntry(
             int         threadId,
             string      threadName,
             DateTime    min,
             DateTime    max,
             LogLevel    level,
-            T           message,
-            LogEntry<T> actual)
+            string      message,
+            LogEntry actual)
         {
             Assert.AreEqual(threadId  , actual.ThreadId  );
             Assert.AreEqual(threadName, actual.ThreadName);

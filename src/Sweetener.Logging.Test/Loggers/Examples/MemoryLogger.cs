@@ -5,7 +5,7 @@ namespace Sweetener.Logging.Test
 {
     internal class MemoryLogger : Logger
     {
-        public Queue<LogEntry<string>> Entries { get; } = new Queue<LogEntry<string>>();
+        public Queue<LogEntry> Entries { get; } = new Queue<LogEntry>();
 
         public MemoryLogger()
             : base()
@@ -19,7 +19,7 @@ namespace Sweetener.Logging.Test
             : base(minLevel, formatProvider)
         { }
 
-        protected internal override void Log(LogEntry<string> logEntry)
+        protected internal override void Log(LogEntry logEntry)
             => Entries.Enqueue(logEntry);
     }
 }
