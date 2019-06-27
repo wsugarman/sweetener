@@ -20,6 +20,9 @@ namespace Sweetener.Logging
 
         public virtual ILogEntryTemplate Build()
         {
+            if (_indices.ContainsKey(TemplateParameter.Context))
+                throw new InvalidOperationException("Template cannot contain 'cxt' or 'context' parameter");
+
             if (!_indices.ContainsKey(TemplateParameter.Message))
                 throw new InvalidOperationException("Template is missing required 'msg' or 'message' parameter");
 
@@ -27,6 +30,20 @@ namespace Sweetener.Logging
             // it will provide a hook for polymorphism and further cement the relationship
             // between the builder and the template itself
             return new LogEntryTemplate(_template, _format);
+        }
+
+        public virtual ILogEntryTemplate<T> Build<T>()
+        {
+            if (!_indices.ContainsKey(TemplateParameter.Context))
+                throw new InvalidOperationException("Template is missing required 'cxt' or 'context' parameter");
+
+            if (!_indices.ContainsKey(TemplateParameter.Message))
+                throw new InvalidOperationException("Template is missing required 'msg' or 'message' parameter");
+
+            // The use of an interface will force the template (a struct) to box, but
+            // it will provide a hook for polymorphism and further cement the relationship
+            // between the builder and the template itself
+            return new LogEntryTemplate<T>(_template, _format);
         }
 
         protected virtual int GetIndex(TemplateParameter parameter)
@@ -211,6 +228,8 @@ namespace Sweetener.Logging
             return null;
         }
 
+        #region LogEntryTemplates
+
         private readonly struct LogEntryTemplate : ILogEntryTemplate
         {
             private readonly string _format;
@@ -236,16 +255,61 @@ namespace Sweetener.Logging
                 // TODO: Can probably replace the process parameters with real values now
                 return string.Format(provider, _format,
                     logEntry.Message,              // {0} - Message
-                    logEntry.Timestamp,            // {1} - Timestamp
-                    logEntry.Level,                // {2} - LogLevel
-                    s_currentProcess.Id,           // {3} - Process Id
-                    s_currentProcess.ProcessName,  // {4} - Process Name
-                    logEntry.ThreadId,             // {5} - Thread Id
-                    logEntry.ThreadName);          // {6} - Thread Name
+                    null,                          // {1} - Context (Unused)
+                    logEntry.Timestamp,            // {2} - Timestamp
+                    logEntry.Level,                // {3} - LogLevel
+                    s_currentProcess.Id,           // {4} - Process Id
+                    s_currentProcess.ProcessName,  // {5} - Process Name
+                    logEntry.ThreadId,             // {6} - Thread Id
+                    logEntry.ThreadName);          // {7} - Thread Name
             }
 
             public override string ToString()
                 => _template;
         }
+
+        #endregion
+
+        #region LogEntryTemplate<T>
+
+        private readonly struct LogEntryTemplate<T> : ILogEntryTemplate<T>
+        {
+            private readonly string _format;
+            private readonly string _template;
+
+            private static readonly Process s_currentProcess = Process.GetCurrentProcess();
+
+            public LogEntryTemplate(string template, string format)
+            {
+                // TODO: While the originalTemplate is really bloat in production, it is
+                //       very helpful to have when debugging and for unit testing.
+                //       That said, is there a better mechanism that doesn't involve
+                //       different code between debug/release configuration?
+                _format   = format;
+                _template = template;
+            }
+
+            public string Format(IFormatProvider provider, LogEntry<T> logEntry)
+            {
+                // TODO: It seems silly to use the object[] override here when we avoid the
+                //       object[] allocation in the ILogger interface. We should figure out
+                //       how to avoid this allocation too if possible.
+                // TODO: Can probably replace the process parameters with real values now
+                return string.Format(provider, _format,
+                    logEntry.Message,              // {0} - Message
+                    logEntry.Context,              // {1} - Context
+                    logEntry.Timestamp,            // {2} - Timestamp
+                    logEntry.Level,                // {3} - LogLevel
+                    s_currentProcess.Id,           // {4} - Process Id
+                    s_currentProcess.ProcessName,  // {5} - Process Name
+                    logEntry.ThreadId,             // {6} - Thread Id
+                    logEntry.ThreadName);          // {7} - Thread Name
+            }
+
+            public override string ToString()
+                => _template;
+        }
+
+        #endregion
     }
 }

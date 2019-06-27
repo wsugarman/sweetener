@@ -1,13 +1,13 @@
-﻿// Generated from Logger.Format.tt
+﻿// Generated from Logger{T}.Format.tt
 using System;
 
 namespace Sweetener.Logging 
 {
     /// <content>
-    /// The portion of the <see cref="Logger"/> class that defines the various formatting
+    /// The portion of the <see cref="Logger{T}"/> class that defines the various formatting
     /// overloads for the logging methods for each <see cref="LogLevel"/>.
     /// </content>
-    abstract partial class Logger
+    abstract partial class Logger<T>
     {
         #region Trace
         /// <summary>
@@ -17,14 +17,15 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="message">The message requested for logging.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string message)
+        public void Trace(T context, string message)
         {
             ThrowIfDisposed();
 
             if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry(LogLevel.Trace, message));
+                Log(new LogEntry<T>(LogLevel.Trace, context, message));
         }
 
         /// <summary>
@@ -32,15 +33,16 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Trace"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string format, object arg0)
+        public void Trace(T context, string format, object arg0)
         {
             ThrowIfDisposed();
 
@@ -48,7 +50,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry(LogLevel.Trace, string.Format(FormatProvider, format, arg0)));
+                Log(new LogEntry<T>(LogLevel.Trace, context, string.Format(FormatProvider, format, arg0)));
         }
 
         /// <summary>
@@ -56,16 +58,17 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Trace"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string format, object arg0, object arg1)
+        public void Trace(T context, string format, object arg0, object arg1)
         {
             ThrowIfDisposed();
 
@@ -73,7 +76,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry(LogLevel.Trace, string.Format(FormatProvider, format, arg0, arg1)));
+                Log(new LogEntry<T>(LogLevel.Trace, context, string.Format(FormatProvider, format, arg0, arg1)));
         }
 
         /// <summary>
@@ -81,9 +84,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Trace"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -91,7 +95,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string format, object arg0, object arg1, object arg2)
+        public void Trace(T context, string format, object arg0, object arg1, object arg2)
         {
             ThrowIfDisposed();
 
@@ -99,7 +103,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry(LogLevel.Trace, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+                Log(new LogEntry<T>(LogLevel.Trace, context, string.Format(FormatProvider, format, arg0, arg1, arg2)));
         }
 
         /// <summary>
@@ -107,9 +111,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Trace"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -118,7 +123,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string format, object arg0, object arg1, object arg2, object arg3)
+        public void Trace(T context, string format, object arg0, object arg1, object arg2, object arg3)
         {
             ThrowIfDisposed();
 
@@ -126,7 +131,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry(LogLevel.Trace, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
+                Log(new LogEntry<T>(LogLevel.Trace, context, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
         }
 
         /// <summary>
@@ -134,9 +139,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Trace"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Trace"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Trace"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
@@ -149,7 +155,7 @@ namespace Sweetener.Logging
         /// </para>
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Trace(string format, params object[] args)
+        public void Trace(T context, string format, params object[] args)
         {
             ThrowIfDisposed();
 
@@ -160,7 +166,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
 
             if (MinLevel <= LogLevel.Trace)
-                Log(new LogEntry(LogLevel.Trace, string.Format(FormatProvider, format, args)));
+                Log(new LogEntry<T>(LogLevel.Trace, context, string.Format(FormatProvider, format, args)));
         }
         #endregion
 
@@ -172,14 +178,15 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="message">The message requested for logging.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string message)
+        public void Debug(T context, string message)
         {
             ThrowIfDisposed();
 
             if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry(LogLevel.Debug, message));
+                Log(new LogEntry<T>(LogLevel.Debug, context, message));
         }
 
         /// <summary>
@@ -187,15 +194,16 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Debug"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string format, object arg0)
+        public void Debug(T context, string format, object arg0)
         {
             ThrowIfDisposed();
 
@@ -203,7 +211,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry(LogLevel.Debug, string.Format(FormatProvider, format, arg0)));
+                Log(new LogEntry<T>(LogLevel.Debug, context, string.Format(FormatProvider, format, arg0)));
         }
 
         /// <summary>
@@ -211,16 +219,17 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Debug"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string format, object arg0, object arg1)
+        public void Debug(T context, string format, object arg0, object arg1)
         {
             ThrowIfDisposed();
 
@@ -228,7 +237,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry(LogLevel.Debug, string.Format(FormatProvider, format, arg0, arg1)));
+                Log(new LogEntry<T>(LogLevel.Debug, context, string.Format(FormatProvider, format, arg0, arg1)));
         }
 
         /// <summary>
@@ -236,9 +245,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Debug"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -246,7 +256,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string format, object arg0, object arg1, object arg2)
+        public void Debug(T context, string format, object arg0, object arg1, object arg2)
         {
             ThrowIfDisposed();
 
@@ -254,7 +264,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry(LogLevel.Debug, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+                Log(new LogEntry<T>(LogLevel.Debug, context, string.Format(FormatProvider, format, arg0, arg1, arg2)));
         }
 
         /// <summary>
@@ -262,9 +272,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Debug"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -273,7 +284,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string format, object arg0, object arg1, object arg2, object arg3)
+        public void Debug(T context, string format, object arg0, object arg1, object arg2, object arg3)
         {
             ThrowIfDisposed();
 
@@ -281,7 +292,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry(LogLevel.Debug, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
+                Log(new LogEntry<T>(LogLevel.Debug, context, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
         }
 
         /// <summary>
@@ -289,9 +300,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Debug"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Debug"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Debug"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
@@ -304,7 +316,7 @@ namespace Sweetener.Logging
         /// </para>
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Debug(string format, params object[] args)
+        public void Debug(T context, string format, params object[] args)
         {
             ThrowIfDisposed();
 
@@ -315,7 +327,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
 
             if (MinLevel <= LogLevel.Debug)
-                Log(new LogEntry(LogLevel.Debug, string.Format(FormatProvider, format, args)));
+                Log(new LogEntry<T>(LogLevel.Debug, context, string.Format(FormatProvider, format, args)));
         }
         #endregion
 
@@ -327,14 +339,15 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="message">The message requested for logging.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string message)
+        public void Info(T context, string message)
         {
             ThrowIfDisposed();
 
             if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry(LogLevel.Info, message));
+                Log(new LogEntry<T>(LogLevel.Info, context, message));
         }
 
         /// <summary>
@@ -342,15 +355,16 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Info"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string format, object arg0)
+        public void Info(T context, string format, object arg0)
         {
             ThrowIfDisposed();
 
@@ -358,7 +372,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry(LogLevel.Info, string.Format(FormatProvider, format, arg0)));
+                Log(new LogEntry<T>(LogLevel.Info, context, string.Format(FormatProvider, format, arg0)));
         }
 
         /// <summary>
@@ -366,16 +380,17 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Info"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string format, object arg0, object arg1)
+        public void Info(T context, string format, object arg0, object arg1)
         {
             ThrowIfDisposed();
 
@@ -383,7 +398,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry(LogLevel.Info, string.Format(FormatProvider, format, arg0, arg1)));
+                Log(new LogEntry<T>(LogLevel.Info, context, string.Format(FormatProvider, format, arg0, arg1)));
         }
 
         /// <summary>
@@ -391,9 +406,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Info"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -401,7 +417,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string format, object arg0, object arg1, object arg2)
+        public void Info(T context, string format, object arg0, object arg1, object arg2)
         {
             ThrowIfDisposed();
 
@@ -409,7 +425,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry(LogLevel.Info, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+                Log(new LogEntry<T>(LogLevel.Info, context, string.Format(FormatProvider, format, arg0, arg1, arg2)));
         }
 
         /// <summary>
@@ -417,9 +433,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Info"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -428,7 +445,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string format, object arg0, object arg1, object arg2, object arg3)
+        public void Info(T context, string format, object arg0, object arg1, object arg2, object arg3)
         {
             ThrowIfDisposed();
 
@@ -436,7 +453,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry(LogLevel.Info, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
+                Log(new LogEntry<T>(LogLevel.Info, context, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
         }
 
         /// <summary>
@@ -444,9 +461,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Info"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Info"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Info"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
@@ -459,7 +477,7 @@ namespace Sweetener.Logging
         /// </para>
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Info(string format, params object[] args)
+        public void Info(T context, string format, params object[] args)
         {
             ThrowIfDisposed();
 
@@ -470,7 +488,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
 
             if (MinLevel <= LogLevel.Info)
-                Log(new LogEntry(LogLevel.Info, string.Format(FormatProvider, format, args)));
+                Log(new LogEntry<T>(LogLevel.Info, context, string.Format(FormatProvider, format, args)));
         }
         #endregion
 
@@ -482,14 +500,15 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="message">The message requested for logging.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string message)
+        public void Warn(T context, string message)
         {
             ThrowIfDisposed();
 
             if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry(LogLevel.Warn, message));
+                Log(new LogEntry<T>(LogLevel.Warn, context, message));
         }
 
         /// <summary>
@@ -497,15 +516,16 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Warn"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string format, object arg0)
+        public void Warn(T context, string format, object arg0)
         {
             ThrowIfDisposed();
 
@@ -513,7 +533,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry(LogLevel.Warn, string.Format(FormatProvider, format, arg0)));
+                Log(new LogEntry<T>(LogLevel.Warn, context, string.Format(FormatProvider, format, arg0)));
         }
 
         /// <summary>
@@ -521,16 +541,17 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Warn"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string format, object arg0, object arg1)
+        public void Warn(T context, string format, object arg0, object arg1)
         {
             ThrowIfDisposed();
 
@@ -538,7 +559,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry(LogLevel.Warn, string.Format(FormatProvider, format, arg0, arg1)));
+                Log(new LogEntry<T>(LogLevel.Warn, context, string.Format(FormatProvider, format, arg0, arg1)));
         }
 
         /// <summary>
@@ -546,9 +567,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Warn"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -556,7 +578,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string format, object arg0, object arg1, object arg2)
+        public void Warn(T context, string format, object arg0, object arg1, object arg2)
         {
             ThrowIfDisposed();
 
@@ -564,7 +586,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry(LogLevel.Warn, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+                Log(new LogEntry<T>(LogLevel.Warn, context, string.Format(FormatProvider, format, arg0, arg1, arg2)));
         }
 
         /// <summary>
@@ -572,9 +594,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Warn"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -583,7 +606,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string format, object arg0, object arg1, object arg2, object arg3)
+        public void Warn(T context, string format, object arg0, object arg1, object arg2, object arg3)
         {
             ThrowIfDisposed();
 
@@ -591,7 +614,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry(LogLevel.Warn, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
+                Log(new LogEntry<T>(LogLevel.Warn, context, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
         }
 
         /// <summary>
@@ -599,9 +622,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Warn"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Warn"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Warn"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
@@ -614,7 +638,7 @@ namespace Sweetener.Logging
         /// </para>
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Warn(string format, params object[] args)
+        public void Warn(T context, string format, params object[] args)
         {
             ThrowIfDisposed();
 
@@ -625,7 +649,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
 
             if (MinLevel <= LogLevel.Warn)
-                Log(new LogEntry(LogLevel.Warn, string.Format(FormatProvider, format, args)));
+                Log(new LogEntry<T>(LogLevel.Warn, context, string.Format(FormatProvider, format, args)));
         }
         #endregion
 
@@ -637,14 +661,15 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="message">The message requested for logging.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string message)
+        public void Error(T context, string message)
         {
             ThrowIfDisposed();
 
             if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry(LogLevel.Error, message));
+                Log(new LogEntry<T>(LogLevel.Error, context, message));
         }
 
         /// <summary>
@@ -652,15 +677,16 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Error"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string format, object arg0)
+        public void Error(T context, string format, object arg0)
         {
             ThrowIfDisposed();
 
@@ -668,7 +694,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry(LogLevel.Error, string.Format(FormatProvider, format, arg0)));
+                Log(new LogEntry<T>(LogLevel.Error, context, string.Format(FormatProvider, format, arg0)));
         }
 
         /// <summary>
@@ -676,16 +702,17 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Error"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string format, object arg0, object arg1)
+        public void Error(T context, string format, object arg0, object arg1)
         {
             ThrowIfDisposed();
 
@@ -693,7 +720,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry(LogLevel.Error, string.Format(FormatProvider, format, arg0, arg1)));
+                Log(new LogEntry<T>(LogLevel.Error, context, string.Format(FormatProvider, format, arg0, arg1)));
         }
 
         /// <summary>
@@ -701,9 +728,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Error"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -711,7 +739,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string format, object arg0, object arg1, object arg2)
+        public void Error(T context, string format, object arg0, object arg1, object arg2)
         {
             ThrowIfDisposed();
 
@@ -719,7 +747,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry(LogLevel.Error, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+                Log(new LogEntry<T>(LogLevel.Error, context, string.Format(FormatProvider, format, arg0, arg1, arg2)));
         }
 
         /// <summary>
@@ -727,9 +755,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Error"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -738,7 +767,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string format, object arg0, object arg1, object arg2, object arg3)
+        public void Error(T context, string format, object arg0, object arg1, object arg2, object arg3)
         {
             ThrowIfDisposed();
 
@@ -746,7 +775,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry(LogLevel.Error, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
+                Log(new LogEntry<T>(LogLevel.Error, context, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
         }
 
         /// <summary>
@@ -754,9 +783,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Error"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Error"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Error"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
@@ -769,7 +799,7 @@ namespace Sweetener.Logging
         /// </para>
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Error(string format, params object[] args)
+        public void Error(T context, string format, params object[] args)
         {
             ThrowIfDisposed();
 
@@ -780,7 +810,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
 
             if (MinLevel <= LogLevel.Error)
-                Log(new LogEntry(LogLevel.Error, string.Format(FormatProvider, format, args)));
+                Log(new LogEntry<T>(LogLevel.Error, context, string.Format(FormatProvider, format, args)));
         }
         #endregion
 
@@ -792,14 +822,15 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="message">The message requested for logging.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string message)
+        public void Fatal(T context, string message)
         {
             ThrowIfDisposed();
 
             if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry(LogLevel.Fatal, message));
+                Log(new LogEntry<T>(LogLevel.Fatal, context, message));
         }
 
         /// <summary>
@@ -807,15 +838,16 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Fatal"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string format, object arg0)
+        public void Fatal(T context, string format, object arg0)
         {
             ThrowIfDisposed();
 
@@ -823,7 +855,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry(LogLevel.Fatal, string.Format(FormatProvider, format, arg0)));
+                Log(new LogEntry<T>(LogLevel.Fatal, context, string.Format(FormatProvider, format, arg0)));
         }
 
         /// <summary>
@@ -831,16 +863,17 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Fatal"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string format, object arg0, object arg1)
+        public void Fatal(T context, string format, object arg0, object arg1)
         {
             ThrowIfDisposed();
 
@@ -848,7 +881,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry(LogLevel.Fatal, string.Format(FormatProvider, format, arg0, arg1)));
+                Log(new LogEntry<T>(LogLevel.Fatal, context, string.Format(FormatProvider, format, arg0, arg1)));
         }
 
         /// <summary>
@@ -856,9 +889,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Fatal"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -866,7 +900,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string format, object arg0, object arg1, object arg2)
+        public void Fatal(T context, string format, object arg0, object arg1, object arg2)
         {
             ThrowIfDisposed();
 
@@ -874,7 +908,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry(LogLevel.Fatal, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+                Log(new LogEntry<T>(LogLevel.Fatal, context, string.Format(FormatProvider, format, arg0, arg1, arg2)));
         }
 
         /// <summary>
@@ -882,9 +916,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Fatal"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
         /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
@@ -893,7 +928,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
         /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string format, object arg0, object arg1, object arg2, object arg3)
+        public void Fatal(T context, string format, object arg0, object arg1, object arg2, object arg3)
         {
             ThrowIfDisposed();
 
@@ -901,7 +936,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.format);
 
             if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry(LogLevel.Fatal, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
+                Log(new LogEntry<T>(LogLevel.Fatal, context, string.Format(FormatProvider, format, arg0, arg1, arg2, arg3)));
         }
 
         /// <summary>
@@ -909,9 +944,10 @@ namespace Sweetener.Logging
         /// specified format information, be logged with the level <see cref="LogLevel.Fatal"/>.
         /// </summary>
         /// <remarks>
-        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
-        /// than or equal to <see cref="LogLevel.Fatal"/>.
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/>
+        /// is less than or equal to <see cref="LogLevel.Fatal"/>.
         /// </remarks>
+        /// <param name="context">The domain-specific information that provides additional context about the message.</param>
         /// <param name="format">A composite format string.</param>
         /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
@@ -924,7 +960,7 @@ namespace Sweetener.Logging
         /// </para>
         /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
-        public void Fatal(string format, params object[] args)
+        public void Fatal(T context, string format, params object[] args)
         {
             ThrowIfDisposed();
 
@@ -935,7 +971,7 @@ namespace Sweetener.Logging
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.args);
 
             if (MinLevel <= LogLevel.Fatal)
-                Log(new LogEntry(LogLevel.Fatal, string.Format(FormatProvider, format, args)));
+                Log(new LogEntry<T>(LogLevel.Fatal, context, string.Format(FormatProvider, format, args)));
         }
         #endregion
 

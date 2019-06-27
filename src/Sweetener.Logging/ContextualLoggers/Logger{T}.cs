@@ -4,10 +4,11 @@ using System.Globalization;
 namespace Sweetener.Logging 
 {
     /// <summary>
-    /// Represents a client that can log messages for a given <see cref="LogLevel"/>
-    /// based on their purpose or severity.
+    /// Represents a client that can log messages with some domain-specific context
+    /// for given <see cref="LogLevel"/> based on their purpose or severity.
     /// </summary>
-    public abstract partial class Logger : IDisposable
+    /// <typeparam name="T">The type of context for each message.</typeparam>
+    public abstract partial class Logger<T> : IDisposable
     {
         /// <summary>
         /// Gets an object that controls formatting. 
@@ -35,7 +36,7 @@ namespace Sweetener.Logging
         private bool _disposed = false;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class for the current
+        /// Initializes a new instance of the <see cref="Logger{T}"/> class for the current
         /// culture that fulfills all logging requests.
         /// </summary>
         protected Logger()
@@ -43,7 +44,7 @@ namespace Sweetener.Logging
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class for the current
+        /// Initializes a new instance of the <see cref="Logger{T}"/> class for the current
         /// culture that fulfills all logging requests above a specified minimum <see cref="LogLevel"/>.
         /// </summary>
         /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
@@ -53,7 +54,7 @@ namespace Sweetener.Logging
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class for a particular
+        /// Initializes a new instance of the <see cref="Logger{T}"/> class for a particular
         /// culture that fulfills all logging requests above a specified minimum <see cref="LogLevel"/>.
         /// </summary>
         /// <remarks>
@@ -75,14 +76,14 @@ namespace Sweetener.Logging
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="Logger"/> object.
+        /// Releases all resources used by the <see cref="Logger{T}"/> object.
         /// </summary>
         /// <remarks>
-        /// Call <see cref="Dispose()"/> when you are finished using the <see cref="Logger"/>.
-        /// The <see cref="Dispose()"/> method leaves the <see cref="Logger"/> in an unusable state.
+        /// Call <see cref="Dispose()"/> when you are finished using the <see cref="Logger{T}"/>.
+        /// The <see cref="Dispose()"/> method leaves the <see cref="Logger{T}"/> in an unusable state.
         /// After calling <see cref="Dispose()"/>, you must release all references to the
-        /// <see cref="Logger"/> so the garbage collector can reclaim the memory that the
-        /// <see cref="Logger"/> was occupying.
+        /// <see cref="Logger{T}"/> so the garbage collector can reclaim the memory that the
+        /// <see cref="Logger{T}"/> was occupying.
         /// </remarks>
         public void Dispose()
         {
@@ -93,7 +94,7 @@ namespace Sweetener.Logging
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="Logger"/> and
+        /// Releases the unmanaged resources used by the <see cref="Logger{T}"/> and
         /// optionally releases the managed resources.
         /// </summary>
         /// <remarks>
@@ -105,7 +106,7 @@ namespace Sweetener.Logging
         /// </para>
         /// <para>
         /// When the <paramref name="disposing"/> parameter is <see langword="true"/>, this method
-        /// releases all resources held by any managed objects that this <see cref="Logger"/>
+        /// releases all resources held by any managed objects that this <see cref="Logger{T}"/>
         /// references. This method invokes the <see cref="IDisposable.Dispose"/> method
         /// of each referenced object.
         /// </para>
@@ -127,7 +128,7 @@ namespace Sweetener.Logging
         /// Logs the specified entry.
         /// </summary>
         /// <param name="logEntry">A log entry which consists of the message and its context.</param>
-        protected internal abstract void Log(LogEntry logEntry);
+        protected internal abstract void Log(LogEntry<T> logEntry);
 
         private void ThrowIfDisposed()
         {
