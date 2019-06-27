@@ -33,6 +33,13 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
+        public void ParseContext()
+        {
+            Assert.AreEqual(TemplateParameter.Context, TemplateParameterName.Parse("cxt"    ));
+            Assert.AreEqual(TemplateParameter.Context, TemplateParameterName.Parse("context"));
+        }
+
+        [TestMethod]
         public void ParseTimestamp()
         {
             Assert.AreEqual(TemplateParameter.Timestamp, TemplateParameterName.Parse("ts"       ));

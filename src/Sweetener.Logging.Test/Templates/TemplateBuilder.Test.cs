@@ -41,6 +41,10 @@ namespace Sweetener.Logging.Test
             Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg,k}"));
             //Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg:abc}"));
 
+            // Context
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{cxt,k}"));
+            //Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{cxt:abc}"));
+
             // Timestamp
             Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ts,k}"  ));
             //Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ts:abc}")); // Unknown format characters are used as literals
@@ -70,7 +74,26 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void BuildExceptions()
         {
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{ts}").Build());
+            #region Build()
+
+            // Missing "msg" or "message"
+            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{ts}" ).Build());
+
+            // Unexpected "cxt" or "context"
+            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{cxt}"    ).Build());
+            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{context}").Build());
+
+            #endregion
+
+            #region Build<T>()
+
+            // Missing "cxt" or "context"
+            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{msg}").Build<Guid>());
+
+            // Missing "msg" or "message"
+            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{cxt}").Build<Guid>());
+
+            #endregion
         }
 
         [TestMethod]
@@ -88,6 +111,15 @@ namespace Sweetener.Logging.Test
 
             Assert.AreEqual(expected, new TemplateBuilder("{msg}"    )._format);
             Assert.AreEqual(expected, new TemplateBuilder("{message}")._format);
+        }
+
+        [TestMethod]
+        public void GetContextIndex()
+        {
+            string expected = $"{{{(int)TemplateParameter.Context}}}";
+
+            Assert.AreEqual(expected, new TemplateBuilder("{cxt}"    )._format);
+            Assert.AreEqual(expected, new TemplateBuilder("{context}")._format);
         }
 
         [TestMethod]
@@ -150,9 +182,9 @@ namespace Sweetener.Logging.Test
             string expected = $"[{{{(int)TemplateParameter.Timestamp}:yyyy-MM-ddTHH:mm:ss}}] [{{{(int)TemplateParameter.Level},-5:F}}] ";
             expected       += $"[Process ({{{(int)TemplateParameter.ProcessId}}}): {{{(int)TemplateParameter.ProcessName}}}] ";
             expected       += $"[Thread ({{{(int)TemplateParameter.ThreadId}}}): {{{(int)TemplateParameter.ThreadName}}}] ";
-            expected       += $"{{{(int)TemplateParameter.Message}}}";
+            expected       += $"[User: {{{(int)TemplateParameter.Context}}}] {{{(int)TemplateParameter.Message}}}";
 
-            TemplateBuilder actual = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] {msg}");
+            TemplateBuilder actual = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] [User: {cxt}] {msg}");
             Assert.AreEqual(expected, actual._format);
         }
 
@@ -162,9 +194,10 @@ namespace Sweetener.Logging.Test
             string expected = $"[Year: {{{(int)TemplateParameter.Timestamp}:yyyy}}] ";
             expected       += $"[Month: {{{(int)TemplateParameter.Timestamp}:MM}}] ";
             expected       += $"[Day: {{{(int)TemplateParameter.Timestamp}:dd}}] ";
+            expected       += $"[Session: {{{(int)TemplateParameter.Context}}}] ";
             expected       += $"***{{{(int)TemplateParameter.Level}:F}}*** {{{(int)TemplateParameter.Message}}} ***{{{(int)TemplateParameter.Level}:F}}***";
 
-            TemplateBuilder actual = new TemplateBuilder("[Year: {ts:yyyy}] [Month: {ts:MM}] [Day: {ts:dd}] ***{l:F}*** {msg} ***{l:F}***");
+            TemplateBuilder actual = new TemplateBuilder("[Year: {ts:yyyy}] [Month: {ts:MM}] [Day: {ts:dd}] [Session: {cxt}] ***{l:F}*** {msg} ***{l:F}***");
             Assert.AreEqual(expected, actual._format);
         }
 
@@ -174,13 +207,15 @@ namespace Sweetener.Logging.Test
             IFormatProvider provider = CultureInfo.InvariantCulture;
             LogLevel[]      levels   = (LogLevel[])Enum.GetValues(typeof(LogLevel));
             DateTime        dateTime = DateTime.UtcNow;
-            ThreadPool.SetMinThreads(levels.Length, levels.Length);
+            Guid            userId   = Guid.NewGuid();
 
+            ThreadPool.SetMinThreads(levels.Length, levels.Length);
             Process currentProcess = Process.GetCurrentProcess();
             int     pid = currentProcess.Id;
             string  pn  = currentProcess.ProcessName;
 
-            ILogEntryTemplate template = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] {msg}").Build();
+            ILogEntryTemplate       template1 = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] {msg}"                ).Build();
+            ILogEntryTemplate<Guid> template2 = new TemplateBuilder("[{ts:yyyy-MM-ddTHH:mm:ss}] [{l,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] [User: {cxt:D}] {msg}").Build<Guid>();
             Task[] tasks = new Task[levels.Length];
 
             for (int i = 0; i < levels.Length; i++)
@@ -200,8 +235,16 @@ namespace Sweetener.Logging.Test
                         tn = currentThread.Name;
                     }
 
-                    string expected = $"[{dateTime:yyyy-MM-ddTHH:mm:ss}] [{level,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] success";
-                    string actual   = template.Format(provider, new LogEntry(dateTime, level, "success"));
+                    string expected, actual;
+
+                    // No Context
+                    expected = $"[{dateTime:yyyy-MM-ddTHH:mm:ss}] [{level,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] success";
+                    actual   = template1.Format(provider, new LogEntry(dateTime, level, "success"));
+                    Assert.AreEqual(expected, actual);
+
+                    // With Context
+                    expected = $"[{dateTime:yyyy-MM-ddTHH:mm:ss}] [{level,-5:F}] [Process ({pid}): {pn}] [Thread ({tid}): {tn}] [User: {userId:D}] success";
+                    actual   = template2.Format(provider, new LogEntry<Guid>(dateTime, level, userId, "success"));
                     Assert.AreEqual(expected, actual);
                 });
             }
@@ -212,12 +255,22 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void FormatEscapedFormatItem()
         {
+            string expected, actual;
             IFormatProvider provider = CultureInfo.InvariantCulture;
 
-            string expected = $"#Debug# @ {Process.GetCurrentProcess().ProcessName} >> Foo Bar {{Baz}}!";
-            string actual   = new TemplateBuilder("#{level:F}# @ {pn} >> {msg}")
+            // No Context
+            expected = $"#Debug# @ {Process.GetCurrentProcess().ProcessName} >> Foo Bar {{Baz}}!";
+            actual   = new TemplateBuilder("#{level:F}# @ {pn} >> {msg}")
                 .Build()
                 .Format(provider, new LogEntry(LogLevel.Debug, "Foo Bar {Baz}!"));
+
+            Assert.AreEqual(expected, actual);
+
+            // With Context
+            expected = $"#Debug# @ {Process.GetCurrentProcess().ProcessName} {{Braces}} >> Foo Bar {{Baz}}!";
+            actual   = new TemplateBuilder("#{level:F}# @ {pn} {cxt} >> {msg}")
+                .Build<string>()
+                .Format(provider, new LogEntry<string>(LogLevel.Debug, "{Braces}", "Foo Bar {Baz}!"));
 
             Assert.AreEqual(expected, actual);
         }
@@ -231,10 +284,21 @@ namespace Sweetener.Logging.Test
 
             // Pretend the thread id is a currency for some interesting formatting changes
             // The "d" format string for DateTime is also impacted by the culture
-            string expected = string.Format(frFR, "{0:C} {1:d} Bonjour de France", tid, dateTime);
-            string actual   = new TemplateBuilder("{tid:C} {ts:d} {msg}")
+            string expected, actual;
+
+            // No Context
+            expected = string.Format(frFR, "{0:C} {1:d} Bonjour de France", tid, dateTime);
+            actual   = new TemplateBuilder("{tid:C} {ts:d} {msg}")
                 .Build()
                 .Format(frFR, new LogEntry(dateTime, LogLevel.Error, "Bonjour de France"));
+
+            Assert.AreEqual(expected, actual);
+
+            // With Context
+            expected = string.Format(frFR, "{0:C} {1:d} {2:P} Bonjour de France", tid, dateTime, 3.14D);
+            actual   = new TemplateBuilder("{tid:C} {ts:d} {cxt:P} {msg}")
+                .Build<double>()
+                .Format(frFR, new LogEntry<double>(dateTime, LogLevel.Error, 3.14D, "Bonjour de France"));
 
             Assert.AreEqual(expected, actual);
         }

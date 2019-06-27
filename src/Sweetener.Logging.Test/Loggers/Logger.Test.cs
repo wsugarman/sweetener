@@ -66,52 +66,52 @@ namespace Sweetener.Logging.Test
             logger.Dispose();
 
             // Trace
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0"                                  ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("{0}"                 , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("{0} {1}"             , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("{0} {1} {2}"         , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("{0} {1} {2} {3}"     , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("{0} {1} {2} {3}, {4}", 1, 2, 3, 4, 5));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0"                                   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0}"                , 1            ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1}"            , 1, 2         ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1} {2}"        , 1, 2, 3      ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
 
             // Debug
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0"                                  ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("{0}"                 , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("{0} {1}"             , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("{0} {1} {2}"         , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("{0} {1} {2} {3}"     , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("{0} {1} {2} {3}, {4}", 1, 2, 3, 4, 5));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0"                                   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0}"                , 1            ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1}"            , 1, 2         ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1} {2}"        , 1, 2, 3      ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
 
             // Info
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0"                                  ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("{0}"                 , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("{0} {1}"             , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("{0} {1} {2}"         , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("{0} {1} {2} {3}"     , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("{0} {1} {2} {3}, {4}", 1, 2, 3, 4, 5));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0"                                   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0}"                , 1            ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1}"            , 1, 2         ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1} {2}"        , 1, 2, 3      ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
 
             // Warn
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0"                                  ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("{0}"                 , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("{0} {1}"             , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("{0} {1} {2}"         , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("{0} {1} {2} {3}"     , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("{0} {1} {2} {3}, {4}", 1, 2, 3, 4, 5));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0"                                   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0}"                , 1            ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1}"            , 1, 2         ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1} {2}"        , 1, 2, 3      ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
 
             // Error
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0"                                  ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("{0}"                 , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("{0} {1}"             , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("{0} {1} {2}"         , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("{0} {1} {2} {3}"     , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("{0} {1} {2} {3}, {4}", 1, 2, 3, 4, 5));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0"                                   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0}"                , 1            ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1}"            , 1, 2         ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1} {2}"        , 1, 2, 3      ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
 
             // Fatal
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0"                                  ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("{0}"                 , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("{0} {1}"             , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("{0} {1} {2}"         , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("{0} {1} {2} {3}"     , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("{0} {1} {2} {3}, {4}", 1, 2, 3, 4, 5));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0"                                   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0}"                , 1            ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1}"            , 1, 2         ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1} {2}"        , 1, 2, 3      ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
+            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
         }
 
         [TestMethod]
