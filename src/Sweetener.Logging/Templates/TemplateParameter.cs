@@ -6,12 +6,13 @@ namespace Sweetener.Logging
     internal enum TemplateParameter
     {
         Message     = 0,
-        Timestamp   = 1,
-        Level       = 2,
-        ProcessId   = 3,
-        ProcessName = 4,
-        ThreadId    = 5,
-        ThreadName  = 6,
+        Context     = 1,
+        Timestamp   = 2,
+        Level       = 3,
+        ProcessId   = 4,
+        ProcessName = 5,
+        ThreadId    = 6,
+        ThreadName  = 7,
     }
 
     internal static class TemplateParameterName
@@ -31,6 +32,9 @@ namespace Sweetener.Logging
                 case "msg":
                 case "message":
                     return TemplateParameter.Message;
+                case "cxt":
+                case "context":
+                    return TemplateParameter.Context;
                 case "ts":
                 case "timestamp":
                     return TemplateParameter.Timestamp;

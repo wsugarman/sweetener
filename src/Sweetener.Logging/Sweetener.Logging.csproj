@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ContextualLoggers\Logger{T}.Format.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Logger{T}.Format.cs</LastGenOutput>
+    </None>
     <None Update="Loggers\Logger.Format.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Logger.Format.cs</LastGenOutput>
@@ -26,6 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="ContextualLoggers\Logger{T}.Format.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Logger{T}.Format.tt</DependentUpon>
+    </Compile>
     <Compile Update="Loggers\Logger.Format.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

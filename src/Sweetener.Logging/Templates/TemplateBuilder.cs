@@ -6,27 +6,16 @@ using System.Text;
 
 namespace Sweetener.Logging
 {
-    internal class TemplateBuilder
+    internal partial class TemplateBuilder
     {
-        protected internal readonly string _template;
         protected internal readonly string _format;
+        protected internal readonly string _template;
         protected readonly Dictionary<TemplateParameter, int> _indices = new Dictionary<TemplateParameter, int>();
 
         public TemplateBuilder(string template)
         {
             _format   = ParseTemplate(template);
             _template = template;
-        }
-
-        public virtual ILogEntryTemplate Build()
-        {
-            if (!_indices.ContainsKey(TemplateParameter.Message))
-                throw new InvalidOperationException("Template is missing required 'msg' or 'message' parameter");
-
-            // The use of an interface will force the template (a struct) to box, but
-            // it will provide a hook for polymorphism and further cement the relationship
-            // between the builder and the template itself
-            return new LogEntryTemplate(_template, _format);
         }
 
         protected virtual int GetIndex(TemplateParameter parameter)
@@ -209,43 +198,6 @@ namespace Sweetener.Logging
             }
 
             return null;
-        }
-
-        private readonly struct LogEntryTemplate : ILogEntryTemplate
-        {
-            private readonly string _format;
-            private readonly string _template;
-
-            private static readonly Process s_currentProcess = Process.GetCurrentProcess();
-
-            public LogEntryTemplate(string template, string format)
-            {
-                // TODO: While the originalTemplate is really bloat in production, it is
-                //       very helpful to have when debugging and for unit testing.
-                //       That said, is there a better mechanism that doesn't involve
-                //       different code between debug/release configuration?
-                _format   = format;
-                _template = template;
-            }
-
-            public string Format(IFormatProvider provider, LogEntry logEntry)
-            {
-                // TODO: It seems silly to use the object[] override here when we avoid the
-                //       object[] allocation in the ILogger interface. We should figure out
-                //       how to avoid this allocation too if possible.
-                // TODO: Can probably replace the process parameters with real values now
-                return string.Format(provider, _format,
-                    logEntry.Message,              // {0} - Message
-                    logEntry.Timestamp,            // {1} - Timestamp
-                    logEntry.Level,                // {2} - LogLevel
-                    s_currentProcess.Id,           // {3} - Process Id
-                    s_currentProcess.ProcessName,  // {4} - Process Name
-                    logEntry.ThreadId,             // {5} - Thread Id
-                    logEntry.ThreadName);          // {6} - Thread Name
-            }
-
-            public override string ToString()
-                => _template;
         }
     }
 }

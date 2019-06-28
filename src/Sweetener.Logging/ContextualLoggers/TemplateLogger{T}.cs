@@ -3,17 +3,17 @@
 namespace Sweetener.Logging
 {
     /// <summary>
-    /// A <see cref="Logger"/> whose messages are enriched with contextual information
-    /// through the use of user-defined message templates.
+    /// A <see cref="Logger{T}"/> whose messages are enriched with both standard and
+    /// domain-specific contextual information through the use of user-defined message templates.
     /// </summary>
-    public abstract class TemplateLogger : Logger
+    public abstract class TemplateLogger<T> : Logger<T>
     {
-        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {msg}";
+        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {cxt} {msg}";
 
-        internal readonly ILogEntryTemplate _template;
+        internal readonly ILogEntryTemplate<T> _template;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// Initializes a new instance of the <see cref="TemplateLogger{T}"/> class for the
         /// current culture that fulfills all logging requests using a default template.
         /// </summary>
         protected TemplateLogger()
@@ -21,7 +21,7 @@ namespace Sweetener.Logging
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// Initializes a new instance of the <see cref="TemplateLogger{T}"/> class for the
         /// current culture that fulfills all logging requests above a specified minimum
         /// <see cref="LogLevel"/> using a default template.
         /// </summary>
@@ -32,7 +32,7 @@ namespace Sweetener.Logging
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// Initializes a new instance of the <see cref="TemplateLogger{T}"/> class for the
         /// current culture that fulfills all logging requests above a specified minimum
         /// <see cref="LogLevel"/> using a custom template.
         /// </summary>
@@ -46,7 +46,7 @@ namespace Sweetener.Logging
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for a
+        /// Initializes a new instance of the <see cref="TemplateLogger{T}"/> class for a
         /// particular culture that fulfills all logging requests above a specified minimum
         /// <see cref="LogLevel"/> using a custom template.
         /// </summary>
@@ -63,14 +63,14 @@ namespace Sweetener.Logging
             : base(minLevel, formatProvider)
         {
             TemplateBuilder templateBuilder = new TemplateBuilder(template);
-            _template = templateBuilder.Build();
+            _template = templateBuilder.Build<T>();
         }
 
         /// <summary>
         /// Logs the specified entry.
         /// </summary>
         /// <param name="logEntry">A log entry which consists of the message and its context.</param>
-        protected internal override void Log(LogEntry logEntry)
+        protected internal override void Log(LogEntry<T> logEntry)
             => WriteLine(_template.Format(FormatProvider, logEntry));
 
         /// <summary>
