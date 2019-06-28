@@ -11,6 +11,11 @@ namespace Sweetener.Logging
     public abstract partial class Logger<T> : IDisposable
     {
         /// <summary>
+        /// A <see cref="Logger{T}"/> with no backing store for its entries.
+        /// </summary>
+        public static readonly Logger<T> Null = new NullLogger<T>();
+
+        /// <summary>
         /// Gets an object that controls formatting. 
         /// </summary>
         public IFormatProvider FormatProvider { get; }

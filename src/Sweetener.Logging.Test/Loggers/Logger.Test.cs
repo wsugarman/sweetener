@@ -36,6 +36,15 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
+        public void Null()
+        {
+            Logger logger = Logger.Null;
+
+            Assert.IsNotNull(logger);
+            Assert.AreEqual(typeof(NullLogger), logger.GetType());
+        }
+
+        [TestMethod]
         public void IsSynchronized()
         {
             Assert.IsFalse(new MemoryLogger(                                           ).IsSynchronized);
