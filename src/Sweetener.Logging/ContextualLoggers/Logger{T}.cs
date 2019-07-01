@@ -7,7 +7,7 @@ namespace Sweetener.Logging
     /// Represents a client that can log messages with some domain-specific context
     /// for given <see cref="LogLevel"/> based on their purpose or severity.
     /// </summary>
-    /// <typeparam name="T">The type of context for each message.</typeparam>
+    /// <typeparam name="T">The type of the domain-specific context.</typeparam>
     public abstract partial class Logger<T> : IDisposable
     {
         /// <summary>
@@ -52,7 +52,11 @@ namespace Sweetener.Logging
         /// </value>
         public virtual object SyncRoot => this;
 
-        private bool _disposed = false;
+        /// <summary>
+        /// Gets a value indicating whether the <see cref="Logger"/> has been disposed.
+        /// </summary>
+        /// <value><see langword="true"/> if the logger has been disposed; otherwise, <see langword="false"/>.</value>
+        protected bool IsDisposed { get; private set; } = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger{T}"/> class for the current
@@ -139,8 +143,8 @@ namespace Sweetener.Logging
             // In the base class, this flag is used to short-circuit calls before Log(...)
             // We don't want method calls on disabled loggers to skip throwing exceptions
             // because the log request was below the minimum log level!
-            if (!_disposed)
-                _disposed = true;
+            if (!IsDisposed)
+                IsDisposed = true;
         }
 
         /// <summary>
@@ -151,7 +155,7 @@ namespace Sweetener.Logging
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (IsDisposed)
                 ThrowObjectDisposedException();
 
             void ThrowObjectDisposedException() => throw new ObjectDisposedException(GetType().Name, "Cannot log with a disposed logger.");

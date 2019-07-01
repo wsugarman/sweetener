@@ -6,6 +6,7 @@ namespace Sweetener.Logging
     /// A <see cref="Logger{T}"/> whose messages are enriched with both standard and
     /// domain-specific contextual information through the use of user-defined message templates.
     /// </summary>
+    /// <typeparam name="T">The type of the domain-specific context.</typeparam>
     public abstract class TemplateLogger<T> : Logger<T>
     {
         internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {cxt} {msg}";
@@ -74,10 +75,9 @@ namespace Sweetener.Logging
             => WriteLine(_template.Format(FormatProvider, logEntry));
 
         /// <summary>
-        /// Writes the message to the log.
+        /// Writes the <paramref name="message"/> to the log.
         /// </summary>
-        /// <param name="message">The value to be logged.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
+        /// <param name="message">The value to be written.</param>
         protected abstract void WriteLine(string message);
     }
 }
