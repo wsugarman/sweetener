@@ -1,38 +1,35 @@
 ﻿using System;
+using System.IO;
 
 namespace Sweetener.Logging
 {
     /// <summary>
-    /// A <see cref="Logger"/> whose messages are enriched with contextual information
-    /// through the use of user-defined message templates.
+    /// A <see cref="Logger"/> that writes its entries to the console.
     /// </summary>
-    public abstract class TemplateLogger : Logger
+    /// <typeparam name="T">The type of the domain-specific context.</typeparam>
+    public class ConsoleLogger<T> : TemplateLogger<T>
     {
-        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {msg}";
-
-        internal readonly ILogEntryTemplate _template;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// Initializes a new instance of the <see cref="ConsoleLogger{T}"/> class for the
         /// current culture that fulfills all logging requests using a default template.
         /// </summary>
-        protected TemplateLogger()
-            : this(LogLevel.Trace)
+        public ConsoleLogger()
+            : base()
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// Initializes a new instance of the <see cref="ConsoleLogger{T}"/> class for the
         /// current culture that fulfills all logging requests above a specified minimum
         /// <see cref="LogLevel"/> using a default template.
         /// </summary>
         /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
-        protected TemplateLogger(LogLevel minLevel)
-            : this(minLevel, DefaultTemplate)
+        public ConsoleLogger(LogLevel minLevel)
+            : base(minLevel)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
+        /// Initializes a new instance of the <see cref="ConsoleLogger{T}"/> class for the
         /// current culture that fulfills all logging requests above a specified minimum
         /// <see cref="LogLevel"/> using a custom template.
         /// </summary>
@@ -41,12 +38,12 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="template"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
         /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
-        protected TemplateLogger(LogLevel minLevel, string template)
-            : this(minLevel, null, template)
+        public ConsoleLogger(LogLevel minLevel, string template)
+            : base(minLevel, template)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateLogger"/> class for a
+        /// Initializes a new instance of the <see cref="ConsoleLogger{T}"/> class for a
         /// particular culture that fulfills all logging requests above a specified minimum
         /// <see cref="LogLevel"/> using a custom template.
         /// </summary>
@@ -59,24 +56,34 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException"><paramref name="template"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
         /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
-        protected TemplateLogger(LogLevel minLevel, IFormatProvider formatProvider, string template)
-            : base(minLevel, formatProvider)
+        public ConsoleLogger(LogLevel minLevel, IFormatProvider formatProvider, string template)
+            : base(minLevel, formatProvider, template)
+        { }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ConsoleLogger{T}"/> and
+        /// optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">
+        /// <see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/>
+        /// to release only unmanaged resources.
+        /// </param>
+        protected override void Dispose(bool disposing)
         {
-            TemplateBuilder templateBuilder = new TemplateBuilder(template);
-            _template = templateBuilder.Build();
+            if (!IsDisposed)
+                Console.Out.Flush();
+
+            base.Dispose(disposing);
         }
 
-        /// <summary>
-        /// Logs the specified entry.
-        /// </summary>
-        /// <param name="logEntry">A log entry which consists of the message and its context.</param>
-        protected internal override void Log(LogEntry logEntry)
-            => WriteLine(_template.Format(FormatProvider, logEntry));
+        // TODO: Should ConsoleLogger<T> override the logging methods to update the possible exceptions?
 
         /// <summary>
-        /// Writes the <paramref name="message"/> to the log.
+        /// Writes the <paramref name="message"/> to the console.
         /// </summary>
         /// <param name="message">The value to be written.</param>
-        protected abstract void WriteLine(string message);
+        /// <exception cref="IOException">An I/O error occurred.</exception>
+        protected override void WriteLine(string message)
+            => Console.WriteLine(message);
     }
 }

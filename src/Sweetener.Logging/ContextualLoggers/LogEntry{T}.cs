@@ -6,7 +6,7 @@ namespace Sweetener.Logging
     /// <summary>
     /// An entry to be written to the log.
     /// </summary>
-    /// <typeparam name="T">The type of the context associated with the <see cref="Message"/>.</typeparam>
+    /// <typeparam name="T">The type of the domain-specific context.</typeparam>
     public readonly struct LogEntry<T>
     {
         /// <summary>
@@ -15,7 +15,7 @@ namespace Sweetener.Logging
         public readonly LogLevel Level;
 
         /// <summary>
-        /// The domain-specific information that provides additiional context about the <see cref="Message"/>.
+        /// The domain-specific information that provides additional context about the <see cref="Message"/>.
         /// </summary>
         public readonly T Context;
 
