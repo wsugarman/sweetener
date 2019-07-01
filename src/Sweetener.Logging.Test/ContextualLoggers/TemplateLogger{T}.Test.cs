@@ -50,10 +50,33 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void IsSynchronized()
         {
-            Assert.IsFalse(new MemoryTemplateLogger<int>(                                                           ).IsSynchronized);
-            Assert.IsFalse(new MemoryTemplateLogger<int>(LogLevel.Info                                              ).IsSynchronized);
-            Assert.IsFalse(new MemoryTemplateLogger<int>(LogLevel.Warn, "{cxt} {msg}"                               ).IsSynchronized);
-            Assert.IsFalse(new MemoryTemplateLogger<int>(LogLevel.Debug, CultureInfo.InvariantCulture, "{cxt} {msg}").IsSynchronized);
+            using (Logger<int> logger = new MemoryTemplateLogger<int>())
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Info))
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Warn, "{cxt} {msg}"))
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{cxt} {msg}"))
+                Assert.IsFalse(logger.IsSynchronized);
+        }
+
+        [TestMethod]
+        public void SyncRoot()
+        {
+            using (Logger<int> logger = new MemoryTemplateLogger<int>())
+                Assert.AreEqual(logger, logger.SyncRoot);
+
+            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Info))
+                Assert.AreEqual(logger, logger.SyncRoot);
+
+            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Warn, "{cxt} {msg}"))
+                Assert.AreEqual(logger, logger.SyncRoot);
+
+            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{cxt} {msg}"))
+                Assert.AreEqual(logger, logger.SyncRoot);
         }
 
         [TestMethod]

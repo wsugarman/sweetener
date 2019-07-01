@@ -38,34 +38,37 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void Null()
         {
-            Logger logger = Logger.Null;
-
-            Assert.IsNotNull(logger);
-            Assert.AreEqual(typeof(NullLogger), logger.GetType());
+            using (Logger logger = Logger.Null)
+            {
+                Assert.IsNotNull(logger);
+                Assert.AreEqual(typeof(NullLogger), logger.GetType());
+            }
         }
 
         [TestMethod]
         public void IsSynchronized()
         {
-            Assert.IsFalse(new MemoryLogger(                                           ).IsSynchronized);
-            Assert.IsFalse(new MemoryLogger(LogLevel.Info                              ).IsSynchronized);
-            Assert.IsFalse(new MemoryLogger(LogLevel.Warn, CultureInfo.InvariantCulture).IsSynchronized);
+            using (Logger logger = new MemoryLogger())
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger logger = new MemoryLogger(LogLevel.Info))
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger logger = new MemoryLogger(LogLevel.Warn, CultureInfo.GetCultureInfo("es-ES")))
+                Assert.IsFalse(logger.IsSynchronized);
         }
 
         [TestMethod]
         public void SyncRoot()
         {
-            Logger logger0 = new MemoryLogger();
-            Logger logger1 = new MemoryLogger(LogLevel.Info);
-            Logger logger2 = new MemoryLogger(LogLevel.Warn, CultureInfo.GetCultureInfo("es-ES"));
+            using (Logger logger = new MemoryLogger())
+                Assert.AreEqual(logger, logger.SyncRoot);
 
-            Assert.IsNotNull(logger0.SyncRoot);
-            Assert.IsNotNull(logger1.SyncRoot);
-            Assert.IsNotNull(logger2.SyncRoot);
+            using (Logger logger = new MemoryLogger(LogLevel.Info))
+                Assert.AreEqual(logger, logger.SyncRoot);
 
-            Assert.AreEqual(typeof(object), logger0.SyncRoot.GetType());
-            Assert.AreEqual(typeof(object), logger1.SyncRoot.GetType());
-            Assert.AreEqual(typeof(object), logger2.SyncRoot.GetType());
+            using (Logger logger = new MemoryLogger(LogLevel.Warn, CultureInfo.GetCultureInfo("es-ES")))
+                Assert.AreEqual(logger, logger.SyncRoot);
         }
 
         [TestMethod]

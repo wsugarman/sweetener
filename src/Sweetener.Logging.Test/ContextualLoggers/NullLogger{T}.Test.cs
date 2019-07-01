@@ -20,7 +20,15 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void IsSynchronized()
         {
-            Assert.IsTrue(new NullLogger<DateTime>().IsSynchronized);
+            using (Logger<DateTime> logger = new NullLogger<DateTime>())
+                Assert.IsTrue(logger.IsSynchronized);
+        }
+
+        [TestMethod]
+        public void SyncRoot()
+        {
+            using (Logger<short> logger = new NullLogger<short>())
+                Assert.AreEqual(logger, logger.SyncRoot);
         }
 
         [TestMethod]
