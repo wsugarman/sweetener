@@ -50,10 +50,33 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void IsSynchronized()
         {
-            Assert.IsFalse(new MemoryTemplateLogger(                                                     ).IsSynchronized);
-            Assert.IsFalse(new MemoryTemplateLogger(LogLevel.Info                                        ).IsSynchronized);
-            Assert.IsFalse(new MemoryTemplateLogger(LogLevel.Warn, "{msg}"                               ).IsSynchronized);
-            Assert.IsFalse(new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.InvariantCulture, "{msg}").IsSynchronized);
+            using (Logger logger = new MemoryTemplateLogger())
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger logger = new MemoryTemplateLogger(LogLevel.Info))
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger logger = new MemoryTemplateLogger(LogLevel.Warn, "{msg}"))
+                Assert.IsFalse(logger.IsSynchronized);
+
+            using (Logger logger = new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{msg}"))
+                Assert.IsFalse(logger.IsSynchronized);
+        }
+
+        [TestMethod]
+        public void SyncRoot()
+        {
+            using (Logger logger = new MemoryTemplateLogger())
+                Assert.AreEqual(logger, logger.SyncRoot);
+
+            using (Logger logger = new MemoryTemplateLogger(LogLevel.Info))
+                Assert.AreEqual(logger, logger.SyncRoot);
+
+            using (Logger logger = new MemoryTemplateLogger(LogLevel.Warn, "{msg}"))
+                Assert.AreEqual(logger, logger.SyncRoot);
+
+            using (Logger logger = new MemoryTemplateLogger(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{msg}"))
+                Assert.AreEqual(logger, logger.SyncRoot);
         }
 
         [TestMethod]

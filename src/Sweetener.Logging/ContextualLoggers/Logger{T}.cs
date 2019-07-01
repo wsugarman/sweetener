@@ -18,25 +18,39 @@ namespace Sweetener.Logging
         /// <summary>
         /// Gets an object that controls formatting. 
         /// </summary>
+        /// <value>
+        /// An <see cref="IFormatProvider"/> object for a specific culture, or the
+        /// formatting of the current culture if no other culture is specified.
+        /// </value>
         public IFormatProvider FormatProvider { get; }
 
         /// <summary>
         /// Gets a value indicating whether logging is synchronized (thread safe).
         /// </summary>
-        /// <returns><see langword="true"/> if logging is synchronized (thread safe); otherwise, <see langword="false"/>.</returns>
+        /// <value>
+        /// <see langword="true"/> if logging is synchronized (thread safe);
+        /// otherwise, <see langword="false"/>.
+        /// </value>
         public virtual bool IsSynchronized => false;
 
         /// <summary>
         /// Gets the minimum level of log requests that will be fulfilled.
         /// </summary>
-        /// <returns>The minimum <see cref="LogLevel"/> that will be fulfilled.</returns>
+        /// <value>
+        /// The minimum <see cref="LogLevel"/> that will be fulfilled by the <see cref="Logger{T}"/>;
+        /// any log request with a <see cref="LogLevel"/> below the minimum will be ignored.
+        /// </value>
         public LogLevel MinLevel { get; }
 
         /// <summary>
-        /// Gets an object that can be used to synchronize logging.
+        /// Gets an object that can be used to synchronize access to the <see cref="Logger{T}"/>.
         /// </summary>
-        /// <returns>An object that can be used to synchronize logging.</returns>
-        public object SyncRoot { get; } = new object();
+        /// <value>
+        /// An object that can be used to synchronize access to the <see cref="Logger{T}"/>.
+        /// In the default implementation of <see cref="Logger{T}"/>, this property always
+        /// returns the current instance.
+        /// </value>
+        public virtual object SyncRoot => this;
 
         private bool _disposed = false;
 
@@ -122,8 +136,8 @@ namespace Sweetener.Logging
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
-            // In the base class, this flag is used to short circuit calls before Log(...)
-            // We don't want method calls on disabled loggers to not throw exceptions
+            // In the base class, this flag is used to short-circuit calls before Log(...)
+            // We don't want method calls on disabled loggers to skip throwing exceptions
             // because the log request was below the minimum log level!
             if (!_disposed)
                 _disposed = true;
