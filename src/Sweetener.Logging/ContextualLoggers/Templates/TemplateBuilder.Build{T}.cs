@@ -8,10 +8,10 @@ namespace Sweetener.Logging
         public virtual ILogEntryTemplate<T> Build<T>()
         {
             if (!_indices.ContainsKey(TemplateParameter.Context))
-                throw new InvalidOperationException("Template is missing required 'cxt' or 'context' parameter");
+                throw new FormatException("Template is missing required 'cxt' or 'context' parameter");
 
             if (!_indices.ContainsKey(TemplateParameter.Message))
-                throw new InvalidOperationException("Template is missing required 'msg' or 'message' parameter");
+                throw new FormatException("Template is missing required 'msg' or 'message' parameter");
 
             return new LogEntryTemplate<T>(_template, _format);
         }

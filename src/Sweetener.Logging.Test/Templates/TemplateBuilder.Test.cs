@@ -77,21 +77,21 @@ namespace Sweetener.Logging.Test
             #region Build()
 
             // Missing "msg" or "message"
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{ts}" ).Build());
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{ts}" ).Build());
 
             // Unexpected "cxt" or "context"
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{cxt}"    ).Build());
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{context}").Build());
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{cxt}"    ).Build());
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{context}").Build());
 
             #endregion
 
             #region Build<T>()
 
             // Missing "cxt" or "context"
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{msg}").Build<Guid>());
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{msg}").Build<Guid>());
 
             // Missing "msg" or "message"
-            Assert.ThrowsException<InvalidOperationException>(() => new TemplateBuilder("{cxt}").Build<Guid>());
+            Assert.ThrowsException<FormatException>(() => new TemplateBuilder("{cxt}").Build<Guid>());
 
             #endregion
         }

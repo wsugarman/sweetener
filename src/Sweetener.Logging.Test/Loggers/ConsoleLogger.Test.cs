@@ -21,31 +21,31 @@ namespace Sweetener.Logging.Test
             // Constructor Overloads
             using (ConsoleLogger logger = new ConsoleLogger())
             {
-                Assert.AreEqual(LogLevel.Trace                , logger.MinLevel            );
-                Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider      );
-                Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
+                Assert.AreEqual(LogLevel.Trace                , logger.MinLevel           );
+                Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider     );
+                Assert.AreEqual(TemplateLogger.DefaultTemplate, logger.Template.ToString());
             }
 
             using (ConsoleLogger logger = new ConsoleLogger(LogLevel.Warn))
             {
-                Assert.AreEqual(LogLevel.Warn                 , logger.MinLevel            );
-                Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider      );
-                Assert.AreEqual(TemplateLogger.DefaultTemplate, logger._template.ToString());
+                Assert.AreEqual(LogLevel.Warn                 , logger.MinLevel           );
+                Assert.AreEqual(CultureInfo.CurrentCulture    , logger.FormatProvider     );
+                Assert.AreEqual(TemplateLogger.DefaultTemplate, logger.Template.ToString());
             }
 
             using (ConsoleLogger logger = new ConsoleLogger(LogLevel.Info, "<{pn}|{pid}> - {msg}"))
             {
-                Assert.AreEqual(LogLevel.Info             , logger.MinLevel            );
-                Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider      );
-                Assert.AreEqual("<{pn}|{pid}> - {msg}"    , logger._template.ToString());
+                Assert.AreEqual(LogLevel.Info             , logger.MinLevel           );
+                Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider     );
+                Assert.AreEqual("<{pn}|{pid}> - {msg}"    , logger.Template.ToString());
             }
 
             CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
             using (ConsoleLogger logger = new ConsoleLogger(LogLevel.Error, esES, "[{tid}] {msg}"))
             {
-                Assert.AreEqual(LogLevel.Error , logger.MinLevel            );
-                Assert.AreEqual(esES           , logger.FormatProvider      );
-                Assert.AreEqual("[{tid}] {msg}", logger._template.ToString());
+                Assert.AreEqual(LogLevel.Error , logger.MinLevel           );
+                Assert.AreEqual(esES           , logger.FormatProvider     );
+                Assert.AreEqual("[{tid}] {msg}", logger.Template.ToString());
             }
         }
 

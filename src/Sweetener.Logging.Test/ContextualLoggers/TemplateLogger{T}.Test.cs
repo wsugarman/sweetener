@@ -19,31 +19,31 @@ namespace Sweetener.Logging.Test
             // Constructor Overloads
             using (TemplateLogger<byte> logger = new MemoryTemplateLogger<byte>())
             {
-                Assert.AreEqual(LogLevel.Trace                      , logger.MinLevel            );
-                Assert.AreEqual(CultureInfo.CurrentCulture          , logger.FormatProvider      );
-                Assert.AreEqual(TemplateLogger<byte>.DefaultTemplate, logger._template.ToString());
+                Assert.AreEqual(LogLevel.Trace                      , logger.MinLevel           );
+                Assert.AreEqual(CultureInfo.CurrentCulture          , logger.FormatProvider     );
+                Assert.AreEqual(TemplateLogger<byte>.DefaultTemplate, logger.Template.ToString());
             }
 
             using (TemplateLogger<string> logger = new MemoryTemplateLogger<string>(LogLevel.Warn))
             {
-                Assert.AreEqual(LogLevel.Warn                         , logger.MinLevel            );
-                Assert.AreEqual(CultureInfo.CurrentCulture            , logger.FormatProvider      );
-                Assert.AreEqual(TemplateLogger<string>.DefaultTemplate, logger._template.ToString());
+                Assert.AreEqual(LogLevel.Warn                         , logger.MinLevel           );
+                Assert.AreEqual(CultureInfo.CurrentCulture            , logger.FormatProvider     );
+                Assert.AreEqual(TemplateLogger<string>.DefaultTemplate, logger.Template.ToString());
             }
 
             using (TemplateLogger<Guid> logger = new MemoryTemplateLogger<Guid>(LogLevel.Info, "<{pn}|{pid}> - {msg} {cxt}"))
             {
-                Assert.AreEqual(LogLevel.Info               , logger.MinLevel            );
-                Assert.AreEqual(CultureInfo.CurrentCulture  , logger.FormatProvider      );
-                Assert.AreEqual("<{pn}|{pid}> - {msg} {cxt}", logger._template.ToString());
+                Assert.AreEqual(LogLevel.Info               , logger.MinLevel           );
+                Assert.AreEqual(CultureInfo.CurrentCulture  , logger.FormatProvider     );
+                Assert.AreEqual("<{pn}|{pid}> - {msg} {cxt}", logger.Template.ToString());
             }
 
             CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
             using (TemplateLogger<TimeSpan> logger = new MemoryTemplateLogger<TimeSpan>(LogLevel.Error, esES, "[{tid}] {cxt} {msg}"))
             {
-                Assert.AreEqual(LogLevel.Error       , logger.MinLevel            );
-                Assert.AreEqual(esES                 , logger.FormatProvider      );
-                Assert.AreEqual("[{tid}] {cxt} {msg}", logger._template.ToString());
+                Assert.AreEqual(LogLevel.Error       , logger.MinLevel           );
+                Assert.AreEqual(esES                 , logger.FormatProvider     );
+                Assert.AreEqual("[{tid}] {cxt} {msg}", logger.Template.ToString());
             }
         }
 
