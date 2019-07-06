@@ -7,11 +7,14 @@ namespace Sweetener.Logging
     {
         public virtual ILogEntryTemplate Build()
         {
+            // While InvalidOperationException may be more semantically appropriate,
+            // FormatException makes more sense to callers of the ctor for TemplateLogger 
+            // and its various derived classes.
             if (_indices.ContainsKey(TemplateParameter.Context))
-                throw new InvalidOperationException("Template cannot contain 'cxt' or 'context' parameter");
+                throw new FormatException("Template cannot contain 'cxt' or 'context' parameter");
 
             if (!_indices.ContainsKey(TemplateParameter.Message))
-                throw new InvalidOperationException("Template is missing required 'msg' or 'message' parameter");
+                throw new FormatException("Template is missing required 'msg' or 'message' parameter");
 
             // The use of an interface will force the template (a struct) to box, but
             // it will provide a hook for polymorphism and further cement the relationship

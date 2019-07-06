@@ -134,8 +134,8 @@ namespace Sweetener.Logging
         /// </para>
         /// </remarks>
         /// <param name="disposing">
-        /// <see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/>
-        /// to release only unmanaged resources.
+        /// <see langword="true"/> to release both managed and unmanaged resources;
+        /// <see langword="false"/> to release only unmanaged resources.
         /// </param>
         protected virtual void Dispose(bool disposing)
         {

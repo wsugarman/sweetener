@@ -8,9 +8,9 @@ namespace Sweetener.Logging
     /// </summary>
     public abstract class TemplateLogger : Logger
     {
-        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {msg}";
+        internal ILogEntryTemplate Template { get; }
 
-        internal readonly ILogEntryTemplate _template;
+        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {msg}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TemplateLogger"/> class for the
@@ -63,7 +63,7 @@ namespace Sweetener.Logging
             : base(minLevel, formatProvider)
         {
             TemplateBuilder templateBuilder = new TemplateBuilder(template);
-            _template = templateBuilder.Build();
+            Template = templateBuilder.Build();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Sweetener.Logging
         /// </summary>
         /// <param name="logEntry">A log entry which consists of the message and its context.</param>
         protected internal override void Log(LogEntry logEntry)
-            => WriteLine(_template.Format(FormatProvider, logEntry));
+            => WriteLine(Template.Format(FormatProvider, logEntry));
 
         /// <summary>
         /// Writes the <paramref name="message"/> to the log.

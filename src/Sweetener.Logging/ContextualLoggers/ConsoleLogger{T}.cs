@@ -71,9 +71,17 @@ namespace Sweetener.Logging
         protected override void Dispose(bool disposing)
         {
             if (!IsDisposed)
-                Console.Out.Flush();
-
-            base.Dispose(disposing);
+            {
+                try
+                {
+                    if (disposing)
+                        Console.Out.Flush();
+                }
+                finally
+                {
+                    base.Dispose(disposing);
+                }
+            }
         }
 
         // TODO: Should ConsoleLogger<T> override the logging methods to update the possible exceptions?

@@ -72,7 +72,7 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
-        public void LogThrowIfDisposed()
+        public void ThrowObjectDisposedException()
         {
             Logger logger = new MemoryLogger();
             logger.Dispose();

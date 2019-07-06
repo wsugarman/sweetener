@@ -9,9 +9,9 @@ namespace Sweetener.Logging
     /// <typeparam name="T">The type of the domain-specific context.</typeparam>
     public abstract class TemplateLogger<T> : Logger<T>
     {
-        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {cxt} {msg}";
+        internal ILogEntryTemplate<T> Template { get; }
 
-        internal readonly ILogEntryTemplate<T> _template;
+        internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {cxt} {msg}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TemplateLogger{T}"/> class for the
@@ -64,7 +64,7 @@ namespace Sweetener.Logging
             : base(minLevel, formatProvider)
         {
             TemplateBuilder templateBuilder = new TemplateBuilder(template);
-            _template = templateBuilder.Build<T>();
+            Template = templateBuilder.Build<T>();
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Sweetener.Logging
         /// </summary>
         /// <param name="logEntry">A log entry which consists of the message and its context.</param>
         protected internal override void Log(LogEntry<T> logEntry)
-            => WriteLine(_template.Format(FormatProvider, logEntry));
+            => WriteLine(Template.Format(FormatProvider, logEntry));
 
         /// <summary>
         /// Writes the <paramref name="message"/> to the log.
