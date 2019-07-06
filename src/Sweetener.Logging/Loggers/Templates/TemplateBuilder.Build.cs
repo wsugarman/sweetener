@@ -7,6 +7,9 @@ namespace Sweetener.Logging
     {
         public virtual ILogEntryTemplate Build()
         {
+            // While InvalidOperationException may be more semantically appropriate,
+            // FormatException makes more sense to callers of the ctor for TemplateLogger 
+            // and its various derived classes.
             if (_indices.ContainsKey(TemplateParameter.Context))
                 throw new FormatException("Template cannot contain 'cxt' or 'context' parameter");
 

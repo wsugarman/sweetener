@@ -136,10 +136,10 @@ namespace Sweetener.Logging.Test
                 LogLevel.Debug,
                 frFr,
                 ">> {cxt} {msg}",
-                Encoding.UTF8,
+                Encoding.UTF32,
                 2000,
                 true,
-                (stream) => new StreamLogger<int>(stream, LogLevel.Debug, frFr, ">> {cxt} {msg}", Encoding.UTF8, 2000, true));
+                (stream) => new StreamLogger<int>(stream, LogLevel.Debug, frFr, ">> {cxt} {msg}", Encoding.UTF32, 2000, true));
         }
 
         [TestMethod]
