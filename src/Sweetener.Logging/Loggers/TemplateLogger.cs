@@ -1,13 +1,32 @@
 ﻿using System;
+using System.Globalization;
 
 namespace Sweetener.Logging
 {
     /// <summary>
     /// A <see cref="Logger"/> whose messages are enriched with contextual information
-    /// through the use of user-defined message templates.
+    /// through the use of user-defined message templates. This class is abstract.
     /// </summary>
     public abstract class TemplateLogger : Logger
     {
+        /// <summary>
+        /// Gets an object that controls formatting. 
+        /// </summary>
+        /// <value>
+        /// An <see cref="IFormatProvider"/> object for a specific culture, or the
+        /// formatting of the current culture if no other culture is specified.
+        /// </value>
+        public override IFormatProvider FormatProvider { get; }
+
+        /// <summary>
+        /// Gets the minimum level of log requests that will be fulfilled.
+        /// </summary>
+        /// <value>
+        /// The minimum <see cref="LogLevel"/> that will be fulfilled by the <see cref="TemplateLogger"/>;
+        /// any log request with a <see cref="LogLevel"/> below the minimum will be ignored.
+        /// </value>
+        public override LogLevel MinLevel { get; }
+
         internal ILogEntryTemplate Template { get; }
 
         internal const string DefaultTemplate = "[{ts:O}] [{level:F}] {msg}";
@@ -60,23 +79,31 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
         /// <exception cref="FormatException">The <paramref name="template"/> is not formatted correctly.</exception>
         protected TemplateLogger(LogLevel minLevel, IFormatProvider formatProvider, string template)
-            : base(minLevel, formatProvider)
         {
-            TemplateBuilder templateBuilder = new TemplateBuilder(template);
-            Template = templateBuilder.Build();
+            if (minLevel < LogLevel.Trace || minLevel > LogLevel.Fatal)
+                throw new ArgumentOutOfRangeException(nameof(minLevel), $"Unknown {nameof(LogLevel)} value '{minLevel}'");
+
+            if (formatProvider == null)
+                formatProvider = CultureInfo.CurrentCulture;
+
+            FormatProvider = formatProvider;
+            MinLevel       = minLevel;
+            Template       = new TemplateBuilder(template).Build();
         }
 
         /// <summary>
-        /// Logs the specified entry.
+        /// Adds the entry to the log.
         /// </summary>
-        /// <param name="logEntry">A log entry which consists of the message and its context.</param>
-        protected internal override void Log(LogEntry logEntry)
+        /// <param name="logEntry">A <see cref="LogEntry"/> which consists of the message and its context.</param>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        protected override void Add(LogEntry logEntry)
             => WriteLine(Template.Format(FormatProvider, logEntry));
 
         /// <summary>
-        /// Writes the <paramref name="message"/> to the log.
+        /// When overridden in a derived class, writes the <paramref name="message"/> to the log.
         /// </summary>
         /// <param name="message">The value to be written.</param>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
         protected abstract void WriteLine(string message);
     }
 }

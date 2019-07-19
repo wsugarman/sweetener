@@ -1,27 +1,21 @@
 ﻿using System;
-using System.Globalization;
 
 namespace Sweetener.Logging 
 {
     /// <summary>
     /// Represents a client that can log messages for a given <see cref="LogLevel"/>
-    /// based on their purpose or severity.
+    /// based on their purpose or severity. This class is abstract.
     /// </summary>
     public abstract partial class Logger : IDisposable
     {
         /// <summary>
-        /// A <see cref="Logger"/> with no backing store for its entries.
-        /// </summary>
-        public static readonly Logger Null = new NullLogger();
-
-        /// <summary>
-        /// Gets an object that controls formatting. 
+        /// Gets an object that controls formatting.
         /// </summary>
         /// <value>
         /// An <see cref="IFormatProvider"/> object for a specific culture, or the
         /// formatting of the current culture if no other culture is specified.
         /// </value>
-        public IFormatProvider FormatProvider { get; }
+        public abstract IFormatProvider FormatProvider { get; }
 
         /// <summary>
         /// Gets a value indicating whether logging is synchronized (thread safe).
@@ -39,7 +33,7 @@ namespace Sweetener.Logging
         /// The minimum <see cref="LogLevel"/> that will be fulfilled by the <see cref="Logger"/>;
         /// any log request with a <see cref="LogLevel"/> below the minimum will be ignored.
         /// </value>
-        public LogLevel MinLevel { get; }
+        public abstract LogLevel MinLevel { get; }
 
         /// <summary>
         /// Gets an object that can be used to synchronize access to the <see cref="Logger"/>.
@@ -52,50 +46,16 @@ namespace Sweetener.Logging
         public virtual object SyncRoot => this;
 
         /// <summary>
-        /// Gets a value indicating whether the <see cref="Logger"/> has been disposed.
+        /// A <see cref="Logger"/> with no backing store for its entries.
         /// </summary>
-        /// <value><see langword="true"/> if the logger has been disposed; otherwise, <see langword="false"/>.</value>
-        protected bool IsDisposed { get; private set; } = false;
+        public static readonly Logger Null = new NullLogger();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class for the current
-        /// culture that fulfills all logging requests.
+        /// When overridden in a derived class, adds the entry to the log.
         /// </summary>
-        protected Logger()
-            : this(LogLevel.Trace)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class for the current
-        /// culture that fulfills all logging requests above a specified minimum <see cref="LogLevel"/>.
-        /// </summary>
-        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
-        protected Logger(LogLevel minLevel)
-            : this(minLevel, null)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class for a particular
-        /// culture that fulfills all logging requests above a specified minimum <see cref="LogLevel"/>.
-        /// </summary>
-        /// <remarks>
-        /// If <paramref name="formatProvider"/> is <see langword="null"/>, the formatting of the current culture is used.
-        /// </remarks>
-        /// <param name="minLevel">The minimum level of log requests that will be fulfilled.</param>
-        /// <param name="formatProvider">An <see cref="IFormatProvider"/> object for a specific culture.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minLevel"/> is an unknown value.</exception>
-        protected Logger(LogLevel minLevel, IFormatProvider formatProvider)
-        {
-            if (minLevel < LogLevel.Trace || minLevel > LogLevel.Fatal)
-                throw new ArgumentOutOfRangeException(nameof(minLevel), $"Unknown {nameof(LogLevel)} value '{minLevel}'");
-
-            if (formatProvider == null)
-                formatProvider = CultureInfo.CurrentCulture;
-
-            FormatProvider = formatProvider;
-            MinLevel       = minLevel;
-        }
+        /// <param name="logEntry">A <see cref="LogEntry"/> which consists of the message and its context.</param>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        protected abstract void Add(LogEntry logEntry);
 
         /// <summary>
         /// Releases all resources used by the <see cref="Logger"/> object.
@@ -110,8 +70,6 @@ namespace Sweetener.Logging
         public void Dispose()
         {
             Dispose(true);
-
-            // Still suppress, in case any derived classes use a finalizer
             GC.SuppressFinalize(this);
         }
 
@@ -138,26 +96,112 @@ namespace Sweetener.Logging
         /// <see langword="false"/> to release only unmanaged resources.
         /// </param>
         protected virtual void Dispose(bool disposing)
+        { }
+
+        /// <summary>
+        /// Requests that the specified message be logged with the given <see cref="LogLevel"/>.
+        /// </summary>
+        /// <remarks>
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// than or equal to <paramref name="level"/>.
+        /// </remarks>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the <paramref name="message"/>.</param>
+        /// <param name="message">The message requested for logging.</param>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        public virtual void Log(LogLevel level, string message)
         {
-            // In the base class, this flag is used to short-circuit calls before Log(...)
-            // We don't want method calls on disabled loggers to skip throwing exceptions
-            // because the log request was below the minimum log level!
-            if (!IsDisposed)
-                IsDisposed = true;
+            if (MinLevel <= level)
+                Add(new LogEntry(level, message));
         }
 
         /// <summary>
-        /// Logs the specified entry.
+        /// Requests that the text representation of the specified object, using the
+        /// specified format information, be logged with the given <see cref="LogLevel"/>.
         /// </summary>
-        /// <param name="logEntry">A log entry which consists of the message and its context.</param>
-        protected internal abstract void Log(LogEntry logEntry);
-
-        private void ThrowIfDisposed()
+        /// <remarks>
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// than or equal to <paramref name="level"/>.
+        /// </remarks>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
+        /// <param name="format">A composite format string.</param>
+        /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+        /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        public virtual void Log(LogLevel level, string format, object arg0)
         {
-            if (IsDisposed)
-                ThrowObjectDisposedException();
+            if (MinLevel <= level)
+                Add(new LogEntry(level, string.Format(FormatProvider, format, arg0)));
+        }
 
-            void ThrowObjectDisposedException() => throw new ObjectDisposedException(GetType().Name, "Cannot log with a disposed logger.");
+        /// <summary>
+        /// Requests that the text representation of the specified objects, using the
+        /// specified format information, be logged with the given <paramref name="level"/>.
+        /// </summary>
+        /// <remarks>
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// than or equal to <paramref name="level"/>.
+        /// </remarks>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
+        /// <param name="format">A composite format string.</param>
+        /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
+        /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+        /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        public virtual void Log(LogLevel level, string format, object arg0, object arg1)
+        {
+            if (MinLevel <= level)
+                Add(new LogEntry(level, string.Format(FormatProvider, format, arg0, arg1)));
+        }
+
+        /// <summary>
+        /// Requests that the text representation of the specified objects, using the
+        /// specified format information, be logged with the given <paramref name="level"/>.
+        /// </summary>
+        /// <remarks>
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// than or equal to <paramref name="level"/>.
+        /// </remarks>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
+        /// <param name="format">A composite format string.</param>
+        /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
+        /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
+        /// <param name="arg2">The third object to write using <paramref name="format"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+        /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        public virtual void Log(LogLevel level, string format, object arg0, object arg1, object arg2)
+        {
+            if (MinLevel <= level)
+                Add(new LogEntry(level, string.Format(FormatProvider, format, arg0, arg1, arg2)));
+        }
+
+        /// <summary>
+        /// Requests that the text representation of the specified array of objects, using the
+        /// specified format information, be logged with the given <paramref name="level"/>.
+        /// </summary>
+        /// <remarks>
+        /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
+        /// than or equal to <paramref name="level"/>.
+        /// </remarks>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
+        /// <param name="format">A composite format string.</param>
+        /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
+        /// <exception cref="FormatException">
+        /// <para>The format specification in <paramref name="format"/> is invalid.</para>
+        /// <para>-or-</para>
+        /// <para>
+        /// The index of a format item is less than zero, or greater than or equal
+        /// to the length of the <paramref name="args"/> array.
+        /// </para>
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
+        public virtual void Log(LogLevel level, string format, params object[] args)
+        {
+            if (MinLevel <= level)
+                Add(new LogEntry(level, string.Format(FormatProvider, format, args)));
         }
     }
 }

@@ -1,19 +1,32 @@
-﻿namespace Sweetener.Logging
+﻿using System;
+using System.Globalization;
+
+namespace Sweetener.Logging
 {
     internal sealed class NullLogger : Logger
     {
+        public override IFormatProvider FormatProvider => CultureInfo.InvariantCulture;
+
         public override bool IsSynchronized => true;
 
-        protected override void Dispose(bool disposing)
-        {
-            // There is nothing to dispose and we don't want users to be able to
-            // dispose of a logger used statically!
-            //
-            // Furthermore, repeated calls to GC.SuppressFinalize(this) are just fine
-            // in Logger.Dispose() since there is no finalizer
-        }
+        public override LogLevel MinLevel => LogLevel.Trace;
 
-        protected internal override void Log(LogEntry logEntry)
+        protected override void Add(LogEntry logEntry)
+        { }
+
+        public override void Log(LogLevel level, string message)
+        { }
+
+        public override void Log(LogLevel level, string format, object arg0)
+        { }
+
+        public override void Log(LogLevel level, string format, object arg0, object arg1)
+        { }
+
+        public override void Log(LogLevel level, string format, object arg0, object arg1, object arg2)
+        { }
+
+        public override void Log(LogLevel level, string format, params object[] args)
         { }
     }
 }

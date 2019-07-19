@@ -8,31 +8,17 @@ namespace Sweetener.Logging.Test
     public class LoggerTest
     {
         [TestMethod]
-        public void Constructor()
+        public void IsSynchronized()
         {
-            // Argument Validation
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryLogger((LogLevel)27)      );
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryLogger((LogLevel)27, null));
+            using (Logger logger = new MemoryLogger(default, CultureInfo.InvariantCulture))
+                Assert.IsFalse(logger.IsSynchronized);
+        }
 
-            // Constructor Overloads
-            using (Logger logger = new MemoryLogger())
-            {
-                Assert.AreEqual(LogLevel.Trace            , logger.MinLevel      );
-                Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
-            }
-
-            using (Logger logger = new MemoryLogger(LogLevel.Warn))
-            {
-                Assert.AreEqual(LogLevel.Warn             , logger.MinLevel      );
-                Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
-            }
-
-            CultureInfo frFR = CultureInfo.GetCultureInfo("fr-FR");
-            using (Logger logger = new MemoryLogger(LogLevel.Info, frFR))
-            {
-                Assert.AreEqual(LogLevel.Info, logger.MinLevel      );
-                Assert.AreEqual(frFR         , logger.FormatProvider);
-            }
+        [TestMethod]
+        public void SyncRoot()
+        {
+            using (Logger logger = new MemoryLogger(default, CultureInfo.InvariantCulture))
+                Assert.AreEqual(logger, logger.SyncRoot);
         }
 
         [TestMethod]
@@ -46,262 +32,54 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
-        public void IsSynchronized()
+        public void LogExceptions()
         {
-            using (Logger logger = new MemoryLogger())
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger logger = new MemoryLogger(LogLevel.Info))
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger logger = new MemoryLogger(LogLevel.Warn, CultureInfo.GetCultureInfo("es-ES")))
-                Assert.IsFalse(logger.IsSynchronized);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger logger = new MemoryLogger())
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger logger = new MemoryLogger(LogLevel.Info))
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger logger = new MemoryLogger(LogLevel.Warn, CultureInfo.GetCultureInfo("es-ES")))
-                Assert.AreEqual(logger, logger.SyncRoot);
-        }
-
-        [TestMethod]
-        public void ThrowObjectDisposedException()
-        {
-            Logger logger = new MemoryLogger();
-            logger.Dispose();
-
-            // Trace
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0"                                   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0}"                , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1}"            , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1} {2}"        , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Trace("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
-
-            // Debug
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0"                                   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0}"                , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1}"            , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1} {2}"        , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Debug("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
-
-            // Info
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0"                                   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0}"                , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1}"            , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1} {2}"        , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Info("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
-
-            // Warn
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0"                                   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0}"                , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1}"            , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1} {2}"        , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Warn("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
-
-            // Error
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0"                                   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0}"                , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1}"            , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1} {2}"        , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Error("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
-
-            // Fatal
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0"                                   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0}"                , 1            ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1}"            , 1, 2         ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1} {2}"        , 1, 2, 3      ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   ));
-            Assert.ThrowsException<ObjectDisposedException>(() => logger.Fatal("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5));
-        }
-
-        [TestMethod]
-        public void LogThrowIfNullArgument()
-        {
-            using (Logger logger = new MemoryLogger())
+            using (Logger logger = new MemoryLogger(default, CultureInfo.InvariantCulture))
             {
                 object[] args = null;
 
-                // Trace
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(null, 1            ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(null, 1, 2         ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(null, 1, 2, 3      ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(null, 1, 2, 3, 4   ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(null, 1, 2, 3, 4, 5));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Trace("{0}", args        ));
+                // ArgumentNullException
+                Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Trace, null, 1         ));
+                Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Debug, null, 1, 2      ));
+                Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Info , null, 1, 2, 3   ));
+                Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Warn , null, 1, 2, 3, 4));
+                Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Fatal, "{0}", args     ));
 
-                // Debug
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(null, 1            ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(null, 1, 2         ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(null, 1, 2, 3      ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(null, 1, 2, 3, 4   ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(null, 1, 2, 3, 4, 5));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Debug("{0}", args        ));
-
-                // Info
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Info(null, 1            ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Info(null, 1, 2         ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Info(null, 1, 2, 3      ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Info(null, 1, 2, 3, 4   ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Info(null, 1, 2, 3, 4, 5));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Info("{0}", args        ));
-
-                // Warn
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(null, 1            ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(null, 1, 2         ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(null, 1, 2, 3      ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(null, 1, 2, 3, 4   ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(null, 1, 2, 3, 4, 5));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Warn("{0}", args        ));
-
-                // Error
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Error(null, 1            ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Error(null, 1, 2         ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Error(null, 1, 2, 3      ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Error(null, 1, 2, 3, 4   ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Error(null, 1, 2, 3, 4, 5));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Error("{0}", args        ));
-
-                // Fatal
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(null, 1            ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(null, 1, 2         ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(null, 1, 2, 3      ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(null, 1, 2, 3, 4   ));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(null, 1, 2, 3, 4, 5));
-                Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal("{0}", args        ));
+                // Format Exception
+                Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Fatal, "{0:Y}", 1         ));
+                Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Error, "{0:Y}", 1, 2      ));
+                Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Warn , "{0:Y}", 1, 2, 3   ));
+                Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Info , "{0:Y}", 1, 2, 3, 4));
             }
         }
 
         [TestMethod]
-        public void LogThrowBadFormat()
-        {
-            // Use an unknown format specifier for numbers
-            using (Logger logger = new MemoryLogger())
-            {
-                // Trace
-                Assert.ThrowsException<FormatException>(() => logger.Trace("{0:Y}", 1            ));
-                Assert.ThrowsException<FormatException>(() => logger.Trace("{0:Y}", 1, 2         ));
-                Assert.ThrowsException<FormatException>(() => logger.Trace("{0:Y}", 1, 2, 3      ));
-                Assert.ThrowsException<FormatException>(() => logger.Trace("{0:Y}", 1, 2, 3, 4   ));
-                Assert.ThrowsException<FormatException>(() => logger.Trace("{0:Y}", 1, 2, 3, 4, 5));
-
-                // Debug
-                Assert.ThrowsException<FormatException>(() => logger.Debug("{0:Y}", 1            ));
-                Assert.ThrowsException<FormatException>(() => logger.Debug("{0:Y}", 1, 2         ));
-                Assert.ThrowsException<FormatException>(() => logger.Debug("{0:Y}", 1, 2, 3      ));
-                Assert.ThrowsException<FormatException>(() => logger.Debug("{0:Y}", 1, 2, 3, 4   ));
-                Assert.ThrowsException<FormatException>(() => logger.Debug("{0:Y}", 1, 2, 3, 4, 5));
-
-                // Info
-                Assert.ThrowsException<FormatException>(() => logger.Info("{0:Y}", 1            ));
-                Assert.ThrowsException<FormatException>(() => logger.Info("{0:Y}", 1, 2         ));
-                Assert.ThrowsException<FormatException>(() => logger.Info("{0:Y}", 1, 2, 3      ));
-                Assert.ThrowsException<FormatException>(() => logger.Info("{0:Y}", 1, 2, 3, 4   ));
-                Assert.ThrowsException<FormatException>(() => logger.Info("{0:Y}", 1, 2, 3, 4, 5));
-
-                // Warn
-                Assert.ThrowsException<FormatException>(() => logger.Warn("{0:Y}", 1            ));
-                Assert.ThrowsException<FormatException>(() => logger.Warn("{0:Y}", 1, 2         ));
-                Assert.ThrowsException<FormatException>(() => logger.Warn("{0:Y}", 1, 2, 3      ));
-                Assert.ThrowsException<FormatException>(() => logger.Warn("{0:Y}", 1, 2, 3, 4   ));
-                Assert.ThrowsException<FormatException>(() => logger.Warn("{0:Y}", 1, 2, 3, 4, 5));
-
-                // Error
-                Assert.ThrowsException<FormatException>(() => logger.Error("{0:Y}", 1            ));
-                Assert.ThrowsException<FormatException>(() => logger.Error("{0:Y}", 1, 2         ));
-                Assert.ThrowsException<FormatException>(() => logger.Error("{0:Y}", 1, 2, 3      ));
-                Assert.ThrowsException<FormatException>(() => logger.Error("{0:Y}", 1, 2, 3, 4   ));
-                Assert.ThrowsException<FormatException>(() => logger.Error("{0:Y}", 1, 2, 3, 4, 5));
-
-                // Fatal
-                Assert.ThrowsException<FormatException>(() => logger.Fatal("{0:Y}", 1            ));
-                Assert.ThrowsException<FormatException>(() => logger.Fatal("{0:Y}", 1, 2         ));
-                Assert.ThrowsException<FormatException>(() => logger.Fatal("{0:Y}", 1, 2, 3      ));
-                Assert.ThrowsException<FormatException>(() => logger.Fatal("{0:Y}", 1, 2, 3, 4   ));
-                Assert.ThrowsException<FormatException>(() => logger.Fatal("{0:Y}", 1, 2, 3, 4, 5));
-            }
-        }
-
-        [TestMethod]
-        public void IgnoreBelowMinLevel()
+        public void LogIgnoreBelowMinLevel()
         {
             LogLevel[] levels = (LogLevel[])Enum.GetValues(typeof(LogLevel));
-            foreach (LogLevel minLevel in levels)
+            for (int i = 0; i < levels.Length; i++)
             {
-                using (MemoryLogger logger = new MemoryLogger(minLevel))
+                using (MemoryLogger logger = new MemoryLogger(levels[i], CultureInfo.InvariantCulture))
                 {
-                    // Trace
-                    logger.Trace("0"                                   );
-                    logger.Trace("0 {0}"                , 1            );
-                    logger.Trace("0 {0} {1}"            , 1, 2         );
-                    logger.Trace("0 {0} {1} {2}"        , 1, 2, 3      );
-                    logger.Trace("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
-                    logger.Trace("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
-
-                    // Debug
-                    logger.Debug("0"                                   );
-                    logger.Debug("0 {0}"                , 1            );
-                    logger.Debug("0 {0} {1}"            , 1, 2         );
-                    logger.Debug("0 {0} {1} {2}"        , 1, 2, 3      );
-                    logger.Debug("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
-                    logger.Debug("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
-
-                    // Info
-                    logger.Info("0"                                   );
-                    logger.Info("0 {0}"                , 1            );
-                    logger.Info("0 {0} {1}"            , 1, 2         );
-                    logger.Info("0 {0} {1} {2}"        , 1, 2, 3      );
-                    logger.Info("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
-                    logger.Info("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
-
-                    // Warn
-                    logger.Warn("0"                                   );
-                    logger.Warn("0 {0}"                , 1            );
-                    logger.Warn("0 {0} {1}"            , 1, 2         );
-                    logger.Warn("0 {0} {1} {2}"        , 1, 2, 3      );
-                    logger.Warn("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
-                    logger.Warn("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
-
-                    // Error
-                    logger.Error("0"                                   );
-                    logger.Error("0 {0}"                , 1            );
-                    logger.Error("0 {0} {1}"            , 1, 2         );
-                    logger.Error("0 {0} {1} {2}"        , 1, 2, 3      );
-                    logger.Error("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
-                    logger.Error("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
-
-                    // Fatal
-                    logger.Fatal("0"                                   );
-                    logger.Fatal("0 {0}"                , 1            );
-                    logger.Fatal("0 {0} {1}"            , 1, 2         );
-                    logger.Fatal("0 {0} {1} {2}"        , 1, 2, 3      );
-                    logger.Fatal("0 {0} {1} {2} {3}"    , 1, 2, 3, 4   );
-                    logger.Fatal("0 {0} {1} {2} {3} {4}", 1, 2, 3, 4, 5);
-
-                    // As the minimum level increases, it reduces the number of log entries
                     LogLevel maxLevel = levels[levels.Length - 1];
-                    int expectedCount = ((int)maxLevel - (int)minLevel + 1) * 6;
-                    Assert.AreEqual(expectedCount, logger.Entries.Count);
-
-                    for (LogLevel level = minLevel; level <= maxLevel; level++)
+                    for (int j = 0; j < levels.Length; j++)
                     {
-                        AssertLogEntry(level, "0"          , logger.Entries.Dequeue());
-                        AssertLogEntry(level, "0 1"        , logger.Entries.Dequeue());
-                        AssertLogEntry(level, "0 1 2"      , logger.Entries.Dequeue());
-                        AssertLogEntry(level, "0 1 2 3"    , logger.Entries.Dequeue());
-                        AssertLogEntry(level, "0 1 2 3 4"  , logger.Entries.Dequeue());
-                        AssertLogEntry(level, "0 1 2 3 4 5", logger.Entries.Dequeue());
+                        logger.Log(levels[j], "1"                            );
+                        logger.Log(levels[j], "1 {0}"            , 2         );
+                        logger.Log(levels[j], "1 {0} {1}"        , 2, 3      );
+                        logger.Log(levels[j], "1 {0} {1} {2}"    , 2, 3, 4   );
+                        logger.Log(levels[j], "1 {0} {1} {2} {3}", 2, 3, 4, 5);
+                    }
+
+                    // As the minimum level increases, it reduces the number of fulfilled log requests
+                    Assert.AreEqual((levels.Length - i) * 5, logger.Entries.Count);
+                    for (int j = i; j < levels.Length; j++)
+                    {
+                        Assert.That.AreEqual(new LogEntry(levels[j], "1"        ), logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
+                        Assert.That.AreEqual(new LogEntry(levels[j], "1 2"      ), logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
+                        Assert.That.AreEqual(new LogEntry(levels[j], "1 2 3"    ), logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
+                        Assert.That.AreEqual(new LogEntry(levels[j], "1 2 3 4"  ), logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
+                        Assert.That.AreEqual(new LogEntry(levels[j], "1 2 3 4 5"), logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
                     }
                 }
             }
@@ -310,22 +88,28 @@ namespace Sweetener.Logging.Test
         [TestMethod]
         public void Log()
         {
-            using (MemoryLogger logger = new MemoryLogger())
+            using (MemoryLogger logger = new MemoryLogger(default, CultureInfo.InvariantCulture))
             {
-                logger.Trace("Trace");
-                logger.Debug("Debug");
-                logger.Info ("Info" );
-                logger.Warn ("Warn" );
-                logger.Error("Error");
-                logger.Fatal("Fatal");
+                logger.Log(LogLevel.Trace, "Trace");
+                logger.Log(LogLevel.Debug, "Debug");
+                logger.Log(LogLevel.Info , "Info" );
+                logger.Log(LogLevel.Warn , "Warn" );
+                logger.Log(LogLevel.Error, "Error");
+                logger.Log(LogLevel.Fatal, "Fatal");
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, "Trace", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, "Debug", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , "Info" , logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , "Warn" , logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, "Error", logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, "Fatal", logger.Entries.Dequeue());
+                LogEntry[] expectedEntries = new LogEntry[]
+                {
+                    new LogEntry(LogLevel.Trace, "Trace"),
+                    new LogEntry(LogLevel.Debug, "Debug"),
+                    new LogEntry(LogLevel.Info , "Info" ),
+                    new LogEntry(LogLevel.Warn , "Warn" ),
+                    new LogEntry(LogLevel.Error, "Error"),
+                    new LogEntry(LogLevel.Fatal, "Fatal"),
+                };
+
+                for (int i = 0; i < logger.Entries.Count; i++)
+                    Assert.That.AreEqual(expectedEntries[i], logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
             }
         }
 
@@ -337,20 +121,26 @@ namespace Sweetener.Logging.Test
             {
                 string msg = "{0,8:C}";
 
-                logger.Trace(msg,   4321);
-                logger.Debug(msg,  11235);
-                logger.Info (msg,  81321);
-                logger.Warn (msg,   3455);
-                logger.Error(msg,  89144);
-                logger.Fatal(msg, 233377);
+                logger.Log(LogLevel.Trace, msg,   4321);
+                logger.Log(LogLevel.Debug, msg,  11235);
+                logger.Log(LogLevel.Info , msg,  81321);
+                logger.Log(LogLevel.Warn , msg,   3455);
+                logger.Log(LogLevel.Error, msg,  89144);
+                logger.Log(LogLevel.Fatal, msg, 233377);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, string.Format(jaJP, msg,   4321), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, string.Format(jaJP, msg,  11235), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , string.Format(jaJP, msg,  81321), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , string.Format(jaJP, msg,   3455), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, string.Format(jaJP, msg,  89144), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, string.Format(jaJP, msg, 233377), logger.Entries.Dequeue());
+                LogEntry[] expectedEntries = new LogEntry[]
+                {
+                    new LogEntry(LogLevel.Trace, string.Format(jaJP, msg,   4321)),
+                    new LogEntry(LogLevel.Debug, string.Format(jaJP, msg,  11235)),
+                    new LogEntry(LogLevel.Info , string.Format(jaJP, msg,  81321)),
+                    new LogEntry(LogLevel.Warn , string.Format(jaJP, msg,   3455)),
+                    new LogEntry(LogLevel.Error, string.Format(jaJP, msg,  89144)),
+                    new LogEntry(LogLevel.Fatal, string.Format(jaJP, msg, 233377)),
+                };
+
+                for (int i = 0; i < logger.Entries.Count; i++)
+                    Assert.That.AreEqual(expectedEntries[i], logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
             }
         }
 
@@ -363,20 +153,26 @@ namespace Sweetener.Logging.Test
                 string msg = "On {0:d}, made {1,11:C}";
 
                 DateTime dt = new DateTime(2019, 01, 15);
-                logger.Trace(msg, dt.AddDays(0),      823);
-                logger.Debug(msg, dt.AddDays(1),     1234);
-                logger.Info (msg, dt.AddDays(2),     5678);
-                logger.Warn (msg, dt.AddDays(3),    91011);
-                logger.Error(msg, dt.AddDays(4),   121314);
-                logger.Fatal(msg, dt.AddDays(5), 15161718);
+                logger.Log(LogLevel.Trace, msg, dt.AddDays(0),      823);
+                logger.Log(LogLevel.Debug, msg, dt.AddDays(1),     1234);
+                logger.Log(LogLevel.Info , msg, dt.AddDays(2),     5678);
+                logger.Log(LogLevel.Warn , msg, dt.AddDays(3),    91011);
+                logger.Log(LogLevel.Error, msg, dt.AddDays(4),   121314);
+                logger.Log(LogLevel.Fatal, msg, dt.AddDays(5), 15161718);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, string.Format(jaJP, msg, dt.AddDays(0),      823), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, string.Format(jaJP, msg, dt.AddDays(1),     1234), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , string.Format(jaJP, msg, dt.AddDays(2),     5678), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , string.Format(jaJP, msg, dt.AddDays(3),    91011), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, string.Format(jaJP, msg, dt.AddDays(4),   121314), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, string.Format(jaJP, msg, dt.AddDays(5), 15161718), logger.Entries.Dequeue());
+                LogEntry[] expectedEntries = new LogEntry[]
+                {
+                    new LogEntry(LogLevel.Trace, string.Format(jaJP, msg, dt.AddDays(0),      823)),
+                    new LogEntry(LogLevel.Debug, string.Format(jaJP, msg, dt.AddDays(1),     1234)),
+                    new LogEntry(LogLevel.Info , string.Format(jaJP, msg, dt.AddDays(2),     5678)),
+                    new LogEntry(LogLevel.Warn , string.Format(jaJP, msg, dt.AddDays(3),    91011)),
+                    new LogEntry(LogLevel.Error, string.Format(jaJP, msg, dt.AddDays(4),   121314)),
+                    new LogEntry(LogLevel.Fatal, string.Format(jaJP, msg, dt.AddDays(5), 15161718)),
+                };
+
+                for (int i = 0; i < logger.Entries.Count; i++)
+                    Assert.That.AreEqual(expectedEntries[i], logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
             }
         }
 
@@ -390,47 +186,26 @@ namespace Sweetener.Logging.Test
                 string soldMsg   = "On {0:d}, sold   {1,7:F2} units for {2,11:C}";
 
                 DateTime dt = new DateTime(2019, 01, 15);
-                logger.Trace(boughtMsg, dt.AddDays(0),    0.42,    13.37);
-                logger.Debug(boughtMsg, dt.AddDays(1),   24.68,    -0.25);
-                logger.Info (soldMsg  , dt.AddDays(2),   10.12,     1.33);
-                logger.Warn (soldMsg  , dt.AddDays(3), 1416.00, 11975.31);
-                logger.Error(boughtMsg, dt.AddDays(4),   18.20,   -10.00);
-                logger.Fatal(soldMsg  , dt.AddDays(5), 2224.00,   115.00);
+                logger.Log(LogLevel.Trace, boughtMsg, dt.AddDays(0),    0.42,    13.37);
+                logger.Log(LogLevel.Debug, boughtMsg, dt.AddDays(1),   24.68,    -0.25);
+                logger.Log(LogLevel.Info , soldMsg  , dt.AddDays(2),   10.12,     1.33);
+                logger.Log(LogLevel.Warn , soldMsg  , dt.AddDays(3), 1416.00, 11975.31);
+                logger.Log(LogLevel.Error, boughtMsg, dt.AddDays(4),   18.20,   -10.00);
+                logger.Log(LogLevel.Fatal, soldMsg  , dt.AddDays(5), 2224.00,   115.00);
 
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0),    0.42,    13.37), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1),   24.68,    -0.25), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2),   10.12,     1.33), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), 1416.00, 11975.31), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4),   18.20,   -10.00), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), 2224.00,   115.00), logger.Entries.Dequeue());
-            }
-        }
+                LogEntry[] expectedEntries = new LogEntry[]
+                {
+                    new LogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0),    0.42,    13.37)),
+                    new LogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1),   24.68,    -0.25)),
+                    new LogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2),   10.12,     1.33)),
+                    new LogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), 1416.00, 11975.31)),
+                    new LogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4),   18.20,   -10.00)),
+                    new LogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), 2224.00,   115.00)),
+                };
 
-        [TestMethod]
-        public void LogFormatArg0Arg1Arg2Arg3()
-        {
-            CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
-            using (MemoryLogger logger = new MemoryLogger(default, esES))
-            {
-                string boughtMsg = "On {0:d}, bought {1,7:F2} units for {2,11:C} (Total = {3,15:C})";
-                string soldMsg   = "On {0:d}, sold   {1,7:F2} units for {2,11:C} (Total = {3,15:C})";
-
-                DateTime dt = new DateTime(2019, 01, 15);
-                logger.Trace(boughtMsg, dt.AddDays(0),    0.42,    13.37,        5.6154);
-                logger.Debug(boughtMsg, dt.AddDays(1),   24.68,    -0.25,       -6.1700);
-                logger.Info (soldMsg  , dt.AddDays(2),   10.12,     1.33,       13.4596);
-                logger.Warn (soldMsg  , dt.AddDays(3), 1416.00, 11975.31, 16957039.0000);
-                logger.Error(boughtMsg, dt.AddDays(4),   18.20,   -10.00,     -182.0000);
-                logger.Fatal(soldMsg  , dt.AddDays(5), 2224.00,   115.00,   255760.0000);
-
-                Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0),    0.42,    13.37,        5.6154), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1),   24.68,    -0.25,       -6.1700), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2),   10.12,     1.33,       13.4596), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), 1416.00, 11975.31, 16957039.0000), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4),   18.20,   -10.00,     -182.0000), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), 2224.00,   115.00,   255760.0000), logger.Entries.Dequeue());
+                for (int i = 0; i < logger.Entries.Count; i++)
+                    Assert.That.AreEqual(expectedEntries[i], logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
             }
         }
 
@@ -440,34 +215,31 @@ namespace Sweetener.Logging.Test
             CultureInfo esES = CultureInfo.GetCultureInfo("es-ES");
             using (MemoryLogger logger = new MemoryLogger(default, esES))
             {
-                string boughtMsg = "On {0:d} {1:g}, bought {2,7:F2} units for {3,11:C} (Total = {4,15:C})";
-                string soldMsg   = "On {0:d} {1:g}, sold   {2,7:F2} units for {3,11:C} (Total = {4,15:C})";
+                string boughtMsg = "On {0:d}, bought {1,7:F2} units for {2,11:C} (Total = {3,15:C})";
+                string soldMsg   = "On {0:d}, sold   {1,7:F2} units for {2,11:C} (Total = {3,15:C})";
 
-                DateTime dt = new DateTime(2019, 01, 15, 16, 17, 18, 19);
-                logger.Trace(boughtMsg, dt.AddDays(0), dt.AddHours(0).TimeOfDay,    0.42,    13.37,        5.6154);
-                logger.Debug(boughtMsg, dt.AddDays(1), dt.AddHours(1).TimeOfDay,   24.68,    -0.25,       -6.1700);
-                logger.Info (soldMsg  , dt.AddDays(2), dt.AddHours(2).TimeOfDay,   10.12,     1.33,       13.4596);
-                logger.Warn (soldMsg  , dt.AddDays(3), dt.AddHours(3).TimeOfDay, 1416.00, 11975.31, 16957039.0000);
-                logger.Error(boughtMsg, dt.AddDays(4), dt.AddHours(4).TimeOfDay,   18.20,   -10.00,     -182.0000);
-                logger.Fatal(soldMsg  , dt.AddDays(5), dt.AddHours(5).TimeOfDay, 2224.00,   115.00,   255760.0000);
-                 
+                DateTime dt = new DateTime(2019, 01, 15);
+                logger.Log(LogLevel.Trace, boughtMsg, dt.AddDays(0),    0.42,    13.37,        5.6154);
+                logger.Log(LogLevel.Debug, boughtMsg, dt.AddDays(1),   24.68,    -0.25,       -6.1700);
+                logger.Log(LogLevel.Info , soldMsg  , dt.AddDays(2),   10.12,     1.33,       13.4596);
+                logger.Log(LogLevel.Warn , soldMsg  , dt.AddDays(3), 1416.00, 11975.31, 16957039.0000);
+                logger.Log(LogLevel.Error, boughtMsg, dt.AddDays(4),   18.20,   -10.00,     -182.0000);
+                logger.Log(LogLevel.Fatal, soldMsg  , dt.AddDays(5), 2224.00,   115.00,   255760.0000);
+
                 Assert.AreEqual(6, logger.Entries.Count);
-                AssertLogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0), dt.AddHours(0).TimeOfDay,    0.42,    13.37,        5.6154), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1), dt.AddHours(1).TimeOfDay,   24.68,    -0.25,       -6.1700), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2), dt.AddHours(2).TimeOfDay,   10.12,     1.33,       13.4596), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), dt.AddHours(3).TimeOfDay, 1416.00, 11975.31, 16957039.0000), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4), dt.AddHours(4).TimeOfDay,   18.20,   -10.00,     -182.0000), logger.Entries.Dequeue());
-                AssertLogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), dt.AddHours(5).TimeOfDay, 2224.00,   115.00,   255760.0000), logger.Entries.Dequeue());
-            }
-        }
+                LogEntry[] expectedEntries = new LogEntry[]
+                {
+                    new LogEntry(LogLevel.Trace, string.Format(esES, boughtMsg, dt.AddDays(0),    0.42,    13.37,        5.6154)),
+                    new LogEntry(LogLevel.Debug, string.Format(esES, boughtMsg, dt.AddDays(1),   24.68,    -0.25,       -6.1700)),
+                    new LogEntry(LogLevel.Info , string.Format(esES, soldMsg  , dt.AddDays(2),   10.12,     1.33,       13.4596)),
+                    new LogEntry(LogLevel.Warn , string.Format(esES, soldMsg  , dt.AddDays(3), 1416.00, 11975.31, 16957039.0000)),
+                    new LogEntry(LogLevel.Error, string.Format(esES, boughtMsg, dt.AddDays(4),   18.20,   -10.00,     -182.0000)),
+                    new LogEntry(LogLevel.Fatal, string.Format(esES, soldMsg  , dt.AddDays(5), 2224.00,   115.00,   255760.0000)),
+                };
 
-        private static void AssertLogEntry(LogLevel expectedLevel, string expectedMessage, LogEntry actual)
-        {
-            // We assert the validity of the time in the TemplateBuilder.Test.cs, so here we'll
-            // instead assert that the value is a time in the appropriate format
-            Assert.AreNotEqual(default        , actual.Timestamp);
-            Assert.AreEqual   (expectedLevel  , actual.Level    );
-            Assert.AreEqual   (expectedMessage, actual.Message  );
+                for (int i = 0; i < logger.Entries.Count; i++)
+                    Assert.That.AreEqual(expectedEntries[i], logger.Entries.Dequeue(), LogEntryEqualityComparer.NoTimestamp);
+            }
         }
     }
 }

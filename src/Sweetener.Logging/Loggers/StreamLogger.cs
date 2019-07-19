@@ -243,7 +243,7 @@ namespace Sweetener.Logging
         /// </para>
         /// <para>
         /// When the <paramref name="disposing"/> parameter is <see langword="true"/>, this method
-        /// releases all resources held by any managed objects that this <see cref="Logger"/>
+        /// releases all resources held by any managed objects that this <see cref="StreamLogger"/>
         /// references. This method invokes the <see cref="IDisposable.Dispose"/> method
         /// of each referenced object.
         /// </para>
@@ -254,17 +254,14 @@ namespace Sweetener.Logging
         /// </param>
         protected override void Dispose(bool disposing)
         {
-            if (!IsDisposed)
+            try
             {
-                try
-                {
-                    if (disposing)
-                        _writer.Dispose();
-                }
-                finally
-                {
-                    base.Dispose(disposing);
-                }
+                if (disposing)
+                    _writer.Dispose();
+            }
+            finally
+            {
+                base.Dispose(disposing);
             }
         }
 

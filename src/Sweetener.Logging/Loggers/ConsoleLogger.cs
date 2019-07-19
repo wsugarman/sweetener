@@ -63,27 +63,27 @@ namespace Sweetener.Logging
         /// Releases the unmanaged resources used by the <see cref="ConsoleLogger"/> and
         /// optionally releases the managed resources.
         /// </summary>
+        /// <remarks>
+        /// Given that <see cref="ConsoleLogger"/> writes its log entries to the <see cref="Console"/>,
+        /// <see cref="Dispose(bool)"/> only invokes <see cref="Flush"/> if <paramref name="disposing"/>
+        /// is <see langword="true"/> and does not dipose of the underlying <see cref="TextWriter"/>.
+        /// </remarks>
         /// <param name="disposing">
         /// <see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/>
         /// to release only unmanaged resources.
         /// </param>
         protected override void Dispose(bool disposing)
         {
-            if (!IsDisposed)
-            {
-                try
-                {
-                    if (disposing)
-                        Console.Out.Flush();
-                }
-                finally
-                {
-                    base.Dispose(disposing);
-                }
-            }
+            if (disposing)
+                Flush();
         }
 
-        // TODO: Should ConsoleLogger override the logging methods to update the possible exceptions?
+        /// <summary>
+        /// Clears all buffers for the current logger and causes any buffered data to
+        /// be written to the underlying stream.
+        /// </summary>
+        public void Flush()
+            => Console.Out.Flush();
 
         /// <summary>
         /// Writes the <paramref name="message"/> to the console.
