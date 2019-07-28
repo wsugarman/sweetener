@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Sweetener.Logging
@@ -11,6 +12,7 @@ namespace Sweetener.Logging
 
         public override LogLevel MinLevel => LogLevel.Trace;
 
+        [ExcludeFromCodeCoverage]
         protected override void Add(LogEntry logEntry)
         { }
 

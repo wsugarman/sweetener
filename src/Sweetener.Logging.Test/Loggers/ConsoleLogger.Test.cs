@@ -10,20 +10,6 @@ namespace Sweetener.Logging.Test
     public class ConsoleLoggerTest
     {
         [TestMethod]
-        public void IsSynchronized()
-        {
-            using (Logger logger = new ConsoleLogger())
-                Assert.IsFalse(logger.IsSynchronized);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger logger = new ConsoleLogger())
-                Assert.AreEqual(logger, logger.SyncRoot);
-        }
-
-        [TestMethod]
         public void ConstructorExceptions()
         {
             // ConsoleLogger(LogLevel)
@@ -124,9 +110,7 @@ namespace Sweetener.Logging.Test
             TextWriter stdOut = Console.Out;
             try
             {
-                // TemplateLogger.Test.cs already validates that the various logging methods
-                // call Log(LogEntry) correctly, so we'll use Log(LogEntry) to validate
-                // calls to WriteLine(string)
+                // TemplateLogger.Test.cs already validates that the various logging methods' formatting
                 using (MemoryStream buffer = new MemoryStream())
                 using (StreamWriter writer = new StreamWriter(buffer))
                 {
