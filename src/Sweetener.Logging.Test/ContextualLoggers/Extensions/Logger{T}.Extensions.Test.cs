@@ -13,9 +13,16 @@ namespace Sweetener.Logging.Test
         {
             using (Logger<int> logger = new MemoryLogger<int>(default, CultureInfo.InvariantCulture))
             {
+                Logger<int> invalidLogger = null;
                 object[] args = null;
 
                 // Trace
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Trace(0, "1"                            ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Trace(0, "1 {0}"            , 2         ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Trace(0, "1 {0} {1}"        , 2, 3      ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Trace(0, "1 {0} {1} {2}"    , 2, 3, 4   ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Trace(0, "1 {0} {1} {2} {3}", 2, 3, 4, 5));
+
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(0, null, 1         ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(0, null, 1, 2      ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(0, null, 1, 2, 3   ));
@@ -23,6 +30,12 @@ namespace Sweetener.Logging.Test
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Trace(0, "{0}", args     ));
 
                 // Debug
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Debug(0, "1"                            ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Debug(0, "1 {0}"            , 2         ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Debug(0, "1 {0} {1}"        , 2, 3      ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Debug(0, "1 {0} {1} {2}"    , 2, 3, 4   ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Debug(0, "1 {0} {1} {2} {3}", 2, 3, 4, 5));
+
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(0, null, 1         ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(0, null, 1, 2      ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(0, null, 1, 2, 3   ));
@@ -30,6 +43,12 @@ namespace Sweetener.Logging.Test
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Debug(0, "{0}", args     ));
 
                 // Info
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Info(0, "1"                            ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Info(0, "1 {0}"            , 2         ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Info(0, "1 {0} {1}"        , 2, 3      ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Info(0, "1 {0} {1} {2}"    , 2, 3, 4   ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Info(0, "1 {0} {1} {2} {3}", 2, 3, 4, 5));
+
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Info(0, null, 1         ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Info(0, null, 1, 2      ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Info(0, null, 1, 2, 3   ));
@@ -37,6 +56,12 @@ namespace Sweetener.Logging.Test
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Info(0, "{0}", args     ));
 
                 // Warn
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Warn(0, "1"                            ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Warn(0, "1 {0}"            , 2         ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Warn(0, "1 {0} {1}"        , 2, 3      ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Warn(0, "1 {0} {1} {2}"    , 2, 3, 4   ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Warn(0, "1 {0} {1} {2} {3}", 2, 3, 4, 5));
+
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(0, null, 1         ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(0, null, 1, 2      ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(0, null, 1, 2, 3   ));
@@ -44,6 +69,12 @@ namespace Sweetener.Logging.Test
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Warn(0, "{0}", args     ));
 
                 // Error
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Error(0, "1"                            ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Error(0, "1 {0}"            , 2         ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Error(0, "1 {0} {1}"        , 2, 3      ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Error(0, "1 {0} {1} {2}"    , 2, 3, 4   ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Error(0, "1 {0} {1} {2} {3}", 2, 3, 4, 5));
+
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Error(0, null, 1         ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Error(0, null, 1, 2      ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Error(0, null, 1, 2, 3   ));
@@ -51,6 +82,12 @@ namespace Sweetener.Logging.Test
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Error(0, "{0}", args     ));
 
                 // Fatal
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Fatal(0, "1"                            ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Fatal(0, "1 {0}"            , 2         ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Fatal(0, "1 {0} {1}"        , 2, 3      ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Fatal(0, "1 {0} {1} {2}"    , 2, 3, 4   ));
+                Assert.ThrowsException<ArgumentNullException>(() => invalidLogger.Fatal(0, "1 {0} {1} {2} {3}", 2, 3, 4, 5));
+
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(0, null, 1         ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(0, null, 1, 2      ));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Fatal(0, null, 1, 2, 3   ));

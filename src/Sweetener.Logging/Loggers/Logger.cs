@@ -3,13 +3,13 @@
 namespace Sweetener.Logging 
 {
     /// <summary>
-    /// Represents a client that can log messages for a given <see cref="LogLevel"/>
+    /// Represents a client that can log messages with a given <see cref="LogLevel"/>
     /// based on their purpose or severity. This class is abstract.
     /// </summary>
     public abstract partial class Logger : IDisposable
     {
         /// <summary>
-        /// Gets an object that controls formatting.
+        /// When overridden in a derived class, returns an object that controls formatting.
         /// </summary>
         /// <value>
         /// An <see cref="IFormatProvider"/> object for a specific culture, or the
@@ -27,7 +27,8 @@ namespace Sweetener.Logging
         public virtual bool IsSynchronized => false;
 
         /// <summary>
-        /// Gets the minimum level of log requests that will be fulfilled.
+        /// When overridden in a derived class, returns the minimum level of log requests
+        /// that will be fulfilled by the <see cref="Logger"/>.
         /// </summary>
         /// <value>
         /// The minimum <see cref="LogLevel"/> that will be fulfilled by the <see cref="Logger"/>;
@@ -105,8 +106,8 @@ namespace Sweetener.Logging
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
         /// than or equal to <paramref name="level"/>.
         /// </remarks>
-        /// <param name="level">The <see cref="LogLevel"/> associated with the <paramref name="message"/>.</param>
-        /// <param name="message">The message requested for logging.</param>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
+        /// <param name="message">The message to be logged.</param>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
         public virtual void Log(LogLevel level, string message)
         {
@@ -115,8 +116,8 @@ namespace Sweetener.Logging
         }
 
         /// <summary>
-        /// Requests that the text representation of the specified object, using the
-        /// specified format information, be logged with the given <see cref="LogLevel"/>.
+        /// Requests that the formatted message be logged with the given <see cref="LogLevel"/>
+        /// using the same semantics as the <see cref="string.Format(string, object)"/> method.
         /// </summary>
         /// <remarks>
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
@@ -124,9 +125,16 @@ namespace Sweetener.Logging
         /// </remarks>
         /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
         /// <param name="format">A composite format string.</param>
-        /// <param name="arg0">An object to write using <paramref name="format"/>.</param>
+        /// <param name="arg0">An object to format and log.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
-        /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
+        /// <exception cref="FormatException">
+        /// <para><paramref name="format"/> is not a valid composite format string.</para>
+        /// <para>-or-</para>
+        /// <para>
+        /// The index of a format item is less than 0 (zero), or greater than or equal to
+        /// the number of objects to be formatted (which, for this method overload, is one).
+        /// </para>
+        /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
         public virtual void Log(LogLevel level, string format, object arg0)
         {
@@ -135,8 +143,8 @@ namespace Sweetener.Logging
         }
 
         /// <summary>
-        /// Requests that the text representation of the specified objects, using the
-        /// specified format information, be logged with the given <paramref name="level"/>.
+        /// Requests that the formatted message be logged with the given <see cref="LogLevel"/>
+        /// using the same semantics as the <see cref="string.Format(string, object, object)"/> method.
         /// </summary>
         /// <remarks>
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
@@ -144,10 +152,17 @@ namespace Sweetener.Logging
         /// </remarks>
         /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
         /// <param name="format">A composite format string.</param>
-        /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
-        /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
+        /// <param name="arg0">The first object to format and log.</param>
+        /// <param name="arg1">The second object to format and log.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
-        /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
+        /// <exception cref="FormatException">
+        /// <para><paramref name="format"/> is not a valid composite format string.</para>
+        /// <para>-or-</para>
+        /// <para>
+        /// The index of a format item is less than 0 (zero), or greater than or equal to
+        /// the number of objects to be formatted (which, for this method overload, is two).
+        /// </para>
+        /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
         public virtual void Log(LogLevel level, string format, object arg0, object arg1)
         {
@@ -156,8 +171,8 @@ namespace Sweetener.Logging
         }
 
         /// <summary>
-        /// Requests that the text representation of the specified objects, using the
-        /// specified format information, be logged with the given <paramref name="level"/>.
+        /// Requests that the formatted message be logged with the given <see cref="LogLevel"/>
+        /// using the same semantics as the <see cref="string.Format(string, object, object, object)"/> method.
         /// </summary>
         /// <remarks>
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
@@ -165,11 +180,18 @@ namespace Sweetener.Logging
         /// </remarks>
         /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
         /// <param name="format">A composite format string.</param>
-        /// <param name="arg0">The first object to write using <paramref name="format"/>.</param>
-        /// <param name="arg1">The second object to write using <paramref name="format"/>.</param>
-        /// <param name="arg2">The third object to write using <paramref name="format"/>.</param>
+        /// <param name="arg0">The first object to format and log.</param>
+        /// <param name="arg1">The second object to format and log.</param>
+        /// <param name="arg2">The third object to format and log.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
-        /// <exception cref="FormatException">The format specification in <paramref name="format"/> is invalid.</exception>
+        /// <exception cref="FormatException">
+        /// <para><paramref name="format"/> is not a valid composite format string.</para>
+        /// <para>-or-</para>
+        /// <para>
+        /// The index of a format item is less than 0 (zero), or greater than or equal to
+        /// the number of objects to be formatted (which, for this method overload, is three).
+        /// </para>
+        /// </exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
         public virtual void Log(LogLevel level, string format, object arg0, object arg1, object arg2)
         {
@@ -178,8 +200,8 @@ namespace Sweetener.Logging
         }
 
         /// <summary>
-        /// Requests that the text representation of the specified array of objects, using the
-        /// specified format information, be logged with the given <paramref name="level"/>.
+        /// Requests that the formatted message be logged with the given <see cref="LogLevel"/>
+        /// using the same semantics as the <see cref="string.Format(string, object[])"/> method.
         /// </summary>
         /// <remarks>
         /// The log request will only be fulfilled if the <see cref="MinLevel"/> is less
@@ -187,13 +209,15 @@ namespace Sweetener.Logging
         /// </remarks>
         /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
         /// <param name="format">A composite format string.</param>
-        /// <param name="args">An array of objects to write using <paramref name="format"/>.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.</exception>
+        /// <param name="args">An object array that contains zero or more objects to format and log.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.
+        /// </exception>
         /// <exception cref="FormatException">
-        /// <para>The format specification in <paramref name="format"/> is invalid.</para>
+        /// <para><paramref name="format"/> is not a valid composite format string.</para>
         /// <para>-or-</para>
         /// <para>
-        /// The index of a format item is less than zero, or greater than or equal
+        /// The index of a format item is less than 0 (zero), or greater than or equal
         /// to the length of the <paramref name="args"/> array.
         /// </para>
         /// </exception>
