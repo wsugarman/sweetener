@@ -19,26 +19,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="ContextualLoggers\Logger{T}.Format.tt">
+    <None Update="ContextualLoggers\Extensions\Logger{T}.Extensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Logger{T}.Format.cs</LastGenOutput>
+      <LastGenOutput>Logger{T}.Extensions.cs</LastGenOutput>
     </None>
-    <None Update="Loggers\Logger.Format.tt">
+    <None Update="Loggers\Extensions\Logger.Extensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Logger.Format.cs</LastGenOutput>
+      <LastGenOutput>Logger.Extensions.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="ContextualLoggers\Logger{T}.Format.cs">
+    <Compile Update="ContextualLoggers\Extensions\Logger{T}.Extensions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Logger{T}.Format.tt</DependentUpon>
+      <DependentUpon>Logger{T}.Extensions.tt</DependentUpon>
     </Compile>
-    <Compile Update="Loggers\Logger.Format.cs">
+    <Compile Update="Loggers\Extensions\Logger.Extensions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Logger.Format.tt</DependentUpon>
+      <DependentUpon>Logger.Extensions.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 

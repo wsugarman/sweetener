@@ -255,17 +255,14 @@ namespace Sweetener.Logging
         /// </param>
         protected override void Dispose(bool disposing)
         {
-            if (!IsDisposed)
+            try
             {
-                try
-                {
-                    if (disposing)
-                        _writer.Dispose();
-                }
-                finally
-                {
-                    base.Dispose(disposing);
-                }
+                if (disposing)
+                    _writer.Dispose();
+            }
+            finally
+            {
+                base.Dispose(disposing);
             }
         }
 

@@ -8,15 +8,37 @@ namespace Sweetener.Logging.Test
     public class ContextualTemplateLoggerTest
     {
         [TestMethod]
+        public void IsSynchronized()
+        {
+            using (Logger<int> logger = new MemoryTemplateLogger<int>())
+                Assert.IsFalse(logger.IsSynchronized);
+        }
+
+        [TestMethod]
+        public void SyncRoot()
+        {
+            using (Logger<int> logger = new MemoryTemplateLogger<int>())
+                Assert.AreEqual(logger, logger.SyncRoot);
+        }
+
+        [TestMethod]
+        public void ConstructorExceptions()
+        {
+            // TemplateLogger(LogLevel)
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryTemplateLogger<ushort>((LogLevel)27));
+
+            // TemplateLogger(LogLevel, string)
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryTemplateLogger<ushort>((LogLevel)27, null));
+
+            // TemplateLogger(LogLevel, IFormatProvider, string)
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryTemplateLogger<ushort>((LogLevel)27  , null, "{cxt} {msg}")); 
+            Assert.ThrowsException<ArgumentNullException      >(() => new MemoryTemplateLogger<ushort>(LogLevel.Trace, null, null         ));
+            Assert.ThrowsException<FormatException            >(() => new MemoryTemplateLogger<ushort>(LogLevel.Trace, null, "{foobar}"   ));
+        }
+
+        [TestMethod]
         public void Constructor()
         {
-            // Argument Validation
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryTemplateLogger<ushort>((LogLevel)27                    ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new MemoryTemplateLogger<ushort>((LogLevel)27  , null            ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new MemoryTemplateLogger<ushort>(LogLevel.Trace, null, null      ));
-            Assert.ThrowsException<FormatException            >(() => new MemoryTemplateLogger<ushort>(LogLevel.Trace, null, "{foobar}"));
-
-            // Constructor Overloads
             using (TemplateLogger<byte> logger = new MemoryTemplateLogger<byte>())
             {
                 Assert.AreEqual(LogLevel.Trace                      , logger.MinLevel           );
@@ -48,103 +70,24 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
-        public void IsSynchronized()
-        {
-            using (Logger<int> logger = new MemoryTemplateLogger<int>())
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Info))
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Warn, "{cxt} {msg}"))
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{cxt} {msg}"))
-                Assert.IsFalse(logger.IsSynchronized);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger<int> logger = new MemoryTemplateLogger<int>())
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Info))
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Warn, "{cxt} {msg}"))
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger<int> logger = new MemoryTemplateLogger<int>(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{cxt} {msg}"))
-                Assert.AreEqual(logger, logger.SyncRoot);
-        }
-
-        [TestMethod]
         public void Log()
         {
             // Validate Log calls WriteLine appropriately based on the template
             // Logger{T}.Test.cs already validates that Log is called appropriately
-            using (MemoryTemplateLogger<char> logger = new MemoryTemplateLogger<char>(default, CultureInfo.InvariantCulture, "{l:F} - {cxt} {msg}"))
+            using (MemoryTemplateLogger<string> logger = new MemoryTemplateLogger<string>(default, CultureInfo.InvariantCulture, "[{l,-5:F}] - {cxt} {msg}"))
             {
-                // Trace
-                logger.Trace('0', "1"                                   );
-                logger.Trace('0', "1 {0}"                , 2            );
-                logger.Trace('0', "1 {0} {1}"            , 2, 3         );
-                logger.Trace('0', "1 {0} {1} {2}"        , 2, 3, 4      );
-                logger.Trace('0', "1 {0} {1} {2} {3}"    , 2, 3, 4, 5   );
-                logger.Trace('0', "1 {0} {1} {2} {3} {4}", 2, 3, 4, 5, 6);
+                logger.Log(LogLevel.Debug, "Why", "Hello"                                                       );
+                logger.Log(LogLevel.Info , "Why", "Hello {0}"            , "World"                              );
+                logger.Log(LogLevel.Fatal, "Why", "Hello {0} {1}"        , "World", "from"                      );
+                logger.Log(LogLevel.Trace, "Why", "Hello {0} {1} {2}"    , "World", "from", "Template"          );
+                logger.Log(LogLevel.Warn , "Why", "Hello {0} {1} {2} {3}", "World", "from", "Template", "Logger");
 
-                // Debug
-                logger.Debug('0', "1"                                   );
-                logger.Debug('0', "1 {0}"                , 2            );
-                logger.Debug('0', "1 {0} {1}"            , 2, 3         );
-                logger.Debug('0', "1 {0} {1} {2}"        , 2, 3, 4      );
-                logger.Debug('0', "1 {0} {1} {2} {3}"    , 2, 3, 4, 5   );
-                logger.Debug('0', "1 {0} {1} {2} {3} {4}", 2, 3, 4, 5, 6);
-
-                // Info
-                logger.Info('0', "1"                                   );
-                logger.Info('0', "1 {0}"                , 2            );
-                logger.Info('0', "1 {0} {1}"            , 2, 3         );
-                logger.Info('0', "1 {0} {1} {2}"        , 2, 3, 4      );
-                logger.Info('0', "1 {0} {1} {2} {3}"    , 2, 3, 4, 5   );
-                logger.Info('0', "1 {0} {1} {2} {3} {4}", 2, 3, 4, 5, 6);
-
-                // Warn
-                logger.Warn('0', "1"                                   );
-                logger.Warn('0', "1 {0}"                , 2            );
-                logger.Warn('0', "1 {0} {1}"            , 2, 3         );
-                logger.Warn('0', "1 {0} {1} {2}"        , 2, 3, 4      );
-                logger.Warn('0', "1 {0} {1} {2} {3}"    , 2, 3, 4, 5   );
-                logger.Warn('0', "1 {0} {1} {2} {3} {4}", 2, 3, 4, 5, 6);
-
-                // Error
-                logger.Error('0', "1"                                   );
-                logger.Error('0', "1 {0}"                , 2            );
-                logger.Error('0', "1 {0} {1}"            , 2, 3         );
-                logger.Error('0', "1 {0} {1} {2}"        , 2, 3, 4      );
-                logger.Error('0', "1 {0} {1} {2} {3}"    , 2, 3, 4, 5   );
-                logger.Error('0', "1 {0} {1} {2} {3} {4}", 2, 3, 4, 5, 6);
-
-                // Fatal
-                logger.Fatal('0', "1"                                   );
-                logger.Fatal('0', "1 {0}"                , 2            );
-                logger.Fatal('0', "1 {0} {1}"            , 2, 3         );
-                logger.Fatal('0', "1 {0} {1} {2}"        , 2, 3, 4      );
-                logger.Fatal('0', "1 {0} {1} {2} {3}"    , 2, 3, 4, 5   );
-                logger.Fatal('0', "1 {0} {1} {2} {3} {4}", 2, 3, 4, 5, 6);
-
-                Assert.AreEqual(36, logger.Entries.Count);
-                for (LogLevel level = LogLevel.Trace; logger.Entries.Count > 0; level++)
-                {
-                    Assert.IsTrue(logger.Entries.Count >= 6);
-                    Assert.AreEqual($"{level:F} - 0 1"          , logger.Entries.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2"        , logger.Entries.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3"      , logger.Entries.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3 4"    , logger.Entries.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3 4 5"  , logger.Entries.Dequeue());
-                    Assert.AreEqual($"{level:F} - 0 1 2 3 4 5 6", logger.Entries.Dequeue());
-                }
+                Assert.AreEqual(5, logger.Entries.Count);
+                Assert.AreEqual("[Debug] - Why Hello"                             , logger.Entries.Dequeue());
+                Assert.AreEqual("[Info ] - Why Hello World"                       , logger.Entries.Dequeue());
+                Assert.AreEqual("[Fatal] - Why Hello World from"                  , logger.Entries.Dequeue());
+                Assert.AreEqual("[Trace] - Why Hello World from Template"         , logger.Entries.Dequeue());
+                Assert.AreEqual("[Warn ] - Why Hello World from Template Logger"  , logger.Entries.Dequeue());
             }
         }
     }

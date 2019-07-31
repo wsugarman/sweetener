@@ -7,19 +7,17 @@ namespace Sweetener.Logging.Test
     {
         public Queue<LogEntry<T>> Entries { get; } = new Queue<LogEntry<T>>();
 
-        public MemoryLogger()
-            : base()
-        { }
+        public override IFormatProvider FormatProvider { get; }
 
-        public MemoryLogger(LogLevel minLevel)
-            : base(minLevel)
-        { }
+        public override LogLevel MinLevel { get; }
 
         public MemoryLogger(LogLevel minLevel, IFormatProvider formatProvider)
-            : base(minLevel, formatProvider)
-        { }
+        {
+            FormatProvider = formatProvider;
+            MinLevel       = minLevel;
+        }
 
-        protected internal override void Log(LogEntry<T> logEntry)
+        protected override void Add(LogEntry<T> logEntry)
             => Entries.Enqueue(logEntry);
     }
 }

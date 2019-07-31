@@ -10,15 +10,23 @@ namespace Sweetener.Logging.Test
     public class ContextualConsoleLoggerTest
     {
         [TestMethod]
-        public void Constructor()
+        public void ConstructorExceptions()
         {
-            // Argument Validation
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ConsoleLogger<ushort>((LogLevel)27                    ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ConsoleLogger<ushort>((LogLevel)27  , null            ));
+            // ConsoleLogger(LogLevel)
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ConsoleLogger<ushort>((LogLevel)27));
+
+            // ConsoleLogger(LogLevel, string)
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ConsoleLogger<ushort>((LogLevel)27, null));
+
+            // ConsoleLogger(LogLevel, IFormatProvider, string)
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ConsoleLogger<ushort>((LogLevel)27  , null, "{msg}"   )); 
             Assert.ThrowsException<ArgumentNullException      >(() => new ConsoleLogger<ushort>(LogLevel.Trace, null, null      ));
             Assert.ThrowsException<FormatException            >(() => new ConsoleLogger<ushort>(LogLevel.Trace, null, "{foobar}"));
+        }
 
-            // Constructor Overloads
+        [TestMethod]
+        public void Constructor()
+        {
             using (ConsoleLogger<byte> logger = new ConsoleLogger<byte>())
             {
                 Assert.AreEqual(LogLevel.Trace                      , logger.MinLevel           );
@@ -50,64 +58,44 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
-        public void IsSynchronized()
-        {
-            using (Logger<int> logger = new ConsoleLogger<int>())
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger<int> logger = new ConsoleLogger<int>(LogLevel.Info))
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger<int> logger = new ConsoleLogger<int>(LogLevel.Warn, "{cxt} {msg}"))
-                Assert.IsFalse(logger.IsSynchronized);
-
-            using (Logger<int> logger = new ConsoleLogger<int>(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{cxt} {msg}"))
-                Assert.IsFalse(logger.IsSynchronized);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger<int> logger = new ConsoleLogger<int>())
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger<int> logger = new ConsoleLogger<int>(LogLevel.Info))
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger<int> logger = new ConsoleLogger<int>(LogLevel.Warn, "{cxt} {msg}"))
-                Assert.AreEqual(logger, logger.SyncRoot);
-
-            using (Logger<int> logger = new ConsoleLogger<int>(LogLevel.Debug, CultureInfo.GetCultureInfo("es-ES"), "{cxt} {msg}"))
-                Assert.AreEqual(logger, logger.SyncRoot);
-        }
-
-        [TestMethod]
         public void Dispose()
         {
             TextWriter stdOut = Console.Out;
             try
             {
-                using (MemoryStream buffer = new MemoryStream())
-                using (StreamWriter writer = new StreamWriter(buffer, Encoding.ASCII, 1024 * 1024)) // 1 MB buffer!
+                using (StreamWriter writer = new StreamWriter(new MemoryStream(), Encoding.ASCII, 1024 * 1024)) // 1 MB buffer!
                 {
                     // Redirect the output
                     Console.SetOut(writer);
 
                     // Ensure that calls to Dipose flush the logger
+                    int position = 0;
                     ConsoleLogger<int> logger = new ConsoleLogger<int>(default, CultureInfo.InvariantCulture, "{cxt} {msg}");
-                    logger.Log(new LogEntry<int>(LogLevel.Info, 1, "Message"));
+                    logger.Log(LogLevel.Info, 1, "message");
 
                     // Writer buffer is too large for the message to have been written
-                    Assert.AreEqual(0, buffer.Position);
+                    Assert.AreEqual(position, writer.BaseStream.Position);
 
                     // Check position after flush from Dipose()
                     logger.Dispose();
-                    Assert.AreEqual(Encoding.ASCII.GetByteCount("1 Message" + writer.NewLine), buffer.Position);
+                    position += Encoding.ASCII.GetByteCount("1 message" + writer.NewLine);
+                    Assert.AreEqual(position, writer.BaseStream.Position);
 
-                    // After writing some more text, ensure that subsequent calls to Dipose() aren't flushing
-                    Console.WriteLine("Another message");
+                    // Ensure we can continue to call Dispose()
+                    logger.Log(LogLevel.Warn, 2, "more messages");
+                    Assert.AreEqual(position, writer.BaseStream.Position);
+
                     logger.Dispose();
-                    Assert.AreEqual(Encoding.ASCII.GetByteCount("1 Message" + writer.NewLine), buffer.Position);
+                    position += Encoding.ASCII.GetByteCount("2 more messages" + writer.NewLine);
+                    Assert.AreEqual(position, writer.BaseStream.Position);
+
+                    // Read back the messages
+                    writer.BaseStream.Seek(0, SeekOrigin.Begin);
+                    using (StreamReader reader = new StreamReader(writer.BaseStream))
+                    {
+                        Assert.AreEqual("1 message"      , reader.ReadLine());
+                        Assert.AreEqual("2 more messages", reader.ReadLine());
+                    }
                 }
             }
             finally
@@ -122,9 +110,7 @@ namespace Sweetener.Logging.Test
             TextWriter stdOut = Console.Out;
             try
             {
-                // TemplateLogger{T}.Test.cs already validates that the various logging methods
-                // call Log(LogEntry<T>) correctly, so we'll use Log(LogEntry<T>) to validate
-                // calls to WriteLine(string)
+                // TemplateLogger{T}.Test.cs already validates that the various logging methods' formatting
                 using (MemoryStream buffer = new MemoryStream())
                 using (StreamWriter writer = new StreamWriter(buffer))
                 {
@@ -132,23 +118,24 @@ namespace Sweetener.Logging.Test
                     Console.SetOut(writer);
 
                     // Write a few lines
-                    using (ConsoleLogger<long> logger = new ConsoleLogger<long>(default, CultureInfo.InvariantCulture, "At {ts:MM/dd/yyyy HH:mm:ss} [{l,-5:F}] [User: {cxt}] - {msg}"))
+                    using (ConsoleLogger<string> logger = new ConsoleLogger<string>(default, CultureInfo.InvariantCulture, "[{l,-5:F}] - {cxt} {msg}"))
                     {
-                        DateTime timestamp = new DateTime(1987, 9, 28, 12, 34, 56);
-                        logger.Log(new LogEntry<long>(timestamp              , LogLevel.Info , 123L, "Hello"  ));
-                        logger.Log(new LogEntry<long>(timestamp.AddSeconds(1), LogLevel.Fatal, 123L, "Console"));
-                        logger.Log(new LogEntry<long>(timestamp.AddSeconds(1), LogLevel.Info , 456L, "Hello"  ));
-                        logger.Log(new LogEntry<long>(timestamp.AddSeconds(2), LogLevel.Warn , 123L, "World"  ));
+                        logger.Log(LogLevel.Trace, "Why", "Hello"                                                      );
+                        logger.Log(LogLevel.Debug, "Why", "Hello {0}"            , "World"                             );
+                        logger.Log(LogLevel.Info , "Why", "Hello {0} {1}"        , "World", "from"                     );
+                        logger.Log(LogLevel.Warn , "Why", "Hello {0} {1} {2}"    , "World", "from", "Console"          );
+                        logger.Log(LogLevel.Error, "Why", "Hello {0} {1} {2} {3}", "World", "from", "Console", "Logger");
                     }
 
                     // Validate
                     buffer.Seek(0, SeekOrigin.Begin);
                     using (StreamReader reader = new StreamReader(buffer))
                     {
-                        Assert.AreEqual("At 09/28/1987 12:34:56 [Info ] [User: 123] - Hello"  , reader.ReadLine());
-                        Assert.AreEqual("At 09/28/1987 12:34:57 [Fatal] [User: 123] - Console", reader.ReadLine());
-                        Assert.AreEqual("At 09/28/1987 12:34:57 [Info ] [User: 456] - Hello"  , reader.ReadLine());
-                        Assert.AreEqual("At 09/28/1987 12:34:58 [Warn ] [User: 123] - World"  , reader.ReadLine());
+                        Assert.AreEqual("[Trace] - Why Hello"                          , reader.ReadLine());
+                        Assert.AreEqual("[Debug] - Why Hello World"                    , reader.ReadLine());
+                        Assert.AreEqual("[Info ] - Why Hello World from"               , reader.ReadLine());
+                        Assert.AreEqual("[Warn ] - Why Hello World from Console"       , reader.ReadLine());
+                        Assert.AreEqual("[Error] - Why Hello World from Console Logger", reader.ReadLine());
                     }
                 }
             }

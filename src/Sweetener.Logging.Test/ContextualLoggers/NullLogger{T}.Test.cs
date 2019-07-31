@@ -8,13 +8,10 @@ namespace Sweetener.Logging.Test
     public class ContextualNullLoggerTest
     {
         [TestMethod]
-        public void Constructor()
+        public void FormatProvider()
         {
-            using (Logger<int> logger = new NullLogger<int>())
-            {
-                Assert.AreEqual(LogLevel.Trace            , logger.MinLevel      );
-                Assert.AreEqual(CultureInfo.CurrentCulture, logger.FormatProvider);
-            }
+            using (Logger<Guid> logger = new NullLogger<Guid>())
+                Assert.AreEqual(CultureInfo.InvariantCulture, logger.FormatProvider);
         }
 
         [TestMethod]
@@ -22,6 +19,13 @@ namespace Sweetener.Logging.Test
         {
             using (Logger<DateTime> logger = new NullLogger<DateTime>())
                 Assert.IsTrue(logger.IsSynchronized);
+        }
+
+        [TestMethod]
+        public void MinLevel()
+        {
+            using (Logger<decimal> logger = new NullLogger<decimal>())
+                Assert.AreEqual(LogLevel.Trace, logger.MinLevel);
         }
 
         [TestMethod]
@@ -37,21 +41,33 @@ namespace Sweetener.Logging.Test
             Logger<char> logger = new NullLogger<char>();
 
             // Assert that we can call Dispose multiple times without issue
-            logger.Info('1', "Foo");
             logger.Dispose();
-            logger.Warn('2', "Bar");
+            logger.Log(LogLevel.Trace, '0', "1");
+
             logger.Dispose();
-            logger.Fatal('3', "Baz");
+            logger.Log(LogLevel.Debug, '0', "1 {0}", 2);
+
+            logger.Dispose();
+            logger.Log(LogLevel.Info , '0', "1 {0} {1}", 2, 3);
+
+            logger.Dispose();
+            logger.Log(LogLevel.Warn , '0', "1 {0} {1} {2}", 2, 3, 4);
+
+            logger.Dispose();
+            logger.Log(LogLevel.Error, '0', "1 {0} {1} {2} {3}", 2, 3, 4, 5);
         }
 
         [TestMethod]
         public void Log()
         {
-            using (Logger<long> logger = new NullLogger<long>())
+            using (Logger<string> logger = new NullLogger<string>())
             {
-                // Log can be called without issue for each level
-                foreach (LogLevel level in Enum.GetValues(typeof(LogLevel)))
-                    logger.Log(new LogEntry<long>(DateTime.UtcNow, level, (long)level, level.ToString("F")));
+                // Nothing to validate other than ensuring we can call the methods without issue
+                logger.Log(LogLevel.Debug, "Why", "Hello"                                                   );
+                logger.Log(LogLevel.Info , "Why", "Hello {0}"            , "World"                          );
+                logger.Log(LogLevel.Fatal, "Why", "Hello {0} {1}"        , "World", "from"                  );
+                logger.Log(LogLevel.Trace, "Why", "Hello {0} {1} {2}"    , "World", "from", "Null"          );
+                logger.Log(LogLevel.Warn , "Why", "Hello {0} {1} {2} {3}", "World", "from", "Null", "Logger");
             }
         }
     }
