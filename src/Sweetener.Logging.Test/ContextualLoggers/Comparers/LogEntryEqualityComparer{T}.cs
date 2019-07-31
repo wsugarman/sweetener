@@ -25,19 +25,6 @@ namespace Sweetener.Logging.Test
             && EqualityComparer<string  >.Default.Equals(x.ThreadName, y.ThreadName);
 
         public int GetHashCode(LogEntry<T> obj)
-        {
-            int hash = HashHelpers.RandomSeed;
-
-            if (_includeTimestamp)
-                hash = HashHelpers.Combine(hash, obj.Timestamp.GetHashCode());
-
-            hash = HashHelpers.Combine(hash, obj.Level      .GetHashCode()     );
-            hash = HashHelpers.Combine(hash, obj.Context   ?.GetHashCode() ?? 0);
-            hash = HashHelpers.Combine(hash, obj.Message   ?.GetHashCode() ?? 0);
-            hash = HashHelpers.Combine(hash, obj.ThreadId   .GetHashCode()     );
-            hash = HashHelpers.Combine(hash, obj.ThreadName?.GetHashCode() ?? 0);
-
-            return hash;
-        }
+            => throw new NotImplementedException();
     }
 }
