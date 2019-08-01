@@ -108,6 +108,7 @@ namespace Sweetener.Logging
         /// </remarks>
         /// <param name="level">The <see cref="LogLevel"/> associated with the message.</param>
         /// <param name="message">The message to be logged.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is an unknown value.</exception>
         /// <exception cref="ObjectDisposedException">The logger is disposed.</exception>
         public virtual void Log(LogLevel level, string message)
         {
@@ -127,6 +128,7 @@ namespace Sweetener.Logging
         /// <param name="format">A composite format string.</param>
         /// <param name="arg0">An object to format and log.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is an unknown value.</exception>
         /// <exception cref="FormatException">
         /// <para><paramref name="format"/> is not a valid composite format string.</para>
         /// <para>-or-</para>
@@ -155,6 +157,7 @@ namespace Sweetener.Logging
         /// <param name="arg0">The first object to format and log.</param>
         /// <param name="arg1">The second object to format and log.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is an unknown value.</exception>
         /// <exception cref="FormatException">
         /// <para><paramref name="format"/> is not a valid composite format string.</para>
         /// <para>-or-</para>
@@ -184,6 +187,7 @@ namespace Sweetener.Logging
         /// <param name="arg1">The second object to format and log.</param>
         /// <param name="arg2">The third object to format and log.</param>
         /// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is an unknown value.</exception>
         /// <exception cref="FormatException">
         /// <para><paramref name="format"/> is not a valid composite format string.</para>
         /// <para>-or-</para>
@@ -213,6 +217,7 @@ namespace Sweetener.Logging
         /// <exception cref="ArgumentNullException">
         /// <paramref name="format"/> or <paramref name="args"/> is <see langword="null"/>.
         /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is an unknown value.</exception>
         /// <exception cref="FormatException">
         /// <para><paramref name="format"/> is not a valid composite format string.</para>
         /// <para>-or-</para>

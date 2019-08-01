@@ -43,6 +43,18 @@ namespace Sweetener.Logging
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LogEntry"/> structure that
+        /// associates the specified message with additional contextual information
+        /// at the current UTC time.
+        /// </summary>
+        /// <param name="level">The <see cref="LogLevel"/> associated with the <see cref="Message"/>.</param>
+        /// <param name="message">The value to be logged.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="level"/> is an unknown value.</exception>
+        public LogEntry(LogLevel level, string message)
+            : this(DateTime.UtcNow, level, message)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogEntry"/> structure that
         /// associates the specified message with additional contextual information.
         /// </summary>
         /// <param name="timestamp">The timestamp when the log request was made.</param>
@@ -63,18 +75,6 @@ namespace Sweetener.Logging
             ThreadId   = currentThread.ManagedThreadId;
             ThreadName = currentThread.Name;
             Timestamp  = timestamp;
-        }
-
-        // This ctor is called internally where we don't need additional checks
-        internal LogEntry(LogLevel level, string message)
-        {
-            Thread currentThread = Thread.CurrentThread;
-
-            Level      = level;
-            Message    = message;
-            ThreadId   = currentThread.ManagedThreadId;
-            ThreadName = currentThread.Name;
-            Timestamp  = DateTime.UtcNow;
         }
     }
 }

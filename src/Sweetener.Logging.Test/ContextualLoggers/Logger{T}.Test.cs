@@ -45,7 +45,14 @@ namespace Sweetener.Logging.Test
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Warn , 0, null, 1, 2, 3, 4));
                 Assert.ThrowsException<ArgumentNullException>(() => logger.Log(LogLevel.Fatal, 0, "{0}", args     ));
 
-                // Format Exception
+                // ArgumentOutOfRangeException
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => logger.Log((LogLevel)101, 0, "1"                             ));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => logger.Log((LogLevel)102, 0, "1 {0}"            , 2          ));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => logger.Log((LogLevel)103, 0, "1 {0} {1}"        , 2, 3       ));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => logger.Log((LogLevel)104, 0, "1 {0} {1} {2}"    , 2, 3, 4    ));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => logger.Log((LogLevel)105, 0, "1 {0} {1} {2} {3}", 2, 3, 4, 5 ));
+
+                // FormatException
                 Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Fatal, 0, "{0:Y}", 1         ));
                 Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Error, 0, "{0:Y}", 1, 2      ));
                 Assert.ThrowsException<FormatException>(() => logger.Log(LogLevel.Warn , 0, "{0:Y}", 1, 2, 3   ));
