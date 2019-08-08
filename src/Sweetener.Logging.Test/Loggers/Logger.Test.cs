@@ -8,17 +8,10 @@ namespace Sweetener.Logging.Test
     public class LoggerTest
     {
         [TestMethod]
-        public void IsSynchronized()
+        public void IsThreadSafe()
         {
             using (Logger logger = new MemoryLogger(default, CultureInfo.InvariantCulture))
-                Assert.IsFalse(logger.IsSynchronized);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger logger = new MemoryLogger(default, CultureInfo.InvariantCulture))
-                Assert.AreEqual(logger, logger.SyncRoot);
+                Assert.IsFalse(logger.IsThreadSafe);
         }
 
         [TestMethod]

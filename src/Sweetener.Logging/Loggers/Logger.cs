@@ -18,13 +18,13 @@ namespace Sweetener.Logging
         public abstract IFormatProvider FormatProvider { get; }
 
         /// <summary>
-        /// Gets a value indicating whether logging is synchronized (thread safe).
+        /// Gets a value indicating whether logging is thread safe.
         /// </summary>
         /// <value>
-        /// <see langword="true"/> if logging is synchronized (thread safe);
+        /// <see langword="true"/> if logging is thread safe;
         /// otherwise, <see langword="false"/>.
         /// </value>
-        public virtual bool IsSynchronized => false;
+        public virtual bool IsThreadSafe => false;
 
         /// <summary>
         /// When overridden in a derived class, returns the minimum level of log requests
@@ -35,16 +35,6 @@ namespace Sweetener.Logging
         /// any log request with a <see cref="LogLevel"/> below the minimum will be ignored.
         /// </value>
         public abstract LogLevel MinLevel { get; }
-
-        /// <summary>
-        /// Gets an object that can be used to synchronize access to the <see cref="Logger"/>.
-        /// </summary>
-        /// <value>
-        /// An object that can be used to synchronize access to the <see cref="Logger"/>.
-        /// In the default implementation of <see cref="Logger"/>, this property always
-        /// returns the current instance.
-        /// </value>
-        public virtual object SyncRoot => this;
 
         /// <summary>
         /// A <see cref="Logger"/> with no backing store for its entries.

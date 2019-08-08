@@ -8,7 +8,7 @@ namespace Sweetener.Logging
     {
         public override IFormatProvider FormatProvider => CultureInfo.InvariantCulture;
 
-        public override bool IsSynchronized => true;
+        public override bool IsThreadSafe => true;
 
         public override LogLevel MinLevel => LogLevel.Trace;
 

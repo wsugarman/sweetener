@@ -8,20 +8,6 @@ namespace Sweetener.Logging.Test
     public class ContextualTemplateLoggerTest
     {
         [TestMethod]
-        public void IsSynchronized()
-        {
-            using (Logger<int> logger = new MemoryTemplateLogger<int>())
-                Assert.IsFalse(logger.IsSynchronized);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger<int> logger = new MemoryTemplateLogger<int>())
-                Assert.AreEqual(logger, logger.SyncRoot);
-        }
-
-        [TestMethod]
         public void ConstructorExceptions()
         {
             // TemplateLogger(LogLevel)
