@@ -15,10 +15,10 @@ namespace Sweetener.Logging.Test
         }
 
         [TestMethod]
-        public void IsSynchronized()
+        public void IsThreadSafe()
         {
             using (Logger<DateTime> logger = new NullLogger<DateTime>())
-                Assert.IsTrue(logger.IsSynchronized);
+                Assert.IsTrue(logger.IsThreadSafe);
         }
 
         [TestMethod]
@@ -26,13 +26,6 @@ namespace Sweetener.Logging.Test
         {
             using (Logger<decimal> logger = new NullLogger<decimal>())
                 Assert.AreEqual(LogLevel.Trace, logger.MinLevel);
-        }
-
-        [TestMethod]
-        public void SyncRoot()
-        {
-            using (Logger<short> logger = new NullLogger<short>())
-                Assert.AreEqual(logger, logger.SyncRoot);
         }
 
         [TestMethod]
