@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sweetener.Logging.Test
+namespace Sweetener.Diagnostics.Logging.Test
 {
     internal class MemoryTemplateLogger<T> : TemplateLogger<T>
     {

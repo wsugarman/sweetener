@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     /// <summary>
     /// A <see cref="Logger"/> that writes its entries to a <see cref="Stream"/> using

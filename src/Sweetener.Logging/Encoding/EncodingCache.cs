@@ -2,7 +2,7 @@
 
 using System.Text;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics
 {
     internal static class EncodingCache
     {

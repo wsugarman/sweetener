@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     /// <summary>
     /// A <see cref="Logger"/> that writes its entries to the console.

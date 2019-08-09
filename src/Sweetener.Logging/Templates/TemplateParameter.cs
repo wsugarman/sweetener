@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     internal enum TemplateParameter
     {

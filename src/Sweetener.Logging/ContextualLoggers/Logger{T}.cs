@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sweetener.Logging 
+namespace Sweetener.Diagnostics.Logging
 {
     /// <summary>
     /// Represents a client that can log messages with some domain-specific context

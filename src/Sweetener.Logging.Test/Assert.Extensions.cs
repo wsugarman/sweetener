@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Logging.Test
+namespace Sweetener.Diagnostics.Test
 {
     internal static class AssertExtensions
     {

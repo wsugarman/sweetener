@@ -1,7 +1,7 @@
 ﻿// Generated from Logger{T}.Extensions.tt
 using System;
 
-namespace Sweetener.Logging.Extensions
+namespace Sweetener.Diagnostics.Logging.Extensions
 {
     /// <content>
     /// The portion of <see cref="LoggerExtensions"/> for <see cref="Logger{T}"/> methods.

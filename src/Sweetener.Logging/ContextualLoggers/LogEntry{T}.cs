@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     /// <summary>
     /// An entry to be written to the log.

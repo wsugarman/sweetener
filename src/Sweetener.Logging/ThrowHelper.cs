@@ -11,7 +11,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics
 {
     internal static class ThrowHelper
     {

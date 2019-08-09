@@ -1,4 +1,4 @@
-﻿namespace Sweetener.Logging
+﻿namespace Sweetener.Diagnostics.Logging
 {
     /// <summary>
     /// Specifies the priority level and semantics associated with a given log entry.

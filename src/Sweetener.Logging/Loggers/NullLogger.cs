@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     internal sealed class NullLogger : Logger
     {

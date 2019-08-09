@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     internal readonly struct FormatItem
     {

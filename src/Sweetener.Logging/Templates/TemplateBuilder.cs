@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     internal partial class TemplateBuilder
     {

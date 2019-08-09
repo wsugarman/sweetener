@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     partial class TemplateBuilder
     {

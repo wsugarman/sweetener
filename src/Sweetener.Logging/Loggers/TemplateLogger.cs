@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace Sweetener.Logging
+namespace Sweetener.Diagnostics.Logging
 {
     /// <summary>
     /// A <see cref="Logger"/> whose messages are enriched with contextual information

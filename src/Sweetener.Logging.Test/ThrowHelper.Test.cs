@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Logging.Test
+namespace Sweetener.Diagnostics.Test
 {
     [TestClass]
     public class ThrowHelperTest
