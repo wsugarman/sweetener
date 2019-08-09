@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Sweetener.Logging.Extensions;
+using Sweetener.Diagnostics.Logging.Extensions;
+using Sweetener.Diagnostics.Test;
 
 namespace Sweetener.Diagnostics.Logging.Test
 {

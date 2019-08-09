@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Diagnostics.Test;
 
 namespace Sweetener.Diagnostics.Logging.Test
 {

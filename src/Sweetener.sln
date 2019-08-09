@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Logging", "Sweetener.Logging\Sweetener.Logging.csproj", "{8B4B7850-5753-462A-ACBE-777BB119BE87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Diagnostics", "Sweetener.Diagnostics\Sweetener.Diagnostics.csproj", "{8B4B7850-5753-462A-ACBE-777BB119BE87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Logging.Test", "Sweetener.Logging.Test\Sweetener.Logging.Test.csproj", "{A631A105-131F-4E9E-B285-B635C0A29621}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Diagnostics.Test", "Sweetener.Diagnostics.Test\Sweetener.Diagnostics.Test.csproj", "{A631A105-131F-4E9E-B285-B635C0A29621}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AE0F665-3CE8-4201-9525-DF7CD3573B1C}"
 	ProjectSection(SolutionItems) = preProject
