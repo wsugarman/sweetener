@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Diagnostics.Logging.Test
+namespace Sweetener.Diagnostics.Test
 {
     [TestClass]
     public class EncodingCacheTest
