@@ -1,0 +1,24 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq" #>
+<#+
+    public string GetTypeParameters(int count)
+        => GetList(count, "T"); // T1, T2, T3
+
+    public string GetParameters(int count)
+        => GetList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3
+
+    public string GetArguments(int count)
+        => GetList(count, "arg"); // arg1, arg2, arg3
+
+    private string GetList(int count, params string[] pattern)
+    {
+        if (count == 0)
+            return string.Empty;
+
+        return count == 1
+            ? string.Join(" " , pattern)
+            : string.Join(", ", System.Linq.Enumerable.Repeat(pattern, count).Select((p, i) => string.Join(" ", pattern.Select(x => x + (i + 1)))));
+    }
+#>

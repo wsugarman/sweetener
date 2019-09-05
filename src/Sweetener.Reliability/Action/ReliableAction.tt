@@ -1,0 +1,97 @@
+﻿<#@ template hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\TextTemplating\Include.t4" #> // Generated from ReliableAction.tt
+using System;
+using System.Threading;
+
+namespace Sweetener.Reliability
+{
+<#
+const int maxParameters = 1;
+for (int i = 0; i <= maxParameters; i++)
+{
+    string arguments      = GetArguments     (i);
+    string parameters     = GetParameters    (i);
+    string typeParameters = GetTypeParameters(i);
+
+    string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
+    string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+#>
+    #region ReliableAction<#= typeParametersCode #>
+
+    /// <summary>
+    /// A wrapper to reliably invoke an <see cref="Action<#= typeParametersComment #>"/> in case of transient issues.
+    /// </summary>
+    public class ReliableAction<#= typeParametersCode #>
+    {
+        /// <summary>
+        /// Gets the maximum number of retry attempts.
+        /// </summary>
+        /// <value>
+        /// The maximum number of attempts the underlying <see cref="Action<#= typeParametersComment #>"/>
+        /// should be invoked if there are transient exceptions.
+        /// </value>
+        public int MaxRetries { get; }
+
+        /// <summary>
+        /// Gets the policy that determines which exceptions are transient.
+        /// </summary>
+        /// <value>
+        /// The <see cref="DelayPolicy"/> that indicates when
+        /// </value>
+        public DelayPolicy DelayPolicy { get; }
+
+        public RetryPolicy RetryPolicy { get; }
+
+        private readonly Action<#= typeParametersCode #> _action;
+
+        public ReliableAction(Action<#= typeParametersCode #> action, int maxRetries, DelayPolicy delayPolicy, RetryPolicy retryPolicy)
+        {
+            _action     = action;
+            MaxRetries  = maxRetries;
+            DelayPolicy = delayPolicy;
+            RetryPolicy = retryPolicy;
+        }
+
+        public bool TryInvoke(<#= parameters #>)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(<#= arguments #>);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    if (!RetryPolicy.IsTransient(e))
+                        return false;
+
+                    delay = DelayPolicy.GetDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            return false;
+        }
+
+        private bool ContinueRetry(int attempt, TimeSpan delay)
+        {
+            bool continueRetry = attempt <= MaxRetries;
+            if (continueRetry)
+                Thread.Sleep(delay);
+
+            return continueRetry;
+        }
+    }
+
+    #endregion
+
+<#
+    }
+#>
+}
