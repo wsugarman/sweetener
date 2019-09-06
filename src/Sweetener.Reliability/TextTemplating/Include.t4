@@ -3,6 +3,8 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq" #>
 <#+
+    const int MaxParameters = 16;
+
     public string GetTypeParameters(int count)
         => GetList(count, "T"); // T1, T2, T3
 
@@ -12,13 +14,40 @@
     public string GetArguments(int count)
         => GetList(count, "arg"); // arg1, arg2, arg3
 
+    public string GetNthWord(int i)
+    {
+        switch (i)
+        {
+            case  1: return "first";
+            case  2: return "second";
+            case  3: return "third";
+            case  4: return "fourth";
+            case  5: return "fifth";
+            case  6: return "sixth";
+            case  7: return "seventh";
+            case  8: return "eighth";
+            case  9: return "ninth";
+            case 10: return "tenth";
+            case 11: return "eleventh";
+            case 12: return "twelfth";
+            case 13: return "thirteenth";
+            case 14: return "fourteenth";
+            case 15: return "fifteenth";
+            case 16: return "sixteenth";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}");
+        }
+    }
+
     private string GetList(int count, params string[] pattern)
     {
         if (count == 0)
             return string.Empty;
 
-        return count == 1
-            ? string.Join(" " , pattern)
-            : string.Join(", ", System.Linq.Enumerable.Repeat(pattern, count).Select((p, i) => string.Join(" ", pattern.Select(x => x + (i + 1)))));
+        IEnumerable<string> patterns = Enumerable
+            .Repeat(pattern, count)
+            .Select((p, i) => string.Join(" ", pattern.Select(x => count == 1 ? x : x + (i + 1))));
+
+        return string.Join(", ", patterns);
     }
 #>

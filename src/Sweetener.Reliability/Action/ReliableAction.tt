@@ -2,19 +2,19 @@
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #> // Generated from ReliableAction.tt
+<#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableAction.tt
 using System;
 using System.Threading;
 
 namespace Sweetener.Reliability
 {
 <#
-const int maxParameters = 1;
-for (int i = 0; i <= maxParameters; i++)
+
+for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
 {
-    string arguments      = GetArguments     (i);
-    string parameters     = GetParameters    (i);
-    string typeParameters = GetTypeParameters(i);
+    string arguments      = GetArguments     (parameterCount);
+    string parameters     = GetParameters    (parameterCount);
+    string typeParameters = GetTypeParameters(parameterCount);
 
     string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
     string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
@@ -22,10 +22,25 @@ for (int i = 0; i <= maxParameters; i++)
     #region ReliableAction<#= typeParametersCode #>
 
     /// <summary>
-    /// A wrapper to reliably invoke an <see cref="Action<#= typeParametersComment #>"/> in case of transient issues.
+    /// A wrapper to reliably invoke a delegate in case of transient issues.
     /// </summary>
-    public class ReliableAction<#= typeParametersCode #>
+<#
+    for (int i = 1; i <= parameterCount; i++)
     {
+        string typeParameter   = parameterCount == 1 ? "T" : "T" + i;
+        string parameterPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+    /// <typeparam name="<#= typeParameter #>">The type of the <#= parameterPrefix #>parameter of the underlying delegate.</typeparam>
+<#
+    }
+#>
+    public sealed class ReliableAction<#= typeParametersCode #>
+    {
+        /// <summary>
+        /// Occurs when the action must be retried due to a transient exception.
+        /// </summary>
+        public event Action Retrying;
+
         /// <summary>
         /// Gets the maximum number of retry attempts.
         /// </summary>
@@ -36,25 +51,63 @@ for (int i = 0; i <= maxParameters; i++)
         public int MaxRetries { get; }
 
         /// <summary>
-        /// Gets the policy that determines which exceptions are transient.
+        /// Gets the policy that determines how long wait to wait between retries.
         /// </summary>
         /// <value>
-        /// The <see cref="DelayPolicy"/> that indicates when
+        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
         /// </value>
         public DelayPolicy DelayPolicy { get; }
 
+        /// <summary>
+        /// Gets the policy that determines which errors are transient.
+        /// </summary>
+        /// <value>
+        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
+        /// </value>
         public RetryPolicy RetryPolicy { get; }
 
         private readonly Action<#= typeParametersCode #> _action;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAction<#= typeParametersComment #>"/>
+        /// class that executes the given <see cref="Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="retryPolicy">The policy that determines which errors are transient.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries"/> is a negative number other than -1, which represents an infinite number of retries.
+        /// </exception>
         public ReliableAction(Action<#= typeParametersCode #> action, int maxRetries, DelayPolicy delayPolicy, RetryPolicy retryPolicy)
         {
+            if (maxRetries < -1)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
             _action     = action;
             MaxRetries  = maxRetries;
             DelayPolicy = delayPolicy;
             RetryPolicy = retryPolicy;
         }
 
+        /// <summary>
+        /// Attempts to successfully invoke the underlying delegate.
+        /// </summary>
+<#
+    for (int i = 1; i <= parameterCount; i++)
+    {
+        string argument       = parameterCount == 1 ? "arg" : "arg" + i;
+        string argumentPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+        /// <param name="<#= argument #>">The <#= argumentPrefix #>argument for the underlying delegate.</param>
+<#
+    }
+#>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
         public bool TryInvoke(<#= parameters #>)
         {
             TimeSpan delay;
@@ -83,7 +136,10 @@ for (int i = 0; i <= maxParameters; i++)
         {
             bool continueRetry = attempt <= MaxRetries;
             if (continueRetry)
+            {
                 Thread.Sleep(delay);
+                Retrying?.Invoke();
+            }
 
             return continueRetry;
         }
