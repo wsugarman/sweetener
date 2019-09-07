@@ -39,7 +39,7 @@ for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -50,23 +50,9 @@ for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<#= typeParametersCode #> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction<#= typeParametersComment #>"/>
@@ -85,14 +71,14 @@ for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
 <#
     for (int i = 1; i <= parameterCount; i++)
@@ -122,14 +108,52 @@ for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+<#
+    for (int i = 1; i <= parameterCount; i++)
+    {
+        string argument       = parameterCount == 1 ? "arg" : "arg" + i;
+        string argumentPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+        /// <param name="<#= argument #>">The <#= argumentPrefix #>argument for the underlying delegate.</param>
+<#
+    }
+#>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(<#= parameters #>)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(<#= arguments #>);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -138,7 +162,7 @@ for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;

@@ -14,7 +14,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -25,23 +25,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction"/>
@@ -60,14 +46,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <returns>
         /// <see langword="true"/> if the delegate completed without throwing an exception
@@ -87,14 +73,42 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke()
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -103,7 +117,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -123,7 +137,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -134,23 +148,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T}"/>
@@ -169,14 +169,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg">The argument for the underlying delegate.</param>
         /// <returns>
@@ -197,14 +197,43 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T arg)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -213,7 +242,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -234,7 +263,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -245,23 +274,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2}"/>
@@ -280,14 +295,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -309,14 +324,44 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -325,7 +370,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -347,7 +392,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -358,23 +403,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3}"/>
@@ -393,14 +424,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -423,14 +454,45 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -439,7 +501,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -462,7 +524,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -473,23 +535,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4}"/>
@@ -508,14 +556,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -539,14 +587,46 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -555,7 +635,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -579,7 +659,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -590,23 +670,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5}"/>
@@ -625,14 +691,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -657,14 +723,47 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -673,7 +772,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -698,7 +797,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -709,23 +808,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6}"/>
@@ -744,14 +829,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -777,14 +862,48 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -793,7 +912,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -819,7 +938,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -830,23 +949,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7}"/>
@@ -865,14 +970,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -899,14 +1004,49 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -915,7 +1055,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -942,7 +1082,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -953,23 +1093,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8}"/>
@@ -988,14 +1114,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1023,14 +1149,50 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1039,7 +1201,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1067,7 +1229,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1078,23 +1240,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
@@ -1113,14 +1261,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1149,14 +1297,51 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1165,7 +1350,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1194,7 +1379,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1205,23 +1390,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/>
@@ -1240,14 +1411,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1277,14 +1448,52 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1293,7 +1502,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1323,7 +1532,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1334,23 +1543,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/>
@@ -1369,14 +1564,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1407,14 +1602,53 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <param name="arg11">The eleventh argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1423,7 +1657,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1454,7 +1688,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1465,23 +1699,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/>
@@ -1500,14 +1720,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1539,14 +1759,54 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <param name="arg11">The eleventh argument for the underlying delegate.</param>
+        /// <param name="arg12">The twelfth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1555,7 +1815,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1587,7 +1847,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1598,23 +1858,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
@@ -1633,14 +1879,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1673,14 +1919,55 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <param name="arg11">The eleventh argument for the underlying delegate.</param>
+        /// <param name="arg12">The twelfth argument for the underlying delegate.</param>
+        /// <param name="arg13">The thirteenth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1689,7 +1976,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1722,7 +2009,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1733,23 +2020,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/>
@@ -1768,14 +2041,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1809,14 +2082,56 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <param name="arg11">The eleventh argument for the underlying delegate.</param>
+        /// <param name="arg12">The twelfth argument for the underlying delegate.</param>
+        /// <param name="arg13">The thirteenth argument for the underlying delegate.</param>
+        /// <param name="arg14">The fourteenth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1825,7 +2140,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1859,7 +2174,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -1870,23 +2185,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/>
@@ -1905,14 +2206,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -1947,14 +2248,57 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <param name="arg11">The eleventh argument for the underlying delegate.</param>
+        /// <param name="arg12">The twelfth argument for the underlying delegate.</param>
+        /// <param name="arg13">The thirteenth argument for the underlying delegate.</param>
+        /// <param name="arg14">The fourteenth argument for the underlying delegate.</param>
+        /// <param name="arg15">The fifteenth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -1963,7 +2307,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
@@ -1998,7 +2342,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the action must be retried due to a transient exception.
         /// </summary>
-        public event Action Retrying;
+        public event Action<int> Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -2009,23 +2353,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        /// <summary>
-        /// Gets the policy that determines how long wait to wait between retries.
-        /// </summary>
-        /// <value>
-        /// The <see cref="DelayPolicy"/> that determines how long wait to wait between retries.
-        /// </value>
-        public DelayPolicy DelayPolicy { get; }
-
-        /// <summary>
-        /// Gets the policy that determines which errors are transient.
-        /// </summary>
-        /// <value>
-        /// The <see cref="RetryPolicy"/> that indicates which errors are transient.
-        /// </value>
-        public RetryPolicy RetryPolicy { get; }
-
         private readonly Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> _action;
+        private readonly DelayPolicy _delayPolicy;
+        private readonly RetryPolicy _retryPolicy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
@@ -2044,14 +2374,14 @@ namespace Sweetener.Reliability
             if (maxRetries < -1)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            _action     = action;
-            MaxRetries  = maxRetries;
-            DelayPolicy = delayPolicy;
-            RetryPolicy = retryPolicy;
+            _action      = action;
+            _delayPolicy = delayPolicy;
+            _retryPolicy = retryPolicy;
+            MaxRetries   = maxRetries;
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate.
+        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
         /// <param name="arg2">The second argument for the underlying delegate.</param>
@@ -2087,14 +2417,58 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!RetryPolicy.IsTransient(e))
+                    if (!_retryPolicy.IsTransient(e))
                         return false;
 
-                    delay = DelayPolicy.GetDelay(attempt, e);
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
                 }
             } while (ContinueRetry(attempt, delay));
 
             return false;
+        }
+
+        /// <summary>
+        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        /// <param name="arg6">The sixth argument for the underlying delegate.</param>
+        /// <param name="arg7">The seventh argument for the underlying delegate.</param>
+        /// <param name="arg8">The eighth argument for the underlying delegate.</param>
+        /// <param name="arg9">The ninth argument for the underlying delegate.</param>
+        /// <param name="arg10">The tenth argument for the underlying delegate.</param>
+        /// <param name="arg11">The eleventh argument for the underlying delegate.</param>
+        /// <param name="arg12">The twelfth argument for the underlying delegate.</param>
+        /// <param name="arg13">The thirteenth argument for the underlying delegate.</param>
+        /// <param name="arg14">The fourteenth argument for the underlying delegate.</param>
+        /// <param name="arg15">The fifteenth argument for the underlying delegate.</param>
+        /// <param name="arg16">The sixteenth argument for the underlying delegate.</param>
+        /// <exception cref="RetriesExhaustedException">The number of attempts exceeded <see cref="MaxRetries"/>.</exception>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16)
+        {
+            TimeSpan delay;
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!_retryPolicy.IsTransient(e))
+                        throw e;
+
+                    delay = _delayPolicy.GetExceptionDelay(attempt, e);
+                }
+            } while (ContinueRetry(attempt, delay));
+
+            throw new RetriesExhaustedException(attempt);
         }
 
         private bool ContinueRetry(int attempt, TimeSpan delay)
@@ -2103,7 +2477,7 @@ namespace Sweetener.Reliability
             if (continueRetry)
             {
                 Thread.Sleep(delay);
-                Retrying?.Invoke();
+                Retrying?.Invoke(attempt);
             }
 
             return continueRetry;
