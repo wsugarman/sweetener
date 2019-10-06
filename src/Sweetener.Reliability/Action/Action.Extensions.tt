@@ -1,0 +1,87 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\TextTemplating\Include.t4" #>// Generated from Action.Extensions.tt
+using System;
+using System.Threading.Tasks;
+
+namespace Sweetener.Reliability
+{
+    /// <summary>
+    /// A collection of methods to reliablty invoke actions.
+    /// </summary>
+    public static class ActionExtensions
+    {
+<#
+for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
+{
+    string arguments      = GetArguments     (parameterCount);
+    string parameters     = GetParameters    (parameterCount);
+    string typeParameters = GetTypeParameters(parameterCount);
+    string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
+
+    string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
+    string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+#>
+        #region WithRetry<#= typeParametersCode #>
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+#>
+        public static Action<#= typeParametersCode #> WithRetry<#= typeParametersCode #>(this Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+#>
+        public static Action<#= typeParametersCode #> WithRetry<#= typeParametersCode #>(this Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < -1)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionPolicy == null)
+                throw new ArgumentNullException(nameof(exceptionPolicy));
+
+            if (delayPolicy == null)
+                throw new ArgumentNullException(nameof(delayPolicy));
+
+            return (<#= parameters #>) =>
+            {
+                int attempt = 0;
+            Attempt:
+                attempt++;
+                try
+                {
+                    action(<#= arguments #>);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!exceptionPolicy(e) || attempt > maxRetries)
+                        throw e;
+
+                    Task.Delay(delayPolicy(attempt, e)).Wait();
+                    goto Attempt;
+                }
+            };
+        }
+
+        #endregion
+
+<#
+}
+#>
+    }
+}

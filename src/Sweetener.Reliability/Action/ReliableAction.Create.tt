@@ -1,0 +1,62 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableAction.Create.tt
+using System;
+
+namespace Sweetener.Reliability
+{
+    partial class ReliableAction
+    {
+<#
+for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
+{
+    string arguments      = GetArguments     (parameterCount);
+    string parameters     = GetParameters    (parameterCount);
+    string typeParameters = GetTypeParameters(parameterCount);
+    string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
+
+    string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
+    string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+#>
+        #region Create<#= typeParametersCode #>
+
+        /// <summary>
+        /// Creates a new <see cref="ReliableAction<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+#>
+        public static ReliableAction<#= typeParametersCode #> Create<#= typeParametersCode #>(
+            Action<#= typeParametersCode #> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a new <see cref="ReliableAction<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+#>
+        public static ReliableAction<#= typeParametersCode #> Create<#= typeParametersCode #>(
+            Action<#= typeParametersCode #> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
+
+
+        #endregion
+
+<#
+}
+#>
+    }
+}

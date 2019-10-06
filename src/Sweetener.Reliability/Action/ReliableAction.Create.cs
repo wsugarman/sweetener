@@ -1,19 +1,16 @@
-﻿// Generated from Action.Extensions.tt
+﻿// Generated from ReliableAction.Create.tt
 using System;
-using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
-    /// <summary>
-    /// A collection of methods to reliablty invoke actions.
-    /// </summary>
-    public static class ActionExtensions
+    partial class ReliableAction
     {
-        #region WithRetry
+        #region Create
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction"/>
+        /// that executes the given <see cref="Action"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The underlying action to invoke.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -25,12 +22,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction Create(
+            Action action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction"/>
+        /// that executes the given <see cref="Action"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The underlying action to invoke.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -42,48 +44,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction Create(
+            Action action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return () =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T>
+        #region Create<T>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T}"/>
+        /// that executes the given <see cref="Action{T}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the underlying delegate.</typeparam>
         /// <param name="action">The underlying action to invoke.</param>
@@ -96,12 +72,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T> WithRetry<T>(this Action<T> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T> Create<T>(
+            Action<T> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T}"/>
+        /// that executes the given <see cref="Action{T}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the underlying delegate.</typeparam>
         /// <param name="action">The underlying action to invoke.</param>
@@ -114,48 +95,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T> WithRetry<T>(this Action<T> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T> Create<T>(
+            Action<T> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T arg) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2>
+        #region Create<T1, T2>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2}"/>
+        /// that executes the given <see cref="Action{T1, T2}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -169,12 +124,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2> WithRetry<T1, T2>(this Action<T1, T2> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2> Create<T1, T2>(
+            Action<T1, T2> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2}"/>
+        /// that executes the given <see cref="Action{T1, T2}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -188,48 +148,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2> WithRetry<T1, T2>(this Action<T1, T2> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2> Create<T1, T2>(
+            Action<T1, T2> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3>
+        #region Create<T1, T2, T3>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -244,12 +178,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3> WithRetry<T1, T2, T3>(this Action<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3> Create<T1, T2, T3>(
+            Action<T1, T2, T3> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -264,48 +203,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3> WithRetry<T1, T2, T3>(this Action<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3> Create<T1, T2, T3>(
+            Action<T1, T2, T3> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4>
+        #region Create<T1, T2, T3, T4>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -321,12 +234,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4> WithRetry<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4> Create<T1, T2, T3, T4>(
+            Action<T1, T2, T3, T4> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -342,48 +260,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4> WithRetry<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4> Create<T1, T2, T3, T4>(
+            Action<T1, T2, T3, T4> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5>
+        #region Create<T1, T2, T3, T4, T5>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -400,12 +292,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5> WithRetry<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5> Create<T1, T2, T3, T4, T5>(
+            Action<T1, T2, T3, T4, T5> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -422,48 +319,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5> WithRetry<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5> Create<T1, T2, T3, T4, T5>(
+            Action<T1, T2, T3, T4, T5> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6>
+        #region Create<T1, T2, T3, T4, T5, T6>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -481,12 +352,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6> WithRetry<T1, T2, T3, T4, T5, T6>(this Action<T1, T2, T3, T4, T5, T6> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(
+            Action<T1, T2, T3, T4, T5, T6> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -504,48 +380,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6> WithRetry<T1, T2, T3, T4, T5, T6>(this Action<T1, T2, T3, T4, T5, T6> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6> Create<T1, T2, T3, T4, T5, T6>(
+            Action<T1, T2, T3, T4, T5, T6> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7>
+        #region Create<T1, T2, T3, T4, T5, T6, T7>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -564,12 +414,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7> WithRetry<T1, T2, T3, T4, T5, T6, T7>(this Action<T1, T2, T3, T4, T5, T6, T7> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(
+            Action<T1, T2, T3, T4, T5, T6, T7> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -588,48 +443,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7> WithRetry<T1, T2, T3, T4, T5, T6, T7>(this Action<T1, T2, T3, T4, T5, T6, T7> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7> Create<T1, T2, T3, T4, T5, T6, T7>(
+            Action<T1, T2, T3, T4, T5, T6, T7> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -649,12 +478,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8>(this Action<T1, T2, T3, T4, T5, T6, T7, T8> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8> Create<T1, T2, T3, T4, T5, T6, T7, T8>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -674,48 +508,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8>(this Action<T1, T2, T3, T4, T5, T6, T7, T8> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8> Create<T1, T2, T3, T4, T5, T6, T7, T8>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -736,12 +544,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -762,48 +575,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -825,12 +612,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -852,48 +644,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -916,12 +682,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -944,48 +715,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1009,12 +754,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1038,48 +788,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1104,12 +828,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1134,48 +863,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1201,12 +904,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1232,48 +940,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1300,12 +982,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1332,48 +1019,22 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 
-        #region WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+        #region Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1401,12 +1062,17 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(action, maxRetries, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
+        /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/> at most a
+        /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
@@ -1434,40 +1100,13 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+        public static ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
+            Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-            if (maxRetries < -1)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries));
-
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
-
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
-
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16) =>
-            {
-                int attempt = 0;
-            Attempt:
-                attempt++;
-                try
-                {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
-                        throw e;
-
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
-                    goto Attempt;
-                }
-            };
-        }
 
         #endregion
 

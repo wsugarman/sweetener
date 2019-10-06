@@ -50,4 +50,83 @@
 
         return string.Join(", ", patterns);
     }
+
+    public void PrintParamsXmlDoc(int parameterCount, int indent)
+    {
+        if (parameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(parameterCount));
+
+        string spaces = new string(' ', indent * 4);
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string param       = parameterCount == 1 ? "arg" : "arg" + i;
+            string paramPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <param name="<#= param #>">The <#= paramPrefix #>argument for the underlying delegate.</param>
+<#+
+        }
+    }
+
+    public void PrintTypeParamsXmlDoc(int typeParameterCount, int indent, bool includeResult)
+    {
+        if (typeParameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
+
+        string spaces = new string(' ', indent * 4);
+        for (int i = 1; i <= typeParameterCount; i++)
+        {
+            string typeParameter   = typeParameterCount == 1 ? "T" : "T" + i;
+            string parameterPrefix = typeParameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <typeparam name="<#= typeParameter #>">The type of the <#= parameterPrefix #>parameter of the underlying delegate.</typeparam>
+<#+
+        }
+
+        if (includeResult)
+        {
+#>
+<#= spaces #>/// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+<#+
+        }
+    }
+
+    public void PrintFuncParamsXmlDoc(int indent, int typeParameterCount = -1, bool includeResultPolicy = false)
+        => PrintParamsXmlDoc(indent, typeParameterCount, isFunc: true, includeResultPolicy: includeResultPolicy);
+
+    public void PrintActionParamsXmlDoc(int indent, int typeParameterCount = -1)
+        => PrintParamsXmlDoc(indent, typeParameterCount, isFunc: false, includeResultPolicy: false);
+
+    private void PrintParamsXmlDoc(int indent, int typeParameterCount, bool isFunc, bool includeResultPolicy)
+    {
+        if (typeParameterCount < -1)
+            throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
+
+        // Add the type parameters after the summary
+        if (typeParameterCount > -1)
+        {
+            PrintTypeParamsXmlDoc(typeParameterCount, indent, includeResult: isFunc);
+        }
+
+        string spaces = new string(' ', indent * 4);
+#>
+<#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The underlying <#= isFunc ? "function" : "action" #> to invoke.</param>
+<#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
+<#+
+        if (includeResultPolicy)
+        {
+#>
+<#= spaces #>/// <param name="resultPolicy">The policy that determines which results are valid.</param>
+<#+
+        }
+#>
+<#= spaces #>/// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+<#= spaces #>/// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+<#= spaces #>/// <exception cref="ArgumentNullException">
+<#= spaces #>/// <paramref name="<#= isFunc ? "func" : "action" #>" />, <#= includeResultPolicy ? "<paramref name=\"resultPolicy\" /> " : "" #><paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+<#= spaces #>/// </exception>
+<#= spaces #>/// <exception cref="ArgumentOutOfRangeException">
+<#= spaces #>/// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+<#= spaces #>/// </exception>
+<#+
+    }
 #>
