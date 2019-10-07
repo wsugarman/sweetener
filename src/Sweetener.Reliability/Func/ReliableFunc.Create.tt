@@ -13,7 +13,7 @@ namespace Sweetener.Reliability
     public static class ReliableFunc
     {
 <#
-    for (int parameterCount = 0; parameterCount <= MaxParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string arguments      = GetArguments     (parameterCount);
         string parameters     = GetParameters    (parameterCount);

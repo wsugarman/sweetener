@@ -11,9 +11,9 @@ namespace Sweetener.Reliability
     {
         #region Fail
 <#
-for (int parameterCount = 1; parameterCount <= MaxParameters; parameterCount++)
-{
-    string typeParameters = GetTypeParameters(parameterCount);
+    for (int parameterCount = 1; parameterCount <= MaxExceptionParameters; parameterCount++)
+    {
+        string typeParameters = GetTypeParameters(parameterCount);
 #>
         /// <summary>
         /// Creates an <see cref="ExceptionPolicy" /> that immediately fails an operation
@@ -21,49 +21,52 @@ for (int parameterCount = 1; parameterCount <= MaxParameters; parameterCount++)
         /// All other exceptions are assumed to be transient.
         /// </summary>
 <#
-    for (int i = 1; i <= parameterCount; i++)
-    {
-        string typeParameter   = parameterCount == 1 ? "T" : "T" + i;
-        string parameterPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string typeParameter   = parameterCount == 1 ? "T" : "T" + i;
+            string parameterPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
 #>
         /// <typeparam name="<#= typeParameter #>">The type of the <#= parameterPrefix #>fatal exception.</typeparam>
 <#
-    }
+        }
 #>
         public static ExceptionPolicy Fail<<#= typeParameters #>>()
 <#
-    for (int i = 1; i <= parameterCount; i++)
-    {
-        string typeParameter = parameterCount == 1 ? "T" : "T" + i;
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string typeParameter = parameterCount == 1 ? "T" : "T" + i;
 #>
             where <#= typeParameter #> : Exception
 <#
-    }
+        }
 #>
-            => e =>
+            => exception =>
             {
-                Type t = e.GetType();
+                if (exception == null)
+                    throw new ArgumentNullException(nameof(exception));
+
+                Type t = exception.GetType();
                 return t != typeof(<#= parameterCount == 1 ? "T);" : "T1)" #>
 <#
-    for (int i = 2; i <= parameterCount; i++)
-    {
+        for (int i = 2; i <= parameterCount; i++)
+        {
 #>
                     && t != typeof(T<#= i #>)<#= i == parameterCount ? ";" : "" #>
 <#
-    }
+        }
 #>
             };
 
 <#
-}
+    }
 #>
         #endregion
 
         #region Retry
 <#
-for (int parameterCount = 1; parameterCount <= MaxParameters; parameterCount++)
-{
-    string typeParameters = GetTypeParameters(parameterCount);
+    for (int parameterCount = 1; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string typeParameters = GetTypeParameters(parameterCount);
 #>
         /// <summary>
         /// Creates an <see cref="ExceptionPolicy" /> that attempts to retry an operation
@@ -71,41 +74,44 @@ for (int parameterCount = 1; parameterCount <= MaxParameters; parameterCount++)
         /// All other exceptions are assumed to be fatal.
         /// </summary>
 <#
-    for (int i = 1; i <= parameterCount; i++)
-    {
-        string typeParameter   = parameterCount == 1 ? "T" : "T" + i;
-        string parameterPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string typeParameter   = parameterCount == 1 ? "T" : "T" + i;
+            string parameterPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
 #>
         /// <typeparam name="<#= typeParameter #>">The type of the <#= parameterPrefix #>transient exception.</typeparam>
 <#
-    }
+        }
 #>
         public static ExceptionPolicy Retry<<#= typeParameters #>>()
 <#
-    for (int i = 1; i <= parameterCount; i++)
-    {
+        for (int i = 1; i <= parameterCount; i++)
+        {
         string typeParameter = parameterCount == 1 ? "T" : "T" + i;
 #>
             where <#= typeParameter #> : Exception
 <#
-    }
+        }
 #>
-            => e =>
+            => exception =>
             {
-                Type t = e.GetType();
+                if (exception == null)
+                    throw new ArgumentNullException(nameof(exception));
+
+                Type t = exception.GetType();
                 return t == typeof(<#= parameterCount == 1 ? "T);" : "T1)" #>
 <#
-    for (int i = 2; i <= parameterCount; i++)
-    {
+        for (int i = 2; i <= parameterCount; i++)
+        {
 #>
                     || t == typeof(T<#= i #>)<#= i == parameterCount ? ";" : "" #>
 <#
-    }
+        }
 #>
             };
 
 <#
-}
+    }
 #>
         #endregion
     }

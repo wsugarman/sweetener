@@ -13,46 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Action\Action.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Action.Extensions.cs</LastGenOutput>
-    </None>
-    <None Update="Action\ReliableAction.Create.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableAction.Create.cs</LastGenOutput>
-    </None>
-    <None Update="Action\ReliableAction.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableAction.cs</LastGenOutput>
-    </None>
-    <None Update="Func\Func.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Func.Extensions.cs</LastGenOutput>
-    </None>
-    <None Update="Func\ReliableFunc.Create.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableFunc.Create.cs</LastGenOutput>
-    </None>
-    <None Update="Func\ReliableFunc.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableFunc.cs</LastGenOutput>
-    </None>
-    <None Update="Policies\Exception\ExceptionPolicies.Specific.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExceptionPolicies.Specific.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Action\Action.Extensions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Action\Actions.Extensions.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Actions.Extensions.tt</DependentUpon>
     </Compile>
     <Compile Update="Action\ReliableAction.Create.cs">
       <DesignTime>True</DesignTime>
@@ -84,6 +48,37 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ExceptionPolicies.Specific.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Action\Action.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Action.Extensions.cs</LastGenOutput>
+    </None>
+    <None Update="Action\ReliableAction.Create.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAction.Create.cs</LastGenOutput>
+    </None>
+    <None Update="Action\ReliableAction.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAction.cs</LastGenOutput>
+    </None>
+    <None Update="Func\Func.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Func.Extensions.cs</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableFunc.Create.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableFunc.Create.cs</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableFunc.cs</LastGenOutput>
+    </None>
+    <None Update="Policies\Exception\ExceptionPolicies.Specific.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExceptionPolicies.Specific.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
 </Project>

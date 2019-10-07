@@ -1,0 +1,111 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Linq" #>
+<#@ include file="..\..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from ExceptionPolicies.Specific.Test.tt
+using System;
+using System.IO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Sweetener.Reliability.Test
+{
+    partial class ExceptionPoliciesTest
+    {
+        #region Fail
+
+<#
+    for (int parameterCount = 1; parameterCount <= MaxExceptionParameters; parameterCount++)
+    {
+        string typeParameters = GetTypeParameters(parameterCount);
+#>
+        [TestMethod]
+        public void Fail_<#= parameterCount #>()
+        {
+            ExceptionPolicy isTransient = ExceptionPolicies.Fail<#= PrintTypeArgs(parameterCount) #>();
+
+            Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+<#
+        for (int i = 0; i < parameterCount; i++)
+        {
+#>
+            Assert.IsFalse(isTransient(new <#= exceptionTypes[i].Name.PadRight(maxNameLength) #>()));
+<#
+        }
+#>
+<#
+        for (int i = parameterCount; i < exceptionTypes.Length; i++)
+        {
+#>
+            Assert.IsTrue (isTransient(new <#= exceptionTypes[i].Name.PadRight(maxNameLength) #>()));
+<#
+        }
+#>
+        }
+
+<#
+    }
+#>
+        #endregion
+
+        #region Retry
+
+<#
+    for (int parameterCount = 1; parameterCount <= MaxExceptionParameters; parameterCount++)
+    {
+        string typeParameters = GetTypeParameters(parameterCount);
+#>
+        [TestMethod]
+        public void Retry_<#= parameterCount #>()
+        {
+            ExceptionPolicy isTransient = ExceptionPolicies.Retry<#= PrintTypeArgs(parameterCount) #>();
+
+            Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+<#
+        for (int i = 0; i < parameterCount; i++)
+        {
+#>
+            Assert.IsTrue (isTransient(new <#= exceptionTypes[i].Name.PadRight(maxNameLength) #>()));
+<#
+        }
+#>
+<#
+        for (int i = parameterCount; i < exceptionTypes.Length; i++)
+        {
+#>
+            Assert.IsFalse(isTransient(new <#= exceptionTypes[i].Name.PadRight(maxNameLength) #>()));
+<#
+        }
+#>
+        }
+
+<#
+    }
+#>
+        #endregion
+    }
+}
+<#+
+    static Type[] exceptionTypes = new Type[]
+    {
+        typeof(AggregateException        ),
+        typeof(ArgumentException         ),
+        typeof(InvalidOperationException ),
+        typeof(IOException               ),
+        typeof(FileNotFoundException     ),
+        typeof(FormatException           ),
+        typeof(OperationCanceledException),
+        typeof(OverflowException         ),
+
+        // This type is never included in the policy
+        typeof(ArgumentNullException     ),
+    };
+
+    int maxNameLength = exceptionTypes.Select(x => x.Name.Length).Max();
+
+    public string PrintTypeArgs(int count)
+        => "<" + string.Join(", ", exceptionTypes.Take(count).Select(x => x.Name)) + ">";
+#>

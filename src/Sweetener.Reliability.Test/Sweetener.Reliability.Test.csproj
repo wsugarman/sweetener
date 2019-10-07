@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,9 +13,53 @@
     <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
     <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\Sweetener.Reliability\Sweetener.Reliability.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Action\ReliableAction.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAction.Test.cs</LastGenOutput>
+    </None>
+    <None Update="Policies\Exception\ExceptionPolicies.Specific.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExceptionPolicies.Specific.Test.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Item Include="Policies\Exception\ExceptionPolicies.Specific.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExceptionPolicies.Specific.Test.tt</DependentUpon>
+    </Item>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="Action\ReliableAction.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Update="Action\ReliableAction.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Policies\Exception\ExceptionPolicies.Specific.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExceptionPolicies.Specific.Test.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

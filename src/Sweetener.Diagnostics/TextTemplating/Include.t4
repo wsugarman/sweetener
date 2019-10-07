@@ -1,5 +1,0 @@
-﻿<#@ assembly name="System" #>
-<#@ import namespace="System" #>
-<#
-    string[] logLevels = new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" };
-#>

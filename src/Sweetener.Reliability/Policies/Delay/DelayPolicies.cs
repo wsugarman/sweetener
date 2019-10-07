@@ -46,7 +46,7 @@ namespace Sweetener.Reliability
         /// </exception>
         public static DelayPolicy Constant(int delayMilliseconds)
         {
-            if (delayMilliseconds <= 1)
+            if (delayMilliseconds < 0)
                 throw new ArgumentOutOfRangeException(nameof(delayMilliseconds));
 
             return (int attempt) =>
@@ -147,8 +147,11 @@ namespace Sweetener.Reliability
 
             return (int attempt) =>
             {
-                if (attempt < 1 || attempt > 31)
-                    throw new ArgumentOutOfRangeException(nameof(attempt), $"{nameof(attempt)} must be inclusively between 1 and 31.");
+                if (attempt < 1)
+                    throw new ArgumentOutOfRangeException(nameof(attempt), $"{nameof(attempt)} must be greater than 0.");
+
+                if (attempt > 31)
+                    throw new OverflowException($"Maximum delay exceeded '{int.MaxValue}' milliseconds.");
 
                 // Since we cannot pass 2^31 as the exclusive upper bound of Random.Next(int, int),
                 // we'll just offset the operation by 1 and add the 1 back afterwards

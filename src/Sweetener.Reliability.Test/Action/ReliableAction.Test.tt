@@ -1,0 +1,96 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from ReliableAction.Test.tt
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Sweetener.Reliability.Test
+{
+<#
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string arguments      = GetArguments     (parameterCount);
+        string parameters     = GetParameters    (parameterCount);
+        string typeParameters = GetTypeParameters(parameterCount);
+        string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
+    
+        string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
+        string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+#>
+        #region ReliableAction<#= typeParametersCode #>
+
+        [TestClass]
+        public class ReliableAction_<#= parameterCount #>_Test
+        {
+            [TestMethod]
+            public void Ctor()
+            {
+                // DelayPolicy
+                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>(null, Retry.Infinite, ExceptionPolicies.Fatal, DelayPolicies.None));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, DelayPolicies.None));
+                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, null                   , DelayPolicies.None));
+                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
+
+                // ComplexDelayPolicy
+                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>(null, Retry.Infinite, ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero ));
+                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, null                   , (i, e) => TimeSpan.Zero ));
+                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
+            }
+        }
+
+        #endregion
+
+<#
+    }
+#>
+}
+<#+
+    static string[] typeArgs = new string[]
+    {
+        "int",
+        "string",
+        "double",
+        "long",
+        "ushort",
+        "byte",
+        "TimeSpan",
+        "uint",
+        "object",
+        "DateTime",
+        "ulong",
+        "sbyte",
+        "decimal",
+        "char",
+        "float",
+        "Guid",
+    };
+
+    static string[] args = new string[]
+    {
+        "42",
+        "\"foo\"",
+        "3.14D",
+        "1000L",
+        "(ushort)1",
+        "(byte)255",
+        "TimeSpan.FromDays(30)",
+        "112U",
+        "new object()",
+        "new DateTime(2019, 10, 06)",
+        "321UL",
+        "(sbyte)-7",
+        "-24.68M",
+        "'!'",
+        "0.1F",
+        "Guid.NewGuid()",
+    };
+
+    public string PrintTypeArgs(int count)
+        => count == 0 ? string.Empty : "<" + string.Join(", ", typeArgs.Take(count)) + ">";
+
+    public string PrintArgs(int count)
+        => "(" + string.Join(", ", args.Take(count)) + ")";
+#>

@@ -3,7 +3,9 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq" #>
 <#+
-    const int MaxParameters = 16;
+    const int MaxDelegateParameters = 16;
+
+    const int MaxExceptionParameters = 8;
 
     public string GetTypeParameters(int count)
         => GetList(count, "T"); // T1, T2, T3
