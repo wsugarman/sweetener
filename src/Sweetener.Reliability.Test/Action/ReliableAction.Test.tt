@@ -4,6 +4,8 @@
 <#@ import namespace="System" #>
 <#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from ReliableAction.Test.tt
 using System;
+using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -11,37 +13,343 @@ namespace Sweetener.Reliability.Test
 <#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string arguments      = GetArguments     (parameterCount);
-        string parameters     = GetParameters    (parameterCount);
-        string typeParameters = GetTypeParameters(parameterCount);
-        string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
-    
-        string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
-        string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+        string arguments      = GetArguments (parameterCount);
+        string parameters     = GetParameters(typeArgs, parameterCount);
+        string typeArguments  = GetTypeArgs  (parameterCount);
+        string typeParameters = parameterCount == 0 ? string.Empty : "<" + GetTypeParameters(parameterCount) + ">";
+        string testArguments  = GetTestArguments(parameterCount);
+        string optionalComma    = parameterCount > 0 ? ", " : string.Empty;
+
 #>
-        #region ReliableAction<#= typeParametersCode #>
+    #region ReliableAction<#= typeParameters #>
 
-        [TestClass]
-        public class ReliableAction_<#= parameterCount #>_Test
+    [TestClass]
+    public sealed class ReliableActionTest<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #> : BaseReliableActionTest
+    {
+        private static readonly Func<ReliableAction<#= typeArguments #>, Action<#= typeArguments #>> s_getAction = DynamicGetter.ForField<ReliableAction<#= typeArguments #>, Action<#= typeArguments #>>("_action");
+
+        [TestMethod]
+        public void Ctor_DelayPolicy()
         {
-            [TestMethod]
-            public void Ctor()
-            {
-                // DelayPolicy
-                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>(null, Retry.Infinite, ExceptionPolicies.Fatal, DelayPolicies.None));
-                Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, DelayPolicies.None));
-                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, null                   , DelayPolicies.None));
-                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>(null, Retries.Infinite, ExceptionPolicies.Fatal, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
 
-                // ComplexDelayPolicy
-                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>(null, Retry.Infinite, ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero));
-                Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero ));
-                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, null                   , (i, e) => TimeSpan.Zero ));
-                Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= PrintTypeArgs(parameterCount) #>((<#= GetArguments(parameterCount) #>) => Console.WriteLine("Hello World"), Retry.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
+            Action<#= typeArguments #> action = (<#= arguments #>) => Console.WriteLine("Hello World");
+            ReliableAction<#= typeArguments #> actual = new ReliableAction<#= typeArguments #>(action, 37, ExceptionPolicies.Transient, DelayPolicies.Constant(115));
+
+            Assert.AreSame(action, s_getAction(actual));
+            Ctor(actual, 37, ExceptionPolicies.Transient, actualPolicy =>
+            {
+                Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy( 1, new Exception()));
+                Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy( 2, new Exception()));
+                Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy(10, new Exception()));
+            });
+        }
+
+        [TestMethod]
+        public void Ctor_ComplexDelayPolicy()
+        {
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>(null, Retries.Infinite, ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
+
+            ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.Zero;
+            Action<#= typeArguments #> action = (<#= arguments #>) => Console.WriteLine("Hello World");
+            ReliableAction<#= typeArguments #> actual = new ReliableAction<#= typeArguments #>(action, 37, ExceptionPolicies.Transient, delayPolicy);
+
+            Assert.AreSame(action, s_getAction(actual));
+            Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
+        }
+
+        [TestMethod]
+        public void Invoke_NoCancellationToken()
+            => Invoke(reliableAction => reliableAction.Invoke(<#= testArguments #>));
+
+        [TestMethod]
+        public void Invoke_CancellationToken()
+        {
+            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            {
+                Action<ReliableAction<#= typeArguments #>> invokeReliableAction = reliableAction => reliableAction.Invoke(<#= testArguments #><#= optionalComma #>cancellationTokenSource.Token);
+
+                Invoke(invokeReliableAction);
+
+                Invoke_Canceled(
+                    new ReliableAction<#= typeArguments #>(
+                        (<#= arguments #>) =>
+                        {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                            AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                            throw new IOException();
+                        },
+                        Retries.Infinite,
+                        ExceptionPolicies.Retry<IOException>(),
+                        DelayPolicies.Constant(5)),
+                    invokeReliableAction,
+                    cancellationTokenSource);
             }
         }
 
-        #endregion
+        [TestMethod]
+        public void TryInvoke_NoCancellationToken()
+            => TryInvoke(reliableAction => reliableAction.TryInvoke(<#= testArguments #>));
+
+        [TestMethod]
+        public void TryInvoke_CancellationToken()
+        {
+            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            {
+                Func<ReliableAction<#= typeArguments #>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(<#= testArguments #><#= optionalComma #>cancellationTokenSource.Token);
+
+                TryInvoke(tryInvokeReliableAction);
+
+                TryInvoke_Canceled(
+                    new ReliableAction<#= typeArguments #>(
+                        (<#= arguments #>) =>
+                        {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                            AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                            throw new IOException();
+                        },
+                        Retries.Infinite,
+                        ExceptionPolicies.Retry<IOException>(),
+                        DelayPolicies.Constant(5)),
+                    tryInvokeReliableAction,
+                    cancellationTokenSource);
+            }
+        }
+
+        private void Invoke(Action<ReliableAction<#= typeArguments #>> invoke)
+        {
+            // Immediate Success
+            Invoke_Success(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) => <#= parameterCount > 0 ? "AssertDelegateParameters(" + arguments + ")" : "Console.WriteLine(\"Success\")" #>,
+                    5,
+                    ExceptionPolicies.Fatal,
+                    DelayPolicies.None),
+                invoke);
+
+            // Immediate Failure
+            Invoke_Failure<ReliableAction<#= typeArguments #>, InvalidOperationException>(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        throw new InvalidOperationException();
+                    },
+                    5,
+                    ExceptionPolicies.Fail<InvalidOperationException>(),
+                    DelayPolicies.None),
+                invoke);
+
+            // Eventual Success
+            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            Invoke_EventualSuccess(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        eventualSuccess();
+                    },
+                    5,
+                    ExceptionPolicies.Retry<IOException>(),
+                    DelayPolicies.None),
+                invoke,
+                3);
+
+            // Eventual Success
+            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
+            Invoke_EventualFailure<ReliableAction<#= typeArguments #>, InvalidOperationException>(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        eventualFailure();
+                    },
+                    5,
+                    ExceptionPolicies.Retry<IOException>(),
+                    DelayPolicies.None),
+                invoke,
+                4);
+
+            // Retries Exhausted
+            Invoke_RetriesExhausted<ReliableAction<#= typeArguments #>, IOException>(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        throw new IOException();
+                    },
+                    7,
+                    ExceptionPolicies.Retry<IOException>(),
+                    DelayPolicies.None),
+                invoke,
+                7);
+        }
+
+        private void TryInvoke(Func<ReliableAction<#= typeArguments #>, bool> invoke)
+        {
+            // Immediate Success
+            TryInvoke_Success(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) => <#= parameterCount > 0 ? "AssertDelegateParameters(" + arguments + ")" : "Console.WriteLine(\"Success\")" #>,
+                    5,
+                    ExceptionPolicies.Fatal,
+                    DelayPolicies.None),
+                invoke);
+
+            // Immediate Failure
+            TryInvoke_Failure<ReliableAction<#= typeArguments #>, InvalidOperationException>(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        throw new InvalidOperationException();
+                    },
+                    5,
+                    ExceptionPolicies.Fail<InvalidOperationException>(),
+                    DelayPolicies.None),
+                invoke);
+
+            // Eventual Success
+            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            TryInvoke_EventualSuccess(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        eventualSuccess();
+                    },
+                    5,
+                    ExceptionPolicies.Retry<IOException>(),
+                    DelayPolicies.None),
+                invoke,
+                3);
+
+            // Eventual Success
+            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
+            TryInvoke_EventualFailure<ReliableAction<#= typeArguments #>, InvalidOperationException>(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        eventualFailure();
+                    },
+                    5,
+                    ExceptionPolicies.Retry<IOException>(),
+                    DelayPolicies.None),
+                invoke,
+                4);
+
+            // Retries Exhausted
+            TryInvoke_RetriesExhausted<ReliableAction<#= typeArguments #>, IOException>(
+                new ReliableAction<#= typeArguments #>(
+                    (<#= arguments #>) =>
+                    {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                        AssertDelegateParameters(<#= arguments #>);
+<#
+        }
+#>
+                        throw new IOException();
+                    },
+                    7,
+                    ExceptionPolicies.Retry<IOException>(),
+                    DelayPolicies.None),
+                invoke,
+                7);
+        }
+<#
+        if (parameterCount > 0)
+        {
+#>
+
+        private static void AssertDelegateParameters(<#= parameters #>)
+        {
+<#
+            int maxArgLength = args.Take(parameterCount).Select(x => x.Length).Max();
+            for (int i = 0; i < parameterCount; i++)
+            {
+#>
+            Assert.AreEqual(<#= args[i].PadRight(maxArgLength) #>, <#= parameterCount == 1 ? "arg" : "arg" + (i + 1) #>);
+<#
+            }
+#>
+        }
+<#
+        }
+#>
+    }
+
+    #endregion
 
 <#
     }
@@ -58,7 +366,7 @@ namespace Sweetener.Reliability.Test
         "byte",
         "TimeSpan",
         "uint",
-        "object",
+        "Tuple<bool, ulong>",
         "DateTime",
         "ulong",
         "sbyte",
@@ -78,19 +386,19 @@ namespace Sweetener.Reliability.Test
         "(byte)255",
         "TimeSpan.FromDays(30)",
         "112U",
-        "new object()",
+        "Tuple.Create(true, 64UL)",
         "new DateTime(2019, 10, 06)",
         "321UL",
         "(sbyte)-7",
         "-24.68M",
         "'!'",
         "0.1F",
-        "Guid.NewGuid()",
+        "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
     };
 
-    public string PrintTypeArgs(int count)
+    public string GetTypeArgs(int count)
         => count == 0 ? string.Empty : "<" + string.Join(", ", typeArgs.Take(count)) + ">";
 
-    public string PrintArgs(int count)
-        => "(" + string.Join(", ", args.Take(count)) + ")";
+    public string GetTestArguments(int count)
+        => string.Join(", ", args.Take(count));
 #>

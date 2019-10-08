@@ -77,10 +77,10 @@ namespace Sweetener.Reliability
                 OnFailure(exception);
                 return false;
             }
-            else if (attempt <= MaxRetries)
+            else if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
             {
                 Task.Delay(_getDelay(attempt, exception), cancellationToken).Wait(cancellationToken);
-                OnRetry(attempt + 1, exception);
+                OnRetry(attempt, exception);
                 return true;
             }
             else

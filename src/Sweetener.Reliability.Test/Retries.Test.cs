@@ -3,10 +3,10 @@
 namespace Sweetener.Reliability.Test
 {
     [TestClass]
-    public class RetryTest
+    public sealed class RetryTest
     {
         [TestMethod]
         public void Infinite()
-            => Assert.AreEqual(-1, Retry.Infinite); // Some methods may rely on the specific value for their behavior
+            => Assert.AreEqual(-1, Retries.Infinite); // Some methods may rely on the specific value for their behavior
     }
 }

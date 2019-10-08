@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Reliability.Test
 {
     [TestClass]
-    public class DelayPoliciesTest
+    public sealed class DelayPoliciesTest
     {
         [TestMethod]
         public void Constant_TimeSpan()

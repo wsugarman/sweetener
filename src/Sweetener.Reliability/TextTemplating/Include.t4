@@ -13,6 +13,14 @@
     public string GetParameters(int count)
         => GetList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3
 
+     public string GetParameters(string[] types, int count)
+     {
+        if (count == 0)
+            return string.Empty;
+
+        return string.Join(", ", types.Take(count).Select((t, i) => t + " " + (count == 1 ? "arg" : "arg" + (i + 1))));
+     }
+
     public string GetArguments(int count)
         => GetList(count, "arg"); // arg1, arg2, arg3
 

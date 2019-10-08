@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Reliability.Test
 {
     [TestClass]
-    public partial class ExceptionPoliciesTest
+    public sealed partial class ExceptionPoliciesTest
     {
         [TestMethod]
         public void Fatal()
