@@ -9,7 +9,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction
 
     [TestClass]
-    public sealed class ReliableActionTest : BaseReliableActionTest
+    public sealed class ReliableActionTest : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction, Action> s_getAction = DynamicGetter.ForField<ReliableAction, Action>("_action");
 
@@ -48,6 +48,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction, FormatException>(
+                new ReliableAction(() => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction(() => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke());
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction, FormatException>(
+                new ReliableAction(() => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction(() => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke());
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction, IOException>(
+                new ReliableAction(() => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction(() => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action)reliableAction)());
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -140,7 +172,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction, InvalidOperationException>(
                 new ReliableAction(
@@ -239,7 +271,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T>
 
     [TestClass]
-    public sealed class ReliableActionTest1 : BaseReliableActionTest
+    public sealed class ReliableActionTest1 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int>, Action<int>> s_getAction = DynamicGetter.ForField<ReliableAction<int>, Action<int>>("_action");
 
@@ -278,6 +310,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int>, FormatException>(
+                new ReliableAction<int>((arg) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int>((arg) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int>, FormatException>(
+                new ReliableAction<int>((arg) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int>((arg) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int>, IOException>(
+                new ReliableAction<int>((arg) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int>((arg) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int>)reliableAction)(42));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -374,7 +438,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int>, InvalidOperationException>(
                 new ReliableAction<int>(
@@ -484,7 +548,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2>
 
     [TestClass]
-    public sealed class ReliableActionTest2 : BaseReliableActionTest
+    public sealed class ReliableActionTest2 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string>, Action<int, string>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string>, Action<int, string>>("_action");
 
@@ -523,6 +587,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string>, FormatException>(
+                new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string>((arg1, arg2) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo"));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string>, FormatException>(
+                new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string>((arg1, arg2) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo"));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string>, IOException>(
+                new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string>((arg1, arg2) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo"),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string>)reliableAction)(42, "foo"));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -619,7 +715,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string>, InvalidOperationException>(
                 new ReliableAction<int, string>(
@@ -730,7 +826,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3>
 
     [TestClass]
-    public sealed class ReliableActionTest3 : BaseReliableActionTest
+    public sealed class ReliableActionTest3 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double>, Action<int, string, double>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double>, Action<int, string, double>>("_action");
 
@@ -769,6 +865,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double>, FormatException>(
+                new ReliableAction<int, string, double>((arg1, arg2, arg3) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double>((arg1, arg2, arg3) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double>, FormatException>(
+                new ReliableAction<int, string, double>((arg1, arg2, arg3) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double>((arg1, arg2, arg3) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double>, IOException>(
+                new ReliableAction<int, string, double>((arg1, arg2, arg3) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double>((arg1, arg2, arg3) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double>)reliableAction)(42, "foo", 3.14D));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -865,7 +993,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double>, InvalidOperationException>(
                 new ReliableAction<int, string, double>(
@@ -977,7 +1105,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4>
 
     [TestClass]
-    public sealed class ReliableActionTest4 : BaseReliableActionTest
+    public sealed class ReliableActionTest4 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long>, Action<int, string, double, long>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long>, Action<int, string, double, long>>("_action");
 
@@ -1016,6 +1144,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long>, FormatException>(
+                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long>, FormatException>(
+                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long>, IOException>(
+                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long>)reliableAction)(42, "foo", 3.14D, 1000L));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -1112,7 +1272,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long>(
@@ -1225,7 +1385,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5>
 
     [TestClass]
-    public sealed class ReliableActionTest5 : BaseReliableActionTest
+    public sealed class ReliableActionTest5 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort>, Action<int, string, double, long, ushort>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort>, Action<int, string, double, long, ushort>>("_action");
 
@@ -1264,6 +1424,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort>, IOException>(
+                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -1360,7 +1552,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort>(
@@ -1474,7 +1666,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6>
 
     [TestClass]
-    public sealed class ReliableActionTest6 : BaseReliableActionTest
+    public sealed class ReliableActionTest6 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte>, Action<int, string, double, long, ushort, byte>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte>, Action<int, string, double, long, ushort, byte>>("_action");
 
@@ -1513,6 +1705,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -1609,7 +1833,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte>(
@@ -1724,7 +1948,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7>
 
     [TestClass]
-    public sealed class ReliableActionTest7 : BaseReliableActionTest
+    public sealed class ReliableActionTest7 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, Action<int, string, double, long, ushort, byte, TimeSpan>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, Action<int, string, double, long, ushort, byte, TimeSpan>>("_action");
 
@@ -1763,6 +1987,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -1859,7 +2115,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
@@ -1975,7 +2231,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8>
 
     [TestClass]
-    public sealed class ReliableActionTest8 : BaseReliableActionTest
+    public sealed class ReliableActionTest8 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, Action<int, string, double, long, ushort, byte, TimeSpan, uint>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, Action<int, string, double, long, ushort, byte, TimeSpan, uint>>("_action");
 
@@ -2014,6 +2270,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -2110,7 +2398,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
@@ -2227,7 +2515,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9>
 
     [TestClass]
-    public sealed class ReliableActionTest9 : BaseReliableActionTest
+    public sealed class ReliableActionTest9 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>>("_action");
 
@@ -2266,6 +2554,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -2362,7 +2682,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
@@ -2480,7 +2800,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
 
     [TestClass]
-    public sealed class ReliableActionTest10 : BaseReliableActionTest
+    public sealed class ReliableActionTest10 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>>("_action");
 
@@ -2519,6 +2839,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -2615,7 +2967,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
@@ -2734,7 +3086,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
 
     [TestClass]
-    public sealed class ReliableActionTest11 : BaseReliableActionTest
+    public sealed class ReliableActionTest11 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>>("_action");
 
@@ -2773,6 +3125,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -2869,7 +3253,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
@@ -2989,7 +3373,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
 
     [TestClass]
-    public sealed class ReliableActionTest12 : BaseReliableActionTest
+    public sealed class ReliableActionTest12 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>>("_action");
 
@@ -3028,6 +3412,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -3124,7 +3540,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
@@ -3245,7 +3661,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
 
     [TestClass]
-    public sealed class ReliableActionTest13 : BaseReliableActionTest
+    public sealed class ReliableActionTest13 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>>("_action");
 
@@ -3284,6 +3700,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -3380,7 +3828,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
@@ -3502,7 +3950,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
 
     [TestClass]
-    public sealed class ReliableActionTest14 : BaseReliableActionTest
+    public sealed class ReliableActionTest14 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>>("_action");
 
@@ -3541,6 +3989,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -3637,7 +4117,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
@@ -3760,7 +4240,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
 
     [TestClass]
-    public sealed class ReliableActionTest15 : BaseReliableActionTest
+    public sealed class ReliableActionTest15 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>>("_action");
 
@@ -3799,6 +4279,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -3895,7 +4407,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
@@ -4019,7 +4531,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
 
     [TestClass]
-    public sealed class ReliableActionTest16 : BaseReliableActionTest
+    public sealed class ReliableActionTest16 : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>> s_getAction = DynamicGetter.ForField<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>>("_action");
 
@@ -4058,6 +4570,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, FormatException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, IOException>(
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -4154,7 +4698,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, InvalidOperationException>(
                 new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(

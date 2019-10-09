@@ -24,7 +24,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<#= typeParameters #>
 
     [TestClass]
-    public sealed class ReliableActionTest<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #> : BaseReliableActionTest
+    public sealed class ReliableActionTest<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #> : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<#= typeArguments #>, Action<#= typeArguments #>> s_getAction = DynamicGetter.ForField<ReliableAction<#= typeArguments #>, Action<#= typeArguments #>>("_action");
 
@@ -63,6 +63,38 @@ namespace Sweetener.Reliability.Test
             Assert.AreSame(action, s_getAction(actual));
             Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
         }
+
+        [TestMethod]
+        public void Failed()
+        {
+            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
+            Failed<ReliableAction<#= typeArguments #>, FormatException>(
+                new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
+                new ReliableAction<#= typeArguments #>((<#= arguments #>) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(<#= testArguments #>));
+        }
+
+        [TestMethod]
+        public void RetriesExhausted()
+            => RetriesExhausted<ReliableAction<#= typeArguments #>, FormatException>(
+                new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<#= typeArguments #>((<#= arguments #>) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(<#= testArguments #>));
+
+        [TestMethod]
+        public void Retrying()
+        {
+            Action eventualSuccess = FlakyAction.Create<IOException>(4);
+            Retrying<ReliableAction<#= typeArguments #>, IOException>(
+                new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
+                new ReliableAction<#= typeArguments #>((<#= arguments #>) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
+                reliableAction => reliableAction.Invoke(<#= testArguments #>),
+                retries: 4);
+        }
+
+        [TestMethod]
+        public void CastAction()
+            => Invoke(reliableAction => ((Action<#= typeArguments #>)reliableAction)(<#= testArguments #>));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -187,7 +219,7 @@ namespace Sweetener.Reliability.Test
                 invoke,
                 3);
 
-            // Eventual Success
+            // Eventual Failure
             Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
             Invoke_EventualFailure<ReliableAction<#= typeArguments #>, InvalidOperationException>(
                 new ReliableAction<#= typeArguments #>(
