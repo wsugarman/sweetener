@@ -166,10 +166,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction reliableAction = new ReliableAction(
                 () =>
                 {
@@ -180,13 +183,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -195,27 +206,39 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction reliableAction = new ReliableAction(
                 () =>
                 {
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -224,26 +247,37 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction reliableAction = new ReliableAction(
                 () =>
                 {
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -475,10 +509,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int>, int> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
@@ -490,13 +527,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -505,28 +550,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
                     AssertDelegateParameters(arg);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -535,8 +592,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int>, int> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
@@ -544,18 +604,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -793,10 +861,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string>, int, string> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
                 (arg1, arg2) =>
                 {
@@ -808,13 +879,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo");
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -823,28 +902,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
                 (arg1, arg2) =>
                 {
                     AssertDelegateParameters(arg1, arg2);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo");
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -853,8 +944,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string>, int, string> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
                 (arg1, arg2) =>
@@ -862,18 +956,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo");
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -1112,10 +1214,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
                 (arg1, arg2, arg3) =>
                 {
@@ -1127,13 +1232,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -1142,28 +1255,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
                 (arg1, arg2, arg3) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -1172,8 +1297,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
                 (arg1, arg2, arg3) =>
@@ -1181,18 +1309,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -1432,10 +1568,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
                 (arg1, arg2, arg3, arg4) =>
                 {
@@ -1447,13 +1586,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -1462,28 +1609,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
                 (arg1, arg2, arg3, arg4) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -1492,8 +1651,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
                 (arg1, arg2, arg3, arg4) =>
@@ -1501,18 +1663,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -1753,10 +1923,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
                 (arg1, arg2, arg3, arg4, arg5) =>
                 {
@@ -1768,13 +1941,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -1783,28 +1964,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
                 (arg1, arg2, arg3, arg4, arg5) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -1813,8 +2006,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
                 (arg1, arg2, arg3, arg4, arg5) =>
@@ -1822,18 +2018,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -2075,10 +2279,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
                 (arg1, arg2, arg3, arg4, arg5, arg6) =>
                 {
@@ -2090,13 +2297,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -2105,28 +2320,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
                 (arg1, arg2, arg3, arg4, arg5, arg6) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -2135,8 +2362,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
                 (arg1, arg2, arg3, arg4, arg5, arg6) =>
@@ -2144,18 +2374,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -2398,10 +2636,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
                 {
@@ -2413,13 +2654,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -2428,28 +2677,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -2458,8 +2719,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
@@ -2467,18 +2731,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -2722,10 +2994,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
                 {
@@ -2737,13 +3012,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -2752,28 +3035,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -2782,8 +3077,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
@@ -2791,18 +3089,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -3047,10 +3353,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
                 {
@@ -3062,13 +3371,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -3077,28 +3394,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -3107,8 +3436,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
@@ -3116,18 +3448,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -3373,10 +3713,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
@@ -3388,13 +3731,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -3403,28 +3754,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -3433,8 +3796,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
@@ -3442,18 +3808,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -3700,10 +4074,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
                 {
@@ -3715,13 +4092,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -3730,28 +4115,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -3760,8 +4157,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
@@ -3769,18 +4169,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -4028,10 +4436,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
                 {
@@ -4043,13 +4454,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -4058,28 +4477,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -4088,8 +4519,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
@@ -4097,18 +4531,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -4357,10 +4799,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
                 {
@@ -4372,13 +4817,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -4387,28 +4840,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -4417,8 +4882,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
@@ -4426,18 +4894,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -4687,10 +5163,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
                 {
@@ -4702,13 +5181,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -4717,28 +5204,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -4747,8 +5246,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
@@ -4756,18 +5258,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -5018,10 +5528,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
                 {
@@ -5033,13 +5546,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -5048,28 +5569,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -5078,8 +5611,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
@@ -5087,18 +5623,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -5350,10 +5894,13 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualSuccess = FlakyAction.Create<IOException>(1);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
                 {
@@ -5365,13 +5912,21 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
 
-            Assert.AreEqual(3, retries);
+            Assert.AreEqual(1, retries);
             Assert.AreEqual(retries, exceptionPolicy.Calls);
             Assert.AreEqual(retries, delayPolicy    .Calls);
         }
@@ -5380,28 +5935,40 @@ namespace Sweetener.Reliability.Test
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
         {
+            DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
                 {
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
                     eventualFailure();
                 },
-                5,
+                4,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, failures = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
-            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(TTransient), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
+            reliableAction.RetriesExhausted += e => Assert.Fail();
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
 
-            Assert.AreEqual(4, retries );
+            Assert.AreEqual(2, retries );
             Assert.AreEqual(1, failures);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
@@ -5410,8 +5977,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            DateTime delayStartUtc = DateTime.MinValue;
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+
+            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
@@ -5419,18 +5989,26 @@ namespace Sweetener.Reliability.Test
                     AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
                     throw new T();
                 },
-                5,
+                2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
             int retries = 0, exhausted = 0;
-            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(T), e.GetType());
+
+                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
+                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
+                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
 
             assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
 
-            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(2, retries  );
             Assert.AreEqual(1, exhausted);
             Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
             Assert.AreEqual(retries    , delayPolicy    .Calls);
