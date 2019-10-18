@@ -22,117 +22,32 @@ namespace Sweetener.Reliability.Test
             validateDelayPolicy(s_getDelayPolicy(reliableAction));
         }
 
-        protected void Failed<TDelegate, TException>(TDelegate successfulDelegate, TDelegate unsuccessfulDelegate, Action<TDelegate> invoke)
-            where TDelegate  : ReliableDelegate
-            where TException : Exception
-            => UnsuccessfulEvent<TDelegate, TException>(successfulDelegate, unsuccessfulDelegate, invoke, retriesExhausted: false);
-
-        protected void RetriesExhausted<TDelegate, TException>(TDelegate successfulDelegate, TDelegate unsuccessfulDelegate, Action<TDelegate> invoke)
-            where TDelegate : ReliableDelegate
-            where TException : Exception
-            => UnsuccessfulEvent<TDelegate, TException>(successfulDelegate, unsuccessfulDelegate, invoke, retriesExhausted: true);
-
-        private void UnsuccessfulEvent<TDelegate, TException>(TDelegate successfulDelegate, TDelegate unsuccessfulDelegate, Action<TDelegate> invoke, bool retriesExhausted)
-            where TDelegate  : ReliableDelegate
-            where TException : Exception
-        {
-            int calls = 0;
-            Action<Exception> eventHandler = e =>
-            {
-                Assert.IsNotNull(e);
-                Assert.AreEqual(typeof(TException), e.GetType());
-
-                calls++;
-            };
-
-            // Set up events
-            if (retriesExhausted)
-            {
-                successfulDelegate  .Failed           += e => Assert.Fail();
-                unsuccessfulDelegate.Failed           += e => Assert.Fail();
-                successfulDelegate  .RetriesExhausted += e => eventHandler(e);
-                unsuccessfulDelegate.RetriesExhausted += e => eventHandler(e);
-            }
-            else
-            {
-                
-                successfulDelegate  .Failed           += e => eventHandler(e);
-                unsuccessfulDelegate.Failed           += e => eventHandler(e);
-                successfulDelegate  .RetriesExhausted += e => Assert.Fail();
-                unsuccessfulDelegate.RetriesExhausted += e => Assert.Fail();
-            }
-
-            // Never Called
-            invoke(successfulDelegate);
-            Assert.AreEqual(0, calls);
-
-            // Called
-            try
-            {
-                invoke(unsuccessfulDelegate);
-                Assert.Fail();
-            }
-            catch (TException e)
-            {
-                Assert.AreEqual(typeof(TException), e.GetType());
-            }
-            catch (AssertFailedException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-            }
-
-            Assert.AreEqual(1, calls);
-        }
-
-        protected void Retrying<TDelegate, TException>(TDelegate immediateSuccess, TDelegate eventualSuccess, Action<TDelegate> invoke, int retries)
-            where TDelegate  : ReliableDelegate
-            where TException : Exception
-        {
-            int calls = 0;
-            RetryHandler handler = (i, e) =>
-            {
-                Assert.IsNotNull(e);
-                Assert.AreEqual(typeof(TException), e.GetType());
-
-                calls++;
-                Assert.AreEqual(calls, i);
-            };
-
-            // Never Called
-            immediateSuccess.Retrying += handler;
-            invoke(immediateSuccess);
-
-            Assert.AreEqual(0, calls);
-
-            // Called a few times
-            eventualSuccess.Retrying += handler;
-            invoke(eventualSuccess);
-
-            Assert.AreEqual(retries, calls);
-        }
-
-        protected void Invoke_Success<T>(T reliableAction, Action<T> invoke)
+        protected void Invoke_Success<T>(Func<int, ExceptionPolicy, DelayPolicy, T> actionFactory, Action<T> invoke)
             where T : ReliableDelegate
-            => TryInvoke_Success(reliableAction, x => { invoke(x); return true; });
+            => TryInvoke_Success(actionFactory, x => { invoke(x); return true; });
 
-        protected void TryInvoke_Success<T>(T reliableAction, Func<T, bool> invoke)
+        protected void TryInvoke_Success<T>(Func<int, ExceptionPolicy, DelayPolicy, T> actionFactory, Func<T, bool> tryInvoke)
             where T : ReliableDelegate
         {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            T reliableAction = actionFactory(Retries.Infinite, exceptionPolicy.Invoke, delayPolicy.Invoke);
+
             reliableAction.Retrying         += (i, e) => Assert.Fail();
             reliableAction.Failed           +=     e  => Assert.Fail();
             reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            Assert.IsTrue(invoke(reliableAction));
+            Assert.IsTrue(tryInvoke(reliableAction));
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
-        protected void Invoke_Failure<TDelegate, TException>(TDelegate reliableAction, Action<TDelegate> invoke)
-            where TDelegate : ReliableDelegate
+        protected void Invoke_Failure<TDelegate, TException>(Func<int, ExceptionPolicy, ComplexDelayPolicy, TDelegate> actionFactory, Action<TDelegate> invoke)
+            where TDelegate  : ReliableDelegate
             where TException : Exception
-            => TryInvoke_Failure<TDelegate, TException>(reliableAction, x =>
+            => TryInvoke_Failure<TDelegate, TException>(actionFactory, x =>
                 {
                     try
                     {
@@ -157,65 +72,87 @@ namespace Sweetener.Reliability.Test
                     return true;
                 });
 
-        protected void TryInvoke_Failure<TDelegate, TException>(TDelegate reliableAction, Func<TDelegate, bool> invoke)
+        protected void TryInvoke_Failure<TDelegate, TException>(Func<int, ExceptionPolicy, ComplexDelayPolicy, TDelegate> actionFactory, Func<TDelegate, bool> tryInvoke)
             where TDelegate  : ReliableDelegate
             where TException : Exception
         {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<TException>(ExceptionPolicies.Fail<TException>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create< TException>((i, e) => TimeSpan.Zero);
+
+            TDelegate reliableAction = actionFactory(Retries.Infinite, exceptionPolicy.Invoke, delayPolicy.Invoke);
+
             reliableAction.Retrying         += (i, e) => Assert.Fail();
             reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.AreEqual(typeof(TException), e.GetType());
 
-            Assert.IsFalse(invoke(reliableAction));
+            Assert.IsFalse(tryInvoke(reliableAction));
+
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
-        protected void Invoke_EventualSuccess<T>(T reliableAction, Action<T> invoke, int expectedAttempts)
-            where T : ReliableDelegate
-            => TryInvoke_EventualSuccess(reliableAction, x => { invoke(x); return true; }, expectedAttempts);
+        protected void Invoke_EventualSuccess<TDelegate, TException>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Action<TDelegate> invoke, int expectedAttempts)
+            where TDelegate  : ReliableDelegate
+            where TException : Exception
+            => TryInvoke_EventualSuccess<TDelegate, TException>(actionFactory, x => { invoke(x); return true; }, expectedAttempts);
 
-        protected void TryInvoke_EventualSuccess<T>(T reliableAction, Func<T, bool> invoke, int expectedAttempts)
-            where T : ReliableDelegate
+        protected void TryInvoke_EventualSuccess<TDelegate, TException>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Func<TDelegate, bool> tryInvoke, int expectedAttempts)
+            where TDelegate  : ReliableDelegate
+            where TException : Exception
         {
-            int attempts = -1;
-            reliableAction.Retrying         += (i, e) => attempts = i;
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TException>(ExceptionPolicies.Retry<TException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            TDelegate reliableAction = actionFactory(Retries.Infinite, exceptionPolicy.Invoke, delayPolicy.Invoke);
+
+            int attempts = 0;
+            reliableAction.Retrying         += (i, e) => Assert.AreEqual(++attempts, i);
             reliableAction.Failed           +=     e  => Assert.Fail();
             reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            Assert.IsTrue(invoke(reliableAction));
+            Assert.IsTrue(tryInvoke(reliableAction));
             Assert.AreEqual(expectedAttempts, attempts);
+
+            Assert.AreEqual(expectedAttempts - 1, exceptionPolicy.Calls);
+            Assert.AreEqual(expectedAttempts - 1, delayPolicy    .Calls);
         }
 
-        protected void Invoke_EventualFailure<TDelegate, TException>(TDelegate reliableAction, Action<TDelegate> invoke, int expectedAttempts)
-            where TDelegate : ReliableDelegate
-            where TException : Exception
-            => Invoke_EventuallyUnsuccessful<TDelegate, TException>(reliableAction, invoke, expectedAttempts, retriesExhausted: false);
+        protected void Invoke_EventualFailure<TDelegate, TTransient, TFatal>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Action<TDelegate> invoke, int expectedAttempts)
+            where TDelegate  : ReliableDelegate
+            where TTransient : Exception
+            where TFatal     : Exception
+            => Invoke_EventuallyUnsuccessful<TDelegate, TTransient, TFatal>(actionFactory, invoke, expectedAttempts, retriesExhausted: false);
 
-        protected void TryInvoke_EventualFailure<TDelegate, TException>(TDelegate reliableAction, Func<TDelegate, bool> invoke, int expectedAttempts)
-            where TDelegate : ReliableDelegate
-            where TException : Exception
-            => TryInvoke_Unsuccessful<TDelegate, TException>(reliableAction, invoke, expectedAttempts, retriesExhausted: false);
+        protected void TryInvoke_EventualFailure<TDelegate, TTransient, TFatal>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Func<TDelegate, bool> tryInvoke, int expectedAttempts)
+            where TDelegate  : ReliableDelegate
+            where TTransient : Exception
+            where TFatal     : Exception
+            => TryInvoke_Unsuccessful<TDelegate, TTransient, TFatal>(actionFactory, tryInvoke, expectedAttempts, retriesExhausted: false);
 
-        protected void Invoke_RetriesExhausted<TDelegate, TException>(TDelegate reliableAction, Action<TDelegate> invoke, int expectedAttempts)
+        protected void Invoke_RetriesExhausted<TDelegate, TException>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Action<TDelegate> invoke, int expectedAttempts)
             where TDelegate  : ReliableDelegate
             where TException : Exception
-            => Invoke_EventuallyUnsuccessful<TDelegate, TException>(reliableAction, invoke, expectedAttempts, retriesExhausted: true);
+            => Invoke_EventuallyUnsuccessful<TDelegate, TException, TException>(actionFactory, invoke, expectedAttempts, retriesExhausted: true);
 
-        protected void TryInvoke_RetriesExhausted<TDelegate, TException>(TDelegate reliableAction, Func<TDelegate, bool> invoke, int expectedAttempts)
+        protected void TryInvoke_RetriesExhausted<TDelegate, TException>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Func<TDelegate, bool> tryInvoke, int expectedAttempts)
             where TDelegate  : ReliableDelegate
             where TException : Exception
-            => TryInvoke_Unsuccessful<TDelegate, TException>(reliableAction, invoke, expectedAttempts, retriesExhausted: true);
+            => TryInvoke_Unsuccessful<TDelegate, TException, TException>(actionFactory, tryInvoke, expectedAttempts, retriesExhausted: true);
 
-        private void Invoke_EventuallyUnsuccessful<TDelegate, TException>(TDelegate reliableAction, Action<TDelegate> invoke, int expectedAttempts, bool retriesExhausted)
+        private void Invoke_EventuallyUnsuccessful<TDelegate, TTransient, TFatal>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Action<TDelegate> invoke, int expectedAttempts, bool retriesExhausted)
             where TDelegate  : ReliableDelegate
-            where TException : Exception
-            => TryInvoke_Unsuccessful<TDelegate, TException>(reliableAction, x =>
+            where TTransient : Exception
+            where TFatal     : Exception
+            => TryInvoke_Unsuccessful<TDelegate, TTransient, TFatal>(actionFactory, x =>
                 {
                     try
                     {
                         invoke(x);
                         Assert.Fail();
                     }
-                    catch (TException e)
+                    catch (TFatal e)
                     {
-                        Assert.AreEqual(typeof(TException), e.GetType());
+                        Assert.AreEqual(typeof(TFatal), e.GetType());
                         return false;
                     }
                     catch (AssertFailedException)
@@ -233,37 +170,63 @@ namespace Sweetener.Reliability.Test
                 expectedAttempts,
                 retriesExhausted);
 
-        private void TryInvoke_Unsuccessful<TDelegate, TException>(TDelegate reliableAction, Func<TDelegate, bool> invoke, int expectedAttempts, bool retriesExhausted)
+        private void TryInvoke_Unsuccessful<TDelegate, TTransient, TFatal>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Func<TDelegate, bool> tryInvoke, int expectedAttempts, bool retriesExhausted)
+            where TDelegate  : ReliableDelegate
+            where TTransient : Exception
+            where TFatal     : Exception
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            TDelegate reliableAction = actionFactory(retriesExhausted ? expectedAttempts : expectedAttempts * 2, exceptionPolicy.Invoke, delayPolicy.Invoke);
+
+            int attempts = 0;
+            reliableAction.Retrying += (i, e) => Assert.AreEqual(++attempts, i);
+
+            if (retriesExhausted)
+            {
+                reliableAction.Failed           += e => Assert.Fail();
+                reliableAction.RetriesExhausted += e => Assert.AreEqual(typeof(TTransient), e.GetType());
+            }
+            else
+            {
+                reliableAction.Failed           += e => Assert.AreEqual(typeof(TFatal), e.GetType());
+                reliableAction.RetriesExhausted += e => Assert.Fail();
+            }
+
+            Assert.IsFalse(tryInvoke(reliableAction));
+            Assert.AreEqual(expectedAttempts, attempts);
+
+            Assert.AreEqual(expectedAttempts    , exceptionPolicy.Calls);
+            Assert.AreEqual(expectedAttempts - 1, delayPolicy    .Calls);
+        }
+
+        protected void Invoke_Canceled<TDelegate, TException>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Action<TDelegate> invoke, CancellationTokenSource cancellationTokenSource)
+            where TDelegate  : ReliableDelegate
+            where TException : Exception
+            => TryInvoke_Canceled<TDelegate, TException>(actionFactory, x => { invoke(x); return false; }, cancellationTokenSource);
+
+        protected void TryInvoke_Canceled<TDelegate, TException>(Func<int, ExceptionPolicy, DelayPolicy, TDelegate> actionFactory, Func<TDelegate, bool> tryInvoke, CancellationTokenSource cancellationTokenSource)
             where TDelegate  : ReliableDelegate
             where TException : Exception
         {
-            int attempts = -1;
-            reliableAction.Retrying += (i, e) => attempts = i;
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TException>(ExceptionPolicies.Transient);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(10));
 
-            if (retriesExhausted)
-                reliableAction.Failed += e => Assert.Fail();
-            else
-                reliableAction.RetriesExhausted += e => Assert.Fail();
+            TDelegate reliableAction = actionFactory(Retries.Infinite, exceptionPolicy.Invoke, delayPolicy.Invoke);
 
-            Assert.IsFalse(invoke(reliableAction));
-            Assert.AreEqual(expectedAttempts, attempts);
-        }
-
-        protected void Invoke_Canceled<T>(T reliableAction, Action<T> invoke, CancellationTokenSource cancellationTokenSource)
-            where T : ReliableDelegate
-            => TryInvoke_Canceled(reliableAction, x => { invoke(x); return false; }, cancellationTokenSource);
-
-        protected void TryInvoke_Canceled<T>(T reliableAction, Func<T, bool> invoke, CancellationTokenSource cancellationTokenSource)
-            where T : ReliableDelegate
-        {
-            reliableAction.Retrying         += (i, e) => Assert.AreEqual(1, i);
+            int attempts = 0;
+            reliableAction.Retrying         += (i, e) => Assert.AreEqual(++attempts, i);
             reliableAction.Failed           +=     e  => Assert.Fail();
             reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
             // We expect a bit of a delay with this operation, so we'll spin it up in a separate thread
-            Task invocation = Task.Run(() => invoke(reliableAction), cancellationTokenSource.Token);
+            Task invocation = Task.Run(() => tryInvoke(reliableAction), cancellationTokenSource.Token);
 
-            Task.Yield();
+            while (invocation.Status != TaskStatus.Running)
+            { }
+
+            Task.Delay((int)TimeSpan.FromHours(1).TotalMilliseconds);
             cancellationTokenSource.Cancel();
 
             // Try to get the result
@@ -280,6 +243,10 @@ namespace Sweetener.Reliability.Test
                     case AssertFailedException afe:
                         throw afe;
                     case TaskCanceledException _:
+                        Assert.IsTrue(attempts              > 0);
+                        Assert.IsTrue(exceptionPolicy.Calls > 0);
+                        Assert.IsTrue(delayPolicy    .Calls > 0);
+                        Assert.AreEqual(exceptionPolicy.Calls, delayPolicy.Calls);
                         return; // Successfully canceled
                     default:
                         Assert.Fail();

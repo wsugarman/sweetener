@@ -27,5 +27,5 @@ namespace Sweetener.Reliability
     /// <param name="exception">The transient exception that caused the operation to retry; otherwise <see langword="null"/></param>
     /// <returns>The <see cref="TimeSpan"/> that represents the delay in milliseconds.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="attempt"/> is less than <c>1</c>.</exception>
-    public delegate TimeSpan ComplexDelayPolicy<T>(int attempt, T result, Exception exception);
+    public delegate TimeSpan ComplexDelayPolicy<in T>(int attempt, T result, Exception exception);
 }

@@ -13,5 +13,5 @@
     /// A value indicating the validity of the result and whether the operation
     /// should be retried if invalid.
     /// </returns>
-    public delegate ResultKind ResultPolicy<T>(T result);
+    public delegate ResultKind ResultPolicy<in T>(T result);
 }

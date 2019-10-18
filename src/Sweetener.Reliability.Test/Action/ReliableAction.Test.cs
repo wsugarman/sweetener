@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -50,219 +51,265 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction, FormatException>(
-                new ReliableAction(() => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction(() => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke());
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction, FormatException>(
-                new ReliableAction(() => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction(() => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke());
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction, IOException>(
-                new ReliableAction(() => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction(() => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action)reliableAction)());
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke());
+            => Invoke((reliableAction) => reliableAction.Invoke());
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction> invokeReliableAction = reliableAction => reliableAction.Invoke(cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction) => reliableAction.Invoke(tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction(
-                        () =>
-                        {
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, token) => reliableAction.Invoke(token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke());
+            => TryInvoke((reliableAction) => reliableAction.TryInvoke());
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Func<ReliableAction, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction(
-                        () =>
-                        {
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
-            }
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction) => reliableAction.TryInvoke(tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, token) => reliableAction.TryInvoke(token));
         }
 
         private void Invoke(Action<ReliableAction> invoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction(
-                    () => Console.WriteLine("Success"),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
 
-            // Immediate Failure
-            Invoke_Failure<ReliableAction, InvalidOperationException>(
-                new ReliableAction(
-                    () =>
-                    {
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
 
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction(
-                    () =>
+            Action<ReliableAction> GetFailureAssertion<T>()
+                where T : Exception
+            {
+                return (r) =>
+                {
+                    try
                     {
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction, InvalidOperationException>(
-                new ReliableAction(
-                    () =>
+                        invoke(r);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
                     {
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction, IOException>(
-                new ReliableAction(
-                    () =>
-                    {
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+                        Assert.Fail();
+                    }
+                };
+            }
         }
 
-        private void TryInvoke(Func<ReliableAction, bool> invoke)
+        private void TryInvoke(Func<ReliableAction, bool> tryInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction(
-                    () => Console.WriteLine("Success"),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            Invoke_Success                                                 ((r) => Assert.IsTrue (tryInvoke(r)));
+            Invoke_EventualSuccess                                         ((r) => Assert.IsTrue (tryInvoke(r)));
+            Invoke_Failure         <             InvalidOperationException>((r) => Assert.IsFalse(tryInvoke(r)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r) => Assert.IsFalse(tryInvoke(r)));
+            Invoke_RetriesExhausted<IOException                           >((r) => Assert.IsFalse(tryInvoke(r)));
+        }
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction, InvalidOperationException>(
-                new ReliableAction(
-                    () =>
-                    {
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+        private void Invoke_Success(Action<ReliableAction> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Eventual Success
+            ReliableAction reliableAction = new ReliableAction(
+                () => Console.WriteLine("Success"),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction reliableAction = new ReliableAction(
+                () =>
+                {
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction(
-                    () =>
-                    {
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction reliableAction = new ReliableAction(
+                () =>
+                {
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction, InvalidOperationException>(
-                new ReliableAction(
-                    () =>
-                    {
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction, IOException>(
-                new ReliableAction(
-                    () =>
-                    {
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction reliableAction = new ReliableAction(
+                () =>
+                {
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction reliableAction = new ReliableAction(
+                () =>
+                {
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction reliableAction = new ReliableAction(
+                () =>
+                {
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
     }
 
@@ -312,229 +359,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int>, FormatException>(
-                new ReliableAction<int>((arg) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int>((arg) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int>, FormatException>(
-                new ReliableAction<int>((arg) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int>((arg) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int>, IOException>(
-                new ReliableAction<int>((arg) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int>((arg) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int>)reliableAction)(42));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42));
+            => Invoke((reliableAction, arg) => reliableAction.Invoke(arg));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg) => reliableAction.Invoke(arg, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int>(
-                        (arg) =>
-                        {
-                            AssertDelegateParameters(arg);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg, token) => reliableAction.Invoke(arg, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42));
+            => TryInvoke((reliableAction, arg) => reliableAction.TryInvoke(arg));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg) => reliableAction.TryInvoke(arg, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg, token) => reliableAction.TryInvoke(arg, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int>, int> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int>, int> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int>(
-                        (arg) =>
-                        {
-                            AssertDelegateParameters(arg);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg) =>
+                {
+                    try
+                    {
+                        invoke(r, arg);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int>> invoke)
+        private void TryInvoke(Func<ReliableAction<int>, int, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int>(
-                    (arg) => AssertDelegateParameters(arg),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int>, InvalidOperationException>(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int>, InvalidOperationException>(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int>, IOException>(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg) => Assert.IsTrue (tryInvoke(r, arg)));
+            Invoke_EventualSuccess                                         ((r, arg) => Assert.IsTrue (tryInvoke(r, arg)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg) => Assert.IsFalse(tryInvoke(r, arg)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg) => Assert.IsFalse(tryInvoke(r, arg)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg) => Assert.IsFalse(tryInvoke(r, arg)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int>, int> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int>(
-                    (arg) => AssertDelegateParameters(arg),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int>, InvalidOperationException>(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int> reliableAction = new ReliableAction<int>(
+                (arg) => AssertDelegateParameters(arg),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int>, int> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int> reliableAction = new ReliableAction<int>(
+                (arg) =>
+                {
+                    AssertDelegateParameters(arg);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int>, int> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int> reliableAction = new ReliableAction<int>(
+                (arg) =>
+                {
+                    AssertDelegateParameters(arg);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int>, InvalidOperationException>(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int>, IOException>(
-                new ReliableAction<int>(
-                    (arg) =>
-                    {
-                        AssertDelegateParameters(arg);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int>, int> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int> reliableAction = new ReliableAction<int>(
+                (arg) =>
+                {
+                    AssertDelegateParameters(arg);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int>, int> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int> reliableAction = new ReliableAction<int>(
+                (arg) =>
+                {
+                    AssertDelegateParameters(arg);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int>, int, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int> reliableAction = new ReliableAction<int>(
+                (arg) =>
+                {
+                    AssertDelegateParameters(arg);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg)
@@ -589,229 +677,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string>, FormatException>(
-                new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string>((arg1, arg2) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo"));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string>, FormatException>(
-                new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string>((arg1, arg2) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo"));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string>, IOException>(
-                new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string>((arg1, arg2) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo"),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string>)reliableAction)(42, "foo"));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo"));
+            => Invoke((reliableAction, arg1, arg2) => reliableAction.Invoke(arg1, arg2));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2) => reliableAction.Invoke(arg1, arg2, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string>(
-                        (arg1, arg2) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, token) => reliableAction.Invoke(arg1, arg2, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo"));
+            => TryInvoke((reliableAction, arg1, arg2) => reliableAction.TryInvoke(arg1, arg2));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2) => reliableAction.TryInvoke(arg1, arg2, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, token) => reliableAction.TryInvoke(arg1, arg2, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string>, int, string> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string>, int, string> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string>(
-                        (arg1, arg2) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string>, int, string, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) => AssertDelegateParameters(arg1, arg2),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string>, InvalidOperationException>(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string>, InvalidOperationException>(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string>, IOException>(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2) => Assert.IsTrue (tryInvoke(r, arg1, arg2)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2) => Assert.IsTrue (tryInvoke(r, arg1, arg2)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string>, int, string> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) => AssertDelegateParameters(arg1, arg2),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string>, InvalidOperationException>(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
+                (arg1, arg2) => AssertDelegateParameters(arg1, arg2),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo");
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string>, int, string> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
+                (arg1, arg2) =>
+                {
+                    AssertDelegateParameters(arg1, arg2);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo");
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string>, int, string> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
+                (arg1, arg2) =>
+                {
+                    AssertDelegateParameters(arg1, arg2);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string>, InvalidOperationException>(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string>, IOException>(
-                new ReliableAction<int, string>(
-                    (arg1, arg2) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo");
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string>, int, string> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
+                (arg1, arg2) =>
+                {
+                    AssertDelegateParameters(arg1, arg2);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo");
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string>, int, string> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
+                (arg1, arg2) =>
+                {
+                    AssertDelegateParameters(arg1, arg2);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo");
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string>, int, string, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
+                (arg1, arg2) =>
+                {
+                    AssertDelegateParameters(arg1, arg2);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2)
@@ -867,229 +996,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double>, FormatException>(
-                new ReliableAction<int, string, double>((arg1, arg2, arg3) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double>((arg1, arg2, arg3) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double>, FormatException>(
-                new ReliableAction<int, string, double>((arg1, arg2, arg3) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double>((arg1, arg2, arg3) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double>, IOException>(
-                new ReliableAction<int, string, double>((arg1, arg2, arg3) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double>((arg1, arg2, arg3) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double>)reliableAction)(42, "foo", 3.14D));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D));
+            => Invoke((reliableAction, arg1, arg2, arg3) => reliableAction.Invoke(arg1, arg2, arg3));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3) => reliableAction.Invoke(arg1, arg2, arg3, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double>(
-                        (arg1, arg2, arg3) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, token) => reliableAction.Invoke(arg1, arg2, arg3, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D));
+            => TryInvoke((reliableAction, arg1, arg2, arg3) => reliableAction.TryInvoke(arg1, arg2, arg3));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3) => reliableAction.TryInvoke(arg1, arg2, arg3, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, token) => reliableAction.TryInvoke(arg1, arg2, arg3, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double>, int, string, double> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double>, int, string, double> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double>(
-                        (arg1, arg2, arg3) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double>, int, string, double, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) => AssertDelegateParameters(arg1, arg2, arg3),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double>, InvalidOperationException>(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double>, InvalidOperationException>(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double>, IOException>(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) => AssertDelegateParameters(arg1, arg2, arg3),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double>, InvalidOperationException>(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
+                (arg1, arg2, arg3) => AssertDelegateParameters(arg1, arg2, arg3),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
+                (arg1, arg2, arg3) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
+                (arg1, arg2, arg3) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double>, InvalidOperationException>(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double>, IOException>(
-                new ReliableAction<int, string, double>(
-                    (arg1, arg2, arg3) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
+                (arg1, arg2, arg3) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double>, int, string, double> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
+                (arg1, arg2, arg3) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double>, int, string, double, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double> reliableAction = new ReliableAction<int, string, double>(
+                (arg1, arg2, arg3) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3)
@@ -1146,229 +1316,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long>, FormatException>(
-                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long>, FormatException>(
-                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long>, IOException>(
-                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long>((arg1, arg2, arg3, arg4) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long>)reliableAction)(42, "foo", 3.14D, 1000L));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4) => reliableAction.Invoke(arg1, arg2, arg3, arg4));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4) => reliableAction.Invoke(arg1, arg2, arg3, arg4, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long>(
-                        (arg1, arg2, arg3, arg4) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long>, int, string, double, long> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long>, int, string, double, long> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long>(
-                        (arg1, arg2, arg3, arg4) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long>, int, string, double, long, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) => AssertDelegateParameters(arg1, arg2, arg3, arg4),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long>, IOException>(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) => AssertDelegateParameters(arg1, arg2, arg3, arg4),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
+                (arg1, arg2, arg3, arg4) => AssertDelegateParameters(arg1, arg2, arg3, arg4),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
+                (arg1, arg2, arg3, arg4) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
+                (arg1, arg2, arg3, arg4) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long>, IOException>(
-                new ReliableAction<int, string, double, long>(
-                    (arg1, arg2, arg3, arg4) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
+                (arg1, arg2, arg3, arg4) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long>, int, string, double, long> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
+                (arg1, arg2, arg3, arg4) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long>, int, string, double, long, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long> reliableAction = new ReliableAction<int, string, double, long>(
+                (arg1, arg2, arg3, arg4) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4)
@@ -1426,229 +1637,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort>, IOException>(
-                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort>((arg1, arg2, arg3, arg4, arg5) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort>(
-                        (arg1, arg2, arg3, arg4, arg5) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort>(
-                        (arg1, arg2, arg3, arg4, arg5) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort>, IOException>(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
+                (arg1, arg2, arg3, arg4, arg5) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
+                (arg1, arg2, arg3, arg4, arg5) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
+                (arg1, arg2, arg3, arg4, arg5) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort>, IOException>(
-                new ReliableAction<int, string, double, long, ushort>(
-                    (arg1, arg2, arg3, arg4, arg5) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
+                (arg1, arg2, arg3, arg4, arg5) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
+                (arg1, arg2, arg3, arg4, arg5) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort> reliableAction = new ReliableAction<int, string, double, long, ushort>(
+                (arg1, arg2, arg3, arg4, arg5) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5)
@@ -1707,229 +1959,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6)
@@ -1989,229 +2282,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30)));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30));
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7)
@@ -2272,229 +2606,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8)
@@ -2556,229 +2931,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL)));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL));
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9)
@@ -2841,229 +3257,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06)));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06));
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10)
@@ -3127,229 +3584,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11)
@@ -3414,229 +3912,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12)
@@ -3702,229 +4241,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13)
@@ -3991,229 +4571,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!'));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!');
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14)
@@ -4281,229 +4902,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F);
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, float arg15)
@@ -4572,229 +5234,270 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
-        public void Failed()
-        {
-            Action eventualFailure = FlakyAction.Create<IOException, FormatException>(4);
-            Failed<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal               , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => eventualFailure()           , Retries.Infinite, ExceptionPolicies.Retry<IOException>(), DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
-        }
-
-        [TestMethod]
-        public void RetriesExhausted()
-            => RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, FormatException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => throw new FormatException() , 3               , ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
-
-        [TestMethod]
-        public void Retrying()
-        {
-            Action eventualSuccess = FlakyAction.Create<IOException>(4);
-            Retrying<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Console.WriteLine("Success"), Retries.Infinite, ExceptionPolicies.Fatal    , DelayPolicies.None),
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => eventualSuccess()           , Retries.Infinite, ExceptionPolicies.Transient, DelayPolicies.None),
-                reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")),
-                retries: 4);
-        }
-
-        [TestMethod]
-        public void CastAction()
-            => Invoke(reliableAction => ((Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>)reliableAction)(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
-
-        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke(reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
+            => Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
-            {
-                Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>> invokeReliableAction = reliableAction => reliableAction.Invoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"), cancellationTokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Invoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, tokenSource.Token));
 
-                Invoke(invokeReliableAction);
-
-                Invoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    invokeReliableAction,
-                    cancellationTokenSource);
-            }
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, token) => reliableAction.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke(reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b")));
+            => TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
-            using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                TryInvoke((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, tokenSource.Token));
+        
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled((reliableAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, token) => reliableAction.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, token));
+        }
+
+        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> invoke)
+        {
+            Invoke_Success        (invoke);
+            Invoke_EventualSuccess(invoke);
+
+            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
+            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
+
+            Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> GetFailureAssertion<T>()
+                where T : Exception
             {
-                Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, bool> tryInvokeReliableAction = reliableAction => reliableAction.TryInvoke(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"), cancellationTokenSource.Token);
-
-                TryInvoke(tryInvokeReliableAction);
-
-                TryInvoke_Canceled(
-                    new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                        (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                        {
-                            AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                            throw new IOException();
-                        },
-                        Retries.Infinite,
-                        ExceptionPolicies.Retry<IOException>(),
-                        DelayPolicies.Constant(5)),
-                    tryInvokeReliableAction,
-                    cancellationTokenSource);
+                return (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
+                {
+                    try
+                    {
+                        invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                        Assert.Fail();
+                    }
+                    catch (T)
+                    { }
+                    catch (Exception)
+                    {
+                        Assert.Fail();
+                    }
+                };
             }
         }
 
-        private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>> invoke)
+        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid, bool> tryInvoke)
         {
-            // Immediate Success
-            Invoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
-
-            // Immediate Failure
-            Invoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
-
-            // Eventual Success
-            Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            Invoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
-
-            // Eventual Failure
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            Invoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
-
-            // Retries Exhausted
-            Invoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            Invoke_Success                                                 ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)));
+            Invoke_EventualSuccess                                         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)));
+            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)));
+            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)));
+            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)));
         }
 
-        private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, bool> invoke)
+        private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
         {
-            // Immediate Success
-            TryInvoke_Success(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16),
-                    5,
-                    ExceptionPolicies.Fatal,
-                    DelayPolicies.None),
-                invoke);
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
-            // Immediate Failure
-            TryInvoke_Failure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        throw new InvalidOperationException();
-                    },
-                    5,
-                    ExceptionPolicies.Fail<InvalidOperationException>(),
-                    DelayPolicies.None),
-                invoke);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16),
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
+
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_Failure<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    throw new T();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int failures = 0;
+            reliableAction.Retrying         += (i, e) => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
+
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
             Action eventualSuccess = FlakyAction.Create<IOException>(3);
-            TryInvoke_EventualSuccess(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        eventualSuccess();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                3);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    eventualSuccess();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
 
-            // Eventual Success
-            Action eventualFailure = FlakyAction.Create<IOException, InvalidOperationException>(4);
-            TryInvoke_EventualFailure<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, InvalidOperationException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        eventualFailure();
-                    },
-                    5,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                4);
+            int retries = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(IOException), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
 
-            // Retries Exhausted
-            TryInvoke_RetriesExhausted<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, IOException>(
-                new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
-                    {
-                        AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-                        throw new IOException();
-                    },
-                    7,
-                    ExceptionPolicies.Retry<IOException>(),
-                    DelayPolicies.None),
-                invoke,
-                7);
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
+
+            Assert.AreEqual(3, retries);
+            Assert.AreEqual(retries, exceptionPolicy.Calls);
+            Assert.AreEqual(retries, delayPolicy    .Calls);
+        }
+
+        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(4);
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    eventualFailure();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, failures = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(TTransient), e.GetType()); };
+            reliableAction.Failed           +=     e  => { failures++;                    Assert.AreEqual(typeof(TFatal    ), e.GetType()); };
+            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
+
+            Assert.AreEqual(4, retries );
+            Assert.AreEqual(1, failures);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertInvoke)
+            where T : Exception, new()
+        {
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    throw new T();
+                },
+                5,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0, exhausted = 0;
+            reliableAction.Retrying         += (i, e) => { Assert.AreEqual(++retries, i); Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Failed           +=     e  => Assert.Fail();
+            reliableAction.RetriesExhausted +=     e  => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"));
+
+            Assert.AreEqual(5, retries  );
+            Assert.AreEqual(1, exhausted);
+            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+            Assert.AreEqual(retries    , delayPolicy    .Calls);
+        }
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid, CancellationToken> assertInvoke)
+        {
+            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
+                {
+                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    throw new IOException();
+                },
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            int retries = 0;
+            reliableAction.Retrying += (i, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+                Assert.AreEqual(typeof(IOException), e.GetType());
+                retryEvent.Set();
+            };
+            reliableAction.Failed           += e => Assert.Fail();
+            reliableAction.RetriesExhausted += e => Assert.Fail();
+
+            // While waiting for the reliable action to complete, we'll cancel it
+            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"), tokenSource.Token), tokenSource.Token);
+
+            // Cancel after at least 1 retry has occurred
+            retryEvent.WaitOne();
+            tokenSource.Cancel();
+
+            // Try to get the result
+            try
+            {
+                invocation.Wait();
+                Assert.Fail();
+            }
+            catch (AggregateException agg)
+            {
+                Assert.AreEqual(1, agg.InnerExceptions.Count);
+                switch (agg.InnerException)
+                {
+                    case AssertFailedException afe:
+                        throw afe;
+                    case TaskCanceledException _:
+                        Assert.IsTrue(retries > 0);
+                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
+                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
+                        return; // Successfully cancelled
+                    default:
+                        Assert.Fail();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                Assert.Fail();
+            }
         }
 
         private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, float arg15, Guid arg16)
