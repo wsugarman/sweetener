@@ -231,21 +231,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailureResult =
+            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailure =
                 (reliableFunc<#= optionalComma #><#= arguments #>) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(<#= arguments #><#= optionalComma #>out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailure =
-                (r<#= optionalComma #><#= arguments #>) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);

@@ -213,21 +213,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<string>> assertFailureResult =
+            Action<ReliableFunc<string>> assertFailure =
                 (reliableFunc) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<string>> assertFailure =
-                (r) => Assert.IsFalse(tryInvoke(r, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -949,21 +946,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string>, int> assertFailureResult =
+            Action<ReliableFunc<int, string>, int> assertFailure =
                 (reliableFunc, arg) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string>, int> assertFailure =
-                (r, arg) => Assert.IsFalse(tryInvoke(r, arg, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -1699,21 +1693,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, string>, int, string> assertFailureResult =
+            Action<ReliableFunc<int, string, string>, int, string> assertFailure =
                 (reliableFunc, arg1, arg2) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, string>, int, string> assertFailure =
-                (r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -2450,21 +2441,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, string>, int, string, double> assertFailureResult =
+            Action<ReliableFunc<int, string, double, string>, int, string, double> assertFailure =
                 (reliableFunc, arg1, arg2, arg3) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, string>, int, string, double> assertFailure =
-                (r, arg1, arg2, arg3) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -3202,21 +3190,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, string>, int, string, double, long> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, string>, int, string, double, long> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, string>, int, string, double, long> assertFailure =
-                (r, arg1, arg2, arg3, arg4) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -3955,21 +3940,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, string>, int, string, double, long, ushort> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, string>, int, string, double, long, ushort> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, string>, int, string, double, long, ushort> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -4709,21 +4691,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, string>, int, string, double, long, ushort, byte> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, string>, int, string, double, long, ushort, byte> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, string>, int, string, double, long, ushort, byte> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -5464,21 +5443,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, string>, int, string, double, long, ushort, byte, TimeSpan> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, string>, int, string, double, long, ushort, byte, TimeSpan> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, string>, int, string, double, long, ushort, byte, TimeSpan> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -6220,21 +6196,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>, int, string, double, long, ushort, byte, TimeSpan, uint> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>, int, string, double, long, ushort, byte, TimeSpan, uint> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>, int, string, double, long, ushort, byte, TimeSpan, uint> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -6977,21 +6950,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -7735,21 +7705,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -8494,21 +8461,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -9254,21 +9218,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -10015,21 +9976,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -10777,21 +10735,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -11540,21 +11495,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
@@ -12304,21 +12256,18 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertFailureResult =
+            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertFailure =
                 (reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) =>
                 {
                     Assert.IsFalse(reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, out string result));
                     Assert.AreEqual(null, result);
                 };
 
-            Invoke_Failure_Result         (assertFailureResult);
-            Invoke_EventualFailure_Result (assertFailureResult);
-            Invoke_RetriesExhausted_Result(assertFailureResult);
+            Invoke_Failure_Result         (assertFailure);
+            Invoke_EventualFailure_Result (assertFailure);
+            Invoke_RetriesExhausted_Result(assertFailure);
 
             // Failure (Exception)
-            Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> assertFailure =
-                (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, out string result));
-
             Invoke_Failure_Exception         <             InvalidOperationException>(assertFailure);
             Invoke_EventualFailure_Exception <IOException, InvalidOperationException>(assertFailure);
             Invoke_RetriesExhausted_Exception<IOException                           >(assertFailure);
