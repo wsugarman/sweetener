@@ -27,6 +27,38 @@ namespace Sweetener.Reliability.Test
             return observableFunc;
         }
 
+        public static ObservableFunc<int, TResult, Exception, TimeSpan> Create<TResult>(ComplexDelayPolicy<TResult> policy)
+        {
+            ObservableFunc<int, TResult, Exception, TimeSpan> observableFunc = new ObservableFunc<int, TResult, Exception, TimeSpan>(policy.Invoke);
+            observableFunc.Invoking += (i, r, e) => Assert.Fail();
+
+            return observableFunc;
+        }
+
+        public static ObservableFunc<int, TResult, Exception, TimeSpan> Create<TResult, TException>(ComplexDelayPolicy<TResult> policy, TResult transientResult)
+            where TResult : IEquatable<TResult>
+            where TException : Exception
+        {
+            ObservableFunc<int, TResult, Exception, TimeSpan> observableFunc = new ObservableFunc<int, TResult, Exception, TimeSpan>(policy.Invoke);
+            observableFunc.Invoking +=
+                (i, r, e) =>
+                {
+                    Assert.AreEqual(observableFunc.Calls, i);
+
+                    if (e == null)
+                    {
+                        Assert.AreEqual(transientResult, r);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(default, r);
+                        Assert.AreEqual(typeof(TException), e.GetType());
+                    }
+                };
+
+            return observableFunc;
+        }
+
         public static ObservableFunc<Exception, bool> Create(ExceptionPolicy policy)
         {
             ObservableFunc<Exception, bool> observableFunc = new ObservableFunc<Exception, bool>(policy.Invoke);
@@ -46,7 +78,7 @@ namespace Sweetener.Reliability.Test
 
         public static ObservableFunc<Exception, bool> Create<TTransient, TFatal>(ExceptionPolicy policy)
             where TTransient : Exception
-            where TFatal     : Exception
+            where TFatal : Exception
         {
             ObservableFunc<Exception, bool> observableFunc = new ObservableFunc<Exception, bool>(policy.Invoke);
             observableFunc.Invoking += e => Assert.IsNotNull(e);
@@ -58,6 +90,23 @@ namespace Sweetener.Reliability.Test
                     else
                         Assert.AreEqual(typeof(TFatal), e.GetType());
                 };
+
+            return observableFunc;
+        }
+
+        public static ObservableFunc<T, ResultKind> Create<T>(ResultPolicy<T> policy)
+        {
+            ObservableFunc<T, ResultKind> observableFunc = new ObservableFunc<T, ResultKind>(policy.Invoke);
+            observableFunc.Invoking += r => Assert.Fail();
+
+            return observableFunc;
+        }
+
+        public static ObservableFunc<T, ResultKind> Create<T>(ResultPolicy<T> policy, T result)
+            where T : IEquatable<T>
+        {
+            ObservableFunc<T, ResultKind> observableFunc = new ObservableFunc<T, ResultKind>(policy.Invoke);
+            observableFunc.Invoking += r => Assert.AreEqual(result, r);
 
             return observableFunc;
         }

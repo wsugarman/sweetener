@@ -1,0 +1,64 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq" #>
+<#+
+    static string[] typeArgs = new string[]
+    {
+        "int",
+        "string",
+        "double",
+        "long",
+        "ushort",
+        "byte",
+        "TimeSpan",
+        "uint",
+        "Tuple<bool, ulong>",
+        "DateTime",
+        "ulong",
+        "sbyte",
+        "decimal",
+        "char",
+        "float",
+        "Guid",
+    };
+
+    static string[] args = new string[]
+    {
+        "42",
+        "\"foo\"",
+        "3.14D",
+        "1000L",
+        "(ushort)1",
+        "(byte)255",
+        "TimeSpan.FromDays(30)",
+        "112U",
+        "Tuple.Create(true, 64UL)",
+        "new DateTime(2019, 10, 06)",
+        "321UL",
+        "(sbyte)-7",
+        "-24.68M",
+        "'!'",
+        "0.1F",
+        "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
+    };
+
+    public string GetTypeArgs(int count, string outputType = null, bool includeBrackets = true)
+    {
+        if (count == 0 && outputType == null)
+            return string.Empty;
+
+        IEnumerable<string> typeArgsEnumerable = typeArgs.Take(count);
+        if (outputType != null)
+            typeArgsEnumerable = typeArgsEnumerable.Concat(new string[] { outputType });
+
+        string result = string.Join(", ", typeArgsEnumerable);
+        if (includeBrackets)
+            result = "<" + result + ">";
+
+        return result;
+    }
+
+    public string GetTestArguments(int count)
+        => string.Join(", ", args.Take(count));
+#>

@@ -7,8 +7,8 @@
 
     const int MaxExceptionParameters = 8;
 
-    public string GetTypeParameters(int count)
-        => GetList(count, "T"); // T1, T2, T3
+    public string GetTypeParameters(int count, string variance = null)
+        => GetList(count, variance != null ? variance + " T" : "T"); // T1, T2, T3
 
     public string GetParameters(int count)
         => GetList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3

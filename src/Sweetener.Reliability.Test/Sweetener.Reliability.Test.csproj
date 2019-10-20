@@ -27,9 +27,17 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAction.Test.cs</LastGenOutput>
     </None>
+    <None Update="Func\ReliableFunc.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableFunc.Test.cs</LastGenOutput>
+    </None>
     <None Update="Policies\Exception\ExceptionPolicies.Specific.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ExceptionPolicies.Specific.Test.cs</LastGenOutput>
+    </None>
+    <None Update="TryFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TryFunc.cs</LastGenOutput>
     </None>
   </ItemGroup>
   
@@ -47,6 +55,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
     </None>
+    <None Include="Func\ReliableFunc.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
+    </None>
+    <None Include="TryFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TryFunc.tt</DependentUpon>
+    </None>
   </ItemGroup>
   
   <ItemGroup>
@@ -55,10 +73,20 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Func\ReliableFunc.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Policies\Exception\ExceptionPolicies.Specific.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ExceptionPolicies.Specific.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="TryFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TryFunc.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 

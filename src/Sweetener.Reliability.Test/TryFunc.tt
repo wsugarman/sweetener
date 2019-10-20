@@ -1,0 +1,20 @@
+﻿<#@ template hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from TryFunc.tt
+namespace Sweetener.Reliability.Test
+{
+<#
+    // Need at least 1 type overload for testing
+    for (int parameterCount = 1; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
+    {
+        string arguments      = GetArguments     (parameterCount);
+        string parameters     = GetParameters    (parameterCount);
+        string typeParameters = GetTypeParameters(parameterCount, variance: "in") + ", TResult";
+#>
+    public delegate bool TryFunc<<#= typeParameters #>>(<#= parameters #>, out TResult result);
+<#
+}
+#>
+}

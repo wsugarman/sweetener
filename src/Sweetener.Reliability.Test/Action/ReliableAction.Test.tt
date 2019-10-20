@@ -2,7 +2,8 @@
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from ReliableAction.Test.tt
+<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>
+<#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableAction.Test.tt
 using System;
 using System.IO;
 using System.Threading;
@@ -17,7 +18,7 @@ namespace Sweetener.Reliability.Test
         string arguments              = GetArguments (parameterCount);
         string parameters             = GetParameters(typeArgs, parameterCount);
         string typeArguments          = GetTypeArgs  (parameterCount);
-        string typeArgumentsNoBracket = GetTypeArgs(parameterCount, includeBrackets: false);
+        string typeArgumentsNoBracket = GetTypeArgs  (parameterCount, includeBrackets: false);
         string typeParameters         = parameterCount == 0 ? string.Empty : "<" + GetTypeParameters(parameterCount) + ">";
         string testArguments          = GetTestArguments(parameterCount);
         string optionalComma          = parameterCount > 0 ? ", " : string.Empty;
@@ -26,7 +27,7 @@ namespace Sweetener.Reliability.Test
     #region ReliableAction<#= typeParameters #>
 
     [TestClass]
-    public sealed class ReliableActionTest<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #> : ReliableDelegateTest
+    public sealed class ReliableAction<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #>Test : ReliableDelegateTest
     {
         private static readonly Func<ReliableAction<#= typeArguments #>, Action<#= typeArguments #>> s_getAction = DynamicGetter.ForField<ReliableAction<#= typeArguments #>, Action<#= typeArguments #>>("_action");
 
@@ -34,15 +35,15 @@ namespace Sweetener.Reliability.Test
         public void Ctor_DelayPolicy()
         {
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>(null, Retries.Infinite, ExceptionPolicies.Fatal, DelayPolicies.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), -2              , ExceptionPolicies.Fatal, DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
 
             Action<#= typeArguments #> action = (<#= arguments #>) => Console.WriteLine("Hello World");
             ReliableAction<#= typeArguments #> actual = new ReliableAction<#= typeArguments #>(action, 37, ExceptionPolicies.Transient, DelayPolicies.Constant(115));
 
-            Assert.AreSame(action, s_getAction(actual));
-            Ctor(actual, 37, ExceptionPolicies.Transient, actualPolicy =>
+            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
+            Ctor(actual, action, 37, ExceptionPolicies.Transient, actualPolicy =>
             {
                 Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy( 1, new Exception()));
                 Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy( 2, new Exception()));
@@ -54,7 +55,7 @@ namespace Sweetener.Reliability.Test
         public void Ctor_ComplexDelayPolicy()
         {
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>(null, Retries.Infinite, ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), -2            , ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), -2              , ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero ));
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , (i, e) => TimeSpan.Zero ));
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<#= typeArguments #>((<#= arguments #>) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
 
@@ -62,8 +63,19 @@ namespace Sweetener.Reliability.Test
             Action<#= typeArguments #> action = (<#= arguments #>) => Console.WriteLine("Hello World");
             ReliableAction<#= typeArguments #> actual = new ReliableAction<#= typeArguments #>(action, 37, ExceptionPolicies.Transient, delayPolicy);
 
-            Assert.AreSame(action, s_getAction(actual));
-            Ctor(actual, 37, ExceptionPolicies.Transient, delayPolicy);
+            Ctor(actual, action, 37, ExceptionPolicies.Transient, delayPolicy);
+        }
+
+        private void Ctor(ReliableAction<#= typeArguments #> reliableAction, Action<#= typeArguments #> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
+            => Ctor(reliableAction, expectedAction, expectedMaxRetries, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
+
+        private void Ctor(ReliableAction<#= typeArguments #> reliableAction, Action<#= typeArguments #> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy> validateDelayPolicy)
+        {
+            Assert.AreSame (expectedAction, s_getAction(reliableAction));
+            Assert.AreEqual(expectedMaxRetries, reliableAction.MaxRetries);
+            Assert.AreSame (expectedExceptionPolicy, s_getExceptionPolicy(reliableAction));
+
+            validateDelayPolicy(s_getDelayPolicy(reliableAction));
         }
 
         [TestMethod]
@@ -221,8 +233,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(IOException), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
-                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
             reliableAction.Failed           += e => Assert.Fail();
             reliableAction.RetriesExhausted += e => Assert.Fail();
@@ -269,9 +280,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(TTransient), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-
-                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
-                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
             reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
             reliableAction.RetriesExhausted += e => Assert.Fail();
@@ -317,8 +326,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(T), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual.TotalMilliseconds > MinDelay, $"Actual delay {actual.TotalMilliseconds} ms less than minimum delay {MinDelay} ms"   );
-                Assert.IsTrue(actual.TotalMilliseconds < MaxDelay, $"Actual delay {actual.TotalMilliseconds} ms greater than maximum delay {MaxDelay} ms");
+                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
             reliableAction.Failed           += e => Assert.Fail();
             reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
@@ -429,59 +437,3 @@ namespace Sweetener.Reliability.Test
     }
 #>
 }
-<#+
-    static string[] typeArgs = new string[]
-    {
-        "int",
-        "string",
-        "double",
-        "long",
-        "ushort",
-        "byte",
-        "TimeSpan",
-        "uint",
-        "Tuple<bool, ulong>",
-        "DateTime",
-        "ulong",
-        "sbyte",
-        "decimal",
-        "char",
-        "float",
-        "Guid",
-    };
-
-    static string[] args = new string[]
-    {
-        "42",
-        "\"foo\"",
-        "3.14D",
-        "1000L",
-        "(ushort)1",
-        "(byte)255",
-        "TimeSpan.FromDays(30)",
-        "112U",
-        "Tuple.Create(true, 64UL)",
-        "new DateTime(2019, 10, 06)",
-        "321UL",
-        "(sbyte)-7",
-        "-24.68M",
-        "'!'",
-        "0.1F",
-        "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
-    };
-
-    public string GetTypeArgs(int count, bool includeBrackets = true)
-    {
-        if (count == 0)
-            return string.Empty;
-
-        string result = string.Join(", ", typeArgs.Take(count));
-        if (includeBrackets)
-            result = "<" + result + ">";
-
-        return result;
-    }
-
-    public string GetTestArguments(int count)
-        => string.Join(", ", args.Take(count));
-#>

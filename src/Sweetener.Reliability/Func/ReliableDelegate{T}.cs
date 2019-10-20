@@ -73,16 +73,18 @@ namespace Sweetener.Reliability
         private  readonly ExceptionPolicy       _canRetry;
         private  readonly ComplexDelayPolicy<T> _getDelay;
 
+        internal static readonly ResultPolicy<T> DefaultResultPolicy = r => ResultKind.Successful;
+
         internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, r => ResultKind.Successful, exceptionPolicy, (i, r, e) => delayPolicy(i))
+            : this(maxRetries, DefaultResultPolicy, exceptionPolicy, delayPolicy != null ? (i, r, e) => delayPolicy(i) : (ComplexDelayPolicy<T>)null)
         { }
 
         internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)
-            : this(maxRetries, r => ResultKind.Successful, exceptionPolicy, delayPolicy)
+            : this(maxRetries, DefaultResultPolicy, exceptionPolicy, delayPolicy)
         { }
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, resultPolicy, exceptionPolicy, (i, r, e) => delayPolicy(i))
+            : this(maxRetries, resultPolicy, exceptionPolicy, delayPolicy != null ? (i, r, e) => delayPolicy(i) : (ComplexDelayPolicy<T>)null)
         { }
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)
@@ -102,10 +104,10 @@ namespace Sweetener.Reliability
 
             if (kind == ResultKind.Retryable)
             {
-                if (attempt <= MaxRetries)
+                if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
                 {
                     Task.Delay(_getDelay(attempt, result, null), cancellationToken).Wait(cancellationToken);
-                    OnRetry(attempt + 1, result, null);
+                    OnRetry(attempt, result, null);
                     return true;
                 }
 
@@ -126,10 +128,10 @@ namespace Sweetener.Reliability
                 OnFailure(default, exception);
                 return false;
             }
-            else if (attempt <= MaxRetries)
+            else if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
             {
                 Task.Delay(_getDelay(attempt, default, exception), cancellationToken).Wait(cancellationToken);
-                OnRetry(attempt + 1, default, exception);
+                OnRetry(attempt, default, exception);
                 return true;
             }
             else

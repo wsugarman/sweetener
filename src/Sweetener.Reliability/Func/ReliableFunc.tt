@@ -16,7 +16,6 @@ namespace Sweetener.Reliability
         string optionalComma          = parameterCount > 0 ? ", " : string.Empty;
         string typeParametersNoResult = GetTypeParameters(parameterCount);
         string typeParameters         = typeParametersNoResult + optionalComma + "TResult";
-        
 #>
     #region ReliableFunc<<#= typeParameters #>>
 
