@@ -1,4 +1,3 @@
-
 // Generated from Action.Extensions.tt
 using System;
 using System.Threading.Tasks;

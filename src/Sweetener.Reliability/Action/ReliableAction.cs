@@ -1,4 +1,3 @@
-
 // Generated from ReliableAction.tt
 using System;
 using System.Threading;

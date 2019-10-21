@@ -1,4 +1,3 @@
-
 // Generated from ReliableFunc.tt
 using System;
 using System.Threading;

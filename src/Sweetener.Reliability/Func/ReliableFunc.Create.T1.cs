@@ -1,4 +1,3 @@
-
 // Generated from ReliableFunc.Create.tt
 using System;
 

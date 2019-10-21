@@ -7,14 +7,15 @@ namespace Sweetener.Reliability
     /// <summary>
     /// A wrapper to reliably invoke an action despite transient issues.
     /// </summary>
-    /// <typeparam name="T">The type of the parameter of the underlying delegate.</typeparam>
-    public sealed class ReliableAction<T> : ReliableDelegate
+    /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
+    public sealed class ReliableAction<T1, T2> : ReliableDelegate
     {
-        private readonly Action<T> _action;
+        private readonly Action<T1, T2> _action;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableAction{T}"/>
-        /// class that executes the given <see cref="Action{T}"/> at most a
+        /// Initializes a new instance of the <see cref="ReliableAction{T1, T2}"/>
+        /// class that executes the given <see cref="Action{T1, T2}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The underlying action to invoke.</param>
@@ -27,15 +28,15 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAction(Action<T> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public ReliableAction(Action<T1, T2> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableAction{T}"/>
-        /// class that executes the given <see cref="Action{T}"/> at most a
+        /// Initializes a new instance of the <see cref="ReliableAction{T1, T2}"/>
+        /// class that executes the given <see cref="Action{T1, T2}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The underlying action to invoke.</param>
@@ -48,7 +49,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAction(Action<T> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public ReliableAction(Action<T1, T2> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -57,19 +58,21 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
-        public void Invoke(T arg)
-            => Invoke(arg, CancellationToken.None);
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        public void Invoke(T1 arg1, T2 arg2)
+            => Invoke(arg1, arg2, CancellationToken.None);
 
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public void Invoke(T arg, CancellationToken cancellationToken)
+        public void Invoke(T1 arg1, T2 arg2, CancellationToken cancellationToken)
         {
             int attempt = 0;
             Exception lastException;
@@ -78,7 +81,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    _action(arg);
+                    _action(arg1, arg2);
                     return;
                 }
                 catch (Exception e)
@@ -93,18 +96,20 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <returns>
         /// <see langword="true"/> if the delegate completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public bool TryInvoke(T arg)
-            => TryInvoke(arg, CancellationToken.None);
+        public bool TryInvoke(T1 arg1, T2 arg2)
+            => TryInvoke(arg1, arg2, CancellationToken.None);
 
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
@@ -113,7 +118,7 @@ namespace Sweetener.Reliability
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public bool TryInvoke(T arg, CancellationToken cancellationToken)
+        public bool TryInvoke(T1 arg1, T2 arg2, CancellationToken cancellationToken)
         {
             int attempt = 0;
             Exception lastException;
@@ -122,7 +127,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    _action(arg);
+                    _action(arg1, arg2);
                     return true;
                 }
                 catch (Exception e)
@@ -136,13 +141,13 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Implicitly converts the <paramref name="reliableAction"/> to an
-        /// <see cref="Action{T}"/>.
+        /// <see cref="Action{T1, T2}"/>.
         /// </summary>
         /// <remarks>
-        /// The resulting action is equivalent to <see cref="Invoke(T)"/>.
+        /// The resulting action is equivalent to <see cref="Invoke(T1, T2)"/>.
         /// </remarks>
         /// <param name="reliableAction">An operation that may be retried due to transient failures.</param>
-        public static implicit operator Action<T>(ReliableAction<T> reliableAction)
+        public static implicit operator Action<T1, T2>(ReliableAction<T1, T2> reliableAction)
             => reliableAction.Invoke;
     }
 }

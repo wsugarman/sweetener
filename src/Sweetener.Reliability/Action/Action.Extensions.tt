@@ -2,17 +2,16 @@
 <#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #>
-<#
-for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
-{
-    string arguments      = GetArguments     (parameterCount);
-    string parameters     = GetParameters    (parameterCount);
-    string typeParameters = GetTypeParameters(parameterCount);
-    string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
-
-    string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
-    string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+<#@ include file="..\TextTemplating\Include.t4" #><#
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string arguments      = GetArguments     (parameterCount);
+        string parameters     = GetParameters    (parameterCount);
+        string typeParameters = GetTypeParameters(parameterCount);
+        string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
+    
+        string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
+        string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;

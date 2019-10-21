@@ -11,13 +11,14 @@ namespace Sweetener.Reliability
     /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
     /// <typeparam name="T3">The type of the third parameter of the underlying delegate.</typeparam>
     /// <typeparam name="T4">The type of the fourth parameter of the underlying delegate.</typeparam>
-    public sealed class ReliableAction<T1, T2, T3, T4> : ReliableDelegate
+    /// <typeparam name="T5">The type of the fifth parameter of the underlying delegate.</typeparam>
+    public sealed class ReliableAction<T1, T2, T3, T4, T5> : ReliableDelegate
     {
-        private readonly Action<T1, T2, T3, T4> _action;
+        private readonly Action<T1, T2, T3, T4, T5> _action;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4}"/>
-        /// class that executes the given <see cref="Action{T1, T2, T3, T4}"/> at most a
+        /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5}"/>
+        /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The underlying action to invoke.</param>
@@ -30,15 +31,15 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAction(Action<T1, T2, T3, T4> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public ReliableAction(Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4}"/>
-        /// class that executes the given <see cref="Action{T1, T2, T3, T4}"/> at most a
+        /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5}"/>
+        /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The underlying action to invoke.</param>
@@ -51,7 +52,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAction(Action<T1, T2, T3, T4> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public ReliableAction(Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -64,8 +65,9 @@ namespace Sweetener.Reliability
         /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <param name="arg3">The third argument for the underlying delegate.</param>
         /// <param name="arg4">The fourth argument for the underlying delegate.</param>
-        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-            => Invoke(arg1, arg2, arg3, arg4, CancellationToken.None);
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+            => Invoke(arg1, arg2, arg3, arg4, arg5, CancellationToken.None);
 
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
@@ -74,11 +76,12 @@ namespace Sweetener.Reliability
         /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <param name="arg3">The third argument for the underlying delegate.</param>
         /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, CancellationToken cancellationToken)
+        public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, CancellationToken cancellationToken)
         {
             int attempt = 0;
             Exception lastException;
@@ -87,7 +90,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    _action(arg1, arg2, arg3, arg4);
+                    _action(arg1, arg2, arg3, arg4, arg5);
                     return;
                 }
                 catch (Exception e)
@@ -106,12 +109,13 @@ namespace Sweetener.Reliability
         /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <param name="arg3">The third argument for the underlying delegate.</param>
         /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
         /// <returns>
         /// <see langword="true"/> if the delegate completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-            => TryInvoke(arg1, arg2, arg3, arg4, CancellationToken.None);
+        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+            => TryInvoke(arg1, arg2, arg3, arg4, arg5, CancellationToken.None);
 
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
@@ -120,6 +124,7 @@ namespace Sweetener.Reliability
         /// <param name="arg2">The second argument for the underlying delegate.</param>
         /// <param name="arg3">The third argument for the underlying delegate.</param>
         /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg5">The fifth argument for the underlying delegate.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
@@ -128,7 +133,7 @@ namespace Sweetener.Reliability
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, CancellationToken cancellationToken)
+        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, CancellationToken cancellationToken)
         {
             int attempt = 0;
             Exception lastException;
@@ -137,7 +142,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    _action(arg1, arg2, arg3, arg4);
+                    _action(arg1, arg2, arg3, arg4, arg5);
                     return true;
                 }
                 catch (Exception e)
@@ -151,13 +156,13 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Implicitly converts the <paramref name="reliableAction"/> to an
-        /// <see cref="Action{T1, T2, T3, T4}"/>.
+        /// <see cref="Action{T1, T2, T3, T4, T5}"/>.
         /// </summary>
         /// <remarks>
-        /// The resulting action is equivalent to <see cref="Invoke(T1, T2, T3, T4)"/>.
+        /// The resulting action is equivalent to <see cref="Invoke(T1, T2, T3, T4, T5)"/>.
         /// </remarks>
         /// <param name="reliableAction">An operation that may be retried due to transient failures.</param>
-        public static implicit operator Action<T1, T2, T3, T4>(ReliableAction<T1, T2, T3, T4> reliableAction)
+        public static implicit operator Action<T1, T2, T3, T4, T5>(ReliableAction<T1, T2, T3, T4, T5> reliableAction)
             => reliableAction.Invoke;
     }
 }

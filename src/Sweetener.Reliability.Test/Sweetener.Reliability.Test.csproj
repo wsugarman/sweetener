@@ -22,72 +22,76 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Action\ReliableAction.Test.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableAction.Test.cs</LastGenOutput>
-    </None>
-    <None Update="Func\ReliableFunc.Test.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableFunc.Test.cs</LastGenOutput>
-    </None>
-    <None Update="Policies\Exception\ExceptionPolicies.Specific.Test.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExceptionPolicies.Specific.Test.cs</LastGenOutput>
-    </None>
-    <None Update="TryFunc.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TryFunc.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Item Include="Policies\Exception\ExceptionPolicies.Specific.Test.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExceptionPolicies.Specific.Test.tt</DependentUpon>
-    </Item>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <None Include="Action\ReliableAction.Test.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
-    </None>
-    <None Include="Func\ReliableFunc.Test.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
-    </None>
-    <None Include="TryFunc.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TryFunc.tt</DependentUpon>
-    </None>
-  </ItemGroup>
-  
+  <!-- Generated Files -->
   <ItemGroup>
     <Compile Update="Action\ReliableAction.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
     </Compile>
-    <Compile Update="Func\ReliableFunc.Test.cs">
+    <Compile Update="Action\ReliableAction.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\ReliableFunc.T*.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
     </Compile>
-    <Compile Update="Policies\Exception\ExceptionPolicies.Specific.Test.cs">
+    <Compile Update="Policies\Exception\ExceptionPolicies.Fail.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ExceptionPolicies.Specific.Test.tt</DependentUpon>
+      <DependentUpon>ExceptionPolicies.Fail.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Policies\Exception\ExceptionPolicies.Retry.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExceptionPolicies.Retry.Test.tt</DependentUpon>
     </Compile>
     <Compile Update="TryFunc.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>TryFunc.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <!-- Status Files -->
+  <ItemGroup>
+    <None Update="Action\ReliableAction.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableFunc.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <!-- Text Templating Files -->
+  <ItemGroup>
+    <None Update="Action\ReliableAction.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAction.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableFunc.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableFunc.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Policies\Exception\ExceptionPolicies.Fail.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExceptionPolicies.Fail.Test.cs</LastGenOutput>
+    </None>
+    <None Update="Policies\Exception\ExceptionPolicies.Retry.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExceptionPolicies.Retry.Test.cs</LastGenOutput>
+    </None>
+    <None Update="TryFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TryFunc.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
 </Project>

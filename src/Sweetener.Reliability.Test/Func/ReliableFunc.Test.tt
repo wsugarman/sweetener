@@ -1,17 +1,8 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
-<#@ output extension=".cs" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableFunc.Test.tt
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Sweetener.Reliability.Test
-{
-<#
+<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#@ include file="..\TextTemplating\Include.t4" #><#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma                  = parameterCount > 0 ? ", " : string.Empty;
@@ -24,8 +15,15 @@ namespace Sweetener.Reliability.Test
         string typeParameters                 = typeParametersNoResult + optionalComma + "TResult";
         string testArguments                  = GetTestArguments(parameterCount);
 #>
-    #region ReliableFunc<<#= typeParameters #>>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Sweetener.Reliability.Test
+{
     [TestClass]
     public sealed class ReliableFunc<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #>Test : ReliableDelegateTest<string>
     {
@@ -180,8 +178,8 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualSuccess(invoke);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailureResult =
-                (reliableFunc<#= optionalComma #><#= arguments #>) => Assert.AreEqual("Bad Result", reliableFunc.Invoke(<#= arguments #>));
+            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailureResult = (reliableFunc<#= optionalComma #><#= arguments #>)
+                => Assert.AreEqual("Bad Result", reliableFunc.Invoke(<#= arguments #>));
 
             Invoke_Failure_Result         (assertFailureResult, "Bad Result");
             Invoke_EventualFailure_Result (assertFailureResult, "Bad Result");
@@ -219,23 +217,21 @@ namespace Sweetener.Reliability.Test
         private void TryInvoke(TryFunc<ReliableFunc<#= typeArguments #>, <#= typeArgumentsNoBracket #>> tryInvoke)
         {
             // Success
-            Func<ReliableFunc<#= typeArguments #>, <#= typeArgumentsNoBracket #>> assertSuccess =
-                (r<#= optionalComma #><#= arguments #>) =>
-                {
-                    Assert.IsTrue(tryInvoke(r<#= optionalComma #><#= arguments #>, out string result));
-                    return result;
-                };
+            Func<ReliableFunc<#= typeArguments #>, <#= typeArgumentsNoBracket #>> assertSuccess = (r<#= optionalComma #><#= arguments #>) =>
+            {
+                Assert.IsTrue(tryInvoke(r<#= optionalComma #><#= arguments #>, out string result));
+                return result;
+            };
 
             Invoke_Success        (assertSuccess);
             Invoke_EventualSuccess(assertSuccess);
 
             // Failure (Bad Result)
-            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailure =
-                (reliableFunc<#= optionalComma #><#= arguments #>) =>
-                {
-                    Assert.IsFalse(reliableFunc.TryInvoke(<#= arguments #><#= optionalComma #>out string result));
-                    Assert.AreEqual(null, result);
-                };
+            Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertFailure = (reliableFunc<#= optionalComma #><#= arguments #>) =>
+            {
+                Assert.IsFalse(reliableFunc.TryInvoke(<#= arguments #><#= optionalComma #>out string result));
+                Assert.AreEqual(null, result);
+            };
 
             Invoke_Failure_Result         (assertFailure);
             Invoke_EventualFailure_Result (assertFailure);
@@ -249,9 +245,9 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Success(Func<ReliableFunc<#= typeArguments #>, <#= typeArgumentsNoBracket #>> assertInvoke)
         {
-            ObservableFunc<string, ResultKind> resultPolicy    = PolicyValidator.Create(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal, "Success");
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<string   , ResultKind> resultPolicy    = PolicyValidator.Create(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal, "Success");
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
             ReliableFunc<#= typeArguments #> reliableFunc = new ReliableFunc<#= typeArguments #>(
                 (<#= arguments #>) =>
@@ -285,9 +281,9 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure_Exception<T>(Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<string, ResultKind>               resultPolicy    = PolicyValidator.Create<string>(r => ResultKind.Successful);
-            ObservableFunc<Exception, bool>                  exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
-            ObservableFunc<int, string, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<string>((i, r, e) => TimeSpan.Zero);
+            ObservableFunc<string                , ResultKind> resultPolicy    = PolicyValidator.Create<string>(r => ResultKind.Successful);
+            ObservableFunc<Exception             , bool      > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<int, string, Exception, TimeSpan  > delayPolicy     = PolicyValidator.Create<string>((i, r, e) => TimeSpan.Zero);
 
             ReliableFunc<#= typeArguments #> reliableFunc = new ReliableFunc<#= typeArguments #>(
                 (<#= arguments #>) =>
@@ -310,14 +306,13 @@ namespace Sweetener.Reliability.Test
             int failures = 0;
             reliableFunc.Retrying         += (i, r, e) => Assert.Fail();
             reliableFunc.RetriesExhausted += (   r, e) => Assert.Fail();
-            reliableFunc.Failed           +=
-                (r, e) =>
-                {
-                    failures++;
+            reliableFunc.Failed           += (   r, e) =>
+            {
+                failures++;
 
-                    Assert.IsNull(r);
-                    Assert.AreEqual(typeof(T), e.GetType());
-                };
+                Assert.IsNull(r);
+                Assert.AreEqual(typeof(T), e.GetType());
+            };
 
             assertInvoke(reliableFunc<#= optionalComma #><#= testArguments #>);
 
@@ -329,9 +324,9 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Failure_Result(Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertInvoke, string expectedResult = "Failure")
         {
-            ObservableFunc<string, ResultKind>               resultPolicy    = PolicyValidator.Create(r => r == expectedResult ? ResultKind.Fatal : ResultKind.Successful, expectedResult);
-            ObservableFunc<Exception, bool>                  exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Transient);
-            ObservableFunc<int, string, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<string>((i, r, e) => TimeSpan.Zero);
+            ObservableFunc<string                , ResultKind> resultPolicy    = PolicyValidator.Create(r => r == expectedResult ? ResultKind.Fatal : ResultKind.Successful, expectedResult);
+            ObservableFunc<Exception             , bool      > exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Transient);
+            ObservableFunc<int, string, Exception, TimeSpan  > delayPolicy     = PolicyValidator.Create<string>((i, r, e) => TimeSpan.Zero);
 
             ReliableFunc<#= typeArguments #> reliableFunc = new ReliableFunc<#= typeArguments #>(
                 (<#= arguments #>) =>
@@ -354,14 +349,13 @@ namespace Sweetener.Reliability.Test
             int failures = 0;
             reliableFunc.Retrying         += (i, r, e) => Assert.Fail();
             reliableFunc.RetriesExhausted += (   r, e) => Assert.Fail();
-            reliableFunc.Failed           +=
-                (r, e) =>
-                {
-                    failures++;
+            reliableFunc.Failed           += (   r, e) =>
+            {
+                failures++;
 
-                    Assert.AreEqual(expectedResult, r);
-                    Assert.IsNull(e);
-                };
+                Assert.AreEqual(expectedResult, r);
+                Assert.IsNull(e);
+            };
 
             assertInvoke(reliableFunc<#= optionalComma #><#= testArguments #>);
 
@@ -374,18 +368,17 @@ namespace Sweetener.Reliability.Test
         private void Invoke_EventualSuccess(Func<ReliableFunc<#= typeArguments #>, <#= typeArgumentsNoBracket #>> assertInvoke)
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<string, ResultKind> resultPolicy    = new ObservableFunc<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Retryable);
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<string   , ResultKind> resultPolicy    = new ObservableFunc<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Retryable);
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-            resultPolicy.Invoking +=
-                r =>
-                {
-                    if (resultPolicy.Calls == 1)
-                        Assert.AreEqual("Transient", r);
-                    else
-                        Assert.AreEqual("Success", r);
-                };
+            resultPolicy.Invoking += r =>
+            {
+                if (resultPolicy.Calls == 1)
+                    Assert.AreEqual("Transient", r);
+                else
+                    Assert.AreEqual("Success", r);
+            };
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
             Action flakyAction = FlakyAction.Create<IOException>(1);
@@ -448,9 +441,9 @@ namespace Sweetener.Reliability.Test
             where TFatal     : Exception, new()
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<string, ResultKind> resultPolicy    = PolicyValidator.Create(r => ResultKind.Retryable, "Transient");
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<string   , ResultKind> resultPolicy    = PolicyValidator.Create(r => ResultKind.Retryable, "Transient");
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -498,14 +491,13 @@ namespace Sweetener.Reliability.Test
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
                 Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
-            reliableFunc.Failed +=
-                (r, e) =>
-                {
-                    failures++;
+            reliableFunc.Failed += (r, e) =>
+            {
+                failures++;
 
-                    Assert.IsNull(r);
-                    Assert.AreEqual(typeof(TFatal), e.GetType());
-                };
+                Assert.IsNull(r);
+                Assert.AreEqual(typeof(TFatal), e.GetType());
+            };
             reliableFunc.RetriesExhausted += (r, e) => Assert.Fail();
 
             assertInvoke(reliableFunc<#= optionalComma #><#= testArguments #>);
@@ -522,18 +514,17 @@ namespace Sweetener.Reliability.Test
             Assert.AreNotEqual("Transient", expectedResult);
 
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<string, ResultKind> resultPolicy    = new ObservableFunc<string, ResultKind>(r => r == "Transient" ? ResultKind.Retryable : ResultKind.Fatal);
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<string   , ResultKind> resultPolicy    = new ObservableFunc<string, ResultKind>(r => r == "Transient" ? ResultKind.Retryable : ResultKind.Fatal);
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
-             resultPolicy.Invoking +=
-                r =>
-                {
-                    if (resultPolicy.Calls < 3)
-                        Assert.AreEqual("Transient", r);
-                    else
-                        Assert.AreEqual(expectedResult, r);
-                };
+            resultPolicy.Invoking += r =>
+            {
+                if (resultPolicy.Calls < 3)
+                    Assert.AreEqual("Transient", r);
+                else
+                    Assert.AreEqual(expectedResult, r);
+            };
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
             Action flakyAction = FlakyAction.Create<IOException>(1);
@@ -580,14 +571,13 @@ namespace Sweetener.Reliability.Test
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
                 Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
-            reliableFunc.Failed +=
-                (r, e) =>
-                {
-                    failures++;
+            reliableFunc.Failed += (r, e) =>
+            {
+                failures++;
 
-                    Assert.AreEqual(expectedResult, r);
-                    Assert.IsNull(e);
-                };
+                Assert.AreEqual(expectedResult, r);
+                Assert.IsNull(e);
+            };
             reliableFunc.RetriesExhausted += (r, e) => Assert.Fail();
 
             assertInvoke(reliableFunc<#= optionalComma #><#= testArguments #>);
@@ -603,9 +593,9 @@ namespace Sweetener.Reliability.Test
             where T : Exception, new()
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<string, ResultKind> resultPolicy    = PolicyValidator.Create(r => ResultKind.Retryable, "Transient");
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<string   , ResultKind> resultPolicy    = PolicyValidator.Create(r => ResultKind.Retryable, "Transient");
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -650,14 +640,13 @@ namespace Sweetener.Reliability.Test
                 Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
             reliableFunc.Failed           += (r, e) => Assert.Fail();
-            reliableFunc.RetriesExhausted +=
-                (r, e) =>
-                {
-                    exhausted++;
+            reliableFunc.RetriesExhausted += (r, e) =>
+            {
+                exhausted++;
 
-                    Assert.IsNull(r);
-                    Assert.AreEqual(typeof(T), e.GetType());
-                };
+                Assert.IsNull(r);
+                Assert.AreEqual(typeof(T), e.GetType());
+            };
 
             assertInvoke(reliableFunc<#= optionalComma #><#= testArguments #>);
 
@@ -671,9 +660,9 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted_Result(Action<ReliableFunc<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracketNoResult #>> assertInvoke, string expectedResult = "Transient")
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<string, ResultKind> resultPolicy    = PolicyValidator.Create(r => r == expectedResult ? ResultKind.Retryable : ResultKind.Fatal, expectedResult);
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<string   , ResultKind> resultPolicy    = PolicyValidator.Create(r => r == expectedResult ? ResultKind.Retryable : ResultKind.Fatal, expectedResult);
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -721,14 +710,13 @@ namespace Sweetener.Reliability.Test
                 Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
             };
             reliableFunc.Failed           += (r, e) => Assert.Fail();
-            reliableFunc.RetriesExhausted +=
-                (r, e) =>
-                {
-                    exhausted++;
+            reliableFunc.RetriesExhausted += (r, e) =>
+            {
+                exhausted++;
 
-                    Assert.AreEqual(expectedResult, r);
-                    Assert.IsNull(e);
-                };
+                Assert.AreEqual(expectedResult, r);
+                Assert.IsNull(e);
+            };
 
             assertInvoke(reliableFunc<#= optionalComma #><#= testArguments #>);
 
@@ -744,9 +732,9 @@ namespace Sweetener.Reliability.Test
             using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            ObservableFunc<string, ResultKind> resultPolicy    = PolicyValidator.Create(r => r == "Transient" ? ResultKind.Retryable : ResultKind.Fatal, "Transient");
-            ObservableFunc<Exception, bool>    exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>      delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<string   , ResultKind> resultPolicy    = PolicyValidator.Create(r => r == "Transient" ? ResultKind.Retryable : ResultKind.Fatal, "Transient");
+            ObservableFunc<Exception, bool      > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int      , TimeSpan  > delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>(1, "Transient");
             ReliableFunc<#= typeArguments #> reliableAction = new ReliableFunc<#= typeArguments #>(
@@ -768,24 +756,23 @@ namespace Sweetener.Reliability.Test
                 delayPolicy    .Invoke);
 
             int retries = 0;
-            reliableAction.Retrying +=
-                (i, r, e) =>
+            reliableAction.Retrying += (i, r, e) =>
+            {
+                Assert.AreEqual(++retries, i);
+
+                if (i == 1)
                 {
-                    Assert.AreEqual(++retries, i);
+                    Assert.IsNull(r);
+                    Assert.AreEqual(typeof(IOException), e.GetType());
+                }
+                else
+                {
+                    Assert.AreEqual("Transient", r);
+                    Assert.IsNull(e);
 
-                    if (i == 1)
-                    {
-                        Assert.IsNull(r);
-                        Assert.AreEqual(typeof(IOException), e.GetType());
-                    }
-                    else
-                    {
-                        Assert.AreEqual("Transient", r);
-                        Assert.IsNull(e);
-
-                        retryEvent.Set();
-                    }
-                };
+                    retryEvent.Set();
+                }
+            };
             reliableAction.Failed           += (r, e) => Assert.Fail();
             reliableAction.RetriesExhausted += (r, e) => Assert.Fail();
 
@@ -846,10 +833,9 @@ namespace Sweetener.Reliability.Test
         }
 #>
     }
-
-    #endregion
-
+}
 <#
+        SaveOutput($"ReliableFunc.T{parameterCount + 1}.Test.cs");
     }
 #>
-}
+<#= GetTemplateFileName() #> ran successfully

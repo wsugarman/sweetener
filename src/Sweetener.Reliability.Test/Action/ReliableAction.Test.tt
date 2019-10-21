@@ -1,18 +1,8 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
-<#@ output extension=".cs" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableAction.Test.tt
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Sweetener.Reliability.Test
-{
-<#
+<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#@ include file="..\TextTemplating\Include.t4" #><#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string arguments              = GetArguments (parameterCount);
@@ -22,10 +12,16 @@ namespace Sweetener.Reliability.Test
         string typeParameters         = parameterCount == 0 ? string.Empty : "<" + GetTypeParameters(parameterCount) + ">";
         string testArguments          = GetTestArguments(parameterCount);
         string optionalComma          = parameterCount > 0 ? ", " : string.Empty;
-
 #>
-    #region ReliableAction<#= typeParameters #>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Sweetener.Reliability.Test
+{
     [TestClass]
     public sealed class ReliableAction<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #>Test : ReliableDelegateTest
     {
@@ -146,8 +142,8 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Success(Action<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> assertInvoke)
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
             ReliableAction<#= typeArguments #> reliableAction = new ReliableAction<#= typeArguments #>(
                 (<#= arguments #>) => <#= parameterCount > 0 ? "AssertDelegateParameters(" + arguments + ")" : "Console.WriteLine(\"Success\")" #>,
@@ -168,7 +164,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure<T>(Action<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> assertInvoke)
             where T : Exception, new()
         {
-            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
+            ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
             ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
 
             ReliableAction<#= typeArguments #> reliableAction = new ReliableAction<#= typeArguments #>(
@@ -203,8 +199,8 @@ namespace Sweetener.Reliability.Test
         private void Invoke_EventualSuccess(Action<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> assertInvoke)
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -250,8 +246,8 @@ namespace Sweetener.Reliability.Test
             where TFatal     : Exception, new()
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -297,7 +293,7 @@ namespace Sweetener.Reliability.Test
             where T : Exception, new()
         {
             DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception, bool>          exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
+            ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
             ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
 
             delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
@@ -344,8 +340,8 @@ namespace Sweetener.Reliability.Test
             using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int, TimeSpan>   delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
 
             ReliableAction<#= typeArguments #> reliableAction = new ReliableAction<#= typeArguments #>(
                 (<#= arguments #>) =>
@@ -430,10 +426,10 @@ namespace Sweetener.Reliability.Test
         }
 #>
     }
-
-    #endregion
-
+}
 <#
+        string fileName = parameterCount == 0 ? "ReliableAction.Test.cs" : $"ReliableAction.T{parameterCount}.Test.cs";
+        SaveOutput(fileName);
     }
 #>
-}
+<#= GetTemplateFileName() #> ran successfully

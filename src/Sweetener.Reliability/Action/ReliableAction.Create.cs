@@ -1,4 +1,3 @@
-
 // Generated from ReliableAction.Create.tt
 using System;
 
