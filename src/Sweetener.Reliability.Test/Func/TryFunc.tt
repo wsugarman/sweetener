@@ -1,8 +1,8 @@
-﻿<#@ template hostspecific="false" language="C#" #>
+﻿<#@ template hostspecific="true" language="C#" #>
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from TryFunc.tt
+<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #>// Generated from TryFunc.tt
 namespace Sweetener.Reliability.Test
 {
 <#

@@ -39,6 +39,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Func\TryFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TryFunc.tt</DependentUpon>
+    </Compile>
     <Compile Update="Policies\Exception\ExceptionPolicies.Fail.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -48,11 +53,6 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ExceptionPolicies.Retry.Test.tt</DependentUpon>
-    </Compile>
-    <Compile Update="TryFunc.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TryFunc.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
@@ -80,6 +80,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.Test.tt.out</LastGenOutput>
     </None>
+    <None Update="Func\TryFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TryFunc.cs</LastGenOutput>
+    </None>
     <None Update="Policies\Exception\ExceptionPolicies.Fail.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ExceptionPolicies.Fail.Test.cs</LastGenOutput>
@@ -87,10 +91,6 @@
     <None Update="Policies\Exception\ExceptionPolicies.Retry.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ExceptionPolicies.Retry.Test.cs</LastGenOutput>
-    </None>
-    <None Update="TryFunc.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TryFunc.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

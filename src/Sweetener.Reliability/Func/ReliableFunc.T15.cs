@@ -242,6 +242,7 @@ namespace Sweetener.Reliability
         {
             TResult result;
             int attempt = 0;
+
         Attempt:
             attempt++;
             try

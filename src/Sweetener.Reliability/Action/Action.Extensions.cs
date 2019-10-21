@@ -45,7 +45,7 @@ namespace Sweetener.Reliability
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            if (maxRetries < -1)
+            if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
             if (exceptionPolicy == null)
@@ -57,6 +57,7 @@ namespace Sweetener.Reliability
             return () =>
             {
                 int attempt = 0;
+
             Attempt:
                 attempt++;
                 try
@@ -66,7 +67,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || attempt > maxRetries)
+                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw e;
 
                     Task.Delay(delayPolicy(attempt, e)).Wait();

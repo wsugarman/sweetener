@@ -89,7 +89,7 @@ namespace Sweetener.Reliability
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)
         {
-            if (maxRetries < -1)
+            if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
             MaxRetries = maxRetries;
