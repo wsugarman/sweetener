@@ -1,13 +1,8 @@
-﻿<#@ template hostspecific="false" language="C#" #>
-<#@ output extension=".cs" #>
+﻿<#@ template hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableFunc.tt
-using System;
-using System.Threading;
-
-namespace Sweetener.Reliability
-{
+<#@ include file="..\TextTemplating\Include.t4" #>
 <#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -17,8 +12,12 @@ namespace Sweetener.Reliability
         string typeParametersNoResult = GetTypeParameters(parameterCount);
         string typeParameters         = typeParametersNoResult + optionalComma + "TResult";
 #>
-    #region ReliableFunc<<#= typeParameters #>>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading;
 
+namespace Sweetener.Reliability
+{
     /// <summary>
     /// A wrapper to reliably invoke a function despite transient issues.
     /// </summary>
@@ -203,10 +202,9 @@ namespace Sweetener.Reliability
         public static implicit operator Func<<#= typeParameters #>>(ReliableFunc<<#= typeParameters #>> reliableFunc)
             => reliableFunc.Invoke;
     }
-
-    #endregion
-
+}
 <#
+        SaveOutput($"ReliableFunc.T{parameterCount + 1}.cs");
     }
 #>
-}
+<#= GetTemplateFileName() #> ran successfully

@@ -1,17 +1,8 @@
-﻿<#@ template hostspecific="false" language="C#" #>
-<#@ output extension=".cs" #>
+﻿<#@ template hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from ReliableFunc.Create.tt
-using System;
-
-namespace Sweetener.Reliability
-{
-    /// <summary>
-    /// Provides a set of methods for creating reliable functions.
-    /// </summary>
-    public static class ReliableFunc
-    {
+<#@ include file="..\TextTemplating\Include.t4" #>
 <#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -19,8 +10,29 @@ namespace Sweetener.Reliability
         string parameters     = GetParameters    (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount) + (parameterCount > 0 ? ", TResult" : "TResult");
 #>
-        #region Create<<#= typeParameters #>>
+// Generated from <#= GetTemplateFileName() #>
+using System;
 
+namespace Sweetener.Reliability
+{
+<#
+        if (parameterCount == 0)
+        {
+#>
+    /// <summary>
+    /// Provides a set of methods for creating reliable functions.
+    /// </summary>
+    public static partial class ReliableFunc
+<#
+        }
+        else
+        {
+#>
+    static partial class ReliableFunc
+<#
+        }
+#>
+    {
         /// <summary>
         /// Creates a new <see cref="ReliableFunc{<#= typeParameters #>}"/>
         /// that executes the given <see cref="Func{<#= typeParameters #>}"/> at most a
@@ -78,11 +90,10 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy<TResult> delayPolicy)
             => new ReliableFunc<<#= typeParameters #>>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
-
-        #endregion
-
-<#
-}
-#>
     }
 }
+<#
+        SaveOutput($"ReliableFunc.Create.T{parameterCount + 1}.cs");
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully

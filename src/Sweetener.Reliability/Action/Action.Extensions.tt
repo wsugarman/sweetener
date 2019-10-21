@@ -1,18 +1,8 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
-<#@ output extension=".cs" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from Action.Extensions.tt
-using System;
-using System.Threading.Tasks;
-
-namespace Sweetener.Reliability
-{
-    /// <summary>
-    /// A collection of methods to reliablty invoke actions.
-    /// </summary>
-    public static class ActionExtensions
-    {
+<#@ include file="..\TextTemplating\Include.t4" #>
 <#
 for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
 {
@@ -24,8 +14,30 @@ for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterC
     string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
     string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
 #>
-        #region WithRetry<#= typeParametersCode #>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading.Tasks;
 
+namespace Sweetener.Reliability
+{
+<#
+        if (parameterCount == 0)
+        {
+#>
+    /// <summary>
+    /// A collection of methods to reliablty invoke actions.
+    /// </summary>
+    public static partial class ActionExtensions
+<#
+        }
+        else
+        {
+#>
+    static partial class ActionExtensions
+<#
+        }
+#>
+    {
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
         /// that will retry the operation based on the provided policies.
@@ -77,11 +89,11 @@ for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterC
                 }
             };
         }
-
-        #endregion
-
-<#
-}
-#>
     }
 }
+<#
+        string fileName = parameterCount == 0 ? "Action.Extensions.cs" : $"Action.Extensions.T{parameterCount}.cs";
+        SaveOutput(fileName);
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully

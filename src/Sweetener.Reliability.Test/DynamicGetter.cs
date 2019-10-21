@@ -27,7 +27,7 @@ namespace Sweetener.Reliability.Test
 
         public static Func<TOut> ForStaticField<TSource, TOut>(string name)
         {
-            FieldInfo fieldInfo = typeof(TSource).GetField(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo fieldInfo = typeof(TSource).GetField(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (fieldInfo == null)
                 throw new ArgumentException($"Cannot find an instance field called '{name}' for type '{typeof(TSource).Name}'.");
 

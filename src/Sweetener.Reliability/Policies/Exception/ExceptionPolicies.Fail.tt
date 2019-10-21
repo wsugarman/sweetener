@@ -1,0 +1,63 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\..\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+using System;
+
+namespace Sweetener.Reliability
+{
+    static partial class ExceptionPolicies
+    {
+<#
+    for (int parameterCount = 1; parameterCount <= MaxExceptionParameters; parameterCount++)
+    {
+        string typeParameters = GetTypeParameters(parameterCount);
+#>
+        /// <summary>
+        /// Creates an <see cref="ExceptionPolicy" /> that immediately fails an operation
+        /// if any exception is thrown whose type exactly matches <#= parameterCount > 1 ? "one of " : "" #>the given type<#= parameterCount > 1 ? "s" : "" #>.
+        /// All other exceptions are assumed to be transient.
+        /// </summary>
+<#
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string typeParameter   = parameterCount == 1 ? "T" : "T" + i;
+            string parameterPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+        /// <typeparam name="<#= typeParameter #>">The type of the <#= parameterPrefix #>fatal exception.</typeparam>
+<#
+        }
+#>
+        public static ExceptionPolicy Fail<<#= typeParameters #>>()
+<#
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string typeParameter = parameterCount == 1 ? "T" : "T" + i;
+#>
+            where <#= typeParameter #> : Exception
+<#
+        }
+#>
+            => exception =>
+            {
+                if (exception == null)
+                    throw new ArgumentNullException(nameof(exception));
+
+                Type t = exception.GetType();
+                return t != typeof(<#= parameterCount == 1 ? "T);" : "T1)" #>
+<#
+        for (int i = 2; i <= parameterCount; i++)
+        {
+#>
+                    && t != typeof(T<#= i #>)<#= i == parameterCount ? ";" : "" #>
+<#
+        }
+#>
+            };
+
+<#
+    }
+#>
+    }
+}
