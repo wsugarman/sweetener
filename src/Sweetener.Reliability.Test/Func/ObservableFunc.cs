@@ -2,13 +2,16 @@
 
 namespace Sweetener.Reliability.Test
 {
-    internal sealed class ObservableFunc<T, TResult>
+    internal class ObservableFunc
+    {
+        public int Calls { get; protected set; }
+    }
+
+    internal sealed class ObservableFunc<T, TResult> : ObservableFunc
     {
         public event Action<T> Invoking;
 
         public event Action<T, TResult> Invoked;
-
-        public int Calls { get; private set; }
 
         private readonly Func<T, TResult> _func;
 
@@ -32,13 +35,11 @@ namespace Sweetener.Reliability.Test
             => observableFunc.Invoke;
     }
 
-    internal sealed class ObservableFunc<T1, T2, TResult>
+    internal sealed class ObservableFunc<T1, T2, TResult> : ObservableFunc
     {
         public event Action<T1, T2> Invoking;
 
         public event Action<T1, T2, TResult> Invoked;
-
-        public int Calls { get; private set; }
 
         private readonly Func<T1, T2, TResult> _func;
 
@@ -62,13 +63,11 @@ namespace Sweetener.Reliability.Test
             => observableFunc.Invoke;
     }
 
-    internal sealed class ObservableFunc<T1, T2, T3, TResult>
+    internal sealed class ObservableFunc<T1, T2, T3, TResult> : ObservableFunc
     {
         public event Action<T1, T2, T3> Invoking;
 
         public event Action<T1, T2, T3, TResult> Invoked;
-
-        public int Calls { get; private set; }
 
         private readonly Func<T1, T2, T3, TResult> _func;
 

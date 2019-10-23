@@ -20,7 +20,7 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
 
-            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Hello World");
+            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Operation.Null();
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> actual = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(action, 37, ExceptionPolicies.Transient, DelayPolicies.Constant(115));
 
             // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
@@ -41,7 +41,7 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
 
             ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.Zero;
-            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Console.WriteLine("Hello World");
+            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Operation.Null();
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> actual = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(action, 37, ExceptionPolicies.Transient, delayPolicy);
 
             Ctor(actual, action, 37, ExceptionPolicies.Transient, delayPolicy);
@@ -127,11 +127,11 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> assertInvoke)
         {
-            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.IgnoreExceptionPolicy();
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.IgnoreDelayPolicy();
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
-                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10),
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10),
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -150,12 +150,12 @@ namespace Sweetener.Reliability.Test
             where T : Exception, new()
         {
             ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
-            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.IgnoreComplexDelayPolicy();
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
-                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     throw new T();
                 },
                 Retries.Infinite,
@@ -178,7 +178,7 @@ namespace Sweetener.Reliability.Test
         {
             DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(Constants.Delay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -186,7 +186,7 @@ namespace Sweetener.Reliability.Test
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
-                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     eventualSuccess();
                 },
                 Retries.Infinite,
@@ -200,7 +200,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(IOException), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
+                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
             };
             reliableAction.Failed           += e => Assert.Fail();
             reliableAction.RetriesExhausted += e => Assert.Fail();
@@ -218,7 +218,7 @@ namespace Sweetener.Reliability.Test
         {
             DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(Constants.Delay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -226,7 +226,7 @@ namespace Sweetener.Reliability.Test
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
-                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     eventualFailure();
                 },
                 4,
@@ -240,7 +240,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(TTransient), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
+                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
             };
             reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
             reliableAction.RetriesExhausted += e => Assert.Fail();
@@ -258,14 +258,14 @@ namespace Sweetener.Reliability.Test
         {
             DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => Constants.Delay); // A "complex" delay policy
 
             delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
-                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     throw new T();
                 },
                 2,
@@ -279,7 +279,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(T), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
+                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
             };
             reliableAction.Failed           += e => Assert.Fail();
             reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
@@ -303,7 +303,7 @@ namespace Sweetener.Reliability.Test
             ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(
                 (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
                 {
-                    AssertDelegateParameters(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
                     throw new IOException();
                 },
                 Retries.Infinite,
@@ -354,20 +354,6 @@ namespace Sweetener.Reliability.Test
             {
                 Assert.Fail();
             }
-        }
-
-        private static void AssertDelegateParameters(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10)
-        {
-            Assert.AreEqual(42                        , arg1);
-            Assert.AreEqual("foo"                     , arg2);
-            Assert.AreEqual(3.14D                     , arg3);
-            Assert.AreEqual(1000L                     , arg4);
-            Assert.AreEqual((ushort)1                 , arg5);
-            Assert.AreEqual((byte)255                 , arg6);
-            Assert.AreEqual(TimeSpan.FromDays(30)     , arg7);
-            Assert.AreEqual(112U                      , arg8);
-            Assert.AreEqual(Tuple.Create(true, 64UL)  , arg9);
-            Assert.AreEqual(new DateTime(2019, 10, 06), arg10);
         }
     }
 }

@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Arguments.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Arguments.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
     <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
@@ -24,6 +32,11 @@
 
   <!-- Generated Files -->
   <ItemGroup>
+    <Compile Update="Action\Action.Extensions.*Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Extensions.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\ReliableAction.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -33,6 +46,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Arguments.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Arguments.tt</DependentUpon>
     </Compile>
     <Compile Update="Func\ReliableFunc.T*.Test.cs">
       <DesignTime>True</DesignTime>
@@ -58,6 +76,11 @@
 
   <!-- Status Files -->
   <ItemGroup>
+    <None Update="Action\ReliableAction.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Extensions.Test.tt</DependentUpon>
+    </None>
     <None Update="Action\ReliableAction.Test.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -72,9 +95,17 @@
 
   <!-- Text Templating Files -->
   <ItemGroup>
+    <None Update="Action\ReliableAction.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAction.Extensions.Test.tt.out</LastGenOutput>
+    </None>
     <None Update="Action\ReliableAction.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAction.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Arguments.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Arguments.cs</LastGenOutput>
     </None>
     <None Update="Func\ReliableFunc.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

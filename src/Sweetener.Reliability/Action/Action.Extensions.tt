@@ -6,15 +6,12 @@
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string arguments      = GetArguments     (parameterCount);
-        string parameters     = GetParameters    (parameterCount);
-        string typeParameters = GetTypeParameters(parameterCount);
-        string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
-    
-        string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
-        string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+        string typeParameters = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ">" : string.Empty;
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
@@ -44,7 +41,7 @@ namespace Sweetener.Reliability
 <#
         PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
-        public static Action<#= typeParametersCode #> WithRetry<#= typeParametersCode #>(this Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
 
         /// <summary>
@@ -54,7 +51,7 @@ namespace Sweetener.Reliability
 <#
         PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
-        public static Action<#= typeParametersCode #> WithRetry<#= typeParametersCode #>(this Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -68,7 +65,7 @@ namespace Sweetener.Reliability
             if (delayPolicy == null)
                 throw new ArgumentNullException(nameof(delayPolicy));
 
-            return (<#= parameters #>) =>
+            return (<#= arguments #><#= optionalComma #>cancellationToken) =>
             {
                 int attempt = 0;
 
@@ -84,7 +81,7 @@ namespace Sweetener.Reliability
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw e;
 
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
+                    Task.Delay(delayPolicy(attempt, e), cancellationToken).Wait(cancellationToken);
                     goto Attempt;
                 }
             };

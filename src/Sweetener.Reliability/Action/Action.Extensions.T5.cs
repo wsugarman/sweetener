@@ -1,5 +1,6 @@
 // Generated from Action.Extensions.tt
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
@@ -25,7 +26,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5> WithRetry<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public static InterruptableAction<T1, T2, T3, T4, T5> WithRetry<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
 
         /// <summary>
@@ -47,7 +48,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Action<T1, T2, T3, T4, T5> WithRetry<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAction<T1, T2, T3, T4, T5> WithRetry<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -61,7 +62,7 @@ namespace Sweetener.Reliability
             if (delayPolicy == null)
                 throw new ArgumentNullException(nameof(delayPolicy));
 
-            return (T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) =>
+            return (arg1, arg2, arg3, arg4, arg5, cancellationToken) =>
             {
                 int attempt = 0;
 
@@ -77,7 +78,7 @@ namespace Sweetener.Reliability
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw e;
 
-                    Task.Delay(delayPolicy(attempt, e)).Wait();
+                    Task.Delay(delayPolicy(attempt, e), cancellationToken).Wait(cancellationToken);
                     goto Attempt;
                 }
             };

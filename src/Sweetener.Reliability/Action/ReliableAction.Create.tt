@@ -8,8 +8,8 @@
         string arguments      = GetArguments     (parameterCount);
         string parameters     = GetParameters    (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount);
-        string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
-    
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+
         string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
         string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
 #>

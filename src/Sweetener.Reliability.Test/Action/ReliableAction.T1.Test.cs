@@ -20,7 +20,7 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int>((arg) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int>((arg) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
 
-            Action<int> action = (arg) => Console.WriteLine("Hello World");
+            Action<int> action = (arg) => Operation.Null();
             ReliableAction<int> actual = new ReliableAction<int>(action, 37, ExceptionPolicies.Transient, DelayPolicies.Constant(115));
 
             // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
@@ -41,7 +41,7 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int>((arg) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
 
             ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.Zero;
-            Action<int> action = (arg) => Console.WriteLine("Hello World");
+            Action<int> action = (arg) => Operation.Null();
             ReliableAction<int> actual = new ReliableAction<int>(action, 37, ExceptionPolicies.Transient, delayPolicy);
 
             Ctor(actual, action, 37, ExceptionPolicies.Transient, delayPolicy);
@@ -127,11 +127,11 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Success(Action<ReliableAction<int>, int> assertInvoke)
         {
-            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create(ExceptionPolicies.Fatal);
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.IgnoreExceptionPolicy();
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.IgnoreDelayPolicy();
 
             ReliableAction<int> reliableAction = new ReliableAction<int>(
-                (arg) => AssertDelegateParameters(arg),
+                (arg) => Arguments.Validate(arg),
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -150,12 +150,12 @@ namespace Sweetener.Reliability.Test
             where T : Exception, new()
         {
             ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
-            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => TimeSpan.Zero);
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.IgnoreComplexDelayPolicy();
 
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
-                    AssertDelegateParameters(arg);
+                    Arguments.Validate(arg);
                     throw new T();
                 },
                 Retries.Infinite,
@@ -178,7 +178,7 @@ namespace Sweetener.Reliability.Test
         {
             DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(Constants.Delay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -186,7 +186,7 @@ namespace Sweetener.Reliability.Test
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
-                    AssertDelegateParameters(arg);
+                    Arguments.Validate(arg);
                     eventualSuccess();
                 },
                 Retries.Infinite,
@@ -200,7 +200,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(IOException), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
+                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
             };
             reliableAction.Failed           += e => Assert.Fail();
             reliableAction.RetriesExhausted += e => Assert.Fail();
@@ -218,7 +218,7 @@ namespace Sweetener.Reliability.Test
         {
             DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(ConstantDelay));
+            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(Constants.Delay));
 
             delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
 
@@ -226,7 +226,7 @@ namespace Sweetener.Reliability.Test
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
-                    AssertDelegateParameters(arg);
+                    Arguments.Validate(arg);
                     eventualFailure();
                 },
                 4,
@@ -240,7 +240,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(TTransient), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
+                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
             };
             reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
             reliableAction.RetriesExhausted += e => Assert.Fail();
@@ -258,14 +258,14 @@ namespace Sweetener.Reliability.Test
         {
             DateTime delayStartUtc = DateTime.MinValue;
             ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => ConstantDelay); // A "complex" delay policy
+            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => Constants.Delay); // A "complex" delay policy
 
             delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
 
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
-                    AssertDelegateParameters(arg);
+                    Arguments.Validate(arg);
                     throw new T();
                 },
                 2,
@@ -279,7 +279,7 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(typeof(T), e.GetType());
 
                 TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > MinDelay, $"Actual delay {actual} less than allowed minimum delay {MinDelay}");
+                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
             };
             reliableAction.Failed           += e => Assert.Fail();
             reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
@@ -303,7 +303,7 @@ namespace Sweetener.Reliability.Test
             ReliableAction<int> reliableAction = new ReliableAction<int>(
                 (arg) =>
                 {
-                    AssertDelegateParameters(arg);
+                    Arguments.Validate(arg);
                     throw new IOException();
                 },
                 Retries.Infinite,
@@ -354,11 +354,6 @@ namespace Sweetener.Reliability.Test
             {
                 Assert.Fail();
             }
-        }
-
-        private static void AssertDelegateParameters(int arg)
-        {
-            Assert.AreEqual(42, arg);
         }
     }
 }

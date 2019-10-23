@@ -25,6 +25,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\InterruptableAction.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAction.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\ReliableAction.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -74,6 +79,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.tt</DependentUpon>
     </None>
+    <None Update="Action\InterruptableAction.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableAction.cs</LastGenOutput>
+    </None>
     <None Update="Action\ReliableAction.Create.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -88,6 +97,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.tt</DependentUpon>
+    </None>
+    <None Include="Action\InterruptableAction.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAction.tt</DependentUpon>
     </None>
     <None Include="Func\ReliableFunc.Create.tt.out">
       <DesignTime>True</DesignTime>
