@@ -75,6 +75,8 @@ namespace Sweetener.Reliability.Test
             WithRetryT8_Canceled        (withRetry);
         }
 
+        #region WithRetryT8_Success
+
         private void WithRetryT8_Success(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke)
@@ -135,6 +137,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT8_Failure
+
         private void WithRetryT8_Failure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke)
@@ -194,6 +200,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT8_EventualSuccess
 
         private void WithRetryT8_EventualSuccess(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> withRetry,
@@ -256,6 +266,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT8_EventualFailure
+
         private void WithRetryT8_EventualFailure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke)
@@ -317,6 +331,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT8_RetriesExhausted
+
         private void WithRetryT8_RetriesExhausted(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke)
@@ -376,6 +394,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(3, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT8_Canceled
 
         private void WithRetryT8_Canceled(Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint>> withRetry)
             => WithRetryT8_Canceled(
@@ -448,5 +470,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(calls, exceptionPolicy .Calls);
             Assert.AreEqual(calls, delayPolicy     .Calls);
         }
+
+        #endregion
     }
 }

@@ -75,6 +75,8 @@ namespace Sweetener.Reliability.Test
             WithRetryT9_Canceled        (withRetry);
         }
 
+        #region WithRetryT9_Success
+
         private void WithRetryT9_Success(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, CancellationToken> invoke)
@@ -135,6 +137,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT9_Failure
+
         private void WithRetryT9_Failure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, CancellationToken> invoke)
@@ -194,6 +200,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT9_EventualSuccess
 
         private void WithRetryT9_EventualSuccess(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> withRetry,
@@ -256,6 +266,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT9_EventualFailure
+
         private void WithRetryT9_EventualFailure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, CancellationToken> invoke)
@@ -317,6 +331,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT9_RetriesExhausted
+
         private void WithRetryT9_RetriesExhausted(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, CancellationToken> invoke)
@@ -376,6 +394,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(3, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT9_Canceled
 
         private void WithRetryT9_Canceled(Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>>> withRetry)
             => WithRetryT9_Canceled(
@@ -448,5 +470,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(calls, exceptionPolicy .Calls);
             Assert.AreEqual(calls, delayPolicy     .Calls);
         }
+
+        #endregion
     }
 }

@@ -75,6 +75,8 @@ namespace Sweetener.Reliability.Test
             WithRetryT13_Canceled        (withRetry);
         }
 
+        #region WithRetryT13_Success
+
         private void WithRetryT13_Success(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken> invoke)
@@ -135,6 +137,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT13_Failure
+
         private void WithRetryT13_Failure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken> invoke)
@@ -194,6 +200,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT13_EventualSuccess
 
         private void WithRetryT13_EventualSuccess(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> withRetry,
@@ -256,6 +266,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT13_EventualFailure
+
         private void WithRetryT13_EventualFailure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken> invoke)
@@ -317,6 +331,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT13_RetriesExhausted
+
         private void WithRetryT13_RetriesExhausted(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken> invoke)
@@ -376,6 +394,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(3, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT13_Canceled
 
         private void WithRetryT13_Canceled(Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal>> withRetry)
             => WithRetryT13_Canceled(
@@ -448,5 +470,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(calls, exceptionPolicy .Calls);
             Assert.AreEqual(calls, delayPolicy     .Calls);
         }
+
+        #endregion
     }
 }

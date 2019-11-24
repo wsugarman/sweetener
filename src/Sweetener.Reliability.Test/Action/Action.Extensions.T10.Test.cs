@@ -75,6 +75,8 @@ namespace Sweetener.Reliability.Test
             WithRetryT10_Canceled        (withRetry);
         }
 
+        #region WithRetryT10_Success
+
         private void WithRetryT10_Success(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> invoke)
@@ -135,6 +137,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT10_Failure
+
         private void WithRetryT10_Failure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> invoke)
@@ -194,6 +200,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT10_EventualSuccess
 
         private void WithRetryT10_EventualSuccess(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> withRetry,
@@ -256,6 +266,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT10_EventualFailure
+
         private void WithRetryT10_EventualFailure(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> invoke)
@@ -317,6 +331,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT10_RetriesExhausted
+
         private void WithRetryT10_RetriesExhausted(
             Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> invoke)
@@ -376,6 +394,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(3, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT10_Canceled
 
         private void WithRetryT10_Canceled(Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>> withRetry)
             => WithRetryT10_Canceled(
@@ -448,5 +470,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(calls, exceptionPolicy .Calls);
             Assert.AreEqual(calls, delayPolicy     .Calls);
         }
+
+        #endregion
     }
 }

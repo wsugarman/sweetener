@@ -14,115 +14,35 @@ namespace Sweetener.Reliability.Test
 
         [TestMethod]
         public void Ctor_DelayPolicy()
-        {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Retry<IOException>();
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, -2              , exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, exceptionPolicy, (DelayPolicy)null ));
-
-            // Create a ReliableFunc and validate
-            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, 37, exceptionPolicy, delayPolicy.Invoke);
-
-            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
-            Ctor(actual, func, 37, ReliableDelegate<string>.DefaultResultPolicy, exceptionPolicy, actualPolicy =>
-            {
-                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
-                Assert.AreEqual(Constants.Delay, actualPolicy(42, "foo", new ArgumentOutOfRangeException()));
-                Assert.AreEqual(1, delayPolicy.Calls);
-            });
-        }
+            => Ctor_DelayPolicy((f, m, e, d) => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(f, m, e, d));
 
         [TestMethod]
         public void Ctor_ComplexDelayPolicy()
-        {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
-            ExceptionPolicy            exceptionPolicy    = ExceptionPolicies.Retry<IOException>();
-            ComplexDelayPolicy<string> complexDelayPolicy = (i, r, e) => TimeSpan.FromSeconds(3);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(null, Retries.Infinite, exceptionPolicy, complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, -2              , exceptionPolicy, complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, null           , complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, exceptionPolicy, (ComplexDelayPolicy<string>)null));
-
-            // Create a ReliableFunc and validate
-            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, 37, exceptionPolicy, complexDelayPolicy);
-            Ctor(actual, func, 37, ReliableDelegate<string>.DefaultResultPolicy, exceptionPolicy, complexDelayPolicy);
-        }
+            => Ctor_ComplexDelayPolicy((f, m, e, d) => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(f, m, e, d));
 
         [TestMethod]
         public void Ctor_ResultPolicy_DelayPolicy()
-        {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
-            ResultPolicy<string>     resultPolicy    = r => ResultKind.Retryable;
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Retry<IOException>();
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(null, Retries.Infinite, resultPolicy, exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, -2              , resultPolicy, exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, null        , exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, resultPolicy, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, resultPolicy, exceptionPolicy, (DelayPolicy)null ));
-
-            // Create a ReliableFunc and validate
-            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, 37, resultPolicy, exceptionPolicy, delayPolicy.Invoke);
-
-            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
-            Ctor(actual, func, 37, resultPolicy, exceptionPolicy, actualPolicy =>
-            {
-                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
-                Assert.AreEqual(Constants.Delay, actualPolicy(42, "foo", new ArgumentOutOfRangeException()));
-                Assert.AreEqual(1, delayPolicy.Calls);
-            });
-        }
+            => Ctor_ResultPolicy_DelayPolicy((f, m, r, e, d) => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(f, m, r, e, d));
 
         [TestMethod]
         public void Ctor_ResultPolicy_ComplexDelayPolicy()
-        {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
-            ResultPolicy<string>       resultPolicy       = r => r == "foo" ? ResultKind.Successful : ResultKind.Fatal;
-            ExceptionPolicy            exceptionPolicy    = ExceptionPolicies.Fail<FormatException>();
-            ComplexDelayPolicy<string> complexDelayPolicy = (i, r, e) => TimeSpan.Zero;
+            => Ctor_ResultPolicy_ComplexDelayPolicy((f, m, r, e, d) => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(f, m, r, e, d));
 
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(null, Retries.Infinite, resultPolicy, exceptionPolicy, complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, -2              , resultPolicy, exceptionPolicy, complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, null        , exceptionPolicy, complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, resultPolicy, null           , complexDelayPolicy              ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, Retries.Infinite, resultPolicy, exceptionPolicy, (ComplexDelayPolicy<string>)null));
+        [TestMethod]
+        public void Create_DelayPolicy()
+            => Ctor_DelayPolicy((f, m, e, d) => ReliableFunc.Create(f, m, e, d));
 
-            // Create a ReliableFunc and validate
-            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = new ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>(func, 37, resultPolicy, exceptionPolicy, complexDelayPolicy);
-            Ctor(actual, func, 37, resultPolicy, exceptionPolicy, complexDelayPolicy);
-        }
+        [TestMethod]
+        public void Create_ComplexDelayPolicy()
+            => Ctor_ComplexDelayPolicy((f, m, e, d) => ReliableFunc.Create(f, m, e, d));
 
-        private void Ctor(
-            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> reliableFunc,
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>         expectedFunc,
-            int                        expectedMaxRetries,
-            ResultPolicy<string>       expectedResultPolicy,
-            ExceptionPolicy            expectedExceptionPolicy,
-            ComplexDelayPolicy<string> expectedDelayPolicy)
-            => Ctor(reliableFunc, expectedFunc, expectedMaxRetries, expectedResultPolicy, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
+        [TestMethod]
+        public void Create_ResultPolicy_DelayPolicy()
+            => Ctor_ResultPolicy_DelayPolicy((f, m, r, e, d) => ReliableFunc.Create(f, m, r, e, d));
 
-        private void Ctor(
-            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> reliableFunc,
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>         expectedFunc,
-            int                                expectedMaxRetries,
-            ResultPolicy<string>               expectedResultPolicy,
-            ExceptionPolicy                    expectedExceptionPolicy,
-            Action<ComplexDelayPolicy<string>> validateDelayPolicy)
-        {
-            Assert.AreEqual(expectedMaxRetries, reliableFunc.MaxRetries);
-
-            Assert.AreSame(expectedFunc           , s_getFunc           (reliableFunc));
-            Assert.AreSame(expectedResultPolicy   , s_getResultPolicy   (reliableFunc));
-            Assert.AreSame(expectedExceptionPolicy, s_getExceptionPolicy(reliableFunc));
-
-            validateDelayPolicy(s_getDelayPolicy(reliableFunc));
-        }
+        [TestMethod]
+        public void Create_ResultPolicy_ComplexDelayPolicy()
+            => Ctor_ResultPolicy_ComplexDelayPolicy((f, m, r, e, d) => ReliableFunc.Create(f, m, r, e, d));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -160,6 +80,120 @@ namespace Sweetener.Reliability.Test
                 => reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, tokenSource.Token, out result);
         }
 
+        #region Ctor
+
+        private void Ctor_DelayPolicy(Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, ExceptionPolicy, DelayPolicy, ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>> factory)
+        {
+            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
+            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Retry<IOException>();
+            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null           , delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, exceptionPolicy, null              ));
+
+            // Create a ReliableFunc and validate
+            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = factory(func, 37, exceptionPolicy, delayPolicy.Invoke);
+
+            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
+            Ctor(actual, func, 37, ReliableDelegate<string>.DefaultResultPolicy, exceptionPolicy, actualPolicy =>
+            {
+                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
+                Assert.AreEqual(Constants.Delay, actualPolicy(42, "foo", new ArgumentOutOfRangeException()));
+                Assert.AreEqual(1, delayPolicy.Calls);
+            });
+        }
+
+        private void Ctor_ComplexDelayPolicy(Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, ExceptionPolicy, ComplexDelayPolicy<string>, ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>> factory)
+        {
+            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
+            ExceptionPolicy            exceptionPolicy    = ExceptionPolicies.Retry<IOException>();
+            ComplexDelayPolicy<string> complexDelayPolicy = (i, r, e) => TimeSpan.FromSeconds(3);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null           , complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, exceptionPolicy, null              ));
+
+            // Create a ReliableFunc and validate
+            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = factory(func, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, func, 37, ReliableDelegate<string>.DefaultResultPolicy, exceptionPolicy, complexDelayPolicy);
+        }
+
+        private void Ctor_ResultPolicy_DelayPolicy(Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, ResultPolicy<string>, ExceptionPolicy, DelayPolicy, ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>> factory)
+        {
+            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
+            ResultPolicy<string>     resultPolicy    = r => ResultKind.Retryable;
+            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Retry<IOException>();
+            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultPolicy, exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , resultPolicy, exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null        , exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultPolicy, null           , delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultPolicy, exceptionPolicy, null              ));
+
+            // Create a ReliableFunc and validate
+            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = factory(func, 37, resultPolicy, exceptionPolicy, delayPolicy.Invoke);
+
+            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
+            Ctor(actual, func, 37, resultPolicy, exceptionPolicy, actualPolicy =>
+            {
+                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
+                Assert.AreEqual(Constants.Delay, actualPolicy(42, "foo", new ArgumentOutOfRangeException()));
+                Assert.AreEqual(1, delayPolicy.Calls);
+            });
+        }
+
+        private void Ctor_ResultPolicy_ComplexDelayPolicy(Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, ResultPolicy<string>, ExceptionPolicy, ComplexDelayPolicy<string>, ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>> factory)
+        {
+            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> func = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => "Hello World";
+            ResultPolicy<string>       resultPolicy       = r => r == "foo" ? ResultKind.Successful : ResultKind.Fatal;
+            ExceptionPolicy            exceptionPolicy    = ExceptionPolicies.Fail<FormatException>();
+            ComplexDelayPolicy<string> complexDelayPolicy = (i, r, e) => TimeSpan.Zero;
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultPolicy, exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , resultPolicy, exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null        , exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultPolicy, null           , complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultPolicy, exceptionPolicy, null              ));
+
+            // Create a ReliableFunc and validate
+            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> actual = factory(func, 37, resultPolicy, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, func, 37, resultPolicy, exceptionPolicy, complexDelayPolicy);
+        }
+
+        private void Ctor(
+            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> reliableFunc,
+            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>         expectedFunc,
+            int                        expectedMaxRetries,
+            ResultPolicy<string>       expectedResultPolicy,
+            ExceptionPolicy            expectedExceptionPolicy,
+            ComplexDelayPolicy<string> expectedDelayPolicy)
+            => Ctor(reliableFunc, expectedFunc, expectedMaxRetries, expectedResultPolicy, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
+
+        private void Ctor(
+            ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> reliableFunc,
+            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>         expectedFunc,
+            int                                expectedMaxRetries,
+            ResultPolicy<string>               expectedResultPolicy,
+            ExceptionPolicy                    expectedExceptionPolicy,
+            Action<ComplexDelayPolicy<string>> validateDelayPolicy)
+        {
+            Assert.AreEqual(expectedMaxRetries, reliableFunc.MaxRetries);
+
+            Assert.AreSame(expectedFunc           , s_getFunc           (reliableFunc));
+            Assert.AreSame(expectedResultPolicy   , s_getResultPolicy   (reliableFunc));
+            Assert.AreSame(expectedExceptionPolicy, s_getExceptionPolicy(reliableFunc));
+
+            validateDelayPolicy(s_getDelayPolicy(reliableFunc));
+        }
+
+        #endregion
+
+        #region Invoke
+
         private void Invoke(Func<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> invoke)
         {
             // Success
@@ -176,6 +210,10 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualFailure_Exception ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12), t));
             Invoke_RetriesExhausted_Exception((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12), t));
         }
+
+        #endregion
+
+        #region TryInvoke
 
         private void TryInvoke(TryFunc<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> tryInvoke)
         {
@@ -214,6 +252,10 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualFailure_Exception (assertExceptionFailure);
             Invoke_RetriesExhausted_Exception(assertExceptionFailure);
         }
+
+        #endregion
+
+        #region Invoke_Success
 
         private void Invoke_Success(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> assertInvoke)
         {
@@ -263,6 +305,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_Failure_Result
+
         private void Invoke_Failure_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> assertInvoke)
         {
             // Create an "unsuccessful" user-defined function that returns a fatal result
@@ -311,6 +357,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_Failure_Exception
+
         private void Invoke_Failure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, Type> assertInvoke)
         {
             // Create an "unsuccessful" user-defined function that throws a fatal exception
@@ -358,6 +408,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, failedHandler   .Calls);
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
+
+        #endregion
+
+        #region Invoke_EventualSuccess
 
         private void Invoke_EventualSuccess(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> assertInvoke)
         {
@@ -414,6 +468,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_EventualFailure_Result
+
         private void Invoke_EventualFailure_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> assertInvoke)
         {
             // Create a user-defined function that eventually fails after a transient result and exception
@@ -469,6 +527,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_EventualFailure_Exception
+
         private void Invoke_EventualFailure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, Type> assertInvoke)
         {
             // Create a user-defined function that eventually fails after a transient result and exception
@@ -517,6 +579,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, failedHandler   .Calls);
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
+
+        #endregion
+
+        #region Invoke_RetriesExhausted_Result
 
         private void Invoke_RetriesExhausted_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string> assertInvoke)
         {
@@ -567,6 +633,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_RetriesExhausted_Exception
+
         private void Invoke_RetriesExhausted_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, Type> assertInvoke)
         {
             // Create a user-defined function that eventually exhausts the maximum number of retries after transient results and exceptions
@@ -615,6 +685,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, failedHandler   .Calls);
             Assert.AreEqual(1, exhaustedHandler.Calls);
         }
+
+        #endregion
+
+        #region Invoke_Canceled
 
         private void Invoke_Canceled(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken> assertInvoke)
         {
@@ -683,5 +757,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0         , failedHandler   .Calls);
             Assert.AreEqual(0         , exhaustedHandler.Calls);
         }
+
+        #endregion
     }
 }

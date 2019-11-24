@@ -75,6 +75,8 @@ namespace Sweetener.Reliability.Test
             WithRetryT5_Canceled        (withRetry);
         }
 
+        #region WithRetryT5_Success
+
         private void WithRetryT5_Success(
             Func<Action<int, string, double, long, ushort>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> invoke)
@@ -135,6 +137,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT5_Failure
+
         private void WithRetryT5_Failure(
             Func<Action<int, string, double, long, ushort>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> invoke)
@@ -194,6 +200,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT5_EventualSuccess
 
         private void WithRetryT5_EventualSuccess(
             Func<Action<int, string, double, long, ushort>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort>> withRetry,
@@ -256,6 +266,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, delayPolicy    .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT5_EventualFailure
+
         private void WithRetryT5_EventualFailure(
             Func<Action<int, string, double, long, ushort>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> invoke)
@@ -317,6 +331,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
 
+        #endregion
+
+        #region WithRetryT5_RetriesExhausted
+
         private void WithRetryT5_RetriesExhausted(
             Func<Action<int, string, double, long, ushort>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort>> withRetry,
             Action<InterruptableAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> invoke)
@@ -376,6 +394,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(3, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
         }
+
+        #endregion
+
+        #region WithRetryT5_Canceled
 
         private void WithRetryT5_Canceled(Func<Action<int, string, double, long, ushort>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort>> withRetry)
             => WithRetryT5_Canceled(
@@ -448,5 +470,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(calls, exceptionPolicy .Calls);
             Assert.AreEqual(calls, delayPolicy     .Calls);
         }
+
+        #endregion
     }
 }

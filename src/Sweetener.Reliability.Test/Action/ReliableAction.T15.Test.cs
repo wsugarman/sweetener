@@ -14,56 +14,19 @@ namespace Sweetener.Reliability.Test
 
         [TestMethod]
         public void Ctor_DelayPolicy()
-        {
-            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Operation.Null();
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(null  , Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, -2              , exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, Retries.Infinite, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, Retries.Infinite, exceptionPolicy, (DelayPolicy)null ));
-
-            // Create a ReliableAction and validate
-            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> actual = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, 37, exceptionPolicy, delayPolicy.Invoke);
-
-            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
-            Ctor(actual, action, 37, exceptionPolicy, actualPolicy =>
-            {
-                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
-                Assert.AreEqual(Constants.Delay, actualPolicy(42, new ArgumentOutOfRangeException()));
-                Assert.AreEqual(1, delayPolicy.Calls);
-            });
-        }
+            => Ctor_DelayPolicy((a, m, d, e) => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(a, m, d, e));
 
         [TestMethod]
         public void Ctor_ComplexDelayPolicy()
-        {
-            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Operation.Null();
-            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
-            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
+            => Ctor_ComplexDelayPolicy((a, m, d, e) => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(a, m, d, e));
 
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(null  , Retries.Infinite, exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, -2              , exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, Retries.Infinite, null           , complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, Retries.Infinite, exceptionPolicy, (ComplexDelayPolicy)null));
+        [TestMethod]
+        public void Create_DelayPolicy()
+            => Ctor_DelayPolicy((a, m, d, e) => ReliableAction.Create(a, m, d, e));
 
-            // Create a ReliableAction and validate
-            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> actual = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>(action, 37, exceptionPolicy, complexDelayPolicy);
-            Ctor(actual, action, 37, exceptionPolicy, complexDelayPolicy);
-        }
-
-        private void Ctor(ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
-            => Ctor(reliableAction, expectedAction, expectedMaxRetries, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
-
-        private void Ctor(ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy> validateDelayPolicy)
-        {
-            Assert.AreSame (expectedAction         , s_getAction(reliableAction)         );
-            Assert.AreEqual(expectedMaxRetries     , reliableAction.MaxRetries           );
-            Assert.AreSame (expectedExceptionPolicy, s_getExceptionPolicy(reliableAction));
-
-            validateDelayPolicy(s_getDelayPolicy(reliableAction));
-        }
+        [TestMethod]
+        public void Create_ComplexDelayPolicy()
+            => Ctor_ComplexDelayPolicy((a, m, d, e) => ReliableAction.Create(a, m, d, e));
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
@@ -93,6 +56,63 @@ namespace Sweetener.Reliability.Test
             Invoke_Canceled((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token) => r.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token));
         }
 
+        #region Ctor
+
+        private void Ctor_DelayPolicy(Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, ExceptionPolicy, DelayPolicy, ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>> factory)
+        {
+            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Operation.Null();
+            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null              ));
+
+            // Create a ReliableAction and validate
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> actual = factory(action, 37, exceptionPolicy, delayPolicy.Invoke);
+
+            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
+            Ctor(actual, action, 37, exceptionPolicy, actualPolicy =>
+            {
+                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
+                Assert.AreEqual(Constants.Delay, actualPolicy(42, new ArgumentOutOfRangeException()));
+                Assert.AreEqual(1, delayPolicy.Calls);
+            });
+        }
+
+        private void Ctor_ComplexDelayPolicy(Func<Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>> factory)
+        {
+            Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> action = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => Operation.Null();
+            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, (ComplexDelayPolicy)null));
+
+            // Create a ReliableAction and validate
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> actual = factory(action, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, action, 37, exceptionPolicy, complexDelayPolicy);
+        }
+
+        private void Ctor(ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
+            => Ctor(reliableAction, expectedAction, expectedMaxRetries, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
+
+        private void Ctor(ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> reliableAction, Action<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy> validateDelayPolicy)
+        {
+            Assert.AreSame (expectedAction         , s_getAction(reliableAction)         );
+            Assert.AreEqual(expectedMaxRetries     , reliableAction.MaxRetries           );
+            Assert.AreSame (expectedExceptionPolicy, s_getExceptionPolicy(reliableAction));
+
+            validateDelayPolicy(s_getDelayPolicy(reliableAction));
+        }
+
+        #endregion
+
+        #region Invoke
+
         private void Invoke(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> invoke)
         {
             Invoke_Success        (invoke);
@@ -103,6 +123,10 @@ namespace Sweetener.Reliability.Test
             Invoke_RetriesExhausted((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15), e));
         }
 
+        #endregion
+
+        #region TryInvoke
+
         private void TryInvoke(Func<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, bool> tryInvoke)
         {
             Invoke_Success         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15   ) => Assert.IsTrue (tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
@@ -111,6 +135,10 @@ namespace Sweetener.Reliability.Test
             Invoke_EventualFailure ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, e) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
             Invoke_RetriesExhausted((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, e) => Assert.IsFalse(tryInvoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15)));
         }
+
+        #endregion
+
+        #region Invoke_Success
 
         private void Invoke_Success(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
         {
@@ -156,6 +184,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_Failure
+
         private void Invoke_Failure(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Type> assertInvoke)
         {
             // Create an "unsuccessful" user-defined action
@@ -199,6 +231,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, failedHandler   .Calls);
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
+
+        #endregion
+
+        #region Invoke_EventualSuccess
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float> assertInvoke)
         {
@@ -245,6 +281,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_EventualFailure
+
         private void Invoke_EventualFailure(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Type> assertInvoke)
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
@@ -290,6 +330,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
+        #endregion
+
+        #region Invoke_RetriesExhausted
+
         private void Invoke_RetriesExhausted(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Type> assertInvoke)
         {
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
@@ -333,6 +377,10 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, failedHandler   .Calls);
             Assert.AreEqual(1, exhaustedHandler.Calls);
         }
+
+        #endregion
+
+        #region Invoke_Canceled
 
         private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken> assertInvoke)
         {
@@ -395,5 +443,7 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0        , failedHandler   .Calls);
             Assert.AreEqual(0        , exhaustedHandler.Calls);
         }
+
+        #endregion
     }
 }

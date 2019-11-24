@@ -48,6 +48,7 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds(-1), new Random()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds( 1), new Random()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds((double)int.MaxValue + 1), new Random()));
+            Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds( 2), null));
 
             NotSoRandom rand = new NotSoRandom();
             Exponential(DelayPolicies.Exponential(TimeSpan.FromMilliseconds(100), rand), 100, rand);
@@ -67,6 +68,7 @@ namespace Sweetener.Reliability.Test
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(-1, new Random()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential( 1, new Random()));
+            Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicies.Exponential( 2, null        ));
 
             NotSoRandom rand = new NotSoRandom();
             Exponential(DelayPolicies.Exponential(100, rand), 100, rand);
