@@ -209,5 +209,11 @@ namespace Sweetener.Reliability
                 return TimeSpan.FromMilliseconds(checked(slopeMilliseconds * attempt));
             };
         }
+
+        internal static ComplexDelayPolicy Complex(DelayPolicy delayPolicy)
+            => delayPolicy == null ? (ComplexDelayPolicy)null: (i, e) => delayPolicy(i);
+
+        internal static ComplexDelayPolicy<T> Complex<T>(DelayPolicy delayPolicy)
+            => delayPolicy == null ? (ComplexDelayPolicy<T>)null : (i, r, e) => delayPolicy(i);
     }
 }

@@ -11,7 +11,6 @@
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
@@ -42,7 +41,7 @@ namespace Sweetener.Reliability
         PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
         public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+            => WithRetry(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />

@@ -15,36 +15,42 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Ctor_DelayPolicy()
         {
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(null, Retries.Infinite, ExceptionPolicies.Fatal, DelayPolicies.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Hello World"), -2              , ExceptionPolicies.Fatal, DelayPolicies.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , DelayPolicies.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (DelayPolicy)null ));
-
             Action<int, string> action = (arg1, arg2) => Operation.Null();
-            ReliableAction<int, string> actual = new ReliableAction<int, string>(action, 37, ExceptionPolicies.Transient, DelayPolicies.Constant(115));
+            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(null  , Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<int, string>(action, -2              , exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(action, Retries.Infinite, null           , delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(action, Retries.Infinite, exceptionPolicy, (DelayPolicy)null ));
+
+            // Create a ReliableAction and validate
+            ReliableAction<int, string> actual = new ReliableAction<int, string>(action, 37, exceptionPolicy, delayPolicy.Invoke);
 
             // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
-            Ctor(actual, action, 37, ExceptionPolicies.Transient, actualPolicy =>
+            Ctor(actual, action, 37, exceptionPolicy, actualPolicy =>
             {
-                Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy( 1, new Exception()));
-                Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy( 2, new Exception()));
-                Assert.AreEqual(TimeSpan.FromMilliseconds(115), actualPolicy(10, new Exception()));
+                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
+                Assert.AreEqual(Constants.Delay, actualPolicy(42, new ArgumentOutOfRangeException()));
+                Assert.AreEqual(1, delayPolicy.Calls);
             });
         }
 
         [TestMethod]
         public void Ctor_ComplexDelayPolicy()
         {
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(null, Retries.Infinite, ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Hello World"), -2              , ExceptionPolicies.Fatal, (i, e) => TimeSpan.Zero ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Hello World"), Retries.Infinite, null                   , (i, e) => TimeSpan.Zero ));
-            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>((arg1, arg2) => Console.WriteLine("Hello World"), Retries.Infinite, ExceptionPolicies.Fatal, (ComplexDelayPolicy)null));
-
-            ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.Zero;
             Action<int, string> action = (arg1, arg2) => Operation.Null();
-            ReliableAction<int, string> actual = new ReliableAction<int, string>(action, 37, ExceptionPolicies.Transient, delayPolicy);
+            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
 
-            Ctor(actual, action, 37, ExceptionPolicies.Transient, delayPolicy);
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(null  , Retries.Infinite, exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ReliableAction<int, string>(action, -2              , exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(action, Retries.Infinite, null           , complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => new ReliableAction<int, string>(action, Retries.Infinite, exceptionPolicy, (ComplexDelayPolicy)null));
+
+            // Create a ReliableAction and validate
+            ReliableAction<int, string> actual = new ReliableAction<int, string>(action, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, action, 37, exceptionPolicy, complexDelayPolicy);
         }
 
         private void Ctor(ReliableAction<int, string> reliableAction, Action<int, string> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
@@ -52,8 +58,8 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor(ReliableAction<int, string> reliableAction, Action<int, string> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy> validateDelayPolicy)
         {
-            Assert.AreSame (expectedAction, s_getAction(reliableAction));
-            Assert.AreEqual(expectedMaxRetries, reliableAction.MaxRetries);
+            Assert.AreSame (expectedAction         , s_getAction(reliableAction)         );
+            Assert.AreEqual(expectedMaxRetries     , reliableAction.MaxRetries           );
             Assert.AreSame (expectedExceptionPolicy, s_getExceptionPolicy(reliableAction));
 
             validateDelayPolicy(s_getDelayPolicy(reliableAction));
@@ -61,30 +67,30 @@ namespace Sweetener.Reliability.Test
 
         [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke((reliableAction, arg1, arg2) => reliableAction.Invoke(arg1, arg2));
+            => Invoke((r, arg1, arg2) => r.Invoke(arg1, arg2));
 
         [TestMethod]
         public void Invoke_CancellationToken()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Invoke((reliableAction, arg1, arg2) => reliableAction.Invoke(arg1, arg2, tokenSource.Token));
+                Invoke((r, arg1, arg2) => r.Invoke(arg1, arg2, tokenSource.Token));
 
             // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled((reliableAction, arg1, arg2, token) => reliableAction.Invoke(arg1, arg2, token));
+            Invoke_Canceled((r, arg1, arg2, token) => r.Invoke(arg1, arg2, token));
         }
 
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke((reliableAction, arg1, arg2) => reliableAction.TryInvoke(arg1, arg2));
+            => TryInvoke((r, arg1, arg2) => r.TryInvoke(arg1, arg2));
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                TryInvoke((reliableAction, arg1, arg2) => reliableAction.TryInvoke(arg1, arg2, tokenSource.Token));
+                TryInvoke((r, arg1, arg2) => r.TryInvoke(arg1, arg2, tokenSource.Token));
         
             // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled((reliableAction, arg1, arg2, token) => reliableAction.TryInvoke(arg1, arg2, token));
+            Invoke_Canceled((r, arg1, arg2, token) => r.TryInvoke(arg1, arg2, token));
         }
 
         private void Invoke(Action<ReliableAction<int, string>, int, string> invoke)
@@ -92,268 +98,302 @@ namespace Sweetener.Reliability.Test
             Invoke_Success        (invoke);
             Invoke_EventualSuccess(invoke);
 
-            Invoke_Failure         <             InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
-            Invoke_EventualFailure <IOException, InvalidOperationException>(GetFailureAssertion<InvalidOperationException>());
-            Invoke_RetriesExhausted<IOException                           >(GetFailureAssertion<IOException              >());
-
-            Action<ReliableAction<int, string>, int, string> GetFailureAssertion<T>()
-                where T : Exception
-            {
-                return (r, arg1, arg2) =>
-                {
-                    try
-                    {
-                        invoke(r, arg1, arg2);
-                        Assert.Fail();
-                    }
-                    catch (T)
-                    { }
-                    catch (Exception)
-                    {
-                        Assert.Fail();
-                    }
-                };
-            }
+            Invoke_Failure         ((r, arg1, arg2, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2), e));
+            Invoke_EventualFailure ((r, arg1, arg2, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2), e));
+            Invoke_RetriesExhausted((r, arg1, arg2, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2), e));
         }
 
         private void TryInvoke(Func<ReliableAction<int, string>, int, string, bool> tryInvoke)
         {
-            Invoke_Success                                                 ((r, arg1, arg2) => Assert.IsTrue (tryInvoke(r, arg1, arg2)));
-            Invoke_EventualSuccess                                         ((r, arg1, arg2) => Assert.IsTrue (tryInvoke(r, arg1, arg2)));
-            Invoke_Failure         <             InvalidOperationException>((r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
-            Invoke_EventualFailure <IOException, InvalidOperationException>((r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
-            Invoke_RetriesExhausted<IOException                           >((r, arg1, arg2) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
+            Invoke_Success         ((r, arg1, arg2   ) => Assert.IsTrue (tryInvoke(r, arg1, arg2)));
+            Invoke_EventualSuccess ((r, arg1, arg2   ) => Assert.IsTrue (tryInvoke(r, arg1, arg2)));
+            Invoke_Failure         ((r, arg1, arg2, e) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
+            Invoke_EventualFailure ((r, arg1, arg2, e) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
+            Invoke_RetriesExhausted((r, arg1, arg2, e) => Assert.IsFalse(tryInvoke(r, arg1, arg2)));
         }
 
         private void Invoke_Success(Action<ReliableAction<int, string>, int, string> assertInvoke)
         {
-            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.IgnoreExceptionPolicy();
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.IgnoreDelayPolicy();
+            // Create a "successful" user-defined action
+            ActionProxy<int, string> action = new ActionProxy<int, string>((arg1, arg2) => Operation.Null());
 
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>();
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>();
+
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
-                (arg1, arg2) => Arguments.Validate(arg1, arg2),
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableAction.Retrying         += (i, e) => Assert.Fail();
-            reliableAction.Failed           +=     e  => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
+            reliableAction.Retrying         += retryHandler    .Invoke;
+            reliableAction.Failed           += failedHandler   .Invoke;
+            reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
 
+            // Define expectations
+            action          .Invoking += Expect.Arguments<int, string>(Arguments.Validate);
+            exceptionPolicy .Invoking += Expect.Nothing<Exception>();
+            delayPolicy     .Invoking += Expect.Nothing<int, Exception>();
+            retryHandler    .Invoking += Expect.Nothing<int, Exception>();
+            failedHandler   .Invoking += Expect.Nothing<Exception>();
+            exhaustedHandler.Invoking += Expect.Nothing<Exception>();
+
+            // Invoke
             assertInvoke(reliableAction, 42, "foo");
 
-            Assert.AreEqual(0, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            // Validate the number of calls
+            Assert.AreEqual(1, action          .Calls);
+            Assert.AreEqual(0, exceptionPolicy .Calls);
+            Assert.AreEqual(0, delayPolicy     .Calls);
+            Assert.AreEqual(0, retryHandler    .Calls);
+            Assert.AreEqual(0, failedHandler   .Calls);
+            Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
-        private void Invoke_Failure<T>(Action<ReliableAction<int, string>, int, string> assertInvoke)
-            where T : Exception, new()
+        private void Invoke_Failure(Action<ReliableAction<int, string>, int, string, Type> assertInvoke)
         {
-            ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Fail<T>());
-            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.IgnoreComplexDelayPolicy();
+            // Create an "unsuccessful" user-defined action
+            ActionProxy<int, string> action = new ActionProxy<int, string>((arg1, arg2) => throw new InvalidOperationException());
 
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Fail<InvalidOperationException>().Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
-                (arg1, arg2) =>
-                {
-                    Arguments.Validate(arg1, arg2);
-                    throw new T();
-                },
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            int failures = 0;
-            reliableAction.Retrying         += (i, e) => Assert.Fail();
-            reliableAction.RetriesExhausted +=     e  => Assert.Fail();
-            reliableAction.Failed           +=     e  => { failures++; Assert.AreEqual(typeof(T), e.GetType()); };
+            reliableAction.Retrying         += retryHandler    .Invoke;
+            reliableAction.Failed           += failedHandler   .Invoke;
+            reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
 
-            assertInvoke(reliableAction, 42, "foo");
+            // Define expectations
+            action          .Invoking += Expect.Arguments<int, string>(Arguments.Validate);
+            exceptionPolicy .Invoking += Expect.Exception(typeof(InvalidOperationException));
+            delayPolicy     .Invoking += Expect.Nothing<int, Exception>();
+            retryHandler    .Invoking += Expect.Nothing<int, Exception>();
+            failedHandler   .Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
-            Assert.AreEqual(1, failures);
-            Assert.AreEqual(1, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            // Invoke
+            assertInvoke(reliableAction, 42, "foo", typeof(InvalidOperationException));
+
+            // Validate the number of calls
+            Assert.AreEqual(1, action          .Calls);
+            Assert.AreEqual(1, exceptionPolicy .Calls);
+            Assert.AreEqual(0, delayPolicy     .Calls);
+            Assert.AreEqual(0, retryHandler    .Calls);
+            Assert.AreEqual(1, failedHandler   .Calls);
+            Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
         private void Invoke_EventualSuccess(Action<ReliableAction<int, string>, int, string> assertInvoke)
         {
-            DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(Constants.Delay));
+            // Create a "successful" user-defined action that completes after 1 IOException
+            Action flakyAction = FlakyAction.Create<IOException>(1);
+            ActionProxy<int, string> action = new ActionProxy<int, string>((arg1, arg2) => flakyAction());
 
-            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
 
-            Action eventualSuccess = FlakyAction.Create<IOException>(1);
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
-                (arg1, arg2) =>
-                {
-                    Arguments.Validate(arg1, arg2);
-                    eventualSuccess();
-                },
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            int retries = 0;
-            reliableAction.Retrying += (i, e) =>
-            {
-                Assert.AreEqual(++retries, i);
-                Assert.AreEqual(typeof(IOException), e.GetType());
+            reliableAction.Retrying         += retryHandler    .Invoke;
+            reliableAction.Failed           += failedHandler   .Invoke;
+            reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
 
-                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
-            };
-            reliableAction.Failed           += e => Assert.Fail();
-            reliableAction.RetriesExhausted += e => Assert.Fail();
+            // Define expectations
+            action          .Invoking += Expect.ArgumentsAfterDelay<int, string>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy .Invoking += Expect.Exception(typeof(IOException));
+            delayPolicy     .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            failedHandler   .Invoking += Expect.Nothing<Exception>();
+            exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
+            // Invoke
             assertInvoke(reliableAction, 42, "foo");
 
-            Assert.AreEqual(1, retries);
-            Assert.AreEqual(retries, exceptionPolicy.Calls);
-            Assert.AreEqual(retries, delayPolicy    .Calls);
+            // Validate the number of calls
+            Assert.AreEqual(2, action          .Calls);
+            Assert.AreEqual(1, exceptionPolicy .Calls);
+            Assert.AreEqual(1, delayPolicy     .Calls);
+            Assert.AreEqual(1, retryHandler    .Calls);
+            Assert.AreEqual(0, failedHandler   .Calls);
+            Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
-        private void Invoke_EventualFailure<TTransient, TFatal>(Action<ReliableAction<int, string>, int, string> assertInvoke)
-            where TTransient : Exception, new()
-            where TFatal     : Exception, new()
+        private void Invoke_EventualFailure(Action<ReliableAction<int, string>, int, string, Type> assertInvoke)
         {
-            DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<TTransient, TFatal>(ExceptionPolicies.Retry<TTransient>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.Constant(Constants.Delay));
+            // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
+            Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
+            ActionProxy<int, string> action = new ActionProxy<int, string>((arg1, arg2) => flakyAction());
 
-            delayPolicy.Invoked += (i, d) => delayStartUtc = DateTime.UtcNow;
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
 
-            Action eventualFailure = FlakyAction.Create<TTransient, TFatal>(2);
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
-                (arg1, arg2) =>
-                {
-                    Arguments.Validate(arg1, arg2);
-                    eventualFailure();
-                },
-                4,
+                action.Invoke,
+                Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            int retries = 0, failures = 0;
-            reliableAction.Retrying += (i, e) =>
-            {
-                Assert.AreEqual(++retries, i);
-                Assert.AreEqual(typeof(TTransient), e.GetType());
+            reliableAction.Retrying         += retryHandler    .Invoke;
+            reliableAction.Failed           += failedHandler   .Invoke;
+            reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
 
-                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
-            };
-            reliableAction.Failed           += e => { failures++; Assert.AreEqual(typeof(TFatal), e.GetType()); };
-            reliableAction.RetriesExhausted += e => Assert.Fail();
+            // Define expectations
+            action          .Invoking += Expect.ArgumentsAfterDelay<int, string>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy .Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
+            delayPolicy     .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            failedHandler   .Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
-            assertInvoke(reliableAction, 42, "foo");
+            // Invoke
+            assertInvoke(reliableAction, 42, "foo", typeof(InvalidOperationException));
 
-            Assert.AreEqual(2, retries );
-            Assert.AreEqual(1, failures);
-            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
-            Assert.AreEqual(retries    , delayPolicy    .Calls);
+            // Validate the number of calls
+            Assert.AreEqual(3, action          .Calls);
+            Assert.AreEqual(3, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
+            Assert.AreEqual(2, retryHandler    .Calls);
+            Assert.AreEqual(1, failedHandler   .Calls);
+            Assert.AreEqual(0, exhaustedHandler.Calls);
         }
 
-        private void Invoke_RetriesExhausted<T>(Action<ReliableAction<int, string>, int, string> assertInvoke)
-            where T : Exception, new()
+        private void Invoke_RetriesExhausted(Action<ReliableAction<int, string>, int, string, Type> assertInvoke)
         {
-            DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception     , bool    > exceptionPolicy = PolicyValidator.Create<T>(ExceptionPolicies.Retry<T>());
-            ObservableFunc<int, Exception, TimeSpan> delayPolicy     = PolicyValidator.Create<T>((i, e) => Constants.Delay); // A "complex" delay policy
+            // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
+            ActionProxy<int, string> action = new ActionProxy<int, string>((arg1, arg2) => throw new IOException());
 
-            delayPolicy.Invoked += (i, e, d) => delayStartUtc = DateTime.UtcNow;
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
 
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
-                (arg1, arg2) =>
-                {
-                    Arguments.Validate(arg1, arg2);
-                    throw new T();
-                },
+                action.Invoke,
                 2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            int retries = 0, exhausted = 0;
-            reliableAction.Retrying += (i, e) =>
-            {
-                Assert.AreEqual(++retries, i);
-                Assert.AreEqual(typeof(T), e.GetType());
+            reliableAction.Retrying         += retryHandler    .Invoke;
+            reliableAction.Failed           += failedHandler   .Invoke;
+            reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
 
-                TimeSpan actual = DateTime.UtcNow - delayStartUtc;
-                Assert.IsTrue(actual > Constants.MinDelay, $"Actual delay {actual} less than allowed minimum delay {Constants.MinDelay}");
-            };
-            reliableAction.Failed           += e => Assert.Fail();
-            reliableAction.RetriesExhausted += e => { exhausted++; Assert.AreEqual(typeof(T), e.GetType()); };
+            // Define expectations
+            action          .Invoking += Expect.ArgumentsAfterDelay<int, string>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy .Invoking += Expect.Exception(typeof(IOException));
+            delayPolicy     .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            failedHandler   .Invoking += Expect.Nothing<Exception>();
+            exhaustedHandler.Invoking += Expect.Exception(typeof(IOException));
 
-            assertInvoke(reliableAction, 42, "foo");
+            // Invoke
+            assertInvoke(reliableAction, 42, "foo", typeof(IOException));
 
-            Assert.AreEqual(2, retries  );
-            Assert.AreEqual(1, exhausted);
-            Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
-            Assert.AreEqual(retries    , delayPolicy    .Calls);
+            // Validate the number of calls
+            Assert.AreEqual(3, action          .Calls);
+            Assert.AreEqual(3, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
+            Assert.AreEqual(2, retryHandler    .Calls);
+            Assert.AreEqual(0, failedHandler   .Calls);
+            Assert.AreEqual(1, exhaustedHandler.Calls);
         }
 
         private void Invoke_Canceled(Action<ReliableAction<int, string>, int, string, CancellationToken> assertInvoke)
         {
-            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource         = new CancellationTokenSource();
 
-            ObservableFunc<Exception, bool    > exceptionPolicy = PolicyValidator.Create<IOException>(ExceptionPolicies.Retry<IOException>());
-            ObservableFunc<int      , TimeSpan> delayPolicy     = PolicyValidator.Create(DelayPolicies.None);
+            // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
+            ActionProxy<int, string> action = new ActionProxy<int, string>((arg1, arg2) => throw new IOException());
 
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
             ReliableAction<int, string> reliableAction = new ReliableAction<int, string>(
-                (arg1, arg2) =>
-                {
-                    Arguments.Validate(arg1, arg2);
-                    throw new IOException();
-                },
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            int retries = 0;
-            reliableAction.Retrying += (i, e) =>
-            {
-                Assert.AreEqual(++retries, i);
-                Assert.AreEqual(typeof(IOException), e.GetType());
-                retryEvent.Set();
-            };
-            reliableAction.Failed           += e => Assert.Fail();
-            reliableAction.RetriesExhausted += e => Assert.Fail();
+            reliableAction.Retrying         += retryHandler    .Invoke;
+            reliableAction.Failed           += failedHandler   .Invoke;
+            reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
 
-            // While waiting for the reliable action to complete, we'll cancel it
-            Task invocation = Task.Run(() => assertInvoke(reliableAction, 42, "foo", tokenSource.Token), tokenSource.Token);
+            // Define expectations
+            action          .Invoking += Expect.ArgumentsAfterDelay<int, string>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy .Invoking += Expect.Exception(typeof(IOException));
+            delayPolicy     .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            failedHandler   .Invoking += Expect.Nothing<Exception>();
+            exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
-            // Cancel after at least 1 retry has occurred
-            retryEvent.WaitOne();
-            tokenSource.Cancel();
+            // Trigger the event upon retry
+            retryHandler    .Invoking += (i, e, c) => cancellationTrigger.Set();
 
-            // Try to get the result
-            try
+            // Create a task whose job is to cancel the invocation after at least 1 retry
+            Task cancellationTask = Task.Factory.StartNew((state) =>
             {
-                invocation.Wait();
-                Assert.Fail();
-            }
-            catch (AggregateException agg)
-            {
-                Assert.AreEqual(1, agg.InnerExceptions.Count);
-                switch (agg.InnerException)
-                {
-                    case AssertFailedException afe:
-                        throw afe;
-                    case TaskCanceledException _:
-                        Assert.IsTrue(retries > 0);
-                        Assert.AreEqual(retries + 1, exceptionPolicy.Calls);
-                        Assert.AreEqual(retries + 1, delayPolicy    .Calls);
-                        return; // Successfully cancelled
-                    default:
-                        Assert.Fail();
-                        break;
-                }
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-            }
+                (ManualResetEvent e, CancellationTokenSource s) = ((ManualResetEvent, CancellationTokenSource))state;
+                e.WaitOne();
+                s.Cancel();
+
+            }, (cancellationTrigger, tokenSource));
+
+            // Begin the invocation
+            Assert.That.ThrowsException<OperationCanceledException>(() => assertInvoke(reliableAction, 42, "foo", tokenSource.Token));
+
+            // Validate the number of calls
+            int calls = action.Calls;
+            Assert.IsTrue(calls > 1);
+
+            Assert.AreEqual(calls    , action          .Calls);
+            Assert.AreEqual(calls    , exceptionPolicy .Calls);
+            Assert.AreEqual(calls    , delayPolicy     .Calls);
+            Assert.AreEqual(calls - 1, retryHandler    .Calls);
+            Assert.AreEqual(0        , failedHandler   .Calls);
+            Assert.AreEqual(0        , exhaustedHandler.Calls);
         }
     }
 }

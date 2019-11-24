@@ -1,6 +1,5 @@
 // Generated from Action.Extensions.tt
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
@@ -25,7 +24,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static InterruptableAction WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, (i, e) => delayPolicy(i));
+            => WithRetry(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />

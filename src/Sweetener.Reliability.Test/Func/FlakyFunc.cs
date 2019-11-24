@@ -4,66 +4,86 @@ namespace Sweetener.Reliability.Test
 {
     internal static class FlakyFunc
     {
-        public static Func<TResult> Create<TResult, TException>(int retries, TResult result, bool transientError = true)
+        public static Func<TResult> Create<TResult, TException>(TResult transientResult)
             where TException : Exception, new()
-            => () =>
+            => Create<TResult, TException>(transientResult, default, Retries.Infinite);
+
+        public static Func<TResult> Create<TResult, TException>(TResult transientResult, TResult finalResult, int retries)
+            where TException : Exception, new()
+        {
+            if (retries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(retries));
+
+            int calls = 0;
+            return () =>
             {
-                if (retries > 0)
-                {
-                    retries--;
+                calls++;
 
-                    if (transientError)
-                        throw new TException();
-
-                    return result;
-                }
-                else if (retries == Retries.Infinite)
-                {
-                    if (transientError)
-                        throw new TException();
-
-                    return result;
-                }
-                else if (transientError)
-                {
-                    return result;
-                }
-                else
-                {
-                    throw new TException();
-                }
-            };
-
-        public static Func<T> Create<T>(int retries, T transientResult, T result)
-            => () =>
-            {
-                if (retries > 0)
-                {
-                    retries--;
+                if (retries != Retries.Infinite && calls > retries)
+                    return finalResult;
+                else if (calls % 2 == 0)
                     return transientResult;
-                }
-                
-                return retries == Retries.Infinite ? transientResult : result;
+                else
+                    throw new TException();
             };
+        }
+
+        public static Func<TResult> Create<TResult, TTransient, TFatal>(TResult result, int retries)
+            where TTransient : Exception, new()
+            where TFatal     : Exception, new()
+        {
+            if (retries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(retries));
+
+            int calls = 0;
+            return () =>
+            {
+                calls++;
+
+                if (retries != Retries.Infinite && calls > retries)
+                    throw new TFatal();
+                else if (calls % 2 == 0)
+                    return result;
+                else
+                    throw new TTransient();
+            };
+        }
+
+        public static Func<TResult> Create<TResult, TException>(TResult result, int retries)
+            where TException : Exception, new()
+        {
+            if (retries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(retries));
+
+            int calls = 0;
+            return () =>
+            {
+                calls++;
+
+                if (retries != Retries.Infinite && calls > retries)
+                    return result;
+
+                throw new TException();
+            };
+        }
 
         public static Func<TResult> Create<TResult, TTransient, TFatal>(int retries)
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
-            => () =>
+        {
+            if (retries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(retries));
+
+            int calls = 0;
+            return () =>
             {
-                if (retries > 0)
-                {
-                    retries--;
-                    throw new TTransient();
-                }
-                else if (retries == Retries.Infinite)
-                {
-                    throw new TTransient();
-                }
-                else
-                {
+                calls++;
+
+                if (retries != Retries.Infinite && calls > retries)
                     throw new TFatal();
-                }
+
+                throw new TTransient();
             };
+        }
     }
 }

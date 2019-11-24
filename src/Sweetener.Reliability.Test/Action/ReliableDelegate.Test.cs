@@ -6,5 +6,12 @@ namespace Sweetener.Reliability.Test
     {
         protected static readonly Func<ReliableDelegate, ExceptionPolicy   > s_getExceptionPolicy = DynamicGetter.ForField<ReliableDelegate, ExceptionPolicy   >("_canRetry");
         protected static readonly Func<ReliableDelegate, ComplexDelayPolicy> s_getDelayPolicy     = DynamicGetter.ForField<ReliableDelegate, ComplexDelayPolicy>("_getDelay");
+
+        internal static void CreateEventHandlers(out ActionProxy<int, Exception> retryHandler, out ActionProxy<Exception> failedHandler, out ActionProxy<Exception> exhaustedHandler)
+        {
+            retryHandler     = new ActionProxy<int, Exception>();
+            failedHandler    = new ActionProxy<Exception>();
+            exhaustedHandler = new ActionProxy<Exception>();
+        }
     }
 }

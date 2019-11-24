@@ -2,7 +2,7 @@
 
 namespace Sweetener.Reliability.Test
 {
-    internal class Operation
+    internal static class Operation
     {
         public static readonly Action Null = NoOp;
 

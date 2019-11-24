@@ -90,9 +90,7 @@ namespace Sweetener.Reliability.Test
                     return getDelay(x);
                 };
 
-                rand.OnNext      += ()  => Assert.Fail();
-                rand.OnNextMax   += max => Assert.Fail();
-                rand.OnNextRange += (min, max) =>
+                rand.OnNext += (min, max) =>
                 {
                     Assert.AreEqual(-1, min);
                     Assert.AreEqual((int)((1U << attempt) - 1), max);
@@ -100,12 +98,12 @@ namespace Sweetener.Reliability.Test
           
                 for (int i = 0; i < attempts.Length; i++)
                 {
-                    rand.NextIntValue = i * 2;
-                    Assert.AreEqual(TimeSpan.FromMilliseconds(unitMilliseconds * (rand.NextIntValue + 1)), getDelayWrapper(attempts[i]));
+                    rand.NextValue = i * 2;
+                    Assert.AreEqual(TimeSpan.FromMilliseconds(unitMilliseconds * (rand.NextValue + 1)), getDelayWrapper(attempts[i]));
                 }
 
                 // Overflow!
-                rand.NextIntValue = int.MaxValue - 1;
+                rand.NextValue = int.MaxValue - 1;
                 Assert.ThrowsException<OverflowException>(() => getDelayWrapper(31));
             }
             else

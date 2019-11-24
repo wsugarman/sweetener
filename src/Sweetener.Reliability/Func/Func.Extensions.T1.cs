@@ -24,12 +24,8 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<TResult> WithRetry<TResult>(
-            this Func<TResult> func,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            DelayPolicy delayPolicy)
-            => WithRetry(func, maxRetries, r => ResultKind.Successful, exceptionPolicy, (i, r, e) => delayPolicy(i));
+        public static InterruptableFunc<TResult> WithRetry<TResult>(this Func<TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -46,12 +42,8 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<TResult> WithRetry<TResult>(
-            this Func<TResult> func,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            ComplexDelayPolicy<TResult> delayPolicy)
-            => WithRetry(func, maxRetries, r => ResultKind.Successful, exceptionPolicy, delayPolicy);
+        public static InterruptableFunc<TResult> WithRetry<TResult>(this Func<TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -69,13 +61,13 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<TResult> WithRetry<TResult>(
+        public static InterruptableFunc<TResult> WithRetry<TResult>(
             this Func<TResult> func,
-            int maxRetries,
+            int                   maxRetries,
             ResultPolicy<TResult> resultPolicy,
-            ExceptionPolicy exceptionPolicy,
-            DelayPolicy delayPolicy)
-            => WithRetry(func, maxRetries, resultPolicy, exceptionPolicy, (i, r, e) => delayPolicy(i));
+            ExceptionPolicy       exceptionPolicy,
+            DelayPolicy           delayPolicy)
+            => WithRetry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -93,11 +85,11 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<TResult> WithRetry<TResult>(
+        public static InterruptableFunc<TResult> WithRetry<TResult>(
             this Func<TResult> func,
-            int maxRetries,
-            ResultPolicy<TResult> resultPolicy,
-            ExceptionPolicy exceptionPolicy,
+            int                         maxRetries,
+            ResultPolicy<TResult>       resultPolicy,
+            ExceptionPolicy             exceptionPolicy,
             ComplexDelayPolicy<TResult> delayPolicy)
         {
             if (func == null)
@@ -115,7 +107,7 @@ namespace Sweetener.Reliability
             if (delayPolicy == null)
                 throw new ArgumentNullException(nameof(delayPolicy));
 
-            return () =>
+            return (cancellationToken) =>
             {
                 TResult result;
                 int attempt = 0;
@@ -131,7 +123,7 @@ namespace Sweetener.Reliability
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw e;
 
-                    Task.Delay(delayPolicy(attempt, default, e)).Wait();
+                    Task.Delay(delayPolicy(attempt, default, e), cancellationToken).Wait(cancellationToken);
                     goto Attempt;
                 }
 
@@ -139,7 +131,7 @@ namespace Sweetener.Reliability
                 if (kind != ResultKind.Retryable || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;
 
-                Task.Delay(delayPolicy(attempt, result, null)).Wait();
+                Task.Delay(delayPolicy(attempt, result, null), cancellationToken).Wait(cancellationToken);
                 goto Attempt;
             };
         }

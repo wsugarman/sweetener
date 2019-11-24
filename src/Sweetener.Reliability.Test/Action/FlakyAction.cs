@@ -6,37 +6,39 @@ namespace Sweetener.Reliability.Test
     {
         public static Action Create<T>(int retries)
             where T : Exception, new()
-            => () =>
+        {
+            if (retries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(retries));
+
+            int calls = 0;
+            return () =>
             {
-                if (retries > 0)
-                {
-                    retries--;
-                    throw new T();
-                }
-                else if (retries == Retries.Infinite)
-                {
-                    throw new T();
-                }
+                calls++;
+
+                if (retries != Retries.Infinite && calls > retries)
+                    return;
+
+                throw new T();
             };
+        }
 
         public static Action Create<TTransient, TFatal>(int retries)
             where TTransient : Exception, new()
             where TFatal     : Exception, new()
-            => () =>
+        {
+            if (retries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(retries));
+
+            int calls = 0;
+            return () =>
             {
-                if (retries > 0)
-                {
-                    retries--;
-                    throw new TTransient();
-                }
-                else if (retries == Retries.Infinite)
-                {
-                    throw new TTransient();
-                }
-                else
-                {
+                calls++;
+
+                if (retries != Retries.Infinite && calls > retries)
                     throw new TFatal();
-                }
+
+                throw new TTransient();
             };
+        }
     }
 }

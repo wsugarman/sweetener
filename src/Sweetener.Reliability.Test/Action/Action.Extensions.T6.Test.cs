@@ -1,4 +1,4 @@
-// Generated from ReliableAction.Extensions.Test.tt
+// Generated from Action.Extensions.Test.tt
 using System;
 using System.IO;
 using System.Threading;
@@ -12,361 +12,441 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void WithRetryT6_DelayPolicy()
         {
+            Action<int, string, double, long, ushort, byte> nullAction = null;
+            Action<int, string, double, long, ushort, byte> action     = (arg1, arg2, arg3, arg4, arg5, arg6) => Operation.Null();
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithRetry( 4, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithRetry(-2, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithRetry( 4, null                       , DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithRetry( 4, ExceptionPolicies.Transient, (DelayPolicy)null ));
+
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke;
             Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry = (a, r, e, d) => a.WithRetry(r, e, d);
 
-            WithRetryT6_DelayPolicy_Success         (withRetry);
-            WithRetryT6_DelayPolicy_Failure         (withRetry);
-            WithRetryT6_DelayPolicy_EventualSuccess (withRetry);
-            WithRetryT6_DelayPolicy_EventualFailure (withRetry);
-            WithRetryT6_DelayPolicy_RetriesExhausted(withRetry);
-        }
+            // Without Token
+            invoke = (action, arg1, arg2, arg3, arg4, arg5, arg6, token) => action(arg1, arg2, arg3, arg4, arg5, arg6);
 
-        [TestMethod]
-        public void WithRetryT6_DelayPolicy_CancellationToken()
-        {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry = (a, r, e, d) => a.WithRetry(r, e, d);
+            WithRetryT6_Success         (withRetry, invoke);
+            WithRetryT6_Failure         (withRetry, invoke);
+            WithRetryT6_EventualSuccess (withRetry, invoke);
+            WithRetryT6_EventualFailure (withRetry, invoke);
+            WithRetryT6_RetriesExhausted(withRetry, invoke);
 
-            WithRetryT6_DelayPolicy_Success         (withRetry, useToken: true);
-            WithRetryT6_DelayPolicy_Failure         (withRetry, useToken: true);
-            WithRetryT6_DelayPolicy_EventualSuccess (withRetry, useToken: true);
-            WithRetryT6_DelayPolicy_EventualFailure (withRetry, useToken: true);
-            WithRetryT6_DelayPolicy_RetriesExhausted(withRetry, useToken: true);
-            WithRetryT6_DelayPolicy_Canceled        (withRetry);
+            // With Token
+            invoke = (action, arg1, arg2, arg3, arg4, arg5, arg6, token) => action(arg1, arg2, arg3, arg4, arg5, arg6, token);
+
+            WithRetryT6_Success         (withRetry, invoke);
+            WithRetryT6_Failure         (withRetry, invoke);
+            WithRetryT6_EventualSuccess (withRetry, invoke);
+            WithRetryT6_EventualFailure (withRetry, invoke);
+            WithRetryT6_RetriesExhausted(withRetry, invoke);
+            WithRetryT6_Canceled        (withRetry);
         }
 
         [TestMethod]
         public void WithRetryT6_ComplexDelayPolicy()
         {
+            Action<int, string, double, long, ushort, byte> nullAction = null;
+            Action<int, string, double, long, ushort, byte> action     = (arg1, arg2, arg3, arg4, arg5, arg6) => Operation.Null();
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithRetry( 4, ExceptionPolicies.Transient, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithRetry(-2, ExceptionPolicies.Transient, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithRetry( 4, null                       , (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithRetry( 4, ExceptionPolicies.Transient, (ComplexDelayPolicy)null));
+
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke;
             Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry = (a, r, e, d) => a.WithRetry(r, e, d);
 
-            WithRetryT6_ComplexDelayPolicy_Success         (withRetry);
-            WithRetryT6_ComplexDelayPolicy_Failure         (withRetry);
-            WithRetryT6_ComplexDelayPolicy_EventualSuccess (withRetry);
-            WithRetryT6_ComplexDelayPolicy_EventualFailure (withRetry);
-            WithRetryT6_ComplexDelayPolicy_RetriesExhausted(withRetry);
+            // Without Token
+            invoke = (action, arg1, arg2, arg3, arg4, arg5, arg6, token) => action(arg1, arg2, arg3, arg4, arg5, arg6);
+
+            WithRetryT6_Success         (withRetry, invoke);
+            WithRetryT6_Failure         (withRetry, invoke);
+            WithRetryT6_EventualSuccess (withRetry, invoke);
+            WithRetryT6_EventualFailure (withRetry, invoke);
+            WithRetryT6_RetriesExhausted(withRetry, invoke);
+
+            // With Token
+            invoke = (action, arg1, arg2, arg3, arg4, arg5, arg6, token) => action(arg1, arg2, arg3, arg4, arg5, arg6, token);
+
+            WithRetryT6_Success         (withRetry, invoke);
+            WithRetryT6_Failure         (withRetry, invoke);
+            WithRetryT6_EventualSuccess (withRetry, invoke);
+            WithRetryT6_EventualFailure (withRetry, invoke);
+            WithRetryT6_RetriesExhausted(withRetry, invoke);
+            WithRetryT6_Canceled        (withRetry);
         }
 
-        [TestMethod]
-        public void WithRetryT6_ComplexDelayPolicy_CancellationToken()
+        private void WithRetryT6_Success(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_Success(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int>();
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_Success(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_Success(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int, Exception>();
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_Success<T>(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry = (a, r, e, d) => a.WithRetry(r, e, d);
+            // Create a "successful" user-defined action
+            ActionProxy<int, string, double, long, ushort, byte> action = new ActionProxy<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => Operation.Null());
 
-            WithRetryT6_ComplexDelayPolicy_Success         (withRetry, useToken: true);
-            WithRetryT6_ComplexDelayPolicy_Failure         (withRetry, useToken: true);
-            WithRetryT6_ComplexDelayPolicy_EventualSuccess (withRetry, useToken: true);
-            WithRetryT6_ComplexDelayPolicy_EventualFailure (withRetry, useToken: true);
-            WithRetryT6_ComplexDelayPolicy_RetriesExhausted(withRetry, useToken: true);
-            WithRetryT6_ComplexDelayPolicy_Canceled        (withRetry);
-        }
-
-        private void WithRetryT6_DelayPolicy_Success(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_Success((a, r, e, d) => withRetry(a, r, e, d.Invoke), () => PolicyValidator.IgnoreDelayPolicy(), useToken);
-
-        private void WithRetryT6_ComplexDelayPolicy_Success(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_Success((a, r, e, d) => withRetry(a, r, e, d.Invoke), () => PolicyValidator.IgnoreComplexDelayPolicy(), useToken);
-
-        private void WithRetryT6_Success<T>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<T> delayPolicyFactory, bool useToken = false)
-            where T : ObservableFunc
-        {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.IgnoreExceptionPolicy();
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
             T delayPolicy = delayPolicyFactory();
 
+            // Create the reliable InterruptableAction
             InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
-                (arg1, arg2, arg3, arg4, arg5, arg6) => Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6),
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy);
 
-            if (useToken)
-            {
-                using CancellationTokenSource tokenSource = new CancellationTokenSource();
-                reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
-            }
-            else
-            {
-                reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
-            }
+            // Define expectations
+            action         .Invoking += Expect.Arguments<int, string, double, long, ushort, byte>(Arguments.Validate);
+            exceptionPolicy.Invoking += Expect.Nothing<Exception>();
 
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
+
+            // Validate the number of calls
+            Assert.AreEqual(1, action         .Calls);
             Assert.AreEqual(0, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
-        private void WithRetryT6_DelayPolicy_Failure(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_Failure((a, r, e, d) => withRetry(a, r, e, d.Invoke), () => PolicyValidator.IgnoreDelayPolicy(), useToken);
+        private void WithRetryT6_Failure(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_Failure(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int>();
+                    return delayPolicy;
+                });
 
-        private void WithRetryT6_ComplexDelayPolicy_Failure(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_Failure((a, r, e, d) => withRetry(a, r, e, d.Invoke), () => PolicyValidator.IgnoreComplexDelayPolicy(), useToken);
+        private void WithRetryT6_Failure(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_Failure(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int, Exception>();
+                    return delayPolicy;
+                });
 
-        private void WithRetryT6_Failure<T>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<T> delayPolicyFactory, bool useToken = false)
-            where T : ObservableFunc
+        private void WithRetryT6_Failure<T>(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
         {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<FormatException>(ExceptionPolicies.Fail<FormatException>());
+            // Create an "unsuccessful" user-defined action
+            ActionProxy<int, string, double, long, ushort, byte> action = new ActionProxy<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => throw new InvalidOperationException());
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Fail<InvalidOperationException>().Invoke);
             T delayPolicy = delayPolicyFactory();
 
+            // Create the reliable InterruptableAction
             InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
-                (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                {
-                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6);
-                    throw new FormatException();
-                },
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy);
 
-            try
-            {
-                if (useToken)
-                {
-                    using CancellationTokenSource tokenSource = new CancellationTokenSource();
-                    reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
-                }
-                else
-                {
-                    reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
-                }
+            // Define expectations
+            action         .Invoking += Expect.Arguments<int, string, double, long, ushort, byte>(Arguments.Validate);
+            exceptionPolicy.Invoking += Expect.Exception(typeof(InvalidOperationException));
 
-                Assert.Fail();
-            }
-            catch (FormatException)
-            { }
-            catch (AssertFailedException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-            }
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token));
 
+            // Validate the number of calls
+            Assert.AreEqual(1, action         .Calls);
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(0, delayPolicy    .Calls);
         }
 
-        private void WithRetryT6_DelayPolicy_EventualSuccess(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_EventualSuccess<IOException, ObservableFunc<int, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create(DelayPolicies.Constant(t)), useToken);
-
-        private void WithRetryT6_ComplexDelayPolicy_EventualSuccess(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_EventualSuccess<IOException, ObservableFunc<int, Exception, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create<IOException>((i, e) => t), useToken);
-
-        private void WithRetryT6_EventualSuccess<TException, TFunc>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, TFunc, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<TimeSpan, TFunc> delayPolicyFactory, bool useToken = false)
-            where TException : Exception, new()
-            where TFunc      : ObservableFunc
-        {
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TException>(ExceptionPolicies.Retry<TException>());
-            TFunc delayPolicy = delayPolicyFactory(Constants.Delay);
-
-            Action eventualSuccess = FlakyAction.Create<TException>(1);
-            InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
-                (arg1, arg2, arg3, arg4, arg5, arg6) =>
+        private void WithRetryT6_EventualSuccess(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_EventualSuccess(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
                 {
-                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6);
-                    eventualSuccess();
-                },
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_EventualSuccess(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_EventualSuccess(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_EventualSuccess<T>(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create a "successful" user-defined action that completes after 1 IOException
+            Action flakyAction = FlakyAction.Create<IOException>(1);
+            ActionProxy<int, string, double, long, ushort, byte> action = new ActionProxy<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => flakyAction());
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable InterruptableAction
+            InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy);
 
-            DateTime delayStartUtc = DateTime.UtcNow;
-            if (useToken)
-            {
-                using CancellationTokenSource tokenSource = new CancellationTokenSource();
-                reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
-            }
-            else
-            {
-                reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
-            }
-            TimeSpan delay = DateTime.UtcNow - delayStartUtc;
+            // Define expectations
+            action         .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
 
-            Assert.IsTrue(delay > Constants.MinDelay);
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
+
+            // Validate the number of calls
+            Assert.AreEqual(2, action         .Calls);
             Assert.AreEqual(1, exceptionPolicy.Calls);
             Assert.AreEqual(1, delayPolicy    .Calls);
         }
 
-        private void WithRetryT6_DelayPolicy_EventualFailure(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_EventualFailure<IOException, ObservableFunc<int, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create(DelayPolicies.Constant(t)), useToken);
+        private void WithRetryT6_EventualFailure(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_EventualFailure(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
 
-        private void WithRetryT6_ComplexDelayPolicy_EventualFailure(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_EventualFailure<IOException, ObservableFunc<int, Exception, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create<IOException>((i, e) => t), useToken);
+        private void WithRetryT6_EventualFailure(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_EventualFailure(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
 
-        private void WithRetryT6_EventualFailure<TTransient, TFunc>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, TFunc, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<TimeSpan, TFunc> delayPolicyFactory, bool useToken = false)
-            where TTransient : Exception, new()
-            where TFunc      : ObservableFunc
+        private void WithRetryT6_EventualFailure<T>(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
         {
-            Assert.AreNotEqual(typeof(TTransient), typeof(InvalidOperationException));
+            // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
+            Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
+            ActionProxy<int, string, double, long, ushort, byte> action = new ActionProxy<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => flakyAction());
 
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TTransient, InvalidOperationException>(ExceptionPolicies.Retry<TTransient>());
-            TFunc delayPolicy = delayPolicyFactory(Constants.Delay);
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
 
-            Action eventualFailure = FlakyAction.Create<TTransient, InvalidOperationException>(2);
+            // Create the reliable InterruptableAction
             InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
-                (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                {
-                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6);
-                    eventualFailure();
-                },
-                4,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            DateTime delayStartUtc = DateTime.UtcNow;
-
-            try
-            {
-                if (useToken)
-                {
-                    using CancellationTokenSource tokenSource = new CancellationTokenSource();
-                    reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
-                }
-                else
-                {
-                    reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
-                }
-
-                Assert.Fail();
-            }
-            catch (InvalidOperationException)
-            { }
-            catch (AssertFailedException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-            }
-
-            TimeSpan delay = DateTime.UtcNow - delayStartUtc;
-            Assert.IsTrue(delay > TimeSpan.FromMilliseconds(Constants.Delay.TotalMilliseconds * 2 * Constants.MinFactor));
-
-            Assert.AreEqual(3, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
-        }
-
-        private void WithRetryT6_DelayPolicy_RetriesExhausted(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_RetriesExhausted<IOException, ObservableFunc<int, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create(DelayPolicies.Constant(t)), useToken);
-
-        private void WithRetryT6_ComplexDelayPolicy_RetriesExhausted(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, bool useToken = false)
-            => WithRetryT6_RetriesExhausted<IOException, ObservableFunc<int, Exception, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create<IOException>((i, e) => t), useToken);
-
-        private void WithRetryT6_RetriesExhausted<TException, TFunc>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, TFunc, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<TimeSpan, TFunc> delayPolicyFactory, bool useToken = false)
-            where TException : Exception, new()
-            where TFunc      : ObservableFunc
-        {
-            DateTime delayStartUtc = DateTime.MinValue;
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TException>(ExceptionPolicies.Retry<TException>());
-            TFunc delayPolicy = delayPolicyFactory(Constants.Delay);
-
-            InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
-                (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                {
-                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6);
-                    throw new TException();
-                },
-                2,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            try
-            {
-                if (useToken)
-                {
-                    using CancellationTokenSource tokenSource = new CancellationTokenSource();
-                    reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token);
-                }
-                else
-                {
-                    reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255);
-                }
-
-                Assert.Fail();
-            }
-            catch (TException)
-            { }
-            catch (AssertFailedException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-            }
-
-            TimeSpan delay = DateTime.UtcNow - delayStartUtc;
-            Assert.IsTrue(delay > TimeSpan.FromMilliseconds(Constants.Delay.TotalMilliseconds * 2 * Constants.MinFactor));
-
-            Assert.AreEqual(3, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
-        }
-
-        private void WithRetryT6_DelayPolicy_Canceled(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry)
-            => WithRetryT6_Canceled<IOException, ObservableFunc<int, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create(DelayPolicies.Constant(t)));
-
-        private void WithRetryT6_ComplexDelayPolicy_Canceled(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry)
-            => WithRetryT6_Canceled<IOException, ObservableFunc<int, Exception, TimeSpan>>((a, r, e, d) => withRetry(a, r, e, d.Invoke), t => PolicyValidator.Create<IOException>((i, e) => t));
-
-        private void WithRetryT6_Canceled<TException, TFunc>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, TFunc, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<TimeSpan, TFunc> delayPolicyFactory)
-            where TException : Exception, new()
-            where TFunc      : ObservableFunc
-        {
-            using ManualResetEvent        retryEvent  = new ManualResetEvent(false);
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
-            ObservableFunc<Exception, bool> exceptionPolicy = PolicyValidator.Create<TException>(ExceptionPolicies.Retry<TException>());
-            TFunc delayPolicy = delayPolicyFactory(Constants.Delay);
-
-            exceptionPolicy.Invoking += e =>
-            {
-                if (exceptionPolicy.Calls > 1)
-                    retryEvent.Set();
-            };
-
-            InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
-                (arg1, arg2, arg3, arg4, arg5, arg6) =>
-                {
-                    Arguments.Validate(arg1, arg2, arg3, arg4, arg5, arg6);
-                    throw new TException();
-                },
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy);
 
-            // While waiting for the reliable action to complete, we'll cancel it
-            Task invocation = Task.Run(() => reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token), tokenSource.Token);
+            // Define expectations
+            action         .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
 
-            // Cancel after at least 1 retry has occurred
-            retryEvent.WaitOne();
-            tokenSource.Cancel();
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token));
 
-            // Try to get the result
-            try
-            {
-                invocation.Wait();
-                Assert.Fail();
-            }
-            catch (AggregateException agg)
-            {
-                Assert.AreEqual(1, agg.InnerExceptions.Count);
-                switch (agg.InnerException)
+            // Validate the number of calls
+            Assert.AreEqual(3, action          .Calls);
+            Assert.AreEqual(3, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
+        }
+
+        private void WithRetryT6_RetriesExhausted(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_RetriesExhausted(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
                 {
-                    case AssertFailedException afe:
-                        throw afe;
-                    case TaskCanceledException _:
-                        Assert.IsTrue(exceptionPolicy.Calls > 0);
-                        Assert.IsTrue(delayPolicy    .Calls > 0);
-                        Assert.AreEqual(exceptionPolicy.Calls, delayPolicy.Calls);
-                        return; // Successfully cancelled
-                    default:
-                        Assert.Fail();
-                        break;
-                }
-            }
-            catch (Exception)
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_RetriesExhausted(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke)
+            => WithRetryT6_RetriesExhausted(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_RetriesExhausted<T>(
+            Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry,
+            Action<InterruptableAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
+            ActionProxy<int, string, double, long, ushort, byte> action = new ActionProxy<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => throw new IOException());
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable InterruptableAction
+            InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
+                action.Invoke,
+                2,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+            action         .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Assert.That.ThrowsException<IOException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token));
+
+            // Validate the number of calls
+            Assert.AreEqual(3, action          .Calls);
+            Assert.AreEqual(3, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
+        }
+
+        private void WithRetryT6_Canceled(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, DelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry)
+            => WithRetryT6_Canceled(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_Canceled(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction<int, string, double, long, ushort, byte>> withRetry)
+            => WithRetryT6_Canceled(
+                (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void WithRetryT6_Canceled<T>(Func<Action<int, string, double, long, ushort, byte>, int, ExceptionPolicy, T, InterruptableAction<int, string, double, long, ushort, byte>> withRetry, Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource         = new CancellationTokenSource();
+
+            // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
+            ActionProxy<int, string, double, long, ushort, byte> action = new ActionProxy<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => throw new IOException());
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable InterruptableAction
+            InterruptableAction<int, string, double, long, ushort, byte> reliableAction = withRetry(
+                action.Invoke,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+            action         .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            // Trigger the event upon retry
+            exceptionPolicy.Invoking += (e, c) =>
             {
-                Assert.Fail();
-            }
+                if (c.Calls > 1)
+                    cancellationTrigger.Set();
+            };
+
+            // Create a task whose job is to cancel the invocation after at least 1 retry
+            Task cancellationTask = Task.Factory.StartNew((state) =>
+            {
+                (ManualResetEvent e, CancellationTokenSource s) = ((ManualResetEvent, CancellationTokenSource))state;
+                e.WaitOne();
+                s.Cancel();
+
+            }, (cancellationTrigger, tokenSource));
+
+            // Begin the invocation
+            Assert.That.ThrowsException<OperationCanceledException>(() => reliableAction(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, tokenSource.Token));
+
+            // Validate the number of calls
+            int calls = action.Calls;
+            Assert.IsTrue(calls > 1);
+
+            Assert.AreEqual(calls, action          .Calls);
+            Assert.AreEqual(calls, exceptionPolicy .Calls);
+            Assert.AreEqual(calls, delayPolicy     .Calls);
         }
     }
 }

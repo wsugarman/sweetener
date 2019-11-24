@@ -76,7 +76,7 @@ namespace Sweetener.Reliability
         internal static readonly ResultPolicy<T> DefaultResultPolicy = r => ResultKind.Successful;
 
         internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, DefaultResultPolicy, exceptionPolicy, delayPolicy != null ? (i, r, e) => delayPolicy(i) : (ComplexDelayPolicy<T>)null)
+            : this(maxRetries, DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<T>(delayPolicy))
         { }
 
         internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)

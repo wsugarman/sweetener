@@ -5,11 +5,11 @@
 <#@ include file="..\TextTemplating\Include.t4" #><#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
         string arguments      = GetArguments     (parameterCount);
         string parameters     = GetParameters    (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount);
-        string tokenPrefix    = parameterCount > 0 ? ", " : string.Empty;
-    
+
         string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
         string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
 #>
@@ -64,7 +64,7 @@ namespace Sweetener.Reliability
         PrintParamsXmlDoc(parameterCount, indent: 2);
 #>
         public void Invoke(<#= parameters #>)
-            => Invoke(<#= arguments #><#= tokenPrefix #>CancellationToken.None);
+            => Invoke(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
@@ -76,7 +76,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public void Invoke(<#= parameters #><#= tokenPrefix #>CancellationToken cancellationToken)
+        public void Invoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
             int attempt = 0;
             Exception lastException;
@@ -108,7 +108,7 @@ namespace Sweetener.Reliability
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryInvoke(<#= parameters #>)
-            => TryInvoke(<#= arguments #><#= tokenPrefix #>CancellationToken.None);
+            => TryInvoke(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
@@ -124,7 +124,7 @@ namespace Sweetener.Reliability
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public bool TryInvoke(<#= parameters #><#= tokenPrefix #>CancellationToken cancellationToken)
+        public bool TryInvoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
             int attempt = 0;
             Exception lastException;

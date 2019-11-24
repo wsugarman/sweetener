@@ -13,7 +13,7 @@
       <_Parameter1>$(MSBuildProjectName).Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
@@ -45,6 +45,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Create.tt</DependentUpon>
     </Compile>
+    <Compile Update="Func\InterruptableFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableFunc.tt</DependentUpon>
+    </Compile>
     <Compile Update="Func\Func.Extensions.T*.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -72,54 +77,15 @@
     </Compile>
   </ItemGroup>
 
-  <!-- Status Files -->
-  <ItemGroup>
-    <None Update="Action\Action.Extensions.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Action.Extensions.tt</DependentUpon>
-    </None>
-    <None Update="Action\InterruptableAction.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>InterruptableAction.cs</LastGenOutput>
-    </None>
-    <None Update="Action\ReliableAction.Create.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableAction.Create.tt</DependentUpon>
-    </None>
-    <None Update="Action\ReliableAction.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableAction.tt</DependentUpon>
-    </None>
-    <None Update="Func\Func.Extensions.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Func.Extensions.tt</DependentUpon>
-    </None>
-    <None Include="Action\InterruptableAction.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>InterruptableAction.tt</DependentUpon>
-    </None>
-    <None Include="Func\ReliableFunc.Create.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
-    </None>
-    <None Update="Func\ReliableFunc.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableFunc.tt</DependentUpon>
-    </None>
-  </ItemGroup>
-
   <!-- Text Templating Files -->
   <ItemGroup>
     <None Update="Action\Action.Extensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Action.Extensions.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\InterruptableAction.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableAction.cs</LastGenOutput>
     </None>
     <None Update="Action\ReliableAction.Create.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -132,6 +98,10 @@
     <None Update="Func\Func.Extensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Func.Extensions.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\InterruptableFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableFunc.cs</LastGenOutput>
     </None>
     <None Update="Func\ReliableFunc.Create.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -148,6 +118,40 @@
     <None Update="Policies\Exception\ExceptionPolicies.Retry.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ExceptionPolicies.Retry.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <!-- Status Files -->
+  <ItemGroup>
+    <None Update="Action\Action.Extensions.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Action.Extensions.tt</DependentUpon>
+    </None>
+    <None Update="Action\ReliableAction.Create.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Create.tt</DependentUpon>
+    </None>
+    <None Update="Action\ReliableAction.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.tt</DependentUpon>
+    </None>
+    <None Update="Func\Func.Extensions.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Func.Extensions.tt</DependentUpon>
+    </None>
+    <None Include="Func\ReliableFunc.Create.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableFunc.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.tt</DependentUpon>
     </None>
   </ItemGroup>
 
