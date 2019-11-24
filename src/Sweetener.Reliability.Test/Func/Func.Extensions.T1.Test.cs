@@ -419,7 +419,7 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r =>
                 r switch
                 {
-                    418 => ResultKind.Retryable,
+                    418 => ResultKind.Transient,
                     200 => ResultKind.Successful,
                     _   => ResultKind.Fatal,
                 });
@@ -496,7 +496,7 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r =>
                 r switch
                 {
-                    418 => ResultKind.Retryable,
+                    418 => ResultKind.Transient,
                     500 => ResultKind.Fatal,
                     _   => ResultKind.Successful,
                 });
@@ -582,7 +582,7 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int> func = new FuncProxy<int>(() => flakyFunc());
 
             // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Retryable : ResultKind.Successful);
+            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Successful);
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
             T delayPolicy = delayPolicyFactory();
 
@@ -653,7 +653,7 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int> func = new FuncProxy<int>(() => flakyFunc());
 
             // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Retryable : ResultKind.Fatal);
+            FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Fatal);
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
             T delayPolicy = delayPolicyFactory();
 
@@ -734,7 +734,7 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int> func = new FuncProxy<int>(() => flakyFunc());
 
             // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Retryable : ResultKind.Successful);
+            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Successful);
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
             T delayPolicy = delayPolicyFactory();
 
@@ -815,7 +815,7 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int> func = new FuncProxy<int>(() => flakyFunc());
 
             // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Retryable : ResultKind.Successful);
+            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Successful);
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
             T delayPolicy = delayPolicyFactory();
 

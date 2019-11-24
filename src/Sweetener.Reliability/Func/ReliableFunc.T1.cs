@@ -99,6 +99,45 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
+        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// </summary>
+        /// <returns>The return value of the underlying delegate.</returns>
+        public TResult Invoke()
+            => Invoke(CancellationToken.None);
+
+        /// <summary>
+        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>The return value of the underlying delegate.</returns>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public TResult Invoke(CancellationToken cancellationToken)
+        {
+            TResult result;
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+            try
+            {
+                result = _func();
+            }
+            catch (Exception exception)
+            {
+                if (CanRetry(attempt, exception, cancellationToken))
+                    goto Attempt;
+
+                throw;
+            }
+
+            ResultKind kind = _validate(result);
+            if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
+                return result;
+
+            goto Attempt;
+        }
+
+        /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient errors.
         /// </summary>
         /// <param name="result">
@@ -153,45 +192,6 @@ namespace Sweetener.Reliability
 
             result = default;
             return false;
-        }
-
-        /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
-        /// </summary>
-        /// <returns>The return value of the underlying delegate.</returns>
-        public TResult Invoke()
-            => Invoke(CancellationToken.None);
-
-        /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
-        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public TResult Invoke(CancellationToken cancellationToken)
-        {
-            TResult result;
-            int attempt = 0;
-
-        Attempt:
-            attempt++;
-            try
-            {
-                result = _func();
-            }
-            catch (Exception exception)
-            {
-                if (CanRetry(attempt, exception, cancellationToken))
-                    goto Attempt;
-
-                throw exception;
-            }
-
-            ResultKind kind = _validate(result);
-            if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
-                return result;
-
-            goto Attempt;
         }
     }
 }

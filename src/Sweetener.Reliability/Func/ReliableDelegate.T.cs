@@ -102,7 +102,7 @@ namespace Sweetener.Reliability
         {
             Debug.Assert(kind != ResultKind.Successful, "Successful results should not attempt to retry.");
 
-            if (kind == ResultKind.Retryable)
+            if (kind == ResultKind.Transient)
             {
                 if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
                 {

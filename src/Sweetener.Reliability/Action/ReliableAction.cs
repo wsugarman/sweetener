@@ -69,7 +69,6 @@ namespace Sweetener.Reliability
         public void Invoke(CancellationToken cancellationToken)
         {
             int attempt = 0;
-            Exception lastException;
             do
             {
                 attempt++;
@@ -80,11 +79,10 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    lastException = e;
+                    if (!CanRetry(attempt, e, cancellationToken))
+                        throw;
                 }
-            } while (CanRetry(attempt, lastException, cancellationToken));
-
-            throw lastException;
+            } while (true);
         }
 
         /// <summary>

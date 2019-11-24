@@ -103,6 +103,53 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
+        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <returns>The return value of the underlying delegate.</returns>
+        public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+            => Invoke(arg1, arg2, arg3, arg4, CancellationToken.None);
+
+        /// <summary>
+        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// </summary>
+        /// <param name="arg1">The first argument for the underlying delegate.</param>
+        /// <param name="arg2">The second argument for the underlying delegate.</param>
+        /// <param name="arg3">The third argument for the underlying delegate.</param>
+        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>The return value of the underlying delegate.</returns>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, CancellationToken cancellationToken)
+        {
+            TResult result;
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+            try
+            {
+                result = _func(arg1, arg2, arg3, arg4);
+            }
+            catch (Exception exception)
+            {
+                if (CanRetry(attempt, exception, cancellationToken))
+                    goto Attempt;
+
+                throw;
+            }
+
+            ResultKind kind = _validate(result);
+            if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
+                return result;
+
+            goto Attempt;
+        }
+
+        /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient errors.
         /// </summary>
         /// <param name="arg1">The first argument for the underlying delegate.</param>
@@ -165,53 +212,6 @@ namespace Sweetener.Reliability
 
             result = default;
             return false;
-        }
-
-        /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
-        /// </summary>
-        /// <param name="arg1">The first argument for the underlying delegate.</param>
-        /// <param name="arg2">The second argument for the underlying delegate.</param>
-        /// <param name="arg3">The third argument for the underlying delegate.</param>
-        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
-        public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-            => Invoke(arg1, arg2, arg3, arg4, CancellationToken.None);
-
-        /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
-        /// </summary>
-        /// <param name="arg1">The first argument for the underlying delegate.</param>
-        /// <param name="arg2">The second argument for the underlying delegate.</param>
-        /// <param name="arg3">The third argument for the underlying delegate.</param>
-        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
-        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
-        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, CancellationToken cancellationToken)
-        {
-            TResult result;
-            int attempt = 0;
-
-        Attempt:
-            attempt++;
-            try
-            {
-                result = _func(arg1, arg2, arg3, arg4);
-            }
-            catch (Exception exception)
-            {
-                if (CanRetry(attempt, exception, cancellationToken))
-                    goto Attempt;
-
-                throw exception;
-            }
-
-            ResultKind kind = _validate(result);
-            if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
-                return result;
-
-            goto Attempt;
         }
     }
 }

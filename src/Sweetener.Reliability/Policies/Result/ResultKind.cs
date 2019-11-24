@@ -15,7 +15,7 @@
         /// The result of the function indicates failure, but subsequent invocations
         /// may be successful.
         /// </summary>
-        Retryable,
+        Transient,
 
         /// <summary>
         /// The result of the function indicates success.

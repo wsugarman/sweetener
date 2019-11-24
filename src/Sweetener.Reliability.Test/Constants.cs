@@ -4,7 +4,7 @@ namespace Sweetener.Reliability.Test
 {
     internal static class Constants
     {
-        internal const double MinFactor = 0.8;
+        internal const double MinFactor = 1/2;
 
         // Note that the resolution for the Windows system clock is ~15 milliseconds, so
         // any time used for our delay should be greater than 15 milliseconds

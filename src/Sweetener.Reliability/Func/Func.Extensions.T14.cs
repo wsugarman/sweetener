@@ -170,14 +170,14 @@ namespace Sweetener.Reliability
                 catch (Exception e)
                 {
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw e;
+                        throw;
 
                     Task.Delay(delayPolicy(attempt, default, e), cancellationToken).Wait(cancellationToken);
                     goto Attempt;
                 }
 
                 ResultKind kind = resultPolicy(result);
-                if (kind != ResultKind.Retryable || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;
 
                 Task.Delay(delayPolicy(attempt, result, null), cancellationToken).Wait(cancellationToken);

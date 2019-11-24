@@ -83,7 +83,7 @@ namespace Sweetener.Reliability
                 catch (Exception e)
                 {
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw e;
+                        throw;
 
                     Task.Delay(delayPolicy(attempt, e), cancellationToken).Wait(cancellationToken);
                     goto Attempt;
