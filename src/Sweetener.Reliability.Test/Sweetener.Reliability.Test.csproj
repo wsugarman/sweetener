@@ -1,0 +1,161 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sweetener.Reliability\Sweetener.Reliability.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <!-- Generated Files -->
+  <ItemGroup>
+    <Compile Update="Action\Action.Extensions.*Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Action.Extensions.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\ReliableAction.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\ReliableAction.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\Func.Extensions.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Func.Extensions.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\ReliableFunc.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Expectations\Arguments.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Arguments.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Expectations\Expect.Arguments.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Expect.Arguments.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\TryFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TryFunc.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Policies\Exception\ExceptionPolicies.Fail.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExceptionPolicies.Fail.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Policies\Exception\ExceptionPolicies.Retry.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExceptionPolicies.Retry.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Proxies\ActionProxy.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ActionProxy.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Proxies\FuncProxy.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FuncProxy.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Text Templating Files -->
+  <ItemGroup>
+    <None Update="Action\Action.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Action.Extensions.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\ReliableAction.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAction.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Expectations\Arguments.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Arguments.cs</LastGenOutput>
+    </None>
+    <None Update="Expectations\Expect.Arguments.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Expect.Arguments.cs</LastGenOutput>
+    </None>
+    <None Update="Func\Func.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Func.Extensions.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableFunc.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableFunc.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\TryFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TryFunc.cs</LastGenOutput>
+    </None>
+    <None Update="Policies\Exception\ExceptionPolicies.Fail.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExceptionPolicies.Fail.Test.cs</LastGenOutput>
+    </None>
+    <None Update="Policies\Exception\ExceptionPolicies.Retry.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExceptionPolicies.Retry.Test.cs</LastGenOutput>
+    </None>
+    <None Update="Proxies\ActionProxy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ActionProxy.cs</LastGenOutput>
+    </None>
+    <None Update="Proxies\FuncProxy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FuncProxy.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <!-- Status Files -->
+  <ItemGroup>
+    <None Update="Action\Action.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Action.Extensions.Test.tt</DependentUpon>
+    </None>
+    <None Update="Action\ReliableAction.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </None>
+    <None Update="Func\Func.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Func.Extensions.Test.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableFunc.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+</Project>

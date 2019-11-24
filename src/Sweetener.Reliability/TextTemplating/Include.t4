@@ -1,0 +1,182 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
+<#+
+    const int MaxDelegateParameters  = 16;
+    const int MaxExceptionParameters = 8;
+    
+    public string GetTemplateFileName()
+        => Path.GetFileName(Host.TemplateFile);
+
+    public void SaveOutput(string outputFileName)
+    {
+        // Must use hostspecific="true" in order to use Host
+        string templateDirectory = Path.GetDirectoryName(Host.TemplateFile);
+        string outputFilePath = Path.Combine(templateDirectory, outputFileName);
+
+        File.WriteAllText(outputFilePath, GenerationEnvironment.ToString()); 
+        GenerationEnvironment.Length = 0; // Remove everything written thus far
+    }
+
+    public string GetTypeParameters(int count, string variance = null)
+        => GetList(count, variance != null ? variance + " T" : "T"); // T1, T2, T3
+
+    public string GetParameters(int count)
+        => GetList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3
+
+     public string GetParameters(string[] types, int count)
+     {
+        if (count == 0)
+            return string.Empty;
+
+        return string.Join(", ", types.Take(count).Select((t, i) => t + " " + (count == 1 ? "arg" : "arg" + (i + 1))));
+     }
+
+    public string GetArguments(int count)
+        => GetList(count, "arg"); // arg1, arg2, arg3
+
+    public string GetNthWord(int i)
+    {
+        switch (i)
+        {
+            case  1: return "first";
+            case  2: return "second";
+            case  3: return "third";
+            case  4: return "fourth";
+            case  5: return "fifth";
+            case  6: return "sixth";
+            case  7: return "seventh";
+            case  8: return "eighth";
+            case  9: return "ninth";
+            case 10: return "tenth";
+            case 11: return "eleventh";
+            case 12: return "twelfth";
+            case 13: return "thirteenth";
+            case 14: return "fourteenth";
+            case 15: return "fifteenth";
+            case 16: return "sixteenth";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}");
+        }
+    }
+
+    public string GetWord(int i)
+    {
+        switch (i)
+        {
+            case  0: return "zero";
+            case  1: return "a single";
+            case  2: return "two";
+            case  3: return "three";
+            case  4: return "four";
+            case  5: return "five";
+            case  6: return "six";
+            case  7: return "seven";
+            case  8: return "eight";
+            case  9: return "nine";
+            case 10: return "ten";
+            case 11: return "eleven";
+            case 12: return "twelve";
+            case 13: return "thirteen";
+            case 14: return "fourteen";
+            case 15: return "fifteen";
+            case 16: return "sixteen";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}");
+        }
+    }
+
+    private string GetList(int count, params string[] pattern)
+    {
+        if (count == 0)
+            return string.Empty;
+
+        IEnumerable<string> patterns = Enumerable
+            .Repeat(pattern, count)
+            .Select((p, i) => string.Join(" ", pattern.Select(x => count == 1 ? x : x + (i + 1))));
+
+        return string.Join(", ", patterns);
+    }
+
+    public void PrintParamsXmlDoc(int parameterCount, int indent)
+    {
+        if (parameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(parameterCount));
+
+        string spaces = new string(' ', indent * 4);
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string param       = parameterCount == 1 ? "arg" : "arg" + i;
+            string paramPrefix = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <param name="<#= param #>">The <#= paramPrefix #>argument for the underlying delegate.</param>
+<#+
+        }
+    }
+
+    public void PrintTypeParamsXmlDoc(int typeParameterCount, int indent, bool includeResult)
+    {
+        if (typeParameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
+
+        string spaces = new string(' ', indent * 4);
+        for (int i = 1; i <= typeParameterCount; i++)
+        {
+            string typeParameter   = typeParameterCount == 1 ? "T" : "T" + i;
+            string parameterPrefix = typeParameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <typeparam name="<#= typeParameter #>">The type of the <#= parameterPrefix #>parameter of the underlying delegate.</typeparam>
+<#+
+        }
+
+        if (includeResult)
+        {
+#>
+<#= spaces #>/// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+<#+
+        }
+    }
+
+    public void PrintFuncParamsXmlDoc(int indent, int typeParameterCount = -1, bool includeResultPolicy = false)
+        => PrintParamsXmlDoc(indent, typeParameterCount, isFunc: true, includeResultPolicy: includeResultPolicy);
+
+    public void PrintActionParamsXmlDoc(int indent, int typeParameterCount = -1)
+        => PrintParamsXmlDoc(indent, typeParameterCount, isFunc: false, includeResultPolicy: false);
+
+    private void PrintParamsXmlDoc(int indent, int typeParameterCount, bool isFunc, bool includeResultPolicy)
+    {
+        if (typeParameterCount < -1)
+            throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
+
+        // Add the type parameters after the summary
+        if (typeParameterCount > -1)
+        {
+            PrintTypeParamsXmlDoc(typeParameterCount, indent, includeResult: isFunc);
+        }
+
+        string spaces = new string(' ', indent * 4);
+#>
+<#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The underlying <#= isFunc ? "function" : "action" #> to invoke.</param>
+<#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
+<#+
+        if (includeResultPolicy)
+        {
+#>
+<#= spaces #>/// <param name="resultPolicy">The policy that determines which results are valid.</param>
+<#+
+        }
+#>
+<#= spaces #>/// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+<#= spaces #>/// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+<#= spaces #>/// <exception cref="ArgumentNullException">
+<#= spaces #>/// <paramref name="<#= isFunc ? "func" : "action" #>" />, <#= includeResultPolicy ? "<paramref name=\"resultPolicy\" /> " : "" #><paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+<#= spaces #>/// </exception>
+<#= spaces #>/// <exception cref="ArgumentOutOfRangeException">
+<#= spaces #>/// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+<#= spaces #>/// </exception>
+<#+
+    }
+#>

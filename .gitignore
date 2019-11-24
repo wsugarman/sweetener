@@ -1,5 +1,8 @@
 syntax: glob
 
+# Custom files
+*.tt.out
+
 ### VisualStudio ###
 
 # Tool Runtime Dir
