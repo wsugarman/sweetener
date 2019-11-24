@@ -833,7 +833,7 @@ namespace Sweetener.Reliability.Test
 
             // Trigger the event upon retry
             int minRetries = useResultPolicy ? 2 : 1;
-            exceptionPolicy.Invoking += (e, c) =>
+            func.Invoking += (c) =>
             {
                 if (c.Calls > minRetries)
                     cancellationTrigger.Set();

@@ -133,16 +133,5 @@ namespace Sweetener.Reliability
 
             return false;
         }
-
-        /// <summary>
-        /// Implicitly converts the <paramref name="reliableAction"/> to an
-        /// <see cref="Action{T}"/>.
-        /// </summary>
-        /// <remarks>
-        /// The resulting action is equivalent to <see cref="Invoke(T)"/>.
-        /// </remarks>
-        /// <param name="reliableAction">An operation that may be retried due to transient failures.</param>
-        public static implicit operator Action<T>(ReliableAction<T> reliableAction)
-            => reliableAction.Invoke;
     }
 }

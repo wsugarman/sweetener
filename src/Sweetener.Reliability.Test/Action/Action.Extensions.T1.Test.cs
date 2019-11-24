@@ -444,7 +444,7 @@ namespace Sweetener.Reliability.Test
             exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
 
             // Trigger the event upon retry
-            exceptionPolicy.Invoking += (e, c) =>
+            action.Invoking += (arg, c) =>
             {
                 if (c.Calls > 1)
                     cancellationTrigger.Set();

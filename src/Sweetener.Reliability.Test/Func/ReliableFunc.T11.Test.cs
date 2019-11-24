@@ -55,7 +55,8 @@ namespace Sweetener.Reliability.Test
                 Invoke((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => reliableFunc.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, tokenSource.Token));
         
             // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableFunc.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token));
+            Invoke_Canceled((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableFunc.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token), addEventHandlers: false);
+            Invoke_Canceled((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableFunc.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token), addEventHandlers: true );
         }
 
         [TestMethod]
@@ -74,7 +75,8 @@ namespace Sweetener.Reliability.Test
             TryInvoke(TryInvokeFunc);
 
             // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token, out string _));
+            Invoke_Canceled((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token, out string _), addEventHandlers: false);
+            Invoke_Canceled((reliableFunc, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token, out string _), addEventHandlers: true );
 
             bool TryInvokeFunc(ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> reliableFunc, int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, out string result)
                 => reliableFunc.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, tokenSource.Token, out result);
@@ -196,19 +198,22 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke(Func<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> invoke)
         {
-            // Success
-            Invoke_Success                ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
-            Invoke_EventualSuccess        ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                // Success
+                Invoke_Success                ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), addEventHandlers);
+                Invoke_EventualSuccess        ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), addEventHandlers);
 
-            // Failure (Result)
-            Invoke_Failure_Result         ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
-            Invoke_EventualFailure_Result ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
-            Invoke_RetriesExhausted_Result((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)));
+                // Failure (Result)
+                Invoke_Failure_Result         ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), addEventHandlers);
+                Invoke_EventualFailure_Result ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), addEventHandlers);
+                Invoke_RetriesExhausted_Result((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, r) => Assert.AreEqual(r, invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)), addEventHandlers);
 
-            // Failure (Exception)
-            Invoke_Failure_Exception         ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), t));
-            Invoke_EventualFailure_Exception ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), t));
-            Invoke_RetriesExhausted_Exception((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), t));
+                // Failure (Exception)
+                Invoke_Failure_Exception         ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), t), addEventHandlers);
+                Invoke_EventualFailure_Exception ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), t), addEventHandlers);
+                Invoke_RetriesExhausted_Exception((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, t) => Assert.That.ThrowsException(() => invoke(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), t), addEventHandlers);
+            }
         }
 
         #endregion
@@ -238,26 +243,29 @@ namespace Sweetener.Reliability.Test
                     Assert.AreEqual(default, actual);
                 };
 
-            // Success
-            Invoke_Success                (assertSuccess);
-            Invoke_EventualSuccess        (assertSuccess);
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                // Success
+                Invoke_Success                (assertSuccess, addEventHandlers);
+                Invoke_EventualSuccess        (assertSuccess, addEventHandlers);
 
-            // Failure (Result)
-            Invoke_Failure_Result         (assertResultFailure);
-            Invoke_EventualFailure_Result (assertResultFailure);
-            Invoke_RetriesExhausted_Result(assertResultFailure);
+                // Failure (Result)
+                Invoke_Failure_Result         (assertResultFailure, addEventHandlers);
+                Invoke_EventualFailure_Result (assertResultFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Result(assertResultFailure, addEventHandlers);
 
-            // Failure (Exception)
-            Invoke_Failure_Exception         (assertExceptionFailure);
-            Invoke_EventualFailure_Exception (assertExceptionFailure);
-            Invoke_RetriesExhausted_Exception(assertExceptionFailure);
+                // Failure (Exception)
+                Invoke_Failure_Exception         (assertExceptionFailure, addEventHandlers);
+                Invoke_EventualFailure_Exception (assertExceptionFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Exception(assertExceptionFailure, addEventHandlers);
+            }
         }
 
         #endregion
 
         #region Invoke_Success
 
-        private void Invoke_Success(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke)
+        private void Invoke_Success(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke, bool addEventHandlers)
         {
             // Create a "successful" user-defined function
             FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => "Success");
@@ -279,9 +287,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate);
@@ -309,7 +320,7 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Failure_Result
 
-        private void Invoke_Failure_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke)
+        private void Invoke_Failure_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined function that returns a fatal result
             FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => "Failure");
@@ -331,9 +342,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate);
@@ -348,20 +362,24 @@ namespace Sweetener.Reliability.Test
             assertInvoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), "Failure");
 
             // Validate the number of calls
-            Assert.AreEqual(1, func            .Calls);
-            Assert.AreEqual(1, resultPolicy    .Calls);
-            Assert.AreEqual(0, exceptionPolicy .Calls);
-            Assert.AreEqual(0, delayPolicy     .Calls);
-            Assert.AreEqual(0, retryHandler    .Calls);
-            Assert.AreEqual(1, failedHandler   .Calls);
-            Assert.AreEqual(0, exhaustedHandler.Calls);
+            Assert.AreEqual(1, func           .Calls);
+            Assert.AreEqual(1, resultPolicy   .Calls);
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(0, retryHandler    .Calls);
+                Assert.AreEqual(1, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_Failure_Exception
 
-        private void Invoke_Failure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, Type> assertInvoke)
+        private void Invoke_Failure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined function that throws a fatal exception
             FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => throw new InvalidOperationException());
@@ -383,9 +401,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate);
@@ -404,16 +425,20 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(0, resultPolicy    .Calls);
             Assert.AreEqual(1, exceptionPolicy .Calls);
             Assert.AreEqual(0, delayPolicy     .Calls);
-            Assert.AreEqual(0, retryHandler    .Calls);
-            Assert.AreEqual(1, failedHandler   .Calls);
-            Assert.AreEqual(0, exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(0, retryHandler    .Calls);
+                Assert.AreEqual(1, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_EventualSuccess
 
-        private void Invoke_EventualSuccess(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke)
+        private void Invoke_EventualSuccess(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually succeeds after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry", "Success", 2);
@@ -442,9 +467,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate);
@@ -463,16 +491,20 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, resultPolicy    .Calls);
             Assert.AreEqual(1, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
-            Assert.AreEqual(2, retryHandler    .Calls);
-            Assert.AreEqual(0, failedHandler   .Calls);
-            Assert.AreEqual(0, exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(2, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_EventualFailure_Result
 
-        private void Invoke_EventualFailure_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke)
+        private void Invoke_EventualFailure_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually fails after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry", "Failure", 2);
@@ -501,9 +533,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate, Constants.MinDelay);
@@ -522,16 +557,20 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, resultPolicy    .Calls);
             Assert.AreEqual(1, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
-            Assert.AreEqual(2, retryHandler    .Calls);
-            Assert.AreEqual(1, failedHandler   .Calls);
-            Assert.AreEqual(0, exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(2, retryHandler    .Calls);
+                Assert.AreEqual(1, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_EventualFailure_Exception
 
-        private void Invoke_EventualFailure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, Type> assertInvoke)
+        private void Invoke_EventualFailure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, Type> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually fails after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException, InvalidOperationException>("Retry", 2);
@@ -554,9 +593,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate, Constants.MinDelay);
@@ -575,16 +617,20 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, resultPolicy    .Calls);
             Assert.AreEqual(2, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
-            Assert.AreEqual(2, retryHandler    .Calls);
-            Assert.AreEqual(1, failedHandler   .Calls);
-            Assert.AreEqual(0, exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(2, retryHandler    .Calls);
+                Assert.AreEqual(1, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_RetriesExhausted_Result
 
-        private void Invoke_RetriesExhausted_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke)
+        private void Invoke_RetriesExhausted_Result(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually exhausts the maximum number of retries after transient results and exceptions
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
@@ -607,9 +653,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate, Constants.MinDelay);
@@ -628,16 +677,20 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(2, resultPolicy    .Calls);
             Assert.AreEqual(2, exceptionPolicy .Calls);
             Assert.AreEqual(3, delayPolicy     .Calls);
-            Assert.AreEqual(3, retryHandler    .Calls);
-            Assert.AreEqual(0, failedHandler   .Calls);
-            Assert.AreEqual(1, exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(3, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(1, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_RetriesExhausted_Exception
 
-        private void Invoke_RetriesExhausted_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, Type> assertInvoke)
+        private void Invoke_RetriesExhausted_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, Type> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually exhausts the maximum number of retries after transient results and exceptions
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
@@ -660,9 +713,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate, Constants.MinDelay);
@@ -681,16 +737,20 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(1, resultPolicy    .Calls);
             Assert.AreEqual(2, exceptionPolicy .Calls);
             Assert.AreEqual(2, delayPolicy     .Calls);
-            Assert.AreEqual(2, retryHandler    .Calls);
-            Assert.AreEqual(0, failedHandler   .Calls);
-            Assert.AreEqual(1, exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(2, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(1, exhaustedHandler.Calls);
+            }
         }
 
         #endregion
 
         #region Invoke_Canceled
 
-        private void Invoke_Canceled(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> assertInvoke)
+        private void Invoke_Canceled(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken> assertInvoke, bool addEventHandlers)
         {
             using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
             using CancellationTokenSource tokenSource         = new CancellationTokenSource();
@@ -716,9 +776,12 @@ namespace Sweetener.Reliability.Test
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
 
-            reliableFunc.Retrying         += retryHandler    .Invoke;
-            reliableFunc.Failed           += failedHandler   .Invoke;
-            reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
 
             // Define expectations
             func            .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate, Constants.MinDelay);
@@ -730,7 +793,11 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<string, Exception>();
 
             // Trigger the event upon retry
-            retryHandler    .Invoking += (i, r, e, c) => cancellationTrigger.Set();
+            func            .Invoking += (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, c) =>
+            {
+                if (c.Calls > 1)
+                    cancellationTrigger.Set();
+            };
 
             // Create a task whose job is to cancel the invocation after at least 1 retry
             Task cancellationTask = Task.Factory.StartNew((state) =>
@@ -753,9 +820,13 @@ namespace Sweetener.Reliability.Test
             Assert.AreEqual(results   , resultPolicy    .Calls);
             Assert.AreEqual(exceptions, exceptionPolicy .Calls);
             Assert.AreEqual(calls     , delayPolicy     .Calls);
-            Assert.AreEqual(calls - 1 , retryHandler    .Calls);
-            Assert.AreEqual(0         , failedHandler   .Calls);
-            Assert.AreEqual(0         , exhaustedHandler.Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(calls - 1 , retryHandler    .Calls);
+                Assert.AreEqual(0         , failedHandler   .Calls);
+                Assert.AreEqual(0         , exhaustedHandler.Calls);
+            }
         }
 
         #endregion

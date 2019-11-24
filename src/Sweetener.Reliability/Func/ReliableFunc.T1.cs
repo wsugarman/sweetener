@@ -193,16 +193,5 @@ namespace Sweetener.Reliability
 
             goto Attempt;
         }
-
-        /// <summary>
-        /// Implicitly converts the <paramref name="reliableFunc"/> to an
-        /// <see cref="Func{TResult}"/>.
-        /// </summary>
-        /// <remarks>
-        /// The resulting function is equivalent to <see cref="Invoke()"/>.
-        /// </remarks>
-        /// <param name="reliableFunc">An operation that may be retried due to transient failures.</param>
-        public static implicit operator Func<TResult>(ReliableFunc<TResult> reliableFunc)
-            => reliableFunc.Invoke;
     }
 }
