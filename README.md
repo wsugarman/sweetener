@@ -21,11 +21,11 @@ much as possible.
 Sweetener.Reliability provides utilities for reliably running delegates that may
 ocassionally result in transient failures. The lifecycle of these "unreliable" delegates
 is communicated through policies which control aspects including:
-  1. [`ResultPolicy<T>`](src\Sweetener.Reliability\Policies\Result\ResultPolicy.T.cs) -
+  1. [`ResultPolicy<T>`](src/Sweetener.Reliability/Policies/Result/ResultPolicy.T.cs) -
      dictates how to process the result of functions
-  2. [`ExceptionPolicy`](src\Sweetener.Reliability\Policies\Exception\ExceptionPolicy.cs) -
+  2. [`ExceptionPolicy`](src/Sweetener.Reliability/Policies/Exception/ExceptionPolicy.cs) -
      dictates which exceptions are transient and which are fatal
-  3. [`DelayPolicy`](src\Sweetener.Reliability\Policies\Delay\DelayPolicy.cs) -
+  3. [`DelayPolicy`](src/Sweetener.Reliability/Policies/Delay/DelayPolicy.cs) -
      dictates how long to wait between retries
      1. For more advanced scenarios, users can leverage `ComplexDelayPolicy` and
         `ComplexDelayPolicy<T>` where the delay depends on the transient result or
@@ -34,8 +34,8 @@ is communicated through policies which control aspects including:
 #### Reliable Delegates
 ##### Creation
 Reliable delegates can be created in a number of ways. First, users can create instances
-[`ReliableAction`](src\Sweetener.Reliability\Action\ReliableAction.cs) and
-[`ReliableFunc<T>`](src\Sweetener.Reliability\Func\ReliableFunc.T1.cs) using the
+[`ReliableAction`](src/Sweetener.Reliability/Action/ReliableAction.cs) and
+[`ReliableFunc<T>`](src/Sweetener.Reliability/Func/ReliableFunc.T1.cs) using the
 appropriate constructor or static helper method. Note that for every action and function
 type in Sweetener.Reliability, there are type overloads that support up to 16 type
 arguments.
@@ -202,9 +202,9 @@ For simpler use-cases, where only the `Invoke` method is called on instances of
 methods can be used to wrap delegates instead. The `Sweetener.Reliability` namespace
 defines extension methods on [`Action`](https://docs.microsoft.com/en-us/dotnet/api/system.action?view=netstandard-2.0)
 and [`Func<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.func-1?view=netstandard-2.0)
-called [`WithRetry`](src\Sweetener.Reliability\Action\Action.Extensions.cs). These
-methods return [`InterruptableAction`](src\Sweetener.Reliability\Action\InterruptableAction.cs)
-and [`InterruptableFunc<T>`](src\Sweetener.Reliability\Func\InterruptableFunc.cs)
+called [`WithRetry`](src/Sweetener.Reliability/Action/Action.Extensions.cs). These
+methods return [`InterruptableAction`](src/Sweetener.Reliability/Action/InterruptableAction.cs)
+and [`InterruptableFunc<T>`](src/Sweetener.Reliability/Func/InterruptableFunc.cs)
 respectively which allow callers to pass an optional `CancellationToken`.
 
 ```csharp
