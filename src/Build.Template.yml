@@ -2,7 +2,7 @@ parameters:
   project: ''
 
 jobs:
-- job: Build ${{ parameters.Project }}
+- job: Build Pipeline
 
   pool:
     vmImage: 'windows-latest'
