@@ -32,9 +32,7 @@ jobs:
       targetType: 'inline'
       script: |
         shopt -s globstar
-        for assembly in
-          src/${{ parameters.Project }}/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.dll
-          src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.Test.dll
+        for assembly in src/${{ parameters.Project }}/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.dll src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.Test.dll
         do
           sn.exe -Ra "$assembly" "$(SigningKey.SecureFilePath)"
         done
