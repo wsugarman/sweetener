@@ -1,0 +1,48 @@
+parameters:
+  project: ''
+
+jobs:
+- job: Build ${{ parameters.Project }}
+
+  pool:
+    vmImage: 'windows-latest'
+
+  variables:
+    buildConfiguration: 'Release'
+
+  steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'Build'
+    inputs:
+      command: 'build'
+      projects: |
+        src/${{ parameters.Project }}/${{ parameters.Project }}.csproj
+        src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj
+      arguments: '-c $(BuildConfiguration) -p:DelaySign=true'
+
+-   task: DownloadSecureFile@1
+    displayName: 'Download Signing Key'
+    name: SigningKey
+    inputs:
+      secureFile: 'Sweetener.snk'
+
+-   task: Bash@3
+    displayName: 'Sign Assemblies'
+    inputs:
+      targetType: 'inline'
+      script: |
+        shopt -s globstar
+        for assembly in
+          src/${{ parameters.Project }}/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.dll
+          src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.Test.dll
+        do
+          sn.exe -Ra "$assembly" "$(SigningKey.SecureFilePath)"
+        done
+
+  # Note that "Debug" code coverage may result in inaccurate code coverage metrics
+-   task: DotNetCoreCLI@2
+    displayName: 'Test'
+    inputs:
+      command: 'test'
+      projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
+      arguments: '-c $(BuildConfiguration) --no-build --collect "Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal'

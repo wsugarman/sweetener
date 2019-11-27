@@ -220,7 +220,6 @@ InterruptableFunc<string, double, string> reliableInterruptableFunc = flakyFunc.
     r => r == "Success" ? ResultKind.Successful : ResultKind.Transient,
     ExceptionPolicies.Fail<InvalidOperationException>(),
     DelayPolicies.Linear(50));
-);
 ```
 
 ## Installation
