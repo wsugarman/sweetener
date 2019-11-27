@@ -1,5 +1,6 @@
 parameters:
   project: ''
+  netfxTools: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
 
 jobs:
 - job: Build
@@ -35,7 +36,7 @@ jobs:
         $assemblies += @(Get-ChildItem -Path "src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/" -Recurse -Include ${{ parameters.Project }}.Test.dll)
         foreach ($assembly in $assemblies)
         {
-            Start-Process -FilePath "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
+            Start-Process -FilePath "$(netfxTools)/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
         }
       pwsh: true
 
