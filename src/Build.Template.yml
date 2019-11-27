@@ -2,7 +2,7 @@ parameters:
   project: ''
 
 jobs:
-- job: Build Pipeline
+- job: Build
 
   pool:
     vmImage: 'windows-latest'
