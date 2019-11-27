@@ -26,16 +26,18 @@ jobs:
     inputs:
       secureFile: 'Sweetener.snk'
 
-  - task: Bash@3
+  - task: PowerShell@2
     displayName: 'Sign Assemblies'
     inputs:
       targetType: 'inline'
       script: |
-        shopt -s globstar
-        for assembly in src/${{ parameters.Project }}/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.dll src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/**/${{ parameters.Project }}.Test.dll
-        do
-          sn.exe -Ra "$assembly" "$(SigningKey.SecureFilePath)"
-        done
+        $assemblies  = @(Get-ChildItem -Path "src/${{ parameters.Project }}/bin/$(BuildConfiguration)/"      -Recurse -Include ${{ parameters.Project }}.dll)
+        $assemblies += @(Get-ChildItem -Path "src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/" -Recurse -Include ${{ parameters.Project }}.Test.dll)
+        foreach ($assembly in $assemblies)
+        {
+            Start-Process -FilePath "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
+        }
+      pwsh: true
 
   # Note that "Debug" code coverage may result in inaccurate code coverage metrics
   - task: DotNetCoreCLI@2
