@@ -20,13 +20,13 @@ jobs:
         src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj
       arguments: '-c $(BuildConfiguration) -p:DelaySign=true'
 
--   task: DownloadSecureFile@1
-    displayName: 'Download Signing Key'
+  - task: DownloadSecureFile@1
     name: SigningKey
+    displayName: 'Download Signing Key'
     inputs:
       secureFile: 'Sweetener.snk'
 
--   task: Bash@3
+  - task: Bash@3
     displayName: 'Sign Assemblies'
     inputs:
       targetType: 'inline'
@@ -40,7 +40,7 @@ jobs:
         done
 
   # Note that "Debug" code coverage may result in inaccurate code coverage metrics
--   task: DotNetCoreCLI@2
+  - task: DotNetCoreCLI@2
     displayName: 'Test'
     inputs:
       command: 'test'
