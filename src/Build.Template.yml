@@ -36,7 +36,7 @@ jobs:
         $assemblies += @(Get-ChildItem -Path "src/${{ parameters.Project }}.Test/bin/$(BuildConfiguration)/" -Recurse -Include ${{ parameters.Project }}.Test.dll)
         foreach ($assembly in $assemblies)
         {
-            Start-Process -FilePath "$(netfxTools)/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
+            Start-Process -FilePath "${{ parameters.netfxTools }}/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
         }
       pwsh: true
 
