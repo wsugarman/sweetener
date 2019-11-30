@@ -5,8 +5,10 @@ VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AE0F665-3CE8-4201-9525-DF7CD3573B1C}"
 	ProjectSection(SolutionItems) = preProject
-		..\.editorconfig = ..\.editorconfig
-		..\CodeCoverage.runsettings = ..\CodeCoverage.runsettings
+		.editorconfig = .editorconfig
+		Build.Template.yml = Build.Template.yml
+		CodeCoverage.runsettings = CodeCoverage.runsettings
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Reliability", "Sweetener.Reliability\Sweetener.Reliability.csproj", "{2CC0F13B-B8DA-4871-A1DE-6D7144C2F29D}"

@@ -1,0 +1,30 @@
+<Project>
+
+  <PropertyGroup>
+    <SrcDirectory>$(MSBuildThisFileDirectory)</SrcDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SrcDirectory)Public.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="$(MSBuildProjectName.EndsWith('Test'))">
+      <PropertyGroup>
+        <PublicSign>true</PublicSign>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <DelaySign>true</DelaySign>
+      </PropertyGroup>
+      <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+          <_Parameter1>$(MSBuildProjectName).Test, PublicKey=002400000c8000001402000006020000002400005253413100100000010001007127af9e53dfa81f9909fa8c032ec685ce024339149defa44a2e2c93b831fafb8ee2edf2cd1181f4c45c4d2603819801275eb64ff834174fd5aa9d5f4527291ba1bee287cefac997b04a352264995c1752181d4e7ac914a5df0d5e15c068da2a3dd4f157c02ca0bf3ea43c23c35e879c733f84a64f5ef478192cbe514b2e09467626d2c44b878aa8d84ecc4129877f67384295689b108f48f99a3a063135ea4a3b257733bedc4fc3c7989b637414d7f0956be8813a9dbd3a20dd4c9477b191299a315cff14dec19dbe152f0ce28eaa4a1e812efa985b35e855540512e1feafe314f072e78df54711c5942b806f4138d9e3f5bc03285603517d964b714491310bd6a3010397bc5e71345f645a5218bc6eaccaa1cdc1dab857579ff8408ba40da69018f11d94d314331ff54c2a6bb2ca74c2da199358dc66a5c470f1dbf0c381b1d4591d911fa73c1ab2765340d4a0900a24bc541684aeba32975cf2039e6022f6712f00ae04438ff837738c1914c84d938a776a18e524d5b549dde76f8629c1c0c67669daf914d05f8835c8290d71d87379c7b654ebb08b0003aec77fbef706d3842654cfa7c4f1ee049a63efdcf1565e8027cbaebc6fec67925e1673d4ad2d152f03658d3f3a8a1d09a26796213b7bcd9a4ffbbc57b62f920f2e947a8e638cd89f03a03413a5994d0be643e28af44021062281dd80e9dff8343e33cc4d5539ab</_Parameter1>
+        </AssemblyAttribute>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
+</Project>
