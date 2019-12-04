@@ -1,0 +1,43 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="Include.Common.t4" #><#+
+
+    public void PrintDelegateParamsXmlDoc(int parameterCount, int indent)
+    {
+        if (parameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(parameterCount));
+
+        string spaces = new string(' ', indent * SpacesPerTab);
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string param     = parameterCount == 1 ? "arg" : "arg" + i;
+            string qualifier = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <param name="<#= param #>">The <#= qualifier #>parameter of the method that this delegate encapsulates.</param>
+<#+
+        }
+    }
+
+    public void PrintDelegateTypeParamsXmlDoc(int typeParameterCount, int indent, bool includeResult)
+    {
+        if (typeParameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
+
+        string spaces = new string(' ', indent * SpacesPerTab);
+        for (int i = 1; i <= typeParameterCount; i++)
+        {
+            string typeParameter = typeParameterCount == 1 ? "T" : "T" + i;
+            string qualifier     = typeParameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <typeparam name="<#= typeParameter #>">The type of the <#= qualifier #>parameter of the method that this delegate encapsulates.</typeparam>
+<#+
+        }
+
+        if (includeResult)
+        {
+#>
+<#= spaces #>/// <typeparam name="TResult">The type of the return value of the method that this delegate encapsulates.</typeparam>
+<#+
+        }
+    }
+#>

@@ -38,7 +38,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= typeParameters #>> func, int maxRetries,
@@ -52,7 +52,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= typeParameters #>> func, int maxRetries,
@@ -66,7 +66,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= typeParameters #>> func, int maxRetries,
@@ -81,7 +81,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= typeParameters #>> func, int maxRetries,

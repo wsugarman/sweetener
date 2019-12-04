@@ -2,19 +2,19 @@
 <#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#@ include file="..\TextTemplating\Include.t4" #><#
+<#@ include file="..\TextTemplating\Include.t4" #><#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma                  = parameterCount > 0 ? ", " : string.Empty;
-        string arguments                      = GetArguments (parameterCount);
-        string parameters                     = GetParameters(typeArgs, parameterCount);
-        string typeArgumentsNoBracket         = GetTypeArgs  (parameterCount, outputType: "string", includeBrackets: false);
-        string typeArgumentsNoBracketNoResult = GetTypeArgs  (parameterCount                      , includeBrackets: false);
+        string arguments                      = GetArguments     (parameterCount);
+        string parameters                     = GetParameters    (typeArgs, parameterCount);
+        string typeArgumentsNoBracket         = GetTypeArguments (parameterCount, outputType: "string", includeBrackets: false);
+        string typeArgumentsNoBracketNoResult = GetTypeArguments (parameterCount                      , includeBrackets: false);
+        string typeParametersNoResult         = GetTypeParameters(parameterCount);
+        string testArguments                  = GetTestArguments (parameterCount);
         string typeArguments                  = "<" + typeArgumentsNoBracket + ">";
         string typeArgumentsNoResult          = "<" + typeArgumentsNoBracketNoResult + ">";
-        string typeParametersNoResult         = GetTypeParameters(parameterCount);
         string typeParameters                 = typeParametersNoResult + optionalComma + "TResult";
-        string testArguments                  = GetTestArguments(parameterCount);
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;

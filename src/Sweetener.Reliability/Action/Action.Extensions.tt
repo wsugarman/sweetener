@@ -38,7 +38,7 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+        PrintReliableActionCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
         public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             => WithRetry(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
@@ -48,7 +48,7 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+        PrintReliableActionCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
         public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {

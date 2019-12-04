@@ -7,8 +7,8 @@ namespace Sweetener.Reliability
     /// <summary>
     /// A wrapper to reliably invoke a function despite transient issues.
     /// </summary>
-    /// <typeparam name="T">The type of the parameter of the underlying delegate.</typeparam>
-    /// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+    /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
+    /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableFunc<T, TResult> : ReliableDelegate<TResult>
     {
         private readonly Func<T, TResult> _func;
@@ -102,7 +102,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Invokes the underlying delegate and automatically if it encounters transient errors.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>The return value of the underlying delegate.</returns>
         public TResult Invoke(T arg)
             => Invoke(arg, CancellationToken.None);
@@ -110,7 +110,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Invokes the underlying delegate and automatically if it encounters transient errors.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the underlying delegate.</returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
@@ -143,7 +143,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient errors.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="result">
         /// When this method returns, contains the result of the underlying delegate,
         /// if it completed successfully, or the default value if it failed. The parameter
@@ -159,7 +159,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient errors.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <param name="result">
         /// When this method returns, contains the result of the underlying delegate,

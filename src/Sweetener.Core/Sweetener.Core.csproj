@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Sweetener</RootNamespace>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- Generated Files -->
+  <ItemGroup>
+    <Compile Update="Action\InterruptableAction.cs">
+      <DependentUpon>InterruptableAction.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Func\InterruptableFunc.cs">
+      <DependentUpon>InterruptableFunc.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Func\TryFunc.cs">
+      <DependentUpon>TryFunc.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Text Templating Files -->
+  <ItemGroup>
+    <None Update="Action\InterruptableAction.tt">
+      <LastGenOutput>InterruptableAction.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Func\InterruptableFunc.tt">
+      <LastGenOutput>InterruptableFunc.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Func\TryFunc.tt">
+      <LastGenOutput>TryFunc.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+</Project>

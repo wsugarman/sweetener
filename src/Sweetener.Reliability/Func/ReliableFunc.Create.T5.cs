@@ -10,11 +10,11 @@ namespace Sweetener.Reliability
         /// that executes the given <see cref="Func{T1, T2, T3, T4, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T3">The type of the third parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T4">The type of the fourth parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+        /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T4">The type of the fourth parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The underlying function to invoke.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -36,11 +36,11 @@ namespace Sweetener.Reliability
         /// that executes the given <see cref="Func{T1, T2, T3, T4, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T3">The type of the third parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T4">The type of the fourth parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+        /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T4">The type of the fourth parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The underlying function to invoke.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -62,11 +62,11 @@ namespace Sweetener.Reliability
         /// that executes the given <see cref="Func{T1, T2, T3, T4, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T3">The type of the third parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T4">The type of the fourth parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+        /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T4">The type of the fourth parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The underlying function to invoke.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
@@ -90,11 +90,11 @@ namespace Sweetener.Reliability
         /// that executes the given <see cref="Func{T1, T2, T3, T4, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T3">The type of the third parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="T4">The type of the fourth parameter of the underlying delegate.</typeparam>
-        /// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+        /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="T4">The type of the fourth parameter of the method that this reliable delegate encapsulates.</typeparam>
+        /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The underlying function to invoke.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>

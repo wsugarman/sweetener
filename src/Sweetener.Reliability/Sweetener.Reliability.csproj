@@ -2,14 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
   </PropertyGroup>
 
+  <!-- TODO: Remove ProjectReference after package has been published -->
   <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    <ProjectReference Include="..\Sweetener.Core\Sweetener.Core.csproj" />
   </ItemGroup>
 
   <!-- Generated Files -->
@@ -147,6 +144,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.tt</DependentUpon>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

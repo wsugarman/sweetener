@@ -26,7 +26,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+        PrintReliableActionCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
         public static ReliableAction<#= typeParametersCode #> Create<#= typeParametersCode #>(
             Action<#= typeParametersCode #> action,
@@ -41,7 +41,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintActionParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
+        PrintReliableActionCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount);
 #>
         public static ReliableAction<#= typeParametersCode #> Create<#= typeParametersCode #>(
             Action<#= typeParametersCode #> action,

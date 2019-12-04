@@ -1,23 +1,33 @@
 <Project>
 
+  <!-- Repository Variables -->
   <PropertyGroup>
     <SrcDirectory>$(MSBuildThisFileDirectory)</SrcDirectory>
   </PropertyGroup>
 
+  <!-- Common Build Properties -->
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SrcDirectory)Public.snk</AssemblyOriginatorKeyFile>
+    <LangVersion>latest</LangVersion>
+    <SignAssembly>true</SignAssembly>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
+  <!-- Below are items and properties that vary between projects -->
   <Choose>
     <When Condition="$(MSBuildProjectName.EndsWith('Test'))">
+      <!-- Do not expect test classes to have XML doc -->
       <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <NoWarn>CS1591</NoWarn>
         <PublicSign>true</PublicSign>
       </PropertyGroup>
     </When>
     <Otherwise>
       <PropertyGroup>
         <DelaySign>true</DelaySign>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
       </PropertyGroup>
       <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
