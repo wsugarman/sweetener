@@ -7,10 +7,10 @@ namespace Sweetener.Reliability
     /// <summary>
     /// A wrapper to reliably invoke an action despite transient issues.
     /// </summary>
-    /// <typeparam name="T1">The type of the first parameter of the underlying delegate.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter of the underlying delegate.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter of the underlying delegate.</typeparam>
-    /// <typeparam name="T4">The type of the fourth parameter of the underlying delegate.</typeparam>
+    /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
+    /// <typeparam name="T4">The type of the fourth parameter of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableAction<T1, T2, T3, T4> : ReliableDelegate
     {
         private readonly Action<T1, T2, T3, T4> _action;
@@ -60,20 +60,20 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
         /// </summary>
-        /// <param name="arg1">The first argument for the underlying delegate.</param>
-        /// <param name="arg2">The second argument for the underlying delegate.</param>
-        /// <param name="arg3">The third argument for the underlying delegate.</param>
-        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
         public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
             => Invoke(arg1, arg2, arg3, arg4, CancellationToken.None);
 
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
         /// </summary>
-        /// <param name="arg1">The first argument for the underlying delegate.</param>
-        /// <param name="arg2">The second argument for the underlying delegate.</param>
-        /// <param name="arg3">The third argument for the underlying delegate.</param>
-        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
@@ -100,10 +100,10 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
-        /// <param name="arg1">The first argument for the underlying delegate.</param>
-        /// <param name="arg2">The second argument for the underlying delegate.</param>
-        /// <param name="arg3">The third argument for the underlying delegate.</param>
-        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
         /// <see langword="true"/> if the delegate completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
@@ -114,10 +114,10 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
-        /// <param name="arg1">The first argument for the underlying delegate.</param>
-        /// <param name="arg2">The second argument for the underlying delegate.</param>
-        /// <param name="arg3">The third argument for the underlying delegate.</param>
-        /// <param name="arg4">The fourth argument for the underlying delegate.</param>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>

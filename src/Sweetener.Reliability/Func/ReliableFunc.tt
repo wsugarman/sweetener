@@ -33,7 +33,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, includeResultPolicy: false);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: false);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
@@ -47,7 +47,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, includeResultPolicy: false);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: false);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
@@ -61,7 +61,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, includeResultPolicy: true);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: true);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
@@ -75,7 +75,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintFuncParamsXmlDoc(indent: 2, includeResultPolicy: true);
+        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: true);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)

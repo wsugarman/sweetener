@@ -7,7 +7,7 @@ namespace Sweetener.Reliability
     /// <summary>
     /// A wrapper to reliably invoke a function despite transient issues.
     /// </summary>
-    /// <typeparam name="TResult">The type of the return value of the underlying delegate.</typeparam>
+    /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableFunc<TResult> : ReliableDelegate<TResult>
     {
         private readonly Func<TResult> _func;

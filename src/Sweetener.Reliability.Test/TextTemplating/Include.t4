@@ -2,7 +2,7 @@
 <#@ import namespace="System" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq" #>
-<#+
+<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#+
     static string[] typeArgs = new string[]
     {
         "int",
@@ -43,7 +43,7 @@
         "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
     };
 
-    public string GetTypeArgs(int count, string outputType = null, bool includeBrackets = true)
+    public string GetTypeArguments(int count, string outputType = null, bool includeBrackets = true)
     {
         if (count == 0 && outputType == null)
             return string.Empty;

@@ -6,25 +6,25 @@
 using System;
 using System.Threading;
 
-namespace Sweetener.Reliability
+namespace Sweetener
 {
 <#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string parameters     = GetParameters    (parameterCount);
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string parameters     = GetParameters    (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount, variance: "in") + optionalComma + "out TResult";
 #>
     /// <summary>
-    /// Encapsulates a method with <#= GetWord(parameterCount) #> parameter<#= parameterCount == 1 ? string.Empty : "s" #> and a return value of type <typeparamref name="TResult"/>
-    /// that may be cancelled prematurely using the optional <paramref name="cancellationToken" />.
+    /// Encapsulates a method that has <#= GetWord(parameterCount) #> parameter<#= parameterCount == 1 ? string.Empty : "s" #>, returns a value of the type specified by the
+    /// <typeparamref name="TResult"/> parameter, and may be canceled prematurely.
     /// </summary>
 <#
-        PrintTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: true);
-        PrintParamsXmlDoc(parameterCount, indent: 1);
+        PrintDelegateTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: true);
+        PrintDelegateParamsXmlDoc    (parameterCount, indent: 1);
 #>
     /// <param name="cancellationToken">
-    /// An optional cancellation token to observe while waiting for the operation to complete.
+    /// An optional cancellation token to observe while waiting for the method to complete.
     /// </param>
     /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
     public delegate TResult InterruptableFunc<<#= typeParameters #>>(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken = default);

@@ -7,7 +7,7 @@ namespace Sweetener.Reliability
     /// <summary>
     /// A wrapper to reliably invoke an action despite transient issues.
     /// </summary>
-    /// <typeparam name="T">The type of the parameter of the underlying delegate.</typeparam>
+    /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableAction<T> : ReliableDelegate
     {
         private readonly Action<T> _action;
@@ -57,14 +57,14 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         public void Invoke(T arg)
             => Invoke(arg, CancellationToken.None);
 
         /// <summary>
         /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
@@ -91,7 +91,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
         /// <see langword="true"/> if the delegate completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
@@ -102,7 +102,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
         /// </summary>
-        /// <param name="arg">The argument for the underlying delegate.</param>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>

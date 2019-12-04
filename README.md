@@ -1,5 +1,5 @@
 # Sweetener
-The Sweetener project is yet another a collection of open source C# libraries that are
+The Sweetener project is yet another collection of open source C# libraries that are
 meant to ease the development of .NET applications. These libraries contain solutions
 to common problems that are not immediately addressed by the foundational class libraries.
 Each Sweetener library follows the same set of principles:
