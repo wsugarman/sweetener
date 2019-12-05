@@ -107,7 +107,7 @@ namespace Sweetener.Reliability
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         public TResult Invoke(T1 arg1, T2 arg2, T3 arg3)
             => Invoke(arg1, arg2, arg3, CancellationToken.None);
 
@@ -118,7 +118,7 @@ namespace Sweetener.Reliability
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, CancellationToken cancellationToken)
         {

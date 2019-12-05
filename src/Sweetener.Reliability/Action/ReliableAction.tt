@@ -35,7 +35,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableActionCtorParamsXmlDoc(indent: 2);
+        PrintReliableActionCtorXmlDoc(indent: 2);
 #>
         public ReliableAction(Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
@@ -49,7 +49,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableActionCtorParamsXmlDoc(indent: 2);
+        PrintReliableActionCtorXmlDoc(indent: 2);
 #>
         public ReliableAction(Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)

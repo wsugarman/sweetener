@@ -38,10 +38,11 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
-            Func<<#= typeParameters #>> func, int maxRetries,
+            Func<<#= typeParameters #>> func,
+            int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
             => new ReliableFunc<<#= typeParameters #>>(func, maxRetries, exceptionPolicy, delayPolicy);
@@ -52,10 +53,11 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
-            Func<<#= typeParameters #>> func, int maxRetries,
+            Func<<#= typeParameters #>> func,
+            int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy<TResult> delayPolicy)
             => new ReliableFunc<<#= typeParameters #>>(func, maxRetries, exceptionPolicy, delayPolicy);
@@ -66,10 +68,11 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
-            Func<<#= typeParameters #>> func, int maxRetries,
+            Func<<#= typeParameters #>> func,
+            int maxRetries,
             ResultPolicy<TResult> resultPolicy,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -81,10 +84,11 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
 #>
         public static ReliableFunc<<#= typeParameters #>> Create<<#= typeParameters #>>(
-            Func<<#= typeParameters #>> func, int maxRetries,
+            Func<<#= typeParameters #>> func,
+            int maxRetries,
             ResultPolicy<TResult> resultPolicy,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy<TResult> delayPolicy)

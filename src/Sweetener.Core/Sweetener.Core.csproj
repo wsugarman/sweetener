@@ -5,12 +5,40 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="Func\InterruptableAsyncFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAsyncFunc.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
   <!-- Generated Files -->
   <ItemGroup>
+    <Compile Update="Action\AsyncAction.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncAction.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\InterruptableAction.cs">
       <DependentUpon>InterruptableAction.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Action\InterruptableAsyncAction.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAsyncAction.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\AsyncFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncFunc.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\InterruptableAsyncFunc.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAsyncFunc.tt</DependentUpon>
     </Compile>
     <Compile Update="Func\InterruptableFunc.cs">
       <DependentUpon>InterruptableFunc.tt</DependentUpon>
@@ -26,9 +54,25 @@
 
   <!-- Text Templating Files -->
   <ItemGroup>
+    <None Update="Action\AsyncAction.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncAction.cs</LastGenOutput>
+    </None>
     <None Update="Action\InterruptableAction.tt">
       <LastGenOutput>InterruptableAction.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Action\InterruptableAsyncAction.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableAsyncAction.cs</LastGenOutput>
+    </None>
+    <None Update="Func\AsyncFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncFunc.cs</LastGenOutput>
+    </None>
+    <None Update="Func\InterruptableAsyncFunc.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableAsyncFunc.cs</LastGenOutput>
     </None>
     <None Update="Func\InterruptableFunc.tt">
       <LastGenOutput>InterruptableFunc.cs</LastGenOutput>

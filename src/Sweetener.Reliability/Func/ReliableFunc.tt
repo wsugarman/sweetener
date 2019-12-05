@@ -33,7 +33,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: false, includeReturnsXmlDoc: false);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
@@ -47,7 +47,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: false, includeReturnsXmlDoc: false);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
@@ -61,7 +61,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: true, includeReturnsXmlDoc: false);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
@@ -75,7 +75,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorParamsXmlDoc(indent: 2, includeResultPolicy: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: true, includeReturnsXmlDoc: false);
 #>
         public ReliableFunc(Func<<#= typeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
@@ -89,7 +89,7 @@ namespace Sweetener.Reliability
 <#
         PrintParamsXmlDoc(parameterCount, indent: 2);
 #>
-        /// <returns>The return value of the underlying delegate.</returns>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         public TResult Invoke(<#= parameters #>)
             => Invoke(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
@@ -100,7 +100,7 @@ namespace Sweetener.Reliability
         PrintParamsXmlDoc(parameterCount, indent: 2);
 #>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public TResult Invoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {

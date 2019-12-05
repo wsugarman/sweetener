@@ -17,6 +17,7 @@ namespace Sweetener.Reliability
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
         /// </exception>
@@ -37,6 +38,7 @@ namespace Sweetener.Reliability
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
         /// </exception>

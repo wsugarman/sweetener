@@ -1,4 +1,7 @@
 ﻿// Generated from TryFunc.tt
+using System;
+using System.Threading.Tasks;
+
 namespace Sweetener
 {
     /// <summary>

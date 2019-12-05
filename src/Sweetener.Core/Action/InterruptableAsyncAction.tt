@@ -1,0 +1,42 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="..\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Sweetener
+{
+<#
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string optionalComma         = parameterCount > 0 ? ", " : string.Empty;
+        string parameters            = GetParameters    (parameterCount);
+        string typeParameters        = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount, variance: "in") + ">" : string.Empty;
+        string typeParametersComment = parameterCount > 0 ? "{" + GetTypeParameters(parameterCount                ) + "}" : string.Empty;
+#>
+    /// <summary>
+    /// Encapsulates an asynchronous method that has <#= GetWord(parameterCount) #> parameter<#= parameterCount == 1 ? string.Empty : "s" #>, does not return a value, and may be canceled prematurely.
+    /// </summary>
+    /// <remarks>
+    /// A delegate that returns a <see cref="Task" /> is not necessarily asynchronous, and only
+    /// asynchronous delegates should be encapsulated by an <see cref="AsyncAction<#= typeParametersComment #>" />.
+    /// Otherwise, the delegate may be invoked incorrectly.
+    /// </remarks>
+<#
+        PrintDelegateTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: false);
+        PrintDelegateParamsXmlDoc    (parameterCount, indent: 1);
+#>
+    /// <param name="cancellationToken">
+    /// An optional cancellation token to observe while waiting for the method to complete.
+    /// </param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+    public delegate Task InterruptableAsyncAction<#= typeParameters #>(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken = default);
+
+<#
+    }
+#>
+}

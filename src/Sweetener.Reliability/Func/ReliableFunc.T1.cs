@@ -101,7 +101,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Invokes the underlying delegate and automatically if it encounters transient errors.
         /// </summary>
-        /// <returns>The return value of the underlying delegate.</returns>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         public TResult Invoke()
             => Invoke(CancellationToken.None);
 
@@ -109,7 +109,7 @@ namespace Sweetener.Reliability
         /// Invokes the underlying delegate and automatically if it encounters transient errors.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the underlying delegate.</returns>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public TResult Invoke(CancellationToken cancellationToken)
         {
