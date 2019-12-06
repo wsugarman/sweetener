@@ -62,7 +62,7 @@
 
         string spaces = new string(' ', indent * SpacesPerTab);
 #>
-<#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The underlying <#= isFunc ? "function" : "action" #> to invoke.</param>
+<#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The <#= isFunc ? "function" : "action" #> to encapsulate.</param>
 <#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
 <#+
         if (includeResultPolicy)

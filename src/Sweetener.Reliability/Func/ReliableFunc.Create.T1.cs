@@ -14,7 +14,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -38,7 +38,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -62,7 +62,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -88,7 +88,7 @@ namespace Sweetener.Reliability
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>

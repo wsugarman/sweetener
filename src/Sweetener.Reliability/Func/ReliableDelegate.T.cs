@@ -141,6 +141,49 @@ namespace Sweetener.Reliability
             }
         }
 
+        internal async Task<bool> CanRetryAsync(int attempt, T result, ResultKind kind, CancellationToken cancellationToken)
+        {
+            Debug.Assert(kind != ResultKind.Successful, "Successful results should not attempt to retry.");
+
+            if (kind == ResultKind.Transient)
+            {
+                if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+                {
+                    await Task.Delay(_getDelay(attempt, result, null), cancellationToken).ConfigureAwait(false);
+                    OnRetry(attempt, result, null);
+                    return true;
+                }
+
+                OnRetriesExhausted(result, null);
+                return false;
+            }
+            else
+            {
+                OnFailure(result, null);
+                return false;
+            }
+        }
+
+        internal async Task<bool> CanRetryAsync(int attempt, Exception exception, CancellationToken cancellationToken)
+        {
+            if (!_canRetry(exception))
+            {
+                OnFailure(default, exception);
+                return false;
+            }
+            else if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+            {
+                await Task.Delay(_getDelay(attempt, default, exception), cancellationToken).ConfigureAwait(false);
+                OnRetry(attempt, default, exception);
+                return true;
+            }
+            else
+            {
+                OnRetriesExhausted(default, exception);
+                return false;
+            }
+        }
+
         internal virtual void OnFailure(T result, Exception exception)
             => Failed?.Invoke(result, exception);
 

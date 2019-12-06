@@ -17,7 +17,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -38,7 +38,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -59,7 +59,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -81,7 +81,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -99,14 +99,14 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         public TResult Invoke()
             => Invoke(CancellationToken.None);
 
         /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
@@ -138,7 +138,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient errors.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="result">
         /// When this method returns, contains the result of the underlying delegate,
@@ -153,7 +153,7 @@ namespace Sweetener.Reliability
             => TryInvoke(CancellationToken.None, out result);
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient errors.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <param name="result">

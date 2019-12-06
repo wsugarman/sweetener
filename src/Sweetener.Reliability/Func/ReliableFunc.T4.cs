@@ -20,7 +20,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{T1, T2, T3, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -41,7 +41,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{T1, T2, T3, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -62,7 +62,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{T1, T2, T3, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -84,7 +84,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Func{T1, T2, T3, TResult}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="func">The underlying function to invoke.</param>
+        /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="resultPolicy">The policy that determines which results are valid.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
@@ -102,7 +102,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
@@ -112,7 +112,7 @@ namespace Sweetener.Reliability
             => Invoke(arg1, arg2, arg3, CancellationToken.None);
 
         /// <summary>
-        /// Invokes the underlying delegate and automatically if it encounters transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
@@ -147,7 +147,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient errors.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
@@ -165,7 +165,7 @@ namespace Sweetener.Reliability
             => TryInvoke(arg1, arg2, arg3, CancellationToken.None, out result);
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient errors.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>

@@ -36,6 +36,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Create.tt</DependentUpon>
     </Compile>
+    <Compile Update="Func\AsyncFunc.Extensions.T*.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncFunc.Extensions.tt</DependentUpon>
+    </Compile>
     <Compile Update="Func\InterruptableFunc.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -46,15 +51,25 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.tt</DependentUpon>
     </Compile>
-    <Compile Update="Func\ReliableFunc.Create.T*.cs">
+    <Compile Update="Func\ReliableAsyncFunc.T*.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
+      <DependentUpon>ReliableAsyncFunc.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\ReliableAsyncFunc.Create.T*.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Create.tt</DependentUpon>
     </Compile>
     <Compile Update="Func\ReliableFunc.T*.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\ReliableFunc.Create.T*.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
     </Compile>
     <Compile Update="Policies\Exception\ExceptionPolicies.Fail.cs">
       <DesignTime>True</DesignTime>
@@ -86,6 +101,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAction.tt.out</LastGenOutput>
     </None>
+    <None Update="Func\AsyncFunc.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncFunc.Extensions.tt.out</LastGenOutput>
+    </None>
     <None Update="Func\Func.Extensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Func.Extensions.tt.out</LastGenOutput>
@@ -94,13 +113,21 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>InterruptableFunc.cs</LastGenOutput>
     </None>
-    <None Update="Func\ReliableFunc.Create.tt">
+    <None Update="Func\ReliableAsyncFunc.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ReliableFunc.Create.tt.out</LastGenOutput>
+      <LastGenOutput>ReliableAsyncFunc.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableAsyncFunc.Create.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAsyncFunc.Create.tt.out</LastGenOutput>
     </None>
     <None Update="Func\ReliableFunc.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableFunc.Create.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableFunc.Create.tt.out</LastGenOutput>
     </None>
     <None Update="Policies\Exception\ExceptionPolicies.Fail.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -129,20 +156,35 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.tt</DependentUpon>
     </None>
+    <None Update="Func\AsyncFunc.Extensions.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncFunc.Extensions.tt</DependentUpon>
+    </None>
     <None Update="Func\Func.Extensions.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.tt</DependentUpon>
     </None>
-    <None Include="Func\ReliableFunc.Create.tt.out">
+    <None Update="Func\ReliableAsyncFunc.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
+      <DependentUpon>ReliableAsyncFunc.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableAsyncFunc.Create.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Create.tt</DependentUpon>
     </None>
     <None Update="Func\ReliableFunc.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.tt</DependentUpon>
+    </None>
+    <None Include="Func\ReliableFunc.Create.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
     </None>
   </ItemGroup>
 
