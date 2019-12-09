@@ -126,7 +126,7 @@ namespace Sweetener.Reliability
             attempt++;
             try
             {
-                result = <#= async ? "await " : string.Empty #>_func(<#= arguments #>)<#= async ? ".ConfigureAwait(false)" : string.Empty #>;
+                result = <#= optionalAwait #>_func(<#= arguments #>)<#= async ? ".ConfigureAwait(false)" : string.Empty #>;
             }
             catch (Exception exception)
             {

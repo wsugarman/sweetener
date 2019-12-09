@@ -1,4 +1,4 @@
-// Generated from ReliableAction.Create.tt
+// Generated from ReliableAsyncAction.Create.tt
 using System;
 
 namespace Sweetener.Reliability
@@ -26,7 +26,7 @@ namespace Sweetener.Reliability
         /// <typeparam name="T14">The type of the fourteenth parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T15">The type of the fifteenth parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T16">The type of the sixteenth parameter of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -65,7 +65,7 @@ namespace Sweetener.Reliability
         /// <typeparam name="T14">The type of the fourteenth parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T15">The type of the fifteenth parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T16">The type of the sixteenth parameter of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>

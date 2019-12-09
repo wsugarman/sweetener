@@ -1,0 +1,4 @@
+﻿<#@ include file="..\TextTemplating\Include.t4" #><#
+    bool async = true;
+#>
+<#@ include file="TextTemplating\ReliableAction.t4" #>

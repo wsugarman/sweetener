@@ -25,7 +25,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -46,7 +46,7 @@ namespace Sweetener.Reliability
         /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
-        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>

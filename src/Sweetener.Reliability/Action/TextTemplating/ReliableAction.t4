@@ -1,0 +1,174 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#
+    // Assume a boolean variable called "async" has been previously defined!
+    string optionalAsync          = async ? "Async"                  : string.Empty;
+    string optionalAsyncKeyword   = async ? "async "                 : string.Empty;
+    string optionalAwait          = async ? "await "                 : string.Empty;
+    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
+    string result                 = async ? "Task"                   : "void";
+
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments     (parameterCount);
+        string parameters     = GetParameters    (parameterCount);
+        string typeParameters = GetTypeParameters(parameterCount);
+
+        string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
+        string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+#>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading;
+<#
+        if (async)
+        {
+#>
+using System.Threading.Tasks;
+<#
+        }
+#>
+
+namespace Sweetener.Reliability
+{
+    /// <summary>
+    /// A wrapper to reliably invoke an <#= async ? "asynchronous " : string.Empty #>action despite transient issues.
+    /// </summary>
+<#
+        PrintTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: false);
+#>
+    public sealed <#= parameterCount == 0 ? "partial " : "" #>class Reliable<#= optionalAsync #>Action<#= typeParametersCode #> : ReliableDelegate
+    {
+        private readonly <#= optionalAsync #>Action<#= typeParametersCode #> _action;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// class that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2);
+#>
+        public Reliable<#= optionalAsync #>Action(<#= optionalAsync #>Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// class that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2);
+#>
+        public Reliable<#= optionalAsync #>Action(<#= optionalAsync #>Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+        }
+
+        /// <summary>
+        /// <#= async ? "Asynchronously invokes" : "Invokes" #> the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        public <#= optionalAsyncKeyword #><#= result #> Invoke<#= optionalAsync #>(<#= parameters #>)
+            => <#= optionalAwait #>Invoke<#= optionalAsync #>(<#= arguments #><#= optionalComma #>CancellationToken.None)<#= optionalConfigureAwait #>;
+
+        /// <summary>
+        /// <#= async ? "Asynchronously invokes" : "Invokes" #> the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public <#= optionalAsyncKeyword #><#= result #> Invoke<#= optionalAsync #>(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    <#= optionalAwait #>_action(<#= arguments #>)<#= async ? ".ConfigureAwait(false)" : string.Empty #>;
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!<#= optionalAwait #>CanRetry<#= optionalAsync #>(attempt, e, cancellationToken)<#= optionalConfigureAwait #>)
+                        throw;
+                }
+            } while (true);
+        }
+
+<#
+        if (!async)
+        {
+#>
+        /// <summary>
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        public bool TryInvoke(<#= parameters #>)
+            => TryInvoke(<#= arguments #><#= optionalComma #>CancellationToken.None);
+
+        /// <summary>
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public bool TryInvoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+            Exception lastException;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(<#= arguments #>);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    lastException = e;
+                }
+            } while (CanRetry(attempt, lastException, cancellationToken));
+
+            return false;
+        }
+<#
+        }
+#>
+    }
+}
+<#
+        string fileName = parameterCount == 0 ? $"Reliable{optionalAsync}Action.cs" : $"Reliable{optionalAsync}Action.T{parameterCount}.cs";
+        SaveOutput(fileName);
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully

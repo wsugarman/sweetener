@@ -11,7 +11,7 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
@@ -30,7 +30,7 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
-        /// <param name="action">The underlying action to invoke.</param>
+        /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
         /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
