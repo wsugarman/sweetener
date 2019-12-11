@@ -6,9 +6,8 @@ namespace Sweetener.Reliability
 {
     static partial class AsyncActionExtensions
     {
-
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -42,7 +41,7 @@ namespace Sweetener.Reliability
             => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -94,7 +93,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
+                    await action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16).ConfigureAwait(false);
                     return;
                 }
                 catch (Exception e)

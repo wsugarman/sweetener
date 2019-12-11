@@ -4,7 +4,9 @@
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync = async ? "Async" : string.Empty;
+    string optionalAsync          = async ? "Async"                  : string.Empty;
+    string optionalAwait          = async ? "await "                 : string.Empty;
+    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -97,7 +99,7 @@ namespace Sweetener.Reliability
         }
 #>
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
@@ -107,7 +109,7 @@ namespace Sweetener.Reliability
             => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
@@ -135,7 +137,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    action(<#= arguments #>);
+                    <#= optionalAwait #>action(<#= arguments #>)<#= optionalConfigureAwait #>;
                     return;
                 }
                 catch (Exception e)

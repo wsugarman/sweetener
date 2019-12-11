@@ -9,9 +9,8 @@ namespace Sweetener.Reliability
     /// </summary>
     public static partial class AsyncActionExtensions
     {
-
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -29,7 +28,7 @@ namespace Sweetener.Reliability
             => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -65,7 +64,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    action();
+                    await action().ConfigureAwait(false);
                     return;
                 }
                 catch (Exception e)
