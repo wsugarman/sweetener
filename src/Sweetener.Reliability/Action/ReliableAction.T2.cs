@@ -1,6 +1,7 @@
 // Generated from ReliableAction.tt
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
@@ -71,6 +72,9 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public void Invoke(T1 arg1, T2 arg2, CancellationToken cancellationToken)
         {
@@ -86,6 +90,51 @@ namespace Sweetener.Reliability
                 catch (Exception e)
                 {
                     if (!CanRetry(attempt, e, cancellationToken))
+                        throw;
+                }
+            } while (true);
+        }
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        public async Task InvokeAsync(T1 arg1, T2 arg2)
+            => await InvokeAsync(arg1, arg2, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task InvokeAsync(T1 arg1, T2 arg2, CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(arg1, arg2);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);
@@ -115,6 +164,9 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the delegate completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T1 arg1, T2 arg2, CancellationToken cancellationToken)
         {

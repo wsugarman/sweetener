@@ -69,6 +69,9 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T arg, CancellationToken cancellationToken)
         {
@@ -88,6 +91,5 @@ namespace Sweetener.Reliability
                 }
             } while (true);
         }
-
     }
 }

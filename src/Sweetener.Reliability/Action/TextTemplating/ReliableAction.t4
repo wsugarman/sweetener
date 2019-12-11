@@ -4,11 +4,8 @@
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync          = async ? "Async"                  : string.Empty;
-    string optionalAsyncKeyword   = async ? "async "                 : string.Empty;
-    string optionalAwait          = async ? "await "                 : string.Empty;
-    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
-    string result                 = async ? "Task"                   : "void";
+    string optionalAsync = async ? "Async"  : string.Empty;
+    string optionalAwait = async ? "await " : string.Empty;
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -23,14 +20,7 @@
 // Generated from <#= GetTemplateFileName() #>
 using System;
 using System.Threading;
-<#
-        if (async)
-        {
-#>
 using System.Threading.Tasks;
-<#
-        }
-#>
 
 namespace Sweetener.Reliability
 {
@@ -71,18 +61,22 @@ namespace Sweetener.Reliability
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
         }
+<#
+        if (!async)
+        {
+#>
 
         /// <summary>
-        /// <#= async ? "Asynchronously invokes" : "Invokes" #> the encapsulated method despite transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
 <#
         PrintParamsXmlDoc(parameterCount, indent: 2);
 #>
-        public <#= optionalAsyncKeyword #><#= result #> Invoke<#= optionalAsync #>(<#= parameters #>)
-            => <#= optionalAwait #>Invoke<#= optionalAsync #>(<#= arguments #><#= optionalComma #>CancellationToken.None)<#= optionalConfigureAwait #>;
+        public void Invoke(<#= parameters #>)
+            => Invoke(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
         /// <summary>
-        /// <#= async ? "Asynchronously invokes" : "Invokes" #> the encapsulated method despite transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
 <#
         PrintParamsXmlDoc(parameterCount, indent: 2);
@@ -90,8 +84,71 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public <#= optionalAsyncKeyword #><#= result #> Invoke<#= optionalAsync #>(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        public void Invoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+            do
+            {
+                attempt++;
+                try
+                {
+                    _action(<#= arguments #>);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!CanRetry<#= optionalAsync #>(attempt, e, cancellationToken))
+                        throw;
+                }
+            } while (true);
+        }
+<#
+        }
+#>
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        if (!async)
+        {
+#>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+<#
+        }
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        public async Task InvokeAsync(<#= parameters #>)
+            => await InvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        if (!async)
+        {
+#>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+<#
+        }
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task InvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
             int attempt = 0;
             do
@@ -104,16 +161,16 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!<#= optionalAwait #>CanRetry<#= optionalAsync #>(attempt, e, cancellationToken)<#= optionalConfigureAwait #>)
+                    if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);
         }
-
 <#
         if (!async)
         {
 #>
+
         /// <summary>
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
@@ -140,6 +197,9 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the delegate completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {

@@ -4,15 +4,11 @@
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync          = async ? "Async"                  : string.Empty;
-    string optionalAsyncKeyword   = async ? "async "                 : string.Empty;
-    string optionalAwait          = async ? "await "                 : string.Empty;
-    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
-    string result                 = async ? "Task"                   : "void";
+    string optionalAsync = async ? "Async" : string.Empty;
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string arguments      = GetArguments     (parameterCount);
+        string arguments      = GetArguments(parameterCount);
         string typeParameters = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ">" : string.Empty;
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
 #>
@@ -40,6 +36,10 @@ namespace Sweetener.Reliability
         }
 #>
     {
+<#
+        if (!async)
+        {
+#>
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
         /// that will retry the operation based on the provided policies.
@@ -47,8 +47,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static Interruptable<#= optionalAsync #>Action<#= typeParameters #> WithRetry<#= optionalAsync #><#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry<#= optionalAsync #>(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
@@ -57,7 +57,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static Interruptable<#= optionalAsync #>Action<#= typeParameters #> WithRetry<#= optionalAsync #><#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -71,7 +71,7 @@ namespace Sweetener.Reliability
             if (delayPolicy == null)
                 throw new ArgumentNullException(nameof(delayPolicy));
 
-            return <#= optionalAsyncKeyword #>(<#= arguments #><#= optionalComma #>cancellationToken) =>
+            return (<#= arguments #><#= optionalComma #>cancellationToken) =>
             {
                 int attempt = 0;
 
@@ -79,7 +79,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    <#= optionalAwait #>action(<#= arguments #>)<#= optionalConfigureAwait #>;
+                    action(<#= arguments #>);
                     return;
                 }
                 catch (Exception e)
@@ -87,7 +87,63 @@ namespace Sweetener.Reliability
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
-                    <#= optionalAwait #>Task.Delay(delayPolicy(attempt, e), cancellationToken)<#= async ? ".ConfigureAwait(false)" : ".Wait(cancellationToken)" #>;
+                    Task.Delay(delayPolicy(attempt, e), cancellationToken).Wait(cancellationToken);
+                    goto Attempt;
+                }
+            };
+        }
+
+<#
+        }
+#>
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+#>
+        public static InterruptableAsyncAction<#= typeParameters #> WithRetryAsync<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+#>
+        public static InterruptableAsyncAction<#= typeParameters #> WithRetryAsync<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionPolicy == null)
+                throw new ArgumentNullException(nameof(exceptionPolicy));
+
+            if (delayPolicy == null)
+                throw new ArgumentNullException(nameof(delayPolicy));
+
+            return async (<#= arguments #><#= optionalComma #>cancellationToken) =>
+            {
+                int attempt = 0;
+
+            Attempt:
+                attempt++;
+                try
+                {
+                    action(<#= arguments #>);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
+
+                    await Task.Delay(delayPolicy(attempt, e), cancellationToken).ConfigureAwait(false);
                     goto Attempt;
                 }
             };

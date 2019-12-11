@@ -6,6 +6,7 @@ namespace Sweetener.Reliability
 {
     static partial class AsyncActionExtensions
     {
+
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
         /// that will retry the operation based on the provided policies.
@@ -67,7 +68,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    await action(arg1, arg2, arg3).ConfigureAwait(false);
+                    action(arg1, arg2, arg3);
                     return;
                 }
                 catch (Exception e)
