@@ -4,7 +4,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

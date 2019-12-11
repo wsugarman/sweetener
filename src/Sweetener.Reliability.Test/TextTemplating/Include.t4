@@ -2,7 +2,7 @@
 <#@ import namespace="System" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq" #>
-<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#+
+<#@ include file="$(SrcDirectory)\Sweetener.Reliability\TextTemplating\Include.t4" #><#+
     static string[] typeArgs = new string[]
     {
         "int",

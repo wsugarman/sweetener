@@ -7,7 +7,7 @@
 
   <!-- Common Build Properties -->
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>$(SrcDirectory)Public.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SrcDirectory)Build/Public.snk</AssemblyOriginatorKeyFile>
     <LangVersion>latest</LangVersion>
     <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

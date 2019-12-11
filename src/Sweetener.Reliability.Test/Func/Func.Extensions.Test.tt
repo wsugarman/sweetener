@@ -2,7 +2,7 @@
 <#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #><#
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma                  = parameterCount > 0 ? ", " : string.Empty;

@@ -2,7 +2,7 @@
 <#@ output extension=".tt.out" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
     string optionalAsync = async ? "Async" : string.Empty;
 
