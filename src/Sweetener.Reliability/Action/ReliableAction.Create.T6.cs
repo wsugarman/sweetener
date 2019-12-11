@@ -1,4 +1,4 @@
-// Generated from ReliableAsyncAction.Create.tt
+// Generated from ReliableAction.Create.tt
 using System;
 
 namespace Sweetener.Reliability

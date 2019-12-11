@@ -55,14 +55,14 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         public void Invoke(T arg)
             => Invoke(arg, CancellationToken.None);
 
         /// <summary>
-        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">
@@ -89,7 +89,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
@@ -100,7 +100,7 @@ namespace Sweetener.Reliability
             => TryInvoke(arg, CancellationToken.None);
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">

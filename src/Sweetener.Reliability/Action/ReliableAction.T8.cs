@@ -62,7 +62,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
@@ -76,7 +76,7 @@ namespace Sweetener.Reliability
             => Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, CancellationToken.None);
 
         /// <summary>
-        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
@@ -110,7 +110,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
@@ -128,7 +128,7 @@ namespace Sweetener.Reliability
             => TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, CancellationToken.None);
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>

@@ -54,13 +54,13 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         public void Invoke()
             => Invoke(CancellationToken.None);
 
         /// <summary>
-        /// Invokes the underlying delegate and attempts to retry if it encounters transient exceptions.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
@@ -86,7 +86,7 @@ namespace Sweetener.Reliability
         }
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>
         /// <see langword="true"/> if the delegate completed without throwing an exception
@@ -96,7 +96,7 @@ namespace Sweetener.Reliability
             => TryInvoke(CancellationToken.None);
 
         /// <summary>
-        /// Attempts to successfully invoke the underlying delegate despite transient exceptions.
+        /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.

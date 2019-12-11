@@ -1,4 +1,4 @@
-﻿<#@ include file="..\TextTemplating\Include.t4" #><#
+﻿<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     bool async = true;
 #>
 <#@ include file="TextTemplating\Action.Extensions.t4" #>

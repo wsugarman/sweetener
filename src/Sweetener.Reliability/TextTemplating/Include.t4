@@ -1,6 +1,6 @@
 ﻿<#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\..\Sweetener.Core\TextTemplating\Include.Common.t4" #><#+
+<#@ include file="$(MSBuildProjectDirectory)\..\Sweetener.Core\TextTemplating\Include.Common.t4" #><#+
 
     const int MaxExceptionParameters = 8;
 
