@@ -5,10 +5,8 @@
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
     string optionalAsync          = async ? "Async"                  : string.Empty;
-    string optionalAsyncKeyword   = async ? "async "                 : string.Empty;
     string optionalAwait          = async ? "await "                 : string.Empty;
     string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
-    string result                 = async ? "Task<TResult>"          : "TResult";
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -41,6 +39,10 @@ namespace Sweetener.Reliability
         }
 #>
     {
+<#
+        if (!async)
+        {
+#>
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
         /// that will retry the operation based on the provided policies.
@@ -48,8 +50,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
 #>
-        public static Interruptable<#= optionalAsync #>Func<<#= typeParameters #>> WithRetry<#= optionalAsync #><<#= typeParameters #>>(this <#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry<#= optionalAsync #>(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+        public static InterruptableFunc<<#= typeParameters #>> WithRetry<<#= typeParameters #>>(this Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -58,8 +60,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
 #>
-        public static Interruptable<#= optionalAsync #>Func<<#= typeParameters #>> WithRetry<#= optionalAsync #><<#= typeParameters #>>(this <#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            => WithRetry<#= optionalAsync #>(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
+        public static InterruptableFunc<<#= typeParameters #>> WithRetry<<#= typeParameters #>>(this Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -68,22 +70,118 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
 #>
-        public static Interruptable<#= optionalAsync #>Func<<#= typeParameters #>> WithRetry<#= optionalAsync #><<#= typeParameters #>>(
+        public static InterruptableFunc<<#= typeParameters #>> WithRetry<<#= typeParameters #>>(
+            this Func<<#= typeParameters #>> func,
+            int                   maxRetries,
+            ResultPolicy<TResult> resultPolicy,
+            ExceptionPolicy       exceptionPolicy,
+            DelayPolicy           delayPolicy)
+            => WithRetry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+#>
+        public static InterruptableFunc<<#= typeParameters #>> WithRetry<<#= typeParameters #>>(
+            this Func<<#= typeParameters #>> func,
+            int                         maxRetries,
+            ResultPolicy<TResult>       resultPolicy,
+            ExceptionPolicy             exceptionPolicy,
+            ComplexDelayPolicy<TResult> delayPolicy)
+        {
+            if (func == null)
+                throw new ArgumentNullException(nameof(func));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (resultPolicy == null)
+                throw new ArgumentNullException(nameof(resultPolicy));
+
+            if (exceptionPolicy == null)
+                throw new ArgumentNullException(nameof(exceptionPolicy));
+
+            if (delayPolicy == null)
+                throw new ArgumentNullException(nameof(delayPolicy));
+
+            return (<#= arguments #><#= optionalComma #>cancellationToken) =>
+            {
+                TResult result;
+                int attempt = 0;
+
+            Attempt:
+                attempt++;
+                try
+                {
+                    result = func(<#= arguments #>);
+                }
+                catch (Exception e)
+                {
+                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
+
+                    Task.Delay(delayPolicy(attempt, default, e), cancellationToken).Wait(cancellationToken);
+                    goto Attempt;
+                }
+
+                ResultKind kind = resultPolicy(result);
+                if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    return result;
+
+                Task.Delay(delayPolicy(attempt, result, null), cancellationToken).Wait(cancellationToken);
+                goto Attempt;
+            };
+        }
+
+<#
+        }
+#>
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+#>
+        public static InterruptableAsyncFunc<<#= typeParameters #>> WithRetryAsync<<#= typeParameters #>>(this <#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetryAsync(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+#>
+        public static InterruptableAsyncFunc<<#= typeParameters #>> WithRetryAsync<<#= typeParameters #>>(this <#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            => WithRetryAsync(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+#>
+        public static InterruptableAsyncFunc<<#= typeParameters #>> WithRetryAsync<<#= typeParameters #>>(
             this <#= optionalAsync #>Func<<#= typeParameters #>> func,
             int                   maxRetries,
             ResultPolicy<TResult> resultPolicy,
             ExceptionPolicy       exceptionPolicy,
             DelayPolicy           delayPolicy)
-            => WithRetry<#= optionalAsync #>(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+            => WithRetryAsync(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="func" />
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
 #>
-        public static Interruptable<#= optionalAsync #>Func<<#= typeParameters #>> WithRetry<#= optionalAsync #><<#= typeParameters #>>(
+        public static InterruptableAsyncFunc<<#= typeParameters #>> WithRetryAsync<<#= typeParameters #>>(
             this <#= optionalAsync #>Func<<#= typeParameters #>> func,
             int                         maxRetries,
             ResultPolicy<TResult>       resultPolicy,
@@ -105,7 +203,7 @@ namespace Sweetener.Reliability
             if (delayPolicy == null)
                 throw new ArgumentNullException(nameof(delayPolicy));
 
-            return <#= optionalAsyncKeyword #>(<#= arguments #><#= optionalComma #>cancellationToken) =>
+            return async (<#= arguments #><#= optionalComma #>cancellationToken) =>
             {
                 TResult result;
                 int attempt = 0;
@@ -121,7 +219,7 @@ namespace Sweetener.Reliability
                     if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
-                    <#= optionalAwait #>Task.Delay(delayPolicy(attempt, default, e), cancellationToken)<#= async ? ".ConfigureAwait(false)" : ".Wait(cancellationToken)" #>;
+                    await Task.Delay(delayPolicy(attempt, default, e), cancellationToken).ConfigureAwait(false);
                     goto Attempt;
                 }
 
@@ -129,7 +227,7 @@ namespace Sweetener.Reliability
                 if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;
 
-                <#= optionalAwait #>Task.Delay(delayPolicy(attempt, result, null), cancellationToken)<#= async ? ".ConfigureAwait(false)" : ".Wait(cancellationToken)" #>;
+                await Task.Delay(delayPolicy(attempt, result, null), cancellationToken).ConfigureAwait(false);
                 goto Attempt;
             };
         }

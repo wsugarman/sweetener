@@ -1,6 +1,7 @@
 // Generated from ReliableFunc.tt
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
@@ -113,6 +114,9 @@ namespace Sweetener.Reliability
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public TResult Invoke(T arg, CancellationToken cancellationToken)
         {
@@ -135,6 +139,56 @@ namespace Sweetener.Reliability
 
             ResultKind kind = _validate(result);
             if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
+                return result;
+
+            goto Attempt;
+        }
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        public async Task<TResult> InvokeAsync(T arg)
+            => await InvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<TResult> InvokeAsync(T arg, CancellationToken cancellationToken)
+        {
+            TResult result;
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+            try
+            {
+                result = _func(arg);
+            }
+            catch (Exception exception)
+            {
+                if (await CanRetryAsync(attempt, exception, cancellationToken).ConfigureAwait(false))
+                    goto Attempt;
+
+                throw;
+            }
+
+            ResultKind kind = _validate(result);
+            if (kind == ResultKind.Successful || !await CanRetryAsync(attempt, result, kind, cancellationToken).ConfigureAwait(false))
                 return result;
 
             goto Attempt;
@@ -170,6 +224,9 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the delegate completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T arg, CancellationToken cancellationToken, out TResult result)
         {

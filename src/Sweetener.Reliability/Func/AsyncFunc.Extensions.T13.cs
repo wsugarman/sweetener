@@ -7,7 +7,7 @@ namespace Sweetener.Reliability
     static partial class AsyncFuncExtensions
     {
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="func" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -38,7 +38,7 @@ namespace Sweetener.Reliability
             => WithRetryAsync(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="func" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -69,7 +69,7 @@ namespace Sweetener.Reliability
             => WithRetryAsync(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="func" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -106,7 +106,7 @@ namespace Sweetener.Reliability
             => WithRetryAsync(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="func" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>

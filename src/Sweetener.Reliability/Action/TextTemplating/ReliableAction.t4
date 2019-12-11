@@ -4,8 +4,9 @@
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync = async ? "Async"  : string.Empty;
-    string optionalAwait = async ? "await " : string.Empty;
+    string optionalAsync          = async ? "Async"                  : string.Empty;
+    string optionalAwait          = async ? "await "                 : string.Empty;
+    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -156,7 +157,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    <#= optionalAwait #>_action(<#= arguments #>)<#= async ? ".ConfigureAwait(false)" : string.Empty #>;
+                    <#= optionalAwait #>_action(<#= arguments #>)<#= optionalConfigureAwait #>;
                     return;
                 }
                 catch (Exception e)

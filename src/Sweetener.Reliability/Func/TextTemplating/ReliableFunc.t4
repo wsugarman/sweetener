@@ -5,10 +5,8 @@
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
     string optionalAsync          = async ? "Async"                  : string.Empty;
-    string optionalAsyncKeyword   = async ? "async "                 : string.Empty;
     string optionalAwait          = async ? "await "                 : string.Empty;
     string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
-    string result                 = async ? "Task<TResult>"          : "TResult";
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -21,14 +19,7 @@
 // Generated from <#= GetTemplateFileName() #>
 using System;
 using System.Threading;
-<#
-        if (async)
-        {
-#>
 using System.Threading.Tasks;
-<#
-        }
-#>
 
 namespace Sweetener.Reliability
 {
@@ -97,27 +88,34 @@ namespace Sweetener.Reliability
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
         }
+<#
+        if (!async)
+        {
+#>
 
         /// <summary>
-        /// <#= async ? "Asynchronously invokes" : "Invokes" #> the encapsulated method despite transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
 <#
         PrintParamsXmlDoc(parameterCount, indent: 2);
 #>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
-        public <#= optionalAsyncKeyword #><#= result #> Invoke<#= optionalAsync #>(<#= parameters #>)
-            => <#= optionalAwait #>Invoke<#= optionalAsync #>(<#= arguments #><#= optionalComma #>CancellationToken.None)<#= optionalConfigureAwait #>;
+        public TResult Invoke(<#= parameters #>)
+            => Invoke(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
         /// <summary>
-        /// <#= async ? "Asynchronously invokes" : "Invokes" #> the encapsulated method despite transient errors.
+        /// Invokes the encapsulated method despite transient errors.
         /// </summary>
 <#
         PrintParamsXmlDoc(parameterCount, indent: 2);
 #>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public <#= optionalAsyncKeyword #><#= result #> Invoke<#= optionalAsync #>(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        public TResult Invoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
             TResult result;
             int attempt = 0;
@@ -126,27 +124,94 @@ namespace Sweetener.Reliability
             attempt++;
             try
             {
-                result = <#= optionalAwait #>_func(<#= arguments #>)<#= async ? ".ConfigureAwait(false)" : string.Empty #>;
+                result = _func(<#= arguments #>);
             }
             catch (Exception exception)
             {
-                if (<#= optionalAwait #>CanRetry<#= optionalAsync #>(attempt, exception, cancellationToken)<#= optionalConfigureAwait #>)
+                if (CanRetry(attempt, exception, cancellationToken))
                     goto Attempt;
 
                 throw;
             }
 
             ResultKind kind = _validate(result);
-            if (kind == ResultKind.Successful || !<#= optionalAwait #>CanRetry<#= optionalAsync #>(attempt, result, kind, cancellationToken)<#= optionalConfigureAwait #>)
+            if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
                 return result;
 
             goto Attempt;
         }
+<#
+        }
+#>
 
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
 <#
         if (!async)
         {
 #>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+<#
+        }
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        public async Task<TResult> InvokeAsync(<#= parameters #>)
+            => await InvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+<#
+        if (!async)
+        {
+#>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+<#
+        }
+        PrintParamsXmlDoc(parameterCount, indent: 2);
+#>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<TResult> InvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        {
+            TResult result;
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+            try
+            {
+                result = <#= optionalAwait #>_func(<#= arguments #>)<#= optionalConfigureAwait #>;
+            }
+            catch (Exception exception)
+            {
+                if (await CanRetryAsync(attempt, exception, cancellationToken).ConfigureAwait(false))
+                    goto Attempt;
+
+                throw;
+            }
+
+            ResultKind kind = _validate(result);
+            if (kind == ResultKind.Successful || !await CanRetryAsync(attempt, result, kind, cancellationToken).ConfigureAwait(false))
+                return result;
+
+            goto Attempt;
+        }
+<#
+        if (!async)
+        {
+#>
+
         /// <summary>
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
@@ -181,6 +246,9 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the delegate completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken, out TResult result)
         {

@@ -1,6 +1,7 @@
 // Generated from ReliableFunc.tt
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
@@ -155,6 +156,9 @@ namespace Sweetener.Reliability
         /// <param name="arg15">The fifteenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, CancellationToken cancellationToken)
         {
@@ -177,6 +181,84 @@ namespace Sweetener.Reliability
 
             ResultKind kind = _validate(result);
             if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
+                return result;
+
+            goto Attempt;
+        }
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg5">The fifth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg8">The eighth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg9">The ninth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg10">The tenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg11">The eleventh parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg12">The twelfth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg14">The fourteenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg15">The fifteenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15)
+            => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously invokes the encapsulated method despite transient errors.
+        /// </summary>
+        /// <remarks>
+        /// If the encapsulated method succeeds without retrying, the method executes synchronously.
+        /// </remarks>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg5">The fifth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg8">The eighth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg9">The ninth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg10">The tenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg11">The eleventh parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg12">The twelfth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg14">The fourteenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg15">The fifteenth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, CancellationToken cancellationToken)
+        {
+            TResult result;
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+            try
+            {
+                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+            }
+            catch (Exception exception)
+            {
+                if (await CanRetryAsync(attempt, exception, cancellationToken).ConfigureAwait(false))
+                    goto Attempt;
+
+                throw;
+            }
+
+            ResultKind kind = _validate(result);
+            if (kind == ResultKind.Successful || !await CanRetryAsync(attempt, result, kind, cancellationToken).ConfigureAwait(false))
                 return result;
 
             goto Attempt;
@@ -240,6 +322,9 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the delegate completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, CancellationToken cancellationToken, out TResult result)
         {
