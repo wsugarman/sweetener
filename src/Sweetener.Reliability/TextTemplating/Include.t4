@@ -1,6 +1,6 @@
 ﻿<#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="$(SrcDirectory)\TextTemplating\Include.t4" #><#+
+<#@ include file="$(SrcDirectory)TextTemplating\Include.t4" #><#+
 
     const int MaxExceptionParameters = 8;
 
