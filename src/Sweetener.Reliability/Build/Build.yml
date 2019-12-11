@@ -1,0 +1,20 @@
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/Sweetener.Reliability/*
+
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/Sweetener.Reliability/*
+
+jobs:
+- template: ../Build/Build.Template.yml
+  parameters:
+    project: 'Sweetener.Reliability'
