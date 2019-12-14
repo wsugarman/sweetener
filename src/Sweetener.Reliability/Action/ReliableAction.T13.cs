@@ -106,7 +106,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken)
@@ -122,7 +122,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!CanRetry(attempt, e, cancellationToken))
+                    if (e.IsCancellation(cancellationToken) || !CanRetry(attempt, e, cancellationToken))
                         throw;
                 }
             } while (true);
@@ -173,7 +173,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken)
@@ -189,7 +189,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    if (e.IsCancellation(cancellationToken) || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);
@@ -242,7 +242,7 @@ namespace Sweetener.Reliability
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken)
@@ -259,6 +259,9 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
+                    if (e.IsCancellation(cancellationToken))
+                        throw;
+
                     lastException = e;
                 }
             } while (CanRetry(attempt, lastException, cancellationToken));

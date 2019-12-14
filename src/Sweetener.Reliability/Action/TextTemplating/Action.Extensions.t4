@@ -4,9 +4,7 @@
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync          = async ? "Async"                  : string.Empty;
-    string optionalAwait          = async ? "await "                 : string.Empty;
-    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
+    string optionalAsync = async ? "Async" : string.Empty;
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -50,7 +48,7 @@ namespace Sweetener.Reliability
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+            => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="action" />
@@ -86,7 +84,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (e.IsCancellation(cancellationToken) || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     Task.Delay(delayPolicy(attempt, e), cancellationToken).Wait(cancellationToken);
@@ -131,18 +129,48 @@ namespace Sweetener.Reliability
 
             return async (<#= arguments #><#= optionalComma #>cancellationToken) =>
             {
+<#
+        if (async)
+        {
+#>
+                Task t;
+<#
+        }
+#>
                 int attempt = 0;
 
             Attempt:
+<#
+        if (async)
+        {
+#>
+                t = null;
+<#
+        }
+#>
                 attempt++;
                 try
                 {
-                    <#= optionalAwait #>action(<#= arguments #>)<#= optionalConfigureAwait #>;
+<#
+        if (async)
+        {
+#>
+                    t = action(<#= arguments #>);
+                    await t.ConfigureAwait(false);
+<#
+        }
+        else
+        {
+#>
+                    action(<#= arguments #>);
+<#
+        }
+#>
                     return;
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (<#= async ? "t.IsCanceled()" : "e.IsCancellation(cancellationToken)" #> || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayPolicy(attempt, e), cancellationToken).ConfigureAwait(false);

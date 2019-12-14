@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AE0F665-3CE8-4201-9525-DF7CD3573B1C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Core", "Sweetener.Core\Sweetener.Core.csproj", "{3BFD876F-BFF2-421B-8A6A-026056EB5B10}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Core.Test", "Sweetener.Core.Test\Sweetener.Core.Test.csproj", "{842608C5-6455-4F30-9689-F537A84E8FFA}"
@@ -29,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTempl
 	ProjectSection(SolutionItems) = preProject
 		TextTemplating\Include.t4 = TextTemplating\Include.t4
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{21A6CFCD-896E-44E9-873E-204F35A25E82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,9 +57,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{3E71234C-115F-4F8C-88EE-0B0D24F2CE51} = {7AE0F665-3CE8-4201-9525-DF7CD3573B1C}
-		{A2D67F3E-67EB-45B6-AD10-B67C759D2C67} = {7AE0F665-3CE8-4201-9525-DF7CD3573B1C}
-		{3F52AAB7-66A4-40A3-884B-C30FB2A673DB} = {7AE0F665-3CE8-4201-9525-DF7CD3573B1C}
+		{A2D67F3E-67EB-45B6-AD10-B67C759D2C67} = {21A6CFCD-896E-44E9-873E-204F35A25E82}
+		{3F52AAB7-66A4-40A3-884B-C30FB2A673DB} = {21A6CFCD-896E-44E9-873E-204F35A25E82}
+		{3E71234C-115F-4F8C-88EE-0B0D24F2CE51} = {21A6CFCD-896E-44E9-873E-204F35A25E82}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F6F03838-0E0B-40B6-A87B-2A71309475AC}

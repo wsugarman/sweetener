@@ -84,7 +84,7 @@ namespace Sweetener.Reliability
         { }
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, resultPolicy, exceptionPolicy, delayPolicy != null ? (i, r, e) => delayPolicy(i) : (ComplexDelayPolicy<T>)null)
+            : this(maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<T>(delayPolicy))
         { }
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)

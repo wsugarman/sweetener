@@ -112,28 +112,31 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(CancellationToken cancellationToken)
         {
-            TResult result;
+            Task<TResult> t;
             int attempt = 0;
 
         Attempt:
+            t = null;
             attempt++;
             try
             {
-                result = await _func().ConfigureAwait(false);
+                t = _func();
+                await t.ConfigureAwait(false);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                if (await CanRetryAsync(attempt, exception, cancellationToken).ConfigureAwait(false))
-                    goto Attempt;
+                if (t.IsCanceled() || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    throw;
 
-                throw;
+                goto Attempt;
             }
 
+            TResult result = t.Result;
             ResultKind kind = _validate(result);
             if (kind == ResultKind.Successful || !await CanRetryAsync(attempt, result, kind, cancellationToken).ConfigureAwait(false))
                 return result;

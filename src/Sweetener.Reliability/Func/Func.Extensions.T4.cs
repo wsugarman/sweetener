@@ -133,7 +133,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (e.IsCancellation(cancellationToken) || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     Task.Delay(delayPolicy(attempt, default, e), cancellationToken).Wait(cancellationToken);
@@ -276,7 +276,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (e.IsCancellation(cancellationToken) || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayPolicy(attempt, default, e), cancellationToken).ConfigureAwait(false);

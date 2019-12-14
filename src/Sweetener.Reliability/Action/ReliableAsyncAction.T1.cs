@@ -70,7 +70,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T arg, CancellationToken cancellationToken)
@@ -78,15 +78,17 @@ namespace Sweetener.Reliability
             int attempt = 0;
             do
             {
+                Task t = null;
                 attempt++;
                 try
                 {
-                    await _action(arg).ConfigureAwait(false);
+                    t = _action(arg);
+                    await t.ConfigureAwait(false);
                     return;
                 }
                 catch (Exception e)
                 {
-                    if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    if (t.IsCanceled() || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);

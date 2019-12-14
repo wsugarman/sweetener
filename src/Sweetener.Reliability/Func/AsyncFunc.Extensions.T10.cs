@@ -146,24 +146,27 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, cancellationToken) =>
             {
-                TResult result;
+                Task<TResult> t;
                 int attempt = 0;
 
             Attempt:
+                t = null;
                 attempt++;
                 try
                 {
-                    result = await func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9).ConfigureAwait(false);
+                    t = func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                    await t.ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (t.IsCanceled() || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayPolicy(attempt, default, e), cancellationToken).ConfigureAwait(false);
                     goto Attempt;
                 }
 
+                TResult result = t.Result;
                 ResultKind kind = resultPolicy(result);
                 if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;

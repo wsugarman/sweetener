@@ -4,9 +4,7 @@
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
     // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync          = async ? "Async"                  : string.Empty;
-    string optionalAwait          = async ? "await "                 : string.Empty;
-    string optionalConfigureAwait = async ? ".ConfigureAwait(false)" : string.Empty;
+    string optionalAsync = async ? "Async" : string.Empty;
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -120,7 +118,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (e.IsCancellation(cancellationToken) || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     Task.Delay(delayPolicy(attempt, default, e), cancellationToken).Wait(cancellationToken);
@@ -205,24 +203,54 @@ namespace Sweetener.Reliability
 
             return async (<#= arguments #><#= optionalComma #>cancellationToken) =>
             {
-                TResult result;
+                <#= async ? "Task<TResult> t" : "TResult result" #>;
                 int attempt = 0;
 
             Attempt:
+<#
+        if (async)
+        {
+#>
+                t = null;
+<#
+        }
+#>
                 attempt++;
                 try
                 {
-                    result = <#= optionalAwait #>func(<#= arguments #>)<#= optionalConfigureAwait #>;
+<#
+        if (async)
+        {
+#>
+                    t = func(<#= arguments #>);
+                    await t.ConfigureAwait(false);
+<#
+        }
+        else
+        {
+#>
+                    result = func(<#= arguments #>);
+<#
+        }
+#>
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (<#= async ? "t.IsCanceled()" : "e.IsCancellation(cancellationToken)" #> || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayPolicy(attempt, default, e), cancellationToken).ConfigureAwait(false);
                     goto Attempt;
                 }
 
+<#
+        if (async)
+        {
+#>
+                TResult result = t.Result;
+<#
+        }
+#>
                 ResultKind kind = resultPolicy(result);
                 if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;

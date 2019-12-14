@@ -151,7 +151,7 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken)
@@ -165,12 +165,12 @@ namespace Sweetener.Reliability
             {
                 result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                if (CanRetry(attempt, exception, cancellationToken))
-                    goto Attempt;
+                if (e.IsCancellation(cancellationToken) || !CanRetry(attempt, e, cancellationToken))
+                    throw;
 
-                throw;
+                goto Attempt;
             }
 
             ResultKind kind = _validate(result);
@@ -225,7 +225,7 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken)
@@ -239,12 +239,12 @@ namespace Sweetener.Reliability
             {
                 result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                if (await CanRetryAsync(attempt, exception, cancellationToken).ConfigureAwait(false))
-                    goto Attempt;
+                if (e.IsCancellation(cancellationToken) || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    throw;
 
-                throw;
+                goto Attempt;
             }
 
             ResultKind kind = _validate(result);
@@ -309,7 +309,7 @@ namespace Sweetener.Reliability
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
-        /// The provided <paramref name="cancellationToken"/> has already been disposed.
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken, out TResult result)
@@ -323,9 +323,12 @@ namespace Sweetener.Reliability
                 {
                     result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
                 }
-                catch (Exception exception)
+                catch (Exception e)
                 {
-                    retry = CanRetry(attempt, exception, cancellationToken);
+                    if (e.IsCancellation(cancellationToken))
+                        throw;
+
+                    retry = CanRetry(attempt, e, cancellationToken);
                     continue;
                 }
 

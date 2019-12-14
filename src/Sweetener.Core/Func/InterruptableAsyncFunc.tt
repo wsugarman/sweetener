@@ -38,7 +38,7 @@ namespace Sweetener
     /// contains the return value of the method that this delegate encapsulates.
     /// </returns>
     /// <exception cref="ObjectDisposedException">
-    /// The provided <paramref name="cancellationToken"/> has already been disposed.
+    /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
     /// </exception>
     /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
     public delegate Task<TResult> InterruptableAsyncFunc<<#= typeParameters #>>(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken = default);

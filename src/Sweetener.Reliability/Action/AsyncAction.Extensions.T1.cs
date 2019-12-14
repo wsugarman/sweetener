@@ -57,18 +57,21 @@ namespace Sweetener.Reliability
 
             return async (arg, cancellationToken) =>
             {
+                Task t;
                 int attempt = 0;
 
             Attempt:
+                t = null;
                 attempt++;
                 try
                 {
-                    await action(arg).ConfigureAwait(false);
+                    t = action(arg);
+                    await t.ConfigureAwait(false);
                     return;
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (t.IsCanceled() || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayPolicy(attempt, e), cancellationToken).ConfigureAwait(false);
