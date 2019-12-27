@@ -23,6 +23,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\AsyncAction.Extensions.*Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\ReliableAction.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -32,6 +37,16 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\ReliableAsyncAction.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\ReliableAsyncAction.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncAction.Test.tt</DependentUpon>
     </Compile>
     <Compile Update="Func\Func.Extensions.T*.Test.cs">
       <DesignTime>True</DesignTime>
@@ -68,6 +83,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ActionProxy.tt</DependentUpon>
     </Compile>
+    <Compile Update="Proxies\AsyncActionProxy.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncActionProxy.tt</DependentUpon>
+    </Compile>
     <Compile Update="Proxies\FuncProxy.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -81,9 +101,22 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Action.Extensions.Test.tt.out</LastGenOutput>
     </None>
+    <None Update="Action\AsyncAction.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncAction.Extensions.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\AsyncAction.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
+    </None>
     <None Update="Action\ReliableAction.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAction.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\ReliableAsyncAction.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAsyncAction.Test.tt.out</LastGenOutput>
     </None>
     <None Update="Expectations\Arguments.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -113,6 +146,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ActionProxy.cs</LastGenOutput>
     </None>
+    <None Update="Proxies\AsyncActionProxy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncActionProxy.cs</LastGenOutput>
+    </None>
     <None Update="Proxies\FuncProxy.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FuncProxy.cs</LastGenOutput>
@@ -130,6 +167,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </None>
+    <None Update="Action\ReliableAsyncAction.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncAction.Test.tt</DependentUpon>
     </None>
     <None Update="Func\Func.Extensions.Test.tt.out">
       <DesignTime>True</DesignTime>

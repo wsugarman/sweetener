@@ -13,7 +13,7 @@ namespace Sweetener.Reliability
     /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableAsyncAction<T1, T2, T3> : ReliableDelegate
     {
-        private readonly AsyncAction<T1, T2, T3> _action;
+        private readonly InterruptableAsyncAction<T1, T2, T3> _action;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3}"/>
@@ -31,6 +31,44 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public ReliableAsyncAction(AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3}"/>
+        /// class that executes the given <see cref="InterruptableAsyncAction{T1, T2, T3}"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableAsyncAction(AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3}"/>
+        /// class that executes the given <see cref="InterruptableAsyncAction{T1, T2, T3}"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableAsyncAction(InterruptableAsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -51,7 +89,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncAction(AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public ReliableAsyncAction(InterruptableAsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -88,7 +126,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    t = _action(arg1, arg2, arg3);
+                    t = _action(arg1, arg2, arg3, cancellationToken);
                     await t.ConfigureAwait(false);
                     return;
                 }

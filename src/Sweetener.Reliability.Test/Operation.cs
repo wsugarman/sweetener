@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability.Test
 {
@@ -6,7 +7,12 @@ namespace Sweetener.Reliability.Test
     {
         public static readonly Action Null = NoOp;
 
+        public static readonly AsyncAction NullAsync = NoOpAsync;
+
         private static void NoOp()
         { }
+
+        private static async Task NoOpAsync()
+            => await Task.CompletedTask;
     }
 }

@@ -44,6 +44,21 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
+        public void InvokeAsync_NoCancellationToken()
+            => InvokeAsync(async (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => await r.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11).ConfigureAwait(false));
+
+        [TestMethod]
+        public void InvokeAsync_CancellationToken()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                InvokeAsync(async (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => await r.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, tokenSource.Token).ConfigureAwait(false));
+
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled(async (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => await r.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token), addEventHandlers: false);
+            Invoke_Canceled(async (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => await r.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token), addEventHandlers: true );
+        }
+
+        [TestMethod]
         public void TryInvoke_NoCancellationToken()
             => TryInvoke((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => r.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11));
 
@@ -126,6 +141,24 @@ namespace Sweetener.Reliability.Test
                 Invoke_Failure         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11), e), addEventHandlers);
                 Invoke_EventualFailure ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11), e), addEventHandlers);
                 Invoke_RetriesExhausted((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11), e), addEventHandlers);
+            }
+        }
+
+        #endregion
+
+        #region InvokeAsync
+
+        private void InvokeAsync(AsyncAction<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong> invokeAsync)
+        {
+            // Callers may optionally include event handlers
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                Invoke_Success        ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => invokeAsync(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11).Wait(), addEventHandlers);
+                Invoke_EventualSuccess((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => invokeAsync(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11).Wait(), addEventHandlers);
+
+                Invoke_Failure         ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, e) => Assert.That.ThrowsException(async () => await invokeAsync(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11).ConfigureAwait(false), e), addEventHandlers);
+                Invoke_EventualFailure ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, e) => Assert.That.ThrowsException(async () => await invokeAsync(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11).ConfigureAwait(false), e), addEventHandlers);
+                Invoke_RetriesExhausted((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, e) => Assert.That.ThrowsException(async () => await invokeAsync(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11).ConfigureAwait(false), e), addEventHandlers);
             }
         }
 
@@ -423,7 +456,14 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled
 
-        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, CancellationToken> assertInvoke, bool addEventHandlers)
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, CancellationToken> invoke, bool addEventHandlers)
+            => Invoke_Canceled_Delay((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => Assert.That.ThrowsException<OperationCanceledException>(() => invoke(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token)), addEventHandlers);
+
+        // The Async method will expose a "TaskCanceledException" directly
+        private void Invoke_Canceled(AsyncAction<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, CancellationToken> invokeAsync, bool addEventHandlers)
+            => Invoke_Canceled_Delay((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => Assert.That.ThrowsException<TaskCanceledException>(async () => await invokeAsync(r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token).ConfigureAwait(false)), addEventHandlers);
+
+        private void Invoke_Canceled_Delay(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, CancellationToken> assertInvoke, bool addEventHandlers)
         {
             using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
             using CancellationTokenSource tokenSource         = new CancellationTokenSource();
@@ -478,15 +518,15 @@ namespace Sweetener.Reliability.Test
             }, (cancellationTrigger, tokenSource));
 
             // Begin the invocation
-            Assert.That.ThrowsException<OperationCanceledException>(() => assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, tokenSource.Token));
+            assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, tokenSource.Token);
 
             // Validate the number of calls
             int calls = action.Calls;
             Assert.IsTrue(calls > 1);
 
-            Assert.AreEqual(calls    , action         .Calls);
-            Assert.AreEqual(calls    , exceptionPolicy.Calls);
-            Assert.AreEqual(calls    , delayPolicy    .Calls);
+            Assert.AreEqual(calls, action         .Calls);
+            Assert.AreEqual(calls, exceptionPolicy.Calls);
+            Assert.AreEqual(calls, delayPolicy    .Calls);
 
             if (addEventHandlers)
             {

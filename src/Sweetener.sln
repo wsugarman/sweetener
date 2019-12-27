@@ -11,24 +11,27 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Reliability", "Sw
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Reliability.Test", "Sweetener.Reliability.Test\Sweetener.Reliability.Test.csproj", "{3DF3C424-F337-4E13-8123-6E1F6FD43461}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{A2D67F3E-67EB-45B6-AD10-B67C759D2C67}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}"
 	ProjectSection(SolutionItems) = preProject
-		Build\.editorconfig = Build\.editorconfig
-		Build\Build.Template.yml = Build\Build.Template.yml
+		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
+		Public.snk = Public.snk
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{3F52AAB7-66A4-40A3-884B-C30FB2A673DB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{2C6CE23B-6FBA-4071-A578-2D9F965219BE}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Build.Template.yml = Build\Build.Template.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{425E97F2-3F40-4711-8860-4618738A3AA4}"
 	ProjectSection(SolutionItems) = preProject
 		Test\CodeCoverage.runsettings = Test\CodeCoverage.runsettings
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTemplating", "{3E71234C-115F-4F8C-88EE-0B0D24F2CE51}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTemplating", "{300BE535-1586-4CDF-B2FA-C5821F5BB75D}"
 	ProjectSection(SolutionItems) = preProject
 		TextTemplating\Include.t4 = TextTemplating\Include.t4
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{21A6CFCD-896E-44E9-873E-204F35A25E82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,9 +60,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{A2D67F3E-67EB-45B6-AD10-B67C759D2C67} = {21A6CFCD-896E-44E9-873E-204F35A25E82}
-		{3F52AAB7-66A4-40A3-884B-C30FB2A673DB} = {21A6CFCD-896E-44E9-873E-204F35A25E82}
-		{3E71234C-115F-4F8C-88EE-0B0D24F2CE51} = {21A6CFCD-896E-44E9-873E-204F35A25E82}
+		{2C6CE23B-6FBA-4071-A578-2D9F965219BE} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
+		{425E97F2-3F40-4711-8860-4618738A3AA4} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
+		{300BE535-1586-4CDF-B2FA-C5821F5BB75D} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F6F03838-0E0B-40B6-A87B-2A71309475AC}

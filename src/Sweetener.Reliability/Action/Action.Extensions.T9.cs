@@ -31,7 +31,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static InterruptableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+            => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
@@ -117,8 +117,8 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithRetryAsync<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+        public static InterruptableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithAsyncRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
@@ -144,7 +144,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithRetryAsync<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));

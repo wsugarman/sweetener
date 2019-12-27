@@ -1,0 +1,581 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
+    // Assume a boolean variable called "async" has been previously defined!
+    string optionalAsync = async ? "Async" : string.Empty;
+
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string arguments              = GetArguments    (parameterCount);
+        string parameters             = GetParameters   (typeArgs, parameterCount);
+        string typeArguments          = GetTypeArguments(parameterCount);
+        string typeArgumentsNoBracket = GetTypeArguments(parameterCount, includeBrackets: false);
+        string testArguments          = GetTestArguments(parameterCount);
+        string typeParameters         = parameterCount == 0 ? string.Empty : "<" + GetTypeParameters(parameterCount) + ">";
+        string optionalComma          = parameterCount > 0 ? ", " : string.Empty;
+        string suffix                 = parameterCount == 0 ? string.Empty : "T" + parameterCount;
+#>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Sweetener.Reliability.Test
+{
+<#
+        if (parameterCount == 0)
+        {
+#>
+    [TestClass]
+    public partial class <#= optionalAsync #>ActionExtensionsTest
+<#
+        }
+        else
+        {
+#>
+    partial class <#= optionalAsync #>ActionExtensionsTest
+<#
+        }
+#>
+    {
+        [TestMethod]
+        public void With<#= optionalAsync #>Retry<#= suffix #>_DelayPolicy()
+        {
+            <#= optionalAsync #>Action<#= typeArguments #> nullAction = null;
+            <#= optionalAsync #>Action<#= typeArguments #> action     = (<#= arguments #>) => Operation.Null<#= optionalAsync #>();
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .With<#= optionalAsync #>Retry(-2, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, null                       , DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, (DelayPolicy)null ));
+
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke;
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> withRetry = (a, r, e, d) => a.With<#= optionalAsync #>Retry(r, e, d);
+
+            // Without Token
+            invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #>);
+
+            With<#= optionalAsync #>Retry<#= suffix #>_Success         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_Failure         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(withRetry, invoke);
+
+            // With Token
+            invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #><#= optionalComma #>token);
+
+            With<#= optionalAsync #>Retry<#= suffix #>_Success         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_Failure         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_Canceled        (withRetry);
+        }
+
+        [TestMethod]
+        public void With<#= optionalAsync #>Retry<#= suffix #>_ComplexDelayPolicy()
+        {
+            <#= optionalAsync #>Action<#= typeArguments #> nullAction = null;
+            <#= optionalAsync #>Action<#= typeArguments #> action     = (<#= arguments #>) => Operation.Null<#= optionalAsync #>();
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .With<#= optionalAsync #>Retry(-2, ExceptionPolicies.Transient, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, null                       , (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, (ComplexDelayPolicy)null));
+
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke;
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> withRetry = (a, r, e, d) => a.With<#= optionalAsync #>Retry(r, e, d);
+
+            // Without Token
+            invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #>);
+
+            With<#= optionalAsync #>Retry<#= suffix #>_Success         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_Failure         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(withRetry, invoke);
+
+            // With Token
+            invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #><#= optionalComma #>token);
+
+            With<#= optionalAsync #>Retry<#= suffix #>_Success         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_Failure         (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure (withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(withRetry, invoke);
+            With<#= optionalAsync #>Retry<#= suffix #>_Canceled        (withRetry);
+        }
+
+        #region With<#= optionalAsync #>Retry<#= suffix #>_Success
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Success(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_Success(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int>();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Success(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_Success(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int, Exception>();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Success<T>(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, T, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create a "successful" user-defined action
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetNoOpInvoke(parameterCount, async) #>);
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable Interruptable<#= optionalAsync #>Action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> reliableAction = with<#= optionalAsync #>Retry(
+                action.Invoke<#= optionalAsync #>,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action         .Invoking += Expect.Arguments<#= typeArguments #>(Arguments.Validate);
+<#
+        }
+#>
+            exceptionPolicy.Invoking += Expect.Nothing<Exception>();
+
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                invoke(reliableAction<#= optionalComma #><#= testArguments #>, tokenSource.Token);
+
+            // Validate the number of calls
+            Assert.AreEqual(1, action         .Calls);
+            Assert.AreEqual(0, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        #endregion
+
+        #region With<#= optionalAsync #>Retry<#= suffix #>_Failure
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Failure(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_Failure(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int>();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Failure(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_Failure(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>();
+                    delayPolicy.Invoking += Expect.Nothing<int, Exception>();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Failure<T>(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, T, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create an "unsuccessful" user-defined action
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetThrowException<InvalidOperationException>(parameterCount, async) #>);
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Fail<InvalidOperationException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable Interruptable<#= optionalAsync #>Action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> reliableAction = with<#= optionalAsync #>Retry(
+                action.Invoke<#= optionalAsync #>,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action         .Invoking += Expect.Arguments<#= typeArguments #>(Arguments.Validate);
+<#
+        }
+#>
+            exceptionPolicy.Invoking += Expect.Exception(typeof(InvalidOperationException));
+
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction<#= optionalComma #><#= testArguments #>, tokenSource.Token));
+
+            // Validate the number of calls
+            Assert.AreEqual(1, action         .Calls);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(0, delayPolicy    .Calls);
+        }
+
+        #endregion
+
+        #region With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_EventualSuccess<T>(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, T, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create a "successful" user-defined action that completes after 1 IOException
+            Action flakyAction = FlakyAction.Create<IOException>(1);
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetDelegateInvoke(parameterCount, "flakyAction", async) #>);
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable Interruptable<#= optionalAsync #>Action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> reliableAction = with<#= optionalAsync #>Retry(
+                action.Invoke<#= optionalAsync #>,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action         .Invoking += Expect.ArgumentsAfterDelay<#= typeArguments #>(Arguments.Validate, Constants.MinDelay);
+<#
+        }
+        else
+        {
+#>
+            action         .Invoking += Expect.AfterDelay<#= typeArguments #>(Constants.MinDelay);
+<#
+        }
+#>
+            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                invoke(reliableAction<#= optionalComma #><#= testArguments #>, tokenSource.Token);
+
+            // Validate the number of calls
+            Assert.AreEqual(2, action         .Calls);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(1, delayPolicy    .Calls);
+        }
+
+        #endregion
+
+        #region With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_EventualFailure<T>(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, T, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
+            Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetDelegateInvoke(parameterCount, "flakyAction", async) #>);
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable Interruptable<#= optionalAsync #>Action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> reliableAction = with<#= optionalAsync #>Retry(
+                action.Invoke<#= optionalAsync #>,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action         .Invoking += Expect.ArgumentsAfterDelay<#= typeArguments #>(Arguments.Validate, Constants.MinDelay);
+<#
+        }
+        else
+        {
+#>
+            action         .Invoking += Expect.AfterDelay<#= typeArguments #>(Constants.MinDelay);
+<#
+        }
+#>
+            exceptionPolicy.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
+
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction<#= optionalComma #><#= testArguments #>, tokenSource.Token));
+
+            // Validate the number of calls
+            Assert.AreEqual(3, action          .Calls);
+            Assert.AreEqual(3, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
+        }
+
+        #endregion
+
+        #region With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke)
+            => With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                invoke,
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_RetriesExhausted<T>(
+            Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, T, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry,
+            Action<Interruptable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke,
+            Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable Interruptable<#= optionalAsync #>Action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> reliableAction = with<#= optionalAsync #>Retry(
+                action.Invoke<#= optionalAsync #>,
+                2,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action         .Invoking += Expect.ArgumentsAfterDelay<#= typeArguments #>(Arguments.Validate, Constants.MinDelay);
+<#
+        }
+        else
+        {
+#>
+            action         .Invoking += Expect.AfterDelay<#= typeArguments #>(Constants.MinDelay);
+<#
+        }
+#>
+            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            // Invoke
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                Assert.That.ThrowsException<IOException>(() => invoke(reliableAction<#= optionalComma #><#= testArguments #>, tokenSource.Token));
+
+            // Validate the number of calls
+            Assert.AreEqual(3, action          .Calls);
+            Assert.AreEqual(3, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
+        }
+
+        #endregion
+
+        #region With<#= optionalAsync #>Retry<#= suffix #>_Canceled
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Canceled(Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry)
+            => With<#= optionalAsync #>Retry<#= suffix #>_Canceled(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                () =>
+                {
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    delayPolicy.Invoking += Expect.Asc();
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Canceled(Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry)
+            => With<#= optionalAsync #>Retry<#= suffix #>_Canceled(
+                (a, r, e, d) => with<#= optionalAsync #>Retry(a, r, e, d.Invoke),
+                () =>
+                {
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
+                    return delayPolicy;
+                });
+
+        private void With<#= optionalAsync #>Retry<#= suffix #>_Canceled<T>(Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, T, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> with<#= optionalAsync #>Retry, Func<T> delayPolicyFactory)
+            where T : DelegateProxy
+        {
+            using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
+            using CancellationTokenSource tokenSource         = new CancellationTokenSource();
+
+            // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            T delayPolicy = delayPolicyFactory();
+
+            // Create the reliable InterruptableAction
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> reliableAction = with<#= optionalAsync #>Retry(
+                action.Invoke<#= optionalAsync #>,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy);
+
+            // Define expectations
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action         .Invoking += Expect.ArgumentsAfterDelay<#= typeArguments #>(Arguments.Validate, Constants.MinDelay);
+<#
+        }
+        else
+        {
+#>
+            action         .Invoking += Expect.AfterDelay<#= typeArguments #>(Constants.MinDelay);
+<#
+        }
+#>
+            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            // Trigger the event upon retry
+            action.Invoking += (<#= arguments #><#= optionalComma #>c) =>
+            {
+                if (c.Calls > 1)
+                    cancellationTrigger.Set();
+            };
+
+            // Create a task whose job is to cancel the invocation after at least 1 retry
+            Task cancellationTask = Task.Factory.StartNew((state) =>
+            {
+                (ManualResetEvent e, CancellationTokenSource s) = ((ManualResetEvent, CancellationTokenSource))state;
+                e.WaitOne();
+                s.Cancel();
+
+            }, (cancellationTrigger, tokenSource));
+
+            // Begin the invocation
+            Assert.That.ThrowsException<OperationCanceledException>(() => reliableAction(<#= testArguments #><#= optionalComma #>tokenSource.Token));
+
+            // Validate the number of calls
+            int calls = action.Calls;
+            Assert.IsTrue(calls > 1);
+
+            Assert.AreEqual(calls, action          .Calls);
+            Assert.AreEqual(calls, exceptionPolicy .Calls);
+            Assert.AreEqual(calls, delayPolicy     .Calls);
+        }
+
+        #endregion
+    }
+}
+<#
+        string fileName = parameterCount == 0 ? $"{optionalAsync}Action.Extensions.Test.cs" : $"{optionalAsync}Action.Extensions.T{parameterCount}.Test.cs";
+        SaveOutput(fileName);
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully

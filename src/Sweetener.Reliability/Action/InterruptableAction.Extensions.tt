@@ -1,0 +1,4 @@
+﻿<#
+    bool async = false;
+#>
+<#@ include file="TextTemplating\InterruptableAction.Extensions.t4" #>

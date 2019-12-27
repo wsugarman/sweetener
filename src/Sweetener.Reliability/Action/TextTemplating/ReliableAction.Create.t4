@@ -25,8 +25,8 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/> at most a
-        /// specific number of times based on the provided policies.
+        /// that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// at most a specific number of times based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
@@ -40,14 +40,44 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/> at most a
-        /// specific number of times based on the provided policies.
+        /// that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// at most a specific number of times based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
             <#= optionalAsync #>Action<#= typeParametersCode #> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy delayPolicy)
+            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="Interruptable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// at most a specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+#>
+        public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
+            Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> action,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="Interruptable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// at most a specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+#>
+        public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
+            Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)

@@ -31,7 +31,7 @@ namespace Sweetener.Reliability
 #>
     public sealed <#= parameterCount == 0 ? "partial " : "" #>class Reliable<#= optionalAsync #>Action<#= typeParametersCode #> : ReliableDelegate
     {
-        private readonly <#= optionalAsync #>Action<#= typeParametersCode #> _action;
+        private readonly Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> _action;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
@@ -42,10 +42,8 @@ namespace Sweetener.Reliability
         PrintReliableActionCtorXmlDoc(indent: 2);
 #>
         public Reliable<#= optionalAsync #>Action(<#= optionalAsync #>Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
-        {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-        }
+            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
@@ -56,6 +54,32 @@ namespace Sweetener.Reliability
         PrintReliableActionCtorXmlDoc(indent: 2);
 #>
         public Reliable<#= optionalAsync #>Action(<#= optionalAsync #>Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// class that executes the given <see cref="Interruptable<#= optionalAsync #>Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2);
+#>
+        public Reliable<#= optionalAsync #>Action(Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// class that executes the given <see cref="Interruptable<#= optionalAsync #>Action<#= typeParametersComment #>"/> at most a
+        /// specific number of times based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2);
+#>
+        public Reliable<#= optionalAsync #>Action(Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -95,7 +119,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    _action(<#= arguments #>);
+                    _action(<#= arguments #><#= optionalComma #>cancellationToken);
                     return;
                 }
                 catch (Exception e)
@@ -167,14 +191,14 @@ namespace Sweetener.Reliability
         if (async)
         {
 #>
-                    t = _action(<#= arguments #>);
+                    t = _action(<#= arguments #><#= optionalComma #>cancellationToken);
                     await t.ConfigureAwait(false);
 <#
         }
         else
         {
 #>
-                    _action(<#= arguments #>);
+                    _action(<#= arguments #><#= optionalComma #>cancellationToken);
 <#
         }
 #>
@@ -231,7 +255,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    _action(<#= arguments #>);
+                    _action(<#= arguments #><#= optionalComma #>cancellationToken);
                     return true;
                 }
                 catch (Exception e)

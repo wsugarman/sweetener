@@ -103,8 +103,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static InterruptableAsyncAction<#= typeParameters #> WithRetryAsync<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+        public static InterruptableAsyncAction<#= typeParameters #> WithAsyncRetry<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithAsyncRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="action" />
@@ -113,7 +113,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static InterruptableAsyncAction<#= typeParameters #> WithRetryAsync<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAsyncAction<#= typeParameters #> WithAsyncRetry<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));

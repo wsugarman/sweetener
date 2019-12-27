@@ -44,6 +44,21 @@ namespace Sweetener.Reliability.Test
         }
 
         [TestMethod]
+        public void InvokeAsync_NoCancellationToken()
+            => InvokeAsync(async (r) => await r.InvokeAsync().ConfigureAwait(false));
+
+        [TestMethod]
+        public void InvokeAsync_CancellationToken()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                InvokeAsync(async (r) => await r.InvokeAsync(tokenSource.Token).ConfigureAwait(false));
+
+            // Ensure CancellationToken prevents additional retry
+            Invoke_Canceled(async (r, token) => await r.InvokeAsync(token), addEventHandlers: false);
+            Invoke_Canceled(async (r, token) => await r.InvokeAsync(token), addEventHandlers: true );
+        }
+
+        [TestMethod]
         public void TryInvoke_NoCancellationToken()
             => TryInvoke((r) => r.TryInvoke());
 
@@ -126,6 +141,24 @@ namespace Sweetener.Reliability.Test
                 Invoke_Failure         ((r, e) => Assert.That.ThrowsException(() => invoke(r), e), addEventHandlers);
                 Invoke_EventualFailure ((r, e) => Assert.That.ThrowsException(() => invoke(r), e), addEventHandlers);
                 Invoke_RetriesExhausted((r, e) => Assert.That.ThrowsException(() => invoke(r), e), addEventHandlers);
+            }
+        }
+
+        #endregion
+
+        #region InvokeAsync
+
+        private void InvokeAsync(AsyncAction<ReliableAction> invokeAsync)
+        {
+            // Callers may optionally include event handlers
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                Invoke_Success        ((r) => invokeAsync(r).Wait(), addEventHandlers);
+                Invoke_EventualSuccess((r) => invokeAsync(r).Wait(), addEventHandlers);
+
+                Invoke_Failure         ((r, e) => Assert.That.ThrowsException(async () => await invokeAsync(r).ConfigureAwait(false), e), addEventHandlers);
+                Invoke_EventualFailure ((r, e) => Assert.That.ThrowsException(async () => await invokeAsync(r).ConfigureAwait(false), e), addEventHandlers);
+                Invoke_RetriesExhausted((r, e) => Assert.That.ThrowsException(async () => await invokeAsync(r).ConfigureAwait(false), e), addEventHandlers);
             }
         }
 
@@ -421,7 +454,14 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled
 
-        private void Invoke_Canceled(Action<ReliableAction, CancellationToken> assertInvoke, bool addEventHandlers)
+        private void Invoke_Canceled(Action<ReliableAction, CancellationToken> invoke, bool addEventHandlers)
+            => Invoke_Canceled_Delay((r, token) => Assert.That.ThrowsException<OperationCanceledException>(() => invoke(r, token)), addEventHandlers);
+
+        // The Async method will expose a "TaskCanceledException" directly
+        private void Invoke_Canceled(AsyncAction<ReliableAction, CancellationToken> invokeAsync, bool addEventHandlers)
+            => Invoke_Canceled_Delay((r, token) => Assert.That.ThrowsException<TaskCanceledException>(async () => await invokeAsync(r, token).ConfigureAwait(false)), addEventHandlers);
+
+        private void Invoke_Canceled_Delay(Action<ReliableAction, CancellationToken> assertInvoke, bool addEventHandlers)
         {
             using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
             using CancellationTokenSource tokenSource         = new CancellationTokenSource();
@@ -476,15 +516,15 @@ namespace Sweetener.Reliability.Test
             }, (cancellationTrigger, tokenSource));
 
             // Begin the invocation
-            Assert.That.ThrowsException<OperationCanceledException>(() => assertInvoke(reliableAction, tokenSource.Token));
+            assertInvoke(reliableAction, tokenSource.Token);
 
             // Validate the number of calls
             int calls = action.Calls;
             Assert.IsTrue(calls > 1);
 
-            Assert.AreEqual(calls    , action         .Calls);
-            Assert.AreEqual(calls    , exceptionPolicy.Calls);
-            Assert.AreEqual(calls    , delayPolicy    .Calls);
+            Assert.AreEqual(calls, action         .Calls);
+            Assert.AreEqual(calls, exceptionPolicy.Calls);
+            Assert.AreEqual(calls, delayPolicy    .Calls);
 
             if (addEventHandlers)
             {

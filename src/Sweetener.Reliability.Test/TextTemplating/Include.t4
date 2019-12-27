@@ -61,4 +61,32 @@
 
     public string GetTestArguments(int count)
         => string.Join(", ", args.Take(count));
+
+    public string GetDelegateInvoke(int argCount, string delegateName, bool async)
+    {
+        string args = GetArguments(argCount);
+        if (!async)
+            return $"({args}) => {delegateName}()";
+
+        return $"async ({args}) => await Task.Run({delegateName}).ConfigureAwait(false)";
+    }
+
+    public string GetThrowException<T>(int argCount, bool async)
+        where T : Exception
+    {
+        string args = GetArguments(argCount);
+        if (!async)
+            return $"({args}) => throw new {typeof(T).Name}()";
+
+        return $"async ({args}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
+    }
+
+    public string GetNoOpInvoke(int argCount, bool async)
+    {
+        string args = GetArguments(argCount);
+        if (!async)
+            return $"({args}) => Operation.Null()";
+
+        return $"async ({args}) => await Operation.NullAsync().ConfigureAwait(false)";
+    }
 #>

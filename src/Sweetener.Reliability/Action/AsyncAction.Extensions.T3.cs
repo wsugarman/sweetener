@@ -24,8 +24,8 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAsyncAction<T1, T2, T3> WithRetryAsync<T1, T2, T3>(this AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetryAsync(action, maxRetries, exceptionPolicy, delayPolicy != null ? (i, e) => delayPolicy(i) : (ComplexDelayPolicy)null);
+        public static InterruptableAsyncAction<T1, T2, T3> WithAsyncRetry<T1, T2, T3>(this AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithAsyncRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
@@ -45,7 +45,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAsyncAction<T1, T2, T3> WithRetryAsync<T1, T2, T3>(this AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAsyncAction<T1, T2, T3> WithAsyncRetry<T1, T2, T3>(this AsyncAction<T1, T2, T3> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));

@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
 {
     internal static class AssertExtensions
     {
-        internal static void ThrowsException<T>(this Assert assert, Action action, bool rethrowAssertions = true)
+        internal static void ThrowsException<T>(this Assert assert, Action action)
             where T : Exception
-            => ThrowsException(assert, action, typeof(T), rethrowAssertions);
+            => ThrowsException(assert, action, typeof(T));
 
-        internal static void ThrowsException(this Assert assert, Action action, Type exceptionType, bool rethrowAssertions = true)
+        internal static void ThrowsException(this Assert assert, Action action, Type exceptionType)
         {
             if (!typeof(Exception).IsAssignableFrom(exceptionType))
                 throw new ArgumentException($"Type '{exceptionType.Name}' is not an {nameof(Exception)}", nameof(exceptionType));
@@ -20,24 +19,39 @@ namespace Sweetener.Reliability.Test
                 action();
                 Assert.Fail($"Action did not throw an expected exception of type '{exceptionType.Name}'");
             }
+            catch (AssertFailedException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                assert.ExceptionType(exceptionType, e, rethrowAssertions);
+                Assert.AreEqual(exceptionType, e.GetType());
             }
         }
 
-        internal static void ExceptionType(this Assert assert, Type expectedType, Exception actual, bool rethrowAssertions = true)
+        internal static void ThrowsException<T>(this Assert assert, AsyncAction action)
+            where T : Exception
+            => ThrowsException(assert, action, typeof(T));
+
+        internal static void ThrowsException(this Assert assert, AsyncAction action, Type exceptionType)
         {
-            if (!typeof(Exception).IsAssignableFrom(expectedType))
-                throw new ArgumentException($"Type '{expectedType.Name}' is not an {nameof(Exception)}", nameof(expectedType));
+            if (!typeof(Exception).IsAssignableFrom(exceptionType))
+                throw new ArgumentException($"Type '{exceptionType.Name}' is not an {nameof(Exception)}", nameof(exceptionType));
 
-            Type actualType = actual.GetType();
-            if (expectedType != actualType)
+            try
             {
-                if (rethrowAssertions && actualType == typeof(AssertFailedException))
-                    ExceptionDispatchInfo.Capture(actual).Throw();
+                action().Wait();
+                Assert.Fail($"Action did not throw an expected exception of type '{exceptionType.Name}'");
+            }
+            catch (Exception e)
+            {
+                if (e is AggregateException a)
+                    e = a.InnerException;
 
-                Assert.AreEqual(expectedType, actualType);
+                if (e is AssertFailedException)
+                    throw;
+
+                Assert.AreEqual(exceptionType, e.GetType());
             }
         }
     }
