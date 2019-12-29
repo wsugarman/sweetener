@@ -1,4 +1,4 @@
-﻿// Generated from TryFunc.tt
+﻿// Generated from TryFunc.tt ran successfully
 namespace Sweetener
 {
     /// <summary>
