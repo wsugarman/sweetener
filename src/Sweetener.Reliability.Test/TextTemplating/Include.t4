@@ -62,31 +62,40 @@
     public string GetTestArguments(int count)
         => string.Join(", ", args.Take(count));
 
-    public string GetDelegateInvoke(int argCount, string delegateName, bool async)
+    public string GetDelegate(int argCount, string delegateName, bool async, bool interruptable = false)
     {
-        string args = GetArguments(argCount);
-        if (!async)
-            return $"({args}) => {delegateName}()";
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
 
-        return $"async ({args}) => await Task.Run({delegateName}).ConfigureAwait(false)";
+        if (!async)
+            return $"({args}{optionalToken}) => {delegateName}()";
+
+        return $"async ({args}{optionalToken}) => await Task.Run({delegateName}).ConfigureAwait(false)";
     }
 
-    public string GetThrowException<T>(int argCount, bool async)
+    public string GetThrowException<T>(int argCount, bool async, bool interruptable = false)
         where T : Exception
     {
-        string args = GetArguments(argCount);
-        if (!async)
-            return $"({args}) => throw new {typeof(T).Name}()";
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
 
-        return $"async ({args}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
+        if (!async)
+            return $"({args}{optionalToken}) => throw new {typeof(T).Name}()";
+
+        return $"async ({args}{optionalToken}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
     }
 
-    public string GetNoOpInvoke(int argCount, bool async)
+    public string GetNoOpDelegate(int argCount, bool async, bool interruptable = false)
     {
-        string args = GetArguments(argCount);
-        if (!async)
-            return $"({args}) => Operation.Null()";
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
 
-        return $"async ({args}) => await Operation.NullAsync().ConfigureAwait(false)";
+        if (!async)
+            return $"({args}{optionalToken}) => Operation.Null()";
+
+        return $"async ({args}{optionalToken}) => await Operation.NullAsync().ConfigureAwait(false)";
     }
 #>

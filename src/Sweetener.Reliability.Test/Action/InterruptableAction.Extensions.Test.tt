@@ -1,0 +1,5 @@
+﻿<#
+    bool async         = false;
+    bool interruptable = true;
+#>
+<#@ include file="TextTemplating\Action.Extensions.Test.t4" #>

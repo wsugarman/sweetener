@@ -1,11 +1,12 @@
 // Generated from Action.Extensions.tt
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
     /// <summary>
-    /// A collection of methods to reliablty invoke actions.
+    /// A collection of methods to reliablty invoke  actions.
     /// </summary>
     public static partial class ActionExtensions
     {

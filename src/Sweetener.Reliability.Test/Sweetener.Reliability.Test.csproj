@@ -28,6 +28,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\InterruptableAction.Extensions.*Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAction.Extensions.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\InterruptableAsyncAction.Extensions.*Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAsyncAction.Extensions.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\ReliableAction.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -105,10 +115,13 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AsyncAction.Extensions.Test.tt.out</LastGenOutput>
     </None>
-    <None Update="Action\AsyncAction.Extensions.Test.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
+    <None Update="Action\InterruptableAction.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableAction.Extensions.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\InterruptableAsyncAction.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>InterruptableAsyncAction.Extensions.Test.tt.out</LastGenOutput>
     </None>
     <None Update="Action\ReliableAction.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -162,6 +175,21 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.Test.tt</DependentUpon>
+    </None>
+    <None Update="Action\AsyncAction.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
+    </None>
+    <None Update="Action\InterruptableAction.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAction.Extensions.Test.tt</DependentUpon>
+    </None>
+    <None Update="Action\InterruptableAsyncAction.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InterruptableAsyncAction.Extensions.Test.tt</DependentUpon>
     </None>
     <None Update="Action\ReliableAction.Test.tt.out">
       <DesignTime>True</DesignTime>

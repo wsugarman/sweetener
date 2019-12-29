@@ -21,7 +21,7 @@ using System;
 
 namespace Sweetener.Reliability
 {
-    partial class ReliableAction
+    partial class Reliable<#= optionalAsync #>Action
     {
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>

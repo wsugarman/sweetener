@@ -40,7 +40,7 @@ namespace Sweetener.Reliability.Test
             WithRetry_EventualSuccess (withRetry, invoke);
             WithRetry_EventualFailure (withRetry, invoke);
             WithRetry_RetriesExhausted(withRetry, invoke);
-            WithRetry_Canceled        (withRetry);
+            WithRetry_Canceled_Delay  (withRetry, invoke);
         }
 
         [TestMethod]
@@ -73,14 +73,80 @@ namespace Sweetener.Reliability.Test
             WithRetry_EventualSuccess (withRetry, invoke);
             WithRetry_EventualFailure (withRetry, invoke);
             WithRetry_RetriesExhausted(withRetry, invoke);
-            WithRetry_Canceled        (withRetry);
+            WithRetry_Canceled_Delay  (withRetry, invoke);
+        }
+
+        [TestMethod]
+        public void WithAsyncRetry_DelayPolicy()
+        {
+            Action nullAction = null;
+            Action action     = () => Operation.Null();
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                       , DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, ExceptionPolicies.Transient, (DelayPolicy)null ));
+
+            Action<InterruptableAsyncAction, CancellationToken> invoke;
+            Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAsyncAction> withAsyncRetry = (a, r, e, d) => a.WithAsyncRetry(r, e, d);
+
+            // Without Token
+            invoke = (action, token) => action().Wait();
+
+            WithRetry_Success         (withAsyncRetry, invoke);
+            WithRetry_Failure         (withAsyncRetry, invoke);
+            WithRetry_EventualSuccess (withAsyncRetry, invoke);
+            WithRetry_EventualFailure (withAsyncRetry, invoke);
+            WithRetry_RetriesExhausted(withAsyncRetry, invoke);
+
+            // With Token
+            invoke = (action, token) => action(token).Wait();
+
+            WithRetry_Success         (withAsyncRetry, invoke);
+            WithRetry_Failure         (withAsyncRetry, invoke);
+            WithRetry_EventualSuccess (withAsyncRetry, invoke);
+            WithRetry_EventualFailure (withAsyncRetry, invoke);
+            WithRetry_RetriesExhausted(withAsyncRetry, invoke);
+            WithRetry_Canceled_Delay  (withAsyncRetry, invoke);
+        }
+
+        [TestMethod]
+        public void WithAsyncRetry_ComplexDelayPolicy()
+        {
+            Action nullAction = null;
+            Action action     = () => Operation.Null();
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicies.Transient, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicies.Transient, (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                       , (i, e) => TimeSpan.Zero ));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, ExceptionPolicies.Transient, (ComplexDelayPolicy)null));
+
+            Action<InterruptableAsyncAction, CancellationToken> invoke;
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAsyncAction> withAsyncRetry = (a, r, e, d) => a.WithAsyncRetry(r, e, d);
+
+            // Without Token
+            invoke = (action, token) => action().Wait();
+
+            WithRetry_Success         (withAsyncRetry, invoke);
+            WithRetry_Failure         (withAsyncRetry, invoke);
+            WithRetry_EventualSuccess (withAsyncRetry, invoke);
+            WithRetry_EventualFailure (withAsyncRetry, invoke);
+            WithRetry_RetriesExhausted(withAsyncRetry, invoke);
+
+            // With Token
+            invoke = (action, token) => action(token).Wait();
+
+            WithRetry_Success         (withAsyncRetry, invoke);
+            WithRetry_Failure         (withAsyncRetry, invoke);
+            WithRetry_EventualSuccess (withAsyncRetry, invoke);
+            WithRetry_EventualFailure (withAsyncRetry, invoke);
+            WithRetry_RetriesExhausted(withAsyncRetry, invoke);
+            WithRetry_Canceled_Delay  (withAsyncRetry, invoke);
         }
 
         #region WithRetry_Success
 
-        private void WithRetry_Success(
-            Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_Success<T>(
+            Func<Action, int, ExceptionPolicy, DelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_Success(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -91,9 +157,9 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_Success(
-            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_Success<T>(
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_Success(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -104,21 +170,21 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_Success<T>(
-            Func<Action, int, ExceptionPolicy, T, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        private void WithRetry_Success<TDelayPolicy, TAction>(
+            Func<Action, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Action<TAction, CancellationToken> invoke,
+            Func<TDelayPolicy> delayPolicyFactory)
+            where TDelayPolicy : DelegateProxy
         {
             // Create a "successful" user-defined action
             ActionProxy action = new ActionProxy(() => Operation.Null());
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
-            T delayPolicy = delayPolicyFactory();
+            TDelayPolicy delayPolicy = delayPolicyFactory();
 
-            // Create the reliable InterruptableAction
-            InterruptableAction reliableAction = withRetry(
+            // Create the reliable action
+            TAction reliableAction = withRetry(
                 action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
@@ -141,9 +207,9 @@ namespace Sweetener.Reliability.Test
 
         #region WithRetry_Failure
 
-        private void WithRetry_Failure(
-            Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_Failure<T>(
+            Func<Action, int, ExceptionPolicy, DelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_Failure(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -154,9 +220,9 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_Failure(
-            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_Failure<T>(
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_Failure(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -167,21 +233,21 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_Failure<T>(
-            Func<Action, int, ExceptionPolicy, T, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        private void WithRetry_Failure<TDelayPolicy, TAction>(
+            Func<Action, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Action<TAction, CancellationToken> invoke,
+            Func<TDelayPolicy> delayPolicyFactory)
+            where TDelayPolicy : DelegateProxy
         {
             // Create an "unsuccessful" user-defined action
             ActionProxy action = new ActionProxy(() => throw new InvalidOperationException());
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Fail<InvalidOperationException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
+            TDelayPolicy delayPolicy = delayPolicyFactory();
 
-            // Create the reliable InterruptableAction
-            InterruptableAction reliableAction = withRetry(
+            // Create the reliable action
+            TAction reliableAction = withRetry(
                 action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
@@ -204,9 +270,9 @@ namespace Sweetener.Reliability.Test
 
         #region WithRetry_EventualSuccess
 
-        private void WithRetry_EventualSuccess(
-            Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_EventualSuccess<T>(
+            Func<Action, int, ExceptionPolicy, DelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_EventualSuccess(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -217,9 +283,9 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_EventualSuccess(
-            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_EventualSuccess<T>(
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_EventualSuccess(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -230,11 +296,11 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_EventualSuccess<T>(
-            Func<Action, int, ExceptionPolicy, T, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        private void WithRetry_EventualSuccess<TDelayPolicy, TAction>(
+            Func<Action, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Action<TAction, CancellationToken> invoke,
+            Func<TDelayPolicy> delayPolicyFactory)
+            where TDelayPolicy : DelegateProxy
         {
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
@@ -242,10 +308,10 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
+            TDelayPolicy delayPolicy = delayPolicyFactory();
 
-            // Create the reliable InterruptableAction
-            InterruptableAction reliableAction = withRetry(
+            // Create the reliable action
+            TAction reliableAction = withRetry(
                 action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
@@ -269,9 +335,9 @@ namespace Sweetener.Reliability.Test
 
         #region WithRetry_EventualFailure
 
-        private void WithRetry_EventualFailure(
-            Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_EventualFailure<T>(
+            Func<Action, int, ExceptionPolicy, DelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_EventualFailure(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -282,9 +348,9 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_EventualFailure(
-            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_EventualFailure<T>(
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_EventualFailure(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -295,11 +361,11 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_EventualFailure<T>(
-            Func<Action, int, ExceptionPolicy, T, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        private void WithRetry_EventualFailure<TDelayPolicy, TAction>(
+            Func<Action, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Action<TAction, CancellationToken> invoke,
+            Func<TDelayPolicy> delayPolicyFactory)
+            where TDelayPolicy : DelegateProxy
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
@@ -307,10 +373,10 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
+            TDelayPolicy delayPolicy = delayPolicyFactory();
 
-            // Create the reliable InterruptableAction
-            InterruptableAction reliableAction = withRetry(
+            // Create the reliable action
+            TAction reliableAction = withRetry(
                 action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
@@ -334,9 +400,9 @@ namespace Sweetener.Reliability.Test
 
         #region WithRetry_RetriesExhausted
 
-        private void WithRetry_RetriesExhausted(
-            Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_RetriesExhausted<T>(
+            Func<Action, int, ExceptionPolicy, DelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_RetriesExhausted(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -347,9 +413,9 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_RetriesExhausted(
-            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke)
+        private void WithRetry_RetriesExhausted<T>(
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
             => WithRetry_RetriesExhausted(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
                 invoke,
@@ -360,21 +426,21 @@ namespace Sweetener.Reliability.Test
                     return delayPolicy;
                 });
 
-        private void WithRetry_RetriesExhausted<T>(
-            Func<Action, int, ExceptionPolicy, T, InterruptableAction> withRetry,
-            Action<InterruptableAction, CancellationToken> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        private void WithRetry_RetriesExhausted<TDelayPolicy, TAction>(
+            Func<Action, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Action<TAction, CancellationToken> invoke,
+            Func<TDelayPolicy> delayPolicyFactory)
+            where TDelayPolicy : DelegateProxy
         {
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
             ActionProxy action = new ActionProxy(() => throw new IOException());
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
+            TDelayPolicy delayPolicy = delayPolicyFactory();
 
-            // Create the reliable InterruptableAction
-            InterruptableAction reliableAction = withRetry(
+            // Create the reliable action
+            TAction reliableAction = withRetry(
                 action.Invoke,
                 2,
                 exceptionPolicy.Invoke,
@@ -396,43 +462,51 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
-        #region WithRetry_Canceled
+        #region WithRetry_Canceled_Delay
 
-        private void WithRetry_Canceled(Func<Action, int, ExceptionPolicy, DelayPolicy, InterruptableAction> withRetry)
-            => WithRetry_Canceled(
+        private void WithRetry_Canceled_Delay<T>(
+            Func<Action, int, ExceptionPolicy, DelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
+            => WithRetry_Canceled_Delay(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
                 () =>
                 {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
                     delayPolicy.Invoking += Expect.Asc();
                     return delayPolicy;
                 });
 
-        private void WithRetry_Canceled(Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, InterruptableAction> withRetry)
-            => WithRetry_Canceled(
+        private void WithRetry_Canceled_Delay<T>(
+            Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, T> withRetry,
+            Action<T, CancellationToken> invoke)
+            => WithRetry_Canceled_Delay(
                 (a, r, e, d) => withRetry(a, r, e, d.Invoke),
+                invoke,
                 () =>
                 {
-                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+                    FuncProxy<int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, Exception, TimeSpan>();
                     delayPolicy.Invoking += Expect.ExceptionAsc(typeof(IOException));
                     return delayPolicy;
                 });
 
-        private void WithRetry_Canceled<T>(Func<Action, int, ExceptionPolicy, T, InterruptableAction> withRetry, Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        private void WithRetry_Canceled_Delay<TDelayPolicy, TAction>(
+            Func<Action, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Action<TAction, CancellationToken> invoke,
+            Func<TDelayPolicy> delayPolicyFactory)
+            where TDelayPolicy : DelegateProxy
         {
-            using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
-            using CancellationTokenSource tokenSource         = new CancellationTokenSource();
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
             ActionProxy action = new ActionProxy(() => throw new IOException());
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
+            TDelayPolicy delayPolicy = delayPolicyFactory();
 
             // Create the reliable InterruptableAction
-            InterruptableAction reliableAction = withRetry(
+            TAction reliableAction = withRetry(
                 action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
@@ -442,32 +516,21 @@ namespace Sweetener.Reliability.Test
             action         .Invoking += Expect.AfterDelay(Constants.MinDelay);
             exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
 
-            // Trigger the event upon retry
-            action.Invoking += (c) =>
+            // Cancel the delay on its 2nd invocation
+            // (We use the exception policy because there's no Invoking event on TDelay)
+            exceptionPolicy.Invoking += (e, c) =>
             {
-                if (c.Calls > 1)
-                    cancellationTrigger.Set();
+                if (c.Calls == 2)
+                    tokenSource.Cancel();
             };
 
-            // Create a task whose job is to cancel the invocation after at least 1 retry
-            Task cancellationTask = Task.Factory.StartNew((state) =>
-            {
-                (ManualResetEvent e, CancellationTokenSource s) = ((ManualResetEvent, CancellationTokenSource))state;
-                e.WaitOne();
-                s.Cancel();
-
-            }, (cancellationTrigger, tokenSource));
-
             // Begin the invocation
-            Assert.That.ThrowsException<OperationCanceledException>(() => reliableAction(tokenSource.Token));
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableAction, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            int calls = action.Calls;
-            Assert.IsTrue(calls > 1);
-
-            Assert.AreEqual(calls, action          .Calls);
-            Assert.AreEqual(calls, exceptionPolicy .Calls);
-            Assert.AreEqual(calls, delayPolicy     .Calls);
+            Assert.AreEqual(2, action          .Calls);
+            Assert.AreEqual(2, exceptionPolicy .Calls);
+            Assert.AreEqual(2, delayPolicy     .Calls);
         }
 
         #endregion

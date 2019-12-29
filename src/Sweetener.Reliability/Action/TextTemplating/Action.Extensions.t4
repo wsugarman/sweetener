@@ -3,8 +3,8 @@
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
-    // Assume a boolean variable called "async" has been previously defined!
-    string optionalAsync = async ? "Async" : string.Empty;
+    // Assume boolean variables called "async" and "interruptable" have been previously defined!
+    string actionPrefix = (interruptable ? "Interruptable" : string.Empty) + (async ? "Async" : string.Empty);
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
@@ -14,6 +14,14 @@
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
+<#
+        if (parameterCount == 0 && interruptable)
+        {
+#>
+using System.Threading;
+<#
+        }
+#>
 using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
@@ -23,15 +31,23 @@ namespace Sweetener.Reliability
         {
 #>
     /// <summary>
-    /// A collection of methods to reliablty invoke <#= async ? "asynchronous " : string.Empty #>actions.
+    /// A collection of methods to reliablty invoke <#= async ? "asynchronous " : string.Empty #>actions<#= !interruptable ? "." : string.Empty #>
+<#
+        if (interruptable)
+        {
+#>
+    /// that can be interrupted using a <see cref="CancellationToken" />.
+<#
+        }
+#>
     /// </summary>
-    public static partial class <#= optionalAsync #>ActionExtensions
+    public static partial class <#= actionPrefix #>ActionExtensions
 <#
         }
         else
         {
 #>
-    static partial class <#= optionalAsync #>ActionExtensions
+    static partial class <#= actionPrefix #>ActionExtensions
 <#
         }
 #>
@@ -47,7 +63,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this <#= actionPrefix #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
@@ -57,7 +73,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAction<#= typeParameters #> WithRetry<#= typeParameters #>(this <#= actionPrefix #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -79,7 +95,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    action(<#= arguments #>);
+                    action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
                     return;
                 }
                 catch (Exception e)
@@ -103,7 +119,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static InterruptableAsyncAction<#= typeParameters #> WithAsyncRetry<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public static InterruptableAsyncAction<#= typeParameters #> WithAsyncRetry<#= typeParameters #>(this <#= actionPrefix #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             => WithAsyncRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
@@ -113,7 +129,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static InterruptableAsyncAction<#= typeParameters #> WithAsyncRetry<#= typeParameters #>(this <#= optionalAsync #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static InterruptableAsyncAction<#= typeParameters #> WithAsyncRetry<#= typeParameters #>(this <#= actionPrefix #>Action<#= typeParameters #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -155,14 +171,14 @@ namespace Sweetener.Reliability
         if (async)
         {
 #>
-                    t = action(<#= arguments #>);
+                    t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
                     await t.ConfigureAwait(false);
 <#
         }
         else
         {
 #>
-                    action(<#= arguments #>);
+                    action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
 <#
         }
 #>
@@ -181,7 +197,7 @@ namespace Sweetener.Reliability
     }
 }
 <#
-        string fileName = parameterCount == 0 ? $"{optionalAsync}Action.Extensions.cs" : $"{optionalAsync}Action.Extensions.T{parameterCount}.cs";
+        string fileName = parameterCount == 0 ? $"{actionPrefix}Action.Extensions.cs" : $"{actionPrefix}Action.Extensions.T{parameterCount}.cs";
         SaveOutput(fileName);
     }
 #>

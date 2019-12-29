@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -16,6 +17,13 @@ namespace Sweetener.Reliability.Test
 
         public static Action<CallContext> AfterDelay(TimeSpan delay)
             => context =>
+            {
+                if (context.Calls > 1)
+                    Assert.IsTrue(context.TimeSinceLastCall >= delay, $"Time since last call '{context.TimeSinceLastCall}' less than expected delay '{delay}'.");
+            };
+
+        public static Action<CancellationToken, CallContext> AfterDelayWithToken(TimeSpan delay)
+            => (token, context) =>
             {
                 if (context.Calls > 1)
                     Assert.IsTrue(context.TimeSinceLastCall >= delay, $"Time since last call '{context.TimeSinceLastCall}' less than expected delay '{delay}'.");

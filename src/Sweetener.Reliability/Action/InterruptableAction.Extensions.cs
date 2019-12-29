@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Sweetener.Reliability
 {
     /// <summary>
-    /// A collection of methods to reliablty invoke  actions
+    /// A collection of methods to reliablty invoke actions
     /// that can be interrupted using a <see cref="CancellationToken" />.
     /// </summary>
     public static partial class InterruptableActionExtensions

@@ -32,7 +32,7 @@ namespace Sweetener.Reliability
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
 #>
         public static InterruptableAction<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this Action<#= typeParameters #> action)
-            => (<#= arguments #><#= optionalComma #>token) => action(<#= arguments #>);
+            => action == null ? (InterruptableAction<#= typeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => action(<#= arguments #>);
 
 <#
     }
@@ -49,7 +49,7 @@ namespace Sweetener.Reliability
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
 #>
         public static InterruptableAsyncAction<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this AsyncAction<#= typeParameters #> action)
-            => async (<#= arguments #><#= optionalComma #>token) => await action(<#= arguments #>).ConfigureAwait(false);
+            => action == null ? (InterruptableAsyncAction<#= typeParameters #>)null : async (<#= arguments #><#= optionalComma #>token) => await action(<#= arguments #>).ConfigureAwait(false);
 
 <#
     }
@@ -66,7 +66,7 @@ namespace Sweetener.Reliability
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
 #>
         public static InterruptableFunc<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this Func<#= typeParameters #> func)
-            => (<#= arguments #><#= optionalComma #>token) => func(<#= arguments #>);
+            => func == null ? (InterruptableFunc<#= typeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => func(<#= arguments #>);
 
 <#
     }
@@ -83,7 +83,7 @@ namespace Sweetener.Reliability
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
 #>
         public static InterruptableAsyncFunc<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this AsyncFunc<#= typeParameters #> func)
-            => async (<#= arguments #><#= optionalComma #>token) => await func(<#= arguments #>).ConfigureAwait(false);
+            => func == null ? (InterruptableAsyncFunc<#= typeParameters #>)null : async (<#= arguments #><#= optionalComma #>token) => await func(<#= arguments #>).ConfigureAwait(false);
 
 <#
     }

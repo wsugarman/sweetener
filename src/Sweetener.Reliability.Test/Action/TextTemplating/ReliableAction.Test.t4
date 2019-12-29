@@ -28,7 +28,7 @@ namespace Sweetener.Reliability.Test
     [TestClass]
     public sealed class Reliable<#= optionalAsync #>Action<#= parameterCount > 0 ? parameterCount.ToString() : string.Empty #>Test : ReliableDelegateTest
     {
-        private static readonly Func<Reliable<#= optionalAsync #>Action<#= typeArguments #>, <#= optionalAsync #>Action<#= typeArguments #>> s_getAction = DynamicGetter.ForField<Reliable<#= optionalAsync #>Action<#= typeArguments #>, <#= optionalAsync #>Action<#= typeArguments #>>("_action");
+        private static readonly Func<Reliable<#= optionalAsync #>Action<#= typeArguments #>, Interruptable<#= optionalAsync #>Action<#= typeArguments #>> s_getAction = DynamicGetter.ForField<Reliable<#= optionalAsync #>Action<#= typeArguments #>, Interruptable<#= optionalAsync #>Action<#= typeArguments #>>("_action");
 
         [TestMethod]
         public void Ctor_DelayPolicy()
@@ -38,10 +38,14 @@ namespace Sweetener.Reliability.Test
         public void Ctor_ComplexDelayPolicy()
             => Ctor_ComplexDelayPolicy((a, m, d, e) => new Reliable<#= optionalAsync #>Action<#= typeArguments #>(a, m, d, e));
 
-<#
-        if (!async)
-        {
-#>
+        [TestMethod]
+        public void Ctor_Interruptable_DelayPolicy()
+            => Ctor_Interruptable_DelayPolicy((a, m, d, e) => new Reliable<#= optionalAsync #>Action<#= typeArguments #>(a, m, d, e));
+
+        [TestMethod]
+        public void Ctor_Interruptable_ComplexDelayPolicy()
+            => Ctor_Interruptable_ComplexDelayPolicy((a, m, d, e) => new Reliable<#= optionalAsync #>Action<#= typeArguments #>(a, m, d, e));
+
         [TestMethod]
         public void Create_DelayPolicy()
             => Ctor_DelayPolicy((a, m, d, e) => Reliable<#= optionalAsync #>Action.Create(a, m, d, e));
@@ -51,37 +55,35 @@ namespace Sweetener.Reliability.Test
             => Ctor_ComplexDelayPolicy((a, m, d, e) => Reliable<#= optionalAsync #>Action.Create(a, m, d, e));
 
         [TestMethod]
+        public void Create_Interruptable_DelayPolicy()
+            => Ctor_Interruptable_DelayPolicy((a, m, d, e) => Reliable<#= optionalAsync #>Action.Create(a, m, d, e));
+
+        [TestMethod]
+        public void Create_Interruptable_ComplexDelayPolicy()
+            => Ctor_Interruptable_ComplexDelayPolicy((a, m, d, e) => Reliable<#= optionalAsync #>Action.Create(a, m, d, e));
+
+<#
+        if (!async)
+        {
+#>
+        [TestMethod]
         public void Invoke_NoCancellationToken()
-            => Invoke((r<#= optionalComma #><#= arguments #>) => r.Invoke(<#= arguments #>));
+            => Invoke(passToken: false);
 
         [TestMethod]
         public void Invoke_CancellationToken()
-        {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Invoke((r<#= optionalComma #><#= arguments #>) => r.Invoke(<#= arguments #><#= optionalComma #>tokenSource.Token));
-
-            // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled((r<#= optionalComma #><#= arguments #>, token) => r.Invoke(<#= arguments #><#= optionalComma #>token), addEventHandlers: false);
-            Invoke_Canceled((r<#= optionalComma #><#= arguments #>, token) => r.Invoke(<#= arguments #><#= optionalComma #>token), addEventHandlers: true );
-        }
+            => Invoke(passToken: true);
 
 <#
         }
 #>
         [TestMethod]
         public void InvokeAsync_NoCancellationToken()
-            => InvokeAsync(async (r<#= optionalComma #><#= arguments #>) => await r.InvokeAsync(<#= arguments #>).ConfigureAwait(false));
+            => InvokeAsync(passToken: false);
 
         [TestMethod]
         public void InvokeAsync_CancellationToken()
-        {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                InvokeAsync(async (r<#= optionalComma #><#= arguments #>) => await r.InvokeAsync(<#= arguments #><#= optionalComma #>tokenSource.Token).ConfigureAwait(false));
-
-            // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled(async (r<#= optionalComma #><#= arguments #>, token) => await r.InvokeAsync(<#= arguments #><#= optionalComma #>token), addEventHandlers: false);
-            Invoke_Canceled(async (r<#= optionalComma #><#= arguments #>, token) => await r.InvokeAsync(<#= arguments #><#= optionalComma #>token), addEventHandlers: true );
-        }
+            => InvokeAsync(passToken: true);
 
 <#
         if (!async)
@@ -89,18 +91,11 @@ namespace Sweetener.Reliability.Test
 #>
         [TestMethod]
         public void TryInvoke_NoCancellationToken()
-            => TryInvoke((r<#= optionalComma #><#= arguments #>) => r.TryInvoke(<#= arguments #>));
+            => TryInvoke(passToken: false);
 
         [TestMethod]
         public void TryInvoke_CancellationToken()
-        {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                TryInvoke((r<#= optionalComma #><#= arguments #>) => r.TryInvoke(<#= arguments #><#= optionalComma #>tokenSource.Token));
-
-            // Ensure CancellationToken prevents additional retry
-            Invoke_Canceled((r<#= optionalComma #><#= arguments #>, token) => r.TryInvoke(<#= arguments #><#= optionalComma #>token), addEventHandlers: false);
-            Invoke_Canceled((r<#= optionalComma #><#= arguments #>, token) => r.TryInvoke(<#= arguments #><#= optionalComma #>token), addEventHandlers: true );
-        }
+            => TryInvoke(passToken: true);
 
 <#
         }
@@ -109,7 +104,69 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_DelayPolicy(Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
         {
-            <#= optionalAsync #>Action<#= typeArguments #> action = (<#= arguments #>) => Operation.Null<#= optionalAsync #>();
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>();
+            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke<#= optionalAsync #>, -2              , exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke<#= optionalAsync #>, Retries.Infinite, null           , delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke<#= optionalAsync #>, Retries.Infinite, exceptionPolicy, null              ));
+
+            // Create a Reliable<#= optionalAsync #>Action and validate
+            Reliable<#= optionalAsync #>Action<#= typeArguments #> actual = factory(action.Invoke<#= optionalAsync #>, 37, exceptionPolicy, delayPolicy.Invoke);
+
+            // Validate wrapped action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> actualAction = s_getAction(actual);
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action.Invoking += Expect.Arguments<#= typeArguments #>(Arguments.Validate);
+<#
+        }
+#>
+            Assert.AreEqual(0, action.Calls);
+            actualAction(<#= testArguments #>);
+            Assert.AreEqual(1, action.Calls);
+
+            Ctor(actual, 37, exceptionPolicy, delayPolicy);
+        }
+
+        private void Ctor_ComplexDelayPolicy(Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
+        {
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>();
+            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
+
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke<#= optionalAsync #>, -2              , exceptionPolicy, complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke<#= optionalAsync #>, Retries.Infinite, null           , complexDelayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke<#= optionalAsync #>, Retries.Infinite, exceptionPolicy, null              ));
+
+            // Create a Reliable<#= optionalAsync #>Action and validate
+            Reliable<#= optionalAsync #>Action<#= typeArguments #> actual = factory(action.Invoke<#= optionalAsync #>, 37, exceptionPolicy, complexDelayPolicy);
+
+            // Validate wrapped action
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> actualAction = s_getAction(actual);
+<#
+        if (parameterCount > 0)
+        {
+#>
+            action.Invoking += Expect.Arguments<#= typeArguments #>(Arguments.Validate);
+<#
+        }
+#>
+            Assert.AreEqual(0, action.Calls);
+            actualAction(<#= testArguments #>);
+            Assert.AreEqual(1, action.Calls);
+
+            Ctor(actual, 37, exceptionPolicy, complexDelayPolicy);
+        }
+
+        private void Ctor_Interruptable_DelayPolicy(Func<Interruptable<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, DelayPolicy, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
+        {
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> action = (<#= arguments #><#= optionalComma #>t) => Operation.Null<#= optionalAsync #>();
             ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
             FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
 
@@ -121,41 +178,26 @@ namespace Sweetener.Reliability.Test
             // Create a Reliable<#= optionalAsync #>Action and validate
             Reliable<#= optionalAsync #>Action<#= typeArguments #> actual = factory(action, 37, exceptionPolicy, delayPolicy.Invoke);
 
-            // DelayPolicies are wrapped in ComplexDelayPolicies, so we can only validate the correct assignment by invoking the policy
-            Ctor(actual, action, 37, exceptionPolicy, actualPolicy =>
-            {
-                delayPolicy.Invoking += (i, c) => Assert.AreEqual(i, 42);
-                Assert.AreEqual(Constants.Delay, actualPolicy(42, new ArgumentOutOfRangeException()));
-                Assert.AreEqual(1, delayPolicy.Calls);
-            });
+            Assert.AreSame(action, s_getAction(actual));
+            Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
 
-        private void Ctor_ComplexDelayPolicy(Func<<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
+        private void Ctor_Interruptable_ComplexDelayPolicy(Func<Interruptable<#= optionalAsync #>Action<#= typeArguments #>, int, ExceptionPolicy, ComplexDelayPolicy, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
         {
-            <#= optionalAsync #>Action<#= typeArguments #> action = (<#= arguments #>) => Operation.Null<#= optionalAsync #>();
+            Interruptable<#= optionalAsync #>Action<#= typeArguments #> action = (<#= arguments #><#= optionalComma #>t) => Operation.Null<#= optionalAsync #>();
             ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
             ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
 
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, complexDelayPolicy));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, complexDelayPolicy));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, (ComplexDelayPolicy)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null              ));
 
             // Create a Reliable<#= optionalAsync #>Action and validate
             Reliable<#= optionalAsync #>Action<#= typeArguments #> actual = factory(action, 37, exceptionPolicy, complexDelayPolicy);
-            Ctor(actual, action, 37, exceptionPolicy, complexDelayPolicy);
-        }
 
-        private void Ctor(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, <#= optionalAsync #>Action<#= typeArguments #> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
-            => Ctor(reliableAction, expectedAction, expectedMaxRetries, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
-
-        private void Ctor(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, <#= optionalAsync #>Action<#= typeArguments #> expectedAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy> validateDelayPolicy)
-        {
-            Assert.AreSame (expectedAction         , s_getAction(reliableAction)         );
-            Assert.AreEqual(expectedMaxRetries     , reliableAction.MaxRetries           );
-            Assert.AreSame (expectedExceptionPolicy, s_getExceptionPolicy(reliableAction));
-
-            validateDelayPolicy(s_getDelayPolicy(reliableAction));
+            Assert.AreSame(action, s_getAction(actual));
+            Ctor(actual, 37, exceptionPolicy, complexDelayPolicy);
         }
 
         #endregion
@@ -166,17 +208,29 @@ namespace Sweetener.Reliability.Test
 #>
         #region Invoke
 
-        private void Invoke(Action<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> invoke)
+        private void Invoke(bool passToken)
         {
+            Action<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke;
+            if (passToken)
+                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.Invoke(<#= arguments #><#= optionalComma #>t);
+            else
+                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.Invoke(<#= arguments #>);
+
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
                 Invoke_Success        (invoke, addEventHandlers);
                 Invoke_EventualSuccess(invoke, addEventHandlers);
 
-                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>), e), addEventHandlers);
-                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>), e), addEventHandlers);
-                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>), e), addEventHandlers);
+                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+
+                if (passToken)
+                {
+                    Invoke_Canceled_Action(invoke, addEventHandlers);
+                    Invoke_Canceled_Delay (invoke, addEventHandlers);
+                }
             }
         }
 
@@ -187,17 +241,29 @@ namespace Sweetener.Reliability.Test
 #>
         #region InvokeAsync
 
-        private void InvokeAsync(AsyncAction<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> invokeAsync)
+        private void InvokeAsync(bool passToken)
         {
+            Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke;
+            if (passToken)
+                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait();
+            else
+                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #>).Wait();
+
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
-                Invoke_Success        ((r<#= optionalComma #><#= arguments #>) => invokeAsync(r<#= optionalComma #><#= arguments #>).Wait(), addEventHandlers);
-                Invoke_EventualSuccess((r<#= optionalComma #><#= arguments #>) => invokeAsync(r<#= optionalComma #><#= arguments #>).Wait(), addEventHandlers);
+                Invoke_Success        (invoke, addEventHandlers);
+                Invoke_EventualSuccess(invoke, addEventHandlers);
 
-                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, e) => Assert.That.ThrowsException(async () => await invokeAsync(r<#= optionalComma #><#= arguments #>).ConfigureAwait(false), e), addEventHandlers);
-                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, e) => Assert.That.ThrowsException(async () => await invokeAsync(r<#= optionalComma #><#= arguments #>).ConfigureAwait(false), e), addEventHandlers);
-                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, e) => Assert.That.ThrowsException(async () => await invokeAsync(r<#= optionalComma #><#= arguments #>).ConfigureAwait(false), e), addEventHandlers);
+                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+
+                if (passToken)
+                {
+                    Invoke_Canceled_Action(invoke, addEventHandlers);
+                    Invoke_Canceled_Delay (invoke, addEventHandlers);
+                }
             }
         }
 
@@ -209,16 +275,28 @@ namespace Sweetener.Reliability.Test
 #>
         #region TryInvoke
 
-        private void TryInvoke(Func<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, bool> tryInvoke)
+        private void TryInvoke(bool passToken)
         {
+            Func<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken, bool> tryInvoke;
+            if (passToken)
+                tryInvoke = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #><#= optionalComma #>t);
+            else
+                tryInvoke = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #>);
+
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
-                Invoke_Success         ((r<#= optionalComma #><#= arguments #>   ) => Assert.IsTrue (tryInvoke(r<#= optionalComma #><#= arguments #>)), addEventHandlers);
-                Invoke_EventualSuccess ((r<#= optionalComma #><#= arguments #>   ) => Assert.IsTrue (tryInvoke(r<#= optionalComma #><#= arguments #>)), addEventHandlers);
-                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>)), addEventHandlers);
-                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>)), addEventHandlers);
-                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>)), addEventHandlers);
+                Invoke_Success         ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualSuccess ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+
+                if (passToken)
+                {
+                    Invoke_Canceled_Action((r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #><#= optionalComma #>t), addEventHandlers);
+                    Invoke_Canceled_Delay ((r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #><#= optionalComma #>t), addEventHandlers);
+                }
             }
         }
 
@@ -229,10 +307,12 @@ namespace Sweetener.Reliability.Test
 #>
         #region Invoke_Success
 
-        private void Invoke_Success(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> assertInvoke, bool addEventHandlers)
+        private void Invoke_Success(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> assertInvoke, bool addEventHandlers)
         {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
             // Create a "successful" user-defined action
-            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetNoOpInvoke(parameterCount, async) #>);
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetNoOpDelegate(parameterCount, async) #>);
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>();
@@ -272,7 +352,7 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>);
+            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token);
 
             // Validate the number of calls
             Assert.AreEqual(1, action          .Calls);
@@ -287,8 +367,10 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Failure
 
-        private void Invoke_Failure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, Type> assertInvoke, bool addEventHandlers)
+        private void Invoke_Failure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
             // Create an "unsuccessful" user-defined action
             <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetThrowException<InvalidOperationException>(parameterCount, async) #>);
 
@@ -330,7 +412,7 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, typeof(InvalidOperationException));
+            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token, typeof(InvalidOperationException));
 
             // Validate the number of calls
             Assert.AreEqual(1, action         .Calls);
@@ -349,11 +431,13 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_EventualSuccess
 
-        private void Invoke_EventualSuccess(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>> assertInvoke, bool addEventHandlers)
+        private void Invoke_EventualSuccess(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> assertInvoke, bool addEventHandlers)
         {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
-            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetDelegateInvoke(parameterCount, "flakyAction", async) #>);
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
@@ -399,7 +483,7 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>);
+            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token);
 
             // Validate the number of calls
             Assert.AreEqual(2, action         .Calls);
@@ -418,11 +502,13 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_EventualFailure
 
-        private void Invoke_EventualFailure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, Type> assertInvoke, bool addEventHandlers)
+        private void Invoke_EventualFailure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
-            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetDelegateInvoke(parameterCount, "flakyAction", async) #>);
+            <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
@@ -468,7 +554,7 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, typeof(InvalidOperationException));
+            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token, typeof(InvalidOperationException));
 
             // Validate the number of calls
             Assert.AreEqual(3, action         .Calls);
@@ -487,8 +573,10 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_RetriesExhausted
 
-        private void Invoke_RetriesExhausted(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, Type> assertInvoke, bool addEventHandlers)
+        private void Invoke_RetriesExhausted(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
             <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
 
@@ -536,7 +624,7 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Exception(typeof(IOException));
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, typeof(IOException));
+            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token, typeof(IOException));
 
             // Validate the number of calls
             Assert.AreEqual(3, action         .Calls);
@@ -553,19 +641,87 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
-        #region Invoke_Canceled
+        #region Invoke_Canceled_Action
 
-        private void Invoke_Canceled(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke, bool addEventHandlers)
-            => Invoke_Canceled_Delay((r<#= optionalComma #><#= arguments #>, token) => Assert.That.ThrowsException<OperationCanceledException>(() => invoke(r<#= optionalComma #><#= arguments #>, token)), addEventHandlers);
-
-        // The Async method will expose a "TaskCanceledException" directly
-        private void Invoke_Canceled(AsyncAction<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invokeAsync, bool addEventHandlers)
-            => Invoke_Canceled_Delay((r<#= optionalComma #><#= arguments #>, token) => Assert.That.ThrowsException<TaskCanceledException>(async () => await invokeAsync(r<#= optionalComma #><#= arguments #>, token).ConfigureAwait(false)), addEventHandlers);
-
-        private void Invoke_Canceled_Delay(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> assertInvoke, bool addEventHandlers)
+        private void Invoke_Canceled_Action(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke, bool addEventHandlers)
         {
-            using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
-            using CancellationTokenSource tokenSource         = new CancellationTokenSource();
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            // Create a user-defined action that will throw an exception depending on whether its canceled
+            <#= optionalAsync #>ActionProxy<<#= typeArgumentsNoBracket #><#= optionalComma #>CancellationToken> action = new <#= optionalAsync #>ActionProxy<<#= typeArgumentsNoBracket #><#= optionalComma #>CancellationToken>(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalComma #>token) =>
+            {
+<#
+        if (async)
+        {
+#>
+                await Task.CompletedTask;
+<#
+        }
+#>
+                token.ThrowIfCancellationRequested();
+                throw new IOException();
+            });
+
+            // Declare the various policy and event handler proxies
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
+
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create Reliable<#= optionalAsync #>Action
+            Reliable<#= optionalAsync #>Action<#= typeArguments #> reliable<#= optionalAsync #>Action = new Reliable<#= optionalAsync #>Action<#= typeArguments #>(
+                action.Invoke<#= optionalAsync #>,
+                Retries.Infinite,
+                exceptionPolicy.Invoke,
+                delayPolicy    .Invoke);
+
+            if (addEventHandlers)
+            {
+                reliable<#= optionalAsync #>Action.Retrying         += retryHandler    .Invoke;
+                reliable<#= optionalAsync #>Action.Failed           += failedHandler   .Invoke;
+                reliable<#= optionalAsync #>Action.RetriesExhausted += exhaustedHandler.Invoke;
+            }
+
+            // Define expectations
+            action          .Invoking += Expect.ArgumentsAfterDelay<<#= typeArgumentsNoBracket #><#= optionalComma #>CancellationToken>(Arguments.Validate, Constants.MinDelay);
+            exceptionPolicy .Invoking += Expect.Exception(typeof(IOException));
+            delayPolicy     .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+            failedHandler   .Invoking += Expect.Nothing<Exception>();
+            exhaustedHandler.Invoking += Expect.Nothing<Exception>();
+
+            // Cancel the action on its 2nd attempt
+            action          .Invoking += (<#= arguments #><#= optionalComma #>t, c) =>
+            {
+                if (c.Calls == 2)
+                    tokenSource.Cancel();
+            };
+
+            // Invoke, retry, and cancel
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token), allowedDerivedTypes: true);
+
+            // Validate the number of calls
+            Assert.AreEqual(2, action         .Calls);
+            Assert.AreEqual(1, exceptionPolicy.Calls);
+            Assert.AreEqual(1, delayPolicy    .Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(1, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
+        }
+
+        #endregion
+
+        #region Invoke_Canceled_Delay
+
+        private void Invoke_Canceled_Delay(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBracket #>, CancellationToken> invoke, bool addEventHandlers)
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
             <#= optionalAsync #>ActionProxy<#= typeArguments #> action = new <#= optionalAsync #>ActionProxy<#= typeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
@@ -613,38 +769,26 @@ namespace Sweetener.Reliability.Test
             failedHandler   .Invoking += Expect.Nothing<Exception>();
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
-            // Trigger the event upon retry
-            action          .Invoking += (<#= arguments #><#= optionalComma #>c) =>
+            // Cancel the delay on its 2nd invocation
+            delayPolicy     .Invoking += (i, e, c) =>
             {
-                if (c.Calls > 1)
-                    cancellationTrigger.Set();
+                if (c.Calls == 2)
+                    tokenSource.Cancel();
             };
 
-            // Create a task whose job is to cancel the invocation after at least 1 retry
-            Task cancellationTask = Task.Factory.StartNew((state) =>
-            {
-                (ManualResetEvent e, CancellationTokenSource s) = ((ManualResetEvent, CancellationTokenSource))state;
-                e.WaitOne();
-                s.Cancel();
-
-            }, (cancellationTrigger, tokenSource));
-
-            // Begin the invocation
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token);
+            // Invoke, retry, and cancel
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= testArguments #>, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            int calls = action.Calls;
-            Assert.IsTrue(calls > 1);
-
-            Assert.AreEqual(calls, action         .Calls);
-            Assert.AreEqual(calls, exceptionPolicy.Calls);
-            Assert.AreEqual(calls, delayPolicy    .Calls);
+            Assert.AreEqual(2, action         .Calls);
+            Assert.AreEqual(2, exceptionPolicy.Calls);
+            Assert.AreEqual(2, delayPolicy    .Calls);
 
             if (addEventHandlers)
             {
-                Assert.AreEqual(calls - 1, retryHandler    .Calls);
-                Assert.AreEqual(0        , failedHandler   .Calls);
-                Assert.AreEqual(0        , exhaustedHandler.Calls);
+                Assert.AreEqual(1, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
             }
         }
 

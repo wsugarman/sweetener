@@ -3,7 +3,7 @@ using System;
 
 namespace Sweetener.Reliability
 {
-    partial class ReliableAction
+    partial class ReliableAsyncAction
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T}"/>
