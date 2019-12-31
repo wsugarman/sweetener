@@ -11,7 +11,7 @@ namespace Sweetener.Reliability
     /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableAction<T> : ReliableDelegate
     {
-        private readonly InterruptableAction<T> _action;
+        private readonly Action<T, CancellationToken> _action;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T}"/>
@@ -53,7 +53,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T}"/>
-        /// class that executes the given <see cref="InterruptableAction{T}"/> at most a
+        /// class that executes the given <see cref="Action{T, CancellationToken}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -66,7 +66,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAction(InterruptableAction<T> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public ReliableAction(Action<T, CancellationToken> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -74,7 +74,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T}"/>
-        /// class that executes the given <see cref="InterruptableAction{T}"/> at most a
+        /// class that executes the given <see cref="Action{T, CancellationToken}"/> at most a
         /// specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -87,7 +87,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAction(InterruptableAction<T> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public ReliableAction(Action<T, CancellationToken> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
             : base(maxRetries, exceptionPolicy, delayPolicy)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));

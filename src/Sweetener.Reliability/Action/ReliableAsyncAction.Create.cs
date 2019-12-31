@@ -1,5 +1,7 @@
 // Generated from ReliableAsyncAction.Create.tt
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
@@ -7,7 +9,7 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="AsyncAction"/>
+        /// that executes the given <see cref="Func{Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -22,7 +24,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction Create(
-            AsyncAction action,
+            Func<Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -30,7 +32,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="AsyncAction"/>
+        /// that executes the given <see cref="Func{Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -45,7 +47,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction Create(
-            AsyncAction action,
+            Func<Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
@@ -53,7 +55,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="InterruptableAsyncAction"/>
+        /// that executes the given <see cref="Func{CancellationToken, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -68,7 +70,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction Create(
-            InterruptableAsyncAction action,
+            Func<CancellationToken, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -76,7 +78,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="InterruptableAsyncAction"/>
+        /// that executes the given <see cref="Func{CancellationToken, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -91,7 +93,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction Create(
-            InterruptableAsyncAction action,
+            Func<CancellationToken, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)

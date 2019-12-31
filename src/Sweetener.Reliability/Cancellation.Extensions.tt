@@ -25,31 +25,15 @@ namespace Sweetener.Reliability
         #region Action
 
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 2; parameterCount++)
     {
-        string arguments      = GetArguments(parameterCount);
-        string typeParameters = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ">" : string.Empty;
-        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string optionalComma        = parameterCount > 0 ? ", " : string.Empty;
+        string arguments            = GetArguments(parameterCount);
+        string inputTypeParameters  = Enclose(GetActionTypeParameters(parameterCount                     ), BracketType.AngleBrackets);
+        string outputTypeParameters = Enclose(GetActionTypeParameters(parameterCount, interruptable: true), BracketType.AngleBrackets);
 #>
-        public static InterruptableAction<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this Action<#= typeParameters #> action)
-            => action == null ? (InterruptableAction<#= typeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => action(<#= arguments #>);
-
-<#
-    }
-#>
-        #endregion
-
-        #region AsyncAction
-
-<#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
-    {
-        string arguments      = GetArguments(parameterCount);
-        string typeParameters = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ">" : string.Empty;
-        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
-#>
-        public static InterruptableAsyncAction<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this AsyncAction<#= typeParameters #> action)
-            => action == null ? (InterruptableAsyncAction<#= typeParameters #>)null : async (<#= arguments #><#= optionalComma #>token) => await action(<#= arguments #>).ConfigureAwait(false);
+        public static Action<#= outputTypeParameters #> IgnoreInterruption<#= inputTypeParameters #>(this Action<#= inputTypeParameters #> action)
+            => action == null ? (Action<#= outputTypeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => action(<#= arguments #>);
 
 <#
     }
@@ -59,31 +43,15 @@ namespace Sweetener.Reliability
         #region Func
 
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 2; parameterCount++)
     {
-        string arguments      = GetArguments(parameterCount);
-        string typeParameters = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ", TResult>" : "<TResult>";
-        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string optionalComma        = parameterCount > 0 ? ", " : string.Empty;
+        string arguments            = GetArguments(parameterCount);
+        string inputTypeParameters  = Enclose(GetFuncTypeParameters(parameterCount                     ), BracketType.AngleBrackets);
+        string outputTypeParameters = Enclose(GetFuncTypeParameters(parameterCount, interruptable: true), BracketType.AngleBrackets);
 #>
-        public static InterruptableFunc<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this Func<#= typeParameters #> func)
-            => func == null ? (InterruptableFunc<#= typeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => func(<#= arguments #>);
-
-<#
-    }
-#>
-        #endregion
-
-        #region AsyncFunc
-
-<#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
-    {
-        string arguments      = GetArguments(parameterCount);
-        string typeParameters = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ", TResult>" : "<TResult>";
-        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
-#>
-        public static InterruptableAsyncFunc<#= typeParameters #> IgnoreInterruption<#= typeParameters #>(this AsyncFunc<#= typeParameters #> func)
-            => func == null ? (InterruptableAsyncFunc<#= typeParameters #>)null : async (<#= arguments #><#= optionalComma #>token) => await func(<#= arguments #>).ConfigureAwait(false);
+        public static Func<#= outputTypeParameters #> IgnoreInterruption<#= inputTypeParameters #>(this Func<#= inputTypeParameters #> func)
+            => func == null ? (Func<#= outputTypeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => func(<#= arguments #>);
 
 <#
     }

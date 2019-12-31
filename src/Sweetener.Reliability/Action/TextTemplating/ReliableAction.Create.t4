@@ -8,16 +8,30 @@
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string arguments      = GetArguments     (parameterCount);
-        string parameters     = GetParameters    (parameterCount);
-        string typeParameters = GetTypeParameters(parameterCount);
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments (parameterCount);
+        string parameters     = GetParameters(parameterCount);
 
-        string typeParametersCode    = typeParameters == string.Empty ? string.Empty : "<" + typeParameters + ">";
-        string typeParametersComment = typeParameters == string.Empty ? string.Empty : "{" + typeParameters + "}";
+        string typeParameters        = GetActionTypeParameters(parameterCount);
+        string typeParametersCode    = Enclose(typeParameters, BracketType.AngleBrackets);
+        string typeParametersComment = Enclose(typeParameters, BracketType.CurlyBraces  );
+
+        string inputActionTypeCode         = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: false), BracketType.AngleBrackets);
+        string inputActionTypeComment      = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: false), BracketType.CurlyBraces  );
+        string tokenInputActionTypeCode    = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true ), BracketType.AngleBrackets);
+        string tokenInputActionTypeComment = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true ), BracketType.CurlyBraces  );
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
+using System.Threading;
+<#
+        if (async)
+        {
+#>
+using System.Threading.Tasks;
+<#
+        }
+#>
 
 namespace Sweetener.Reliability
 {
@@ -25,14 +39,14 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="<#= inputActionTypeComment #>"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            <#= optionalAsync #>Action<#= typeParametersCode #> action,
+            <#= inputActionTypeCode #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -40,14 +54,14 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="<#= inputActionTypeComment #>"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            <#= optionalAsync #>Action<#= typeParametersCode #> action,
+            <#= inputActionTypeCode #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
@@ -55,14 +69,14 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="Interruptable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="<#= tokenInputActionTypeComment #>"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> action,
+            <#= tokenInputActionTypeCode #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -70,14 +84,14 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="Interruptable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// that executes the given <see cref="<#= tokenInputActionTypeComment #>"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            Interruptable<#= optionalAsync #>Action<#= typeParametersCode #> action,
+            <#= tokenInputActionTypeCode #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)

@@ -16,21 +16,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.tt</DependentUpon>
     </Compile>
-    <Compile Update="Action\AsyncAction.Extensions*.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AsyncAction.Extensions.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Action\InterruptableAction.Extensions*.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>InterruptableAction.Extensions.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Action\InterruptableAsyncAction.Extensions*.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>InterruptableAsyncAction.Extensions.tt</DependentUpon>
-    </Compile>
     <Compile Update="Action\ReliableAction.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -114,18 +99,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Action.Extensions.tt.out</LastGenOutput>
     </None>
-    <None Update="Action\AsyncAction.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>AsyncAction.Extensions.tt.out</LastGenOutput>
-    </None>
-    <None Update="Action\InterruptableAction.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>InterruptableAction.Extensions.tt.out</LastGenOutput>
-    </None>
-    <None Update="Action\InterruptableAsyncAction.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>InterruptableAsyncAction.Extensions.tt.out</LastGenOutput>
-    </None>
     <None Update="Action\ReliableAction.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAction.tt.out</LastGenOutput>
@@ -186,21 +159,6 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.tt</DependentUpon>
-    </None>
-    <None Update="Action\AsyncAction.Extensions.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AsyncAction.Extensions.tt</DependentUpon>
-    </None>
-    <None Update="Action\InterruptableAction.Extensions.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>InterruptableAction.Extensions.tt</DependentUpon>
-    </None>
-    <None Update="Action\InterruptableAsyncAction.Extensions.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>InterruptableAsyncAction.Extensions.tt</DependentUpon>
     </None>
     <None Update="Action\ReliableAction.tt.out">
       <DesignTime>True</DesignTime>

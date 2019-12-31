@@ -1,5 +1,7 @@
 // Generated from ReliableAsyncAction.Create.tt
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
@@ -7,7 +9,7 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T}"/>
-        /// that executes the given <see cref="AsyncAction{T}"/>
+        /// that executes the given <see cref="Func{T, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -23,7 +25,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T> Create<T>(
-            AsyncAction<T> action,
+            Func<T, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -31,7 +33,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T}"/>
-        /// that executes the given <see cref="AsyncAction{T}"/>
+        /// that executes the given <see cref="Func{T, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -47,7 +49,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T> Create<T>(
-            AsyncAction<T> action,
+            Func<T, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
@@ -55,7 +57,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T}"/>
-        /// that executes the given <see cref="InterruptableAsyncAction{T}"/>
+        /// that executes the given <see cref="Func{T, CancellationToken, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -71,7 +73,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T> Create<T>(
-            InterruptableAsyncAction<T> action,
+            Func<T, CancellationToken, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -79,7 +81,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T}"/>
-        /// that executes the given <see cref="InterruptableAsyncAction{T}"/>
+        /// that executes the given <see cref="Func{T, CancellationToken, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -95,7 +97,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T> Create<T>(
-            InterruptableAsyncAction<T> action,
+            Func<T, CancellationToken, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)

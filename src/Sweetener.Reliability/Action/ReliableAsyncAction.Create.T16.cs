@@ -1,5 +1,7 @@
 // Generated from ReliableAsyncAction.Create.tt
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
@@ -7,7 +9,7 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
-        /// that executes the given <see cref="AsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+        /// that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -38,7 +40,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
-            AsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -46,7 +48,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
-        /// that executes the given <see cref="AsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+        /// that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -77,7 +79,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
-            AsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
@@ -85,7 +87,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
-        /// that executes the given <see cref="InterruptableAsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+        /// that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -116,7 +118,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
-            InterruptableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -124,7 +126,7 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
-        /// that executes the given <see cref="InterruptableAsyncAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+        /// that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken, Task}"/>
         /// at most a specific number of times based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -155,7 +157,7 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static ReliableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
-            InterruptableAsyncAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> action,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken, Task> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)

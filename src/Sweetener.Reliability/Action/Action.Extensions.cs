@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 namespace Sweetener.Reliability
 {
     /// <summary>
-    /// A collection of methods to reliablty invoke  actions.
+    /// A collection of methods to reliablty invoke user-defined actions.
     /// </summary>
     public static partial class ActionExtensions
     {
+        #region Action
+
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="action" />
         /// that will retry the operation based on the provided policies.
@@ -25,7 +27,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAction WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public static Action WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
@@ -43,7 +45,80 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAction WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static Action WithRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionPolicy == null)
+                throw new ArgumentNullException(nameof(exceptionPolicy));
+
+            if (delayPolicy == null)
+                throw new ArgumentNullException(nameof(delayPolicy));
+
+            return () =>
+            {
+                int attempt = 0;
+
+            Attempt:
+                attempt++;
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
+
+                    Task.Delay(delayPolicy(attempt, e)).Wait();
+                    goto Attempt;
+                }
+            };
+        }
+
+        #endregion
+
+        #region Action<CancellationToken>
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public static Action<CancellationToken> WithRetry(this Action<CancellationToken> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public static Action<CancellationToken> WithRetry(this Action<CancellationToken> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -65,7 +140,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    action();
+                    action(cancellationToken);
                     return;
                 }
                 catch (Exception e)
@@ -79,26 +154,12 @@ namespace Sweetener.Reliability
             };
         }
 
-        /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
-        /// that will retry the operation based on the provided policies.
-        /// </summary>
-        /// <param name="action">The action to encapsulate.</param>
-        /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
-        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
-        /// </exception>
-        public static InterruptableAsyncAction WithAsyncRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithAsyncRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
+        #endregion
+
+        #region Func<Task>
 
         /// <summary>
-        /// Creates a reliable wrapper around the given <paramref name="action" />
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
@@ -112,7 +173,101 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static InterruptableAsyncAction WithAsyncRetry(this Action action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static Func<Task> WithRetry(this Func<Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public static Func<Task> WithRetry(this Func<Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionPolicy == null)
+                throw new ArgumentNullException(nameof(exceptionPolicy));
+
+            if (delayPolicy == null)
+                throw new ArgumentNullException(nameof(delayPolicy));
+
+            return async () =>
+            {
+                Task t;
+                int attempt = 0;
+
+            Attempt:
+                attempt++;
+                t = null;
+                try
+                {
+                    t = action();
+                    await t.ConfigureAwait(false);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
+
+                    await Task.Delay(delayPolicy(attempt, e)).ConfigureAwait(false);
+                    goto Attempt;
+                }
+            };
+        }
+
+        #endregion
+
+        #region Func<CancellationToken, Task>
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public static Func<CancellationToken, Task> WithRetry(this Func<CancellationToken, Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+        /// <param name="action">The action to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <returns>A reliable delegate that encapsulates the <paramref name="action" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public static Func<CancellationToken, Task> WithRetry(this Func<CancellationToken, Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -128,18 +283,21 @@ namespace Sweetener.Reliability
 
             return async (cancellationToken) =>
             {
+                Task t;
                 int attempt = 0;
 
             Attempt:
                 attempt++;
+                t = null;
                 try
                 {
-                    action();
+                    t = action(cancellationToken);
+                    await t.ConfigureAwait(false);
                     return;
                 }
                 catch (Exception e)
                 {
-                    if (e.IsCancellation(cancellationToken) || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (t.IsCanceled() || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayPolicy(attempt, e), cancellationToken).ConfigureAwait(false);
@@ -147,5 +305,8 @@ namespace Sweetener.Reliability
                 }
             };
         }
+
+        #endregion
+
     }
 }
