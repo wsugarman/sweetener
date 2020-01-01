@@ -8,11 +8,10 @@
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string arguments              = GetArguments     (parameterCount);
-        string parameters             = GetParameters    (parameterCount);
-        string optionalComma          = parameterCount > 0 ? ", " : string.Empty;
-        string typeParametersNoResult = GetTypeParameters(parameterCount);
-        string typeParameters         = typeParametersNoResult + optionalComma + "TResult";
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments         (parameterCount);
+        string parameters     = GetParameters        (parameterCount);
+        string typeParameters = GetFuncTypeParameters(parameterCount);
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
@@ -29,64 +28,121 @@ namespace Sweetener.Reliability
 #>
     public sealed class Reliable<#= optionalAsync #>Func<<#= typeParameters #>> : ReliableDelegate<TResult>
     {
-        private readonly <#= optionalAsync #>Func<<#= typeParameters #>> _func;
+        private readonly Func<<#= GetFuncTypeParameters(parameterCount, async, interruptable: true) #>> _func;
+<#
+        foreach (bool interruptable in new bool[] { false, true })
+        {
+            string inputTypeParameters = GetFuncTypeParameters(parameterCount, async, interruptable);
+#>
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
-        /// class that executes the given <see cref="<#= optionalAsync #>Func{<#= typeParameters #>}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: false, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(<#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+<#
+            if (interruptable)
+            {
+#>
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
         }
+<#
+            }
+            else
+            {
+#>
+        { }
+<#
+            }
+#>
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
-        /// class that executes the given <see cref="<#= optionalAsync #>Func{<#= typeParameters #>}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: false, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(<#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+<#
+            if (interruptable)
+            {
+#>
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
         }
+<#
+            }
+            else
+            {
+#>
+        { }
+<#
+            }
+#>
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
-        /// class that executes the given <see cref="<#= optionalAsync #>Func{<#= typeParameters #>}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: true, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(<#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+<#
+            if (interruptable)
+            {
+#>
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
         }
+<#
+            }
+            else
+            {
+#>
+        { }
+<#
+            }
+#>
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
-        /// class that executes the given <see cref="<#= optionalAsync #>Func{<#= typeParameters #>}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: true, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(<#= optionalAsync #>Func<<#= typeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+<#
+            if (interruptable)
+            {
+#>
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
         }
 <#
+            }
+            else
+            {
+#>
+        { }
+<#
+            }
+        }
+
         if (!async)
         {
 #>
@@ -122,7 +178,7 @@ namespace Sweetener.Reliability
             attempt++;
             try
             {
-                result = _func(<#= arguments #>);
+                result = _func(<#= arguments #><#= optionalComma #>cancellationToken);
             }
             catch (Exception e)
             {
@@ -201,14 +257,14 @@ namespace Sweetener.Reliability
         if (async)
         {
 #>
-                t = _func(<#= arguments #>);
+                t = _func(<#= arguments #><#= optionalComma #>cancellationToken);
                 await t.ConfigureAwait(false);
 <#
         }
         else
         {
 #>
-                result = _func(<#= arguments #>);
+                result = _func(<#= arguments #><#= optionalComma #>cancellationToken);
 <#
         }
 #>
@@ -287,7 +343,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    result = _func(<#= arguments #>);
+                    result = _func(<#= arguments #><#= optionalComma #>cancellationToken);
                 }
                 catch (Exception e)
                 {

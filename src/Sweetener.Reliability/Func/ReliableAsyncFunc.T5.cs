@@ -15,12 +15,12 @@ namespace Sweetener.Reliability
     /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableAsyncFunc<T1, T2, T3, T4, TResult> : ReliableDelegate<TResult>
     {
-        private readonly AsyncFunc<T1, T2, T3, T4, TResult> _func;
+        private readonly Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> _func;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
-        /// class that executes the given <see cref="AsyncFunc{T1, T2, T3, T4, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -32,16 +32,14 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncFunc(AsyncFunc<T1, T2, T3, T4, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, Task<TResult>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : this(func.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
-        /// class that executes the given <see cref="AsyncFunc{T1, T2, T3, T4, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -53,16 +51,14 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncFunc(AsyncFunc<T1, T2, T3, T4, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, Task<TResult>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : this(func.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
-        /// class that executes the given <see cref="AsyncFunc{T1, T2, T3, T4, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -75,7 +71,89 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncFunc(AsyncFunc<T1, T2, T3, T4, TResult> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, Task<TResult>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : this(func.IgnoreInterruption(), maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, Task<TResult>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : this(func.IgnoreInterruption(), maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _func = func ?? throw new ArgumentNullException(nameof(func));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _func = func ?? throw new ArgumentNullException(nameof(func));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
@@ -83,8 +161,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncFunc{T1, T2, T3, T4, TResult}"/>
-        /// class that executes the given <see cref="AsyncFunc{T1, T2, T3, T4, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -97,7 +175,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncFunc(AsyncFunc<T1, T2, T3, T4, TResult> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+        public ReliableAsyncFunc(Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
@@ -137,7 +215,7 @@ namespace Sweetener.Reliability
             attempt++;
             try
             {
-                t = _func(arg1, arg2, arg3, arg4);
+                t = _func(arg1, arg2, arg3, arg4, cancellationToken);
                 await t.ConfigureAwait(false);
             }
             catch (Exception e)

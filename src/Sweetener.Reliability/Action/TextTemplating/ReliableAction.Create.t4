@@ -15,11 +15,6 @@
         string typeParameters        = GetActionTypeParameters(parameterCount);
         string typeParametersCode    = Enclose(typeParameters, BracketType.AngleBrackets);
         string typeParametersComment = Enclose(typeParameters, BracketType.CurlyBraces  );
-
-        string inputActionTypeCode         = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: false), BracketType.AngleBrackets);
-        string inputActionTypeComment      = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: false), BracketType.CurlyBraces  );
-        string tokenInputActionTypeCode    = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true ), BracketType.AngleBrackets);
-        string tokenInputActionTypeComment = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true ), BracketType.CurlyBraces  );
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
@@ -37,16 +32,21 @@ namespace Sweetener.Reliability
 {
     partial class Reliable<#= optionalAsync #>Action
     {
+<#
+        foreach (bool interruptable in new bool[] { false, true })
+        {
+            string inputActionType = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable), BracketType.AngleBrackets);
+#>
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= inputActionTypeComment #>"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given <#= async ? "asynchronous " : string.Empty #>action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            <#= inputActionTypeCode #> action,
+            <#= inputActionType #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             DelayPolicy delayPolicy)
@@ -54,48 +54,22 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= inputActionTypeComment #>"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given <#= async ? "asynchronous " : string.Empty #>action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            <#= inputActionTypeCode #> action,
+            <#= inputActionType #> action,
             int maxRetries,
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
             => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
 
-        /// <summary>
-        /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= tokenInputActionTypeComment #>"/>
-        /// at most a specific number of times based on the provided policies.
-        /// </summary>
 <#
-        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+        }
 #>
-        public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            <#= tokenInputActionTypeCode #> action,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            DelayPolicy delayPolicy)
-            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
-
-        /// <summary>
-        /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// that executes the given <see cref="<#= tokenInputActionTypeComment #>"/>
-        /// at most a specific number of times based on the provided policies.
-        /// </summary>
-<#
-        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
-#>
-        public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
-            <#= tokenInputActionTypeCode #> action,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            ComplexDelayPolicy delayPolicy)
-            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
     }
 }
 <#

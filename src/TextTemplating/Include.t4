@@ -25,47 +25,17 @@
         GenerationEnvironment.Length = 0; // Remove everything written thus far
     }
 
-    public string GetActionTypeParameters(int count, bool async = false, bool interruptable = false, string variance = null)
-    {
-        string result = GenerateIncrementingList(count, variance != null ? variance + " T" : "T"); // T1, T2, T3
-        string optionalComma = string.IsNullOrEmpty(result) ? string.Empty : ", ";
+    public string GetActionTypeParameters(int count, bool async = false, bool interruptable = false, bool contravariant = false)
+        => GetInputTypeParameters(count, interruptable, contravariant) + (async ? (count > 0 || interruptable ? ", Task" : "Task") : string.Empty);
 
-        // Optionally add a token
-        if (interruptable)
-        {
-            result += optionalComma + "CancellationToken";
-            optionalComma = ", ";
-        }
+    public string GetFuncTypeParameters(int count, bool async = false, bool interruptable = false, bool variance = false)
+        => GetInputTypeParameters(count, interruptable, variance)
+        + (count > 0 || interruptable ? ", " : string.Empty)
+        + (async ? "Task<TResult>" : (variance ? "out " : string.Empty) + "TResult");
 
-        // Optionally add a Task
-        if (async)
-        {
-            result += optionalComma + "Task";
-        }
-
-        return result;
-    }
-
-    public string GetFuncTypeParameters(int count, bool async = false, bool interruptable = false, string variance = null)
-    {
-        string result = GenerateIncrementingList(count, variance != null ? variance + " T" : "T"); // T1, T2, T3
-        string optionalComma = string.IsNullOrEmpty(result) ? string.Empty : ", ";
-
-        // Optionally add a token
-        if (interruptable)
-        {
-            result += optionalComma + "CancellationToken";
-            optionalComma = ", ";
-        }
-
-        // Optionally add a Task
-        if (async)
-            result += optionalComma + "Task<TResult>";
-        else
-            result += optionalComma + "TResult";
-
-        return result;
-    }
+    private string GetInputTypeParameters(int count, bool interruptable = false, bool contravariant = false)
+        => GenerateIncrementingList(count, contravariant ? "in T" : "T") // T1, T2, T3
+        + (interruptable ? (count > 0 ? ", " : string.Empty) + "CancellationToken" : string.Empty);
 
     public string GetParameters(int count)
         => GenerateIncrementingList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3

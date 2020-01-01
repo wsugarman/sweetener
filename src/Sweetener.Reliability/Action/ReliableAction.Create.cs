@@ -8,8 +8,8 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAction"/>
-        /// that executes the given <see cref="Action"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -31,8 +31,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAction"/>
-        /// that executes the given <see cref="Action"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -54,8 +54,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAction"/>
-        /// that executes the given <see cref="Action{CancellationToken}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -77,8 +77,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAction"/>
-        /// that executes the given <see cref="Action{CancellationToken}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -97,5 +97,6 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
             => new ReliableAction(action, maxRetries, exceptionPolicy, delayPolicy);
+
     }
 }

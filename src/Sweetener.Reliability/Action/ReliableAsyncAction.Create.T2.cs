@@ -9,8 +9,8 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2}"/>
-        /// that executes the given <see cref="Func{T1, T2, Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -34,8 +34,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2}"/>
-        /// that executes the given <see cref="Func{T1, T2, Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -59,8 +59,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2}"/>
-        /// that executes the given <see cref="Func{T1, T2, CancellationToken, Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -84,8 +84,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction{T1, T2}"/>
-        /// that executes the given <see cref="Func{T1, T2, CancellationToken, Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -106,5 +106,6 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
             => new ReliableAsyncAction<T1, T2>(action, maxRetries, exceptionPolicy, delayPolicy);
+
     }
 }

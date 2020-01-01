@@ -15,11 +15,6 @@
         string typeParameters        = GetActionTypeParameters(parameterCount);
         string typeParametersCode    = Enclose(typeParameters, BracketType.AngleBrackets);
         string typeParametersComment = Enclose(typeParameters, BracketType.CurlyBraces  );
-
-        string inputActionTypeCode         = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: false), BracketType.AngleBrackets);
-        string inputActionTypeComment      = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: false), BracketType.CurlyBraces  );
-        string tokenInputActionTypeCode    = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true ), BracketType.AngleBrackets);
-        string tokenInputActionTypeComment = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true ), BracketType.CurlyBraces  );
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
@@ -36,60 +31,66 @@ namespace Sweetener.Reliability
 #>
     public sealed <#= parameterCount == 0 ? "partial " : "" #>class Reliable<#= optionalAsync #>Action<#= typeParametersCode #> : ReliableDelegate
     {
-        private readonly <#= tokenInputActionTypeCode #> _action;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// class that executes the given <see cref="<#= inputActionTypeComment #>"/> at most a
-        /// specific number of times based on the provided policies.
-        /// </summary>
+        private readonly <#= (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable: true), BracketType.AngleBrackets) #> _action;
 <#
-        PrintReliableActionCtorXmlDoc(indent: 2);
-#>
-        public Reliable<#= optionalAsync #>Action(<#= inputActionTypeCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// class that executes the given <see cref="<#= inputActionTypeComment #>"/> at most a
-        /// specific number of times based on the provided policies.
-        /// </summary>
-<#
-        PrintReliableActionCtorXmlDoc(indent: 2);
-#>
-        public Reliable<#= optionalAsync #>Action(<#= inputActionTypeCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// class that executes the given <see cref="<#= tokenInputActionTypeComment #>"/> at most a
-        /// specific number of times based on the provided policies.
-        /// </summary>
-<#
-        PrintReliableActionCtorXmlDoc(indent: 2);
-#>
-        public Reliable<#= optionalAsync #>Action(<#= tokenInputActionTypeCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
+        foreach (bool interruptable in new bool[] { false, true })
         {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-        }
+            string inputActionType = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable), BracketType.AngleBrackets);
+#>
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
-        /// class that executes the given <see cref="<#= tokenInputActionTypeComment #>"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given <#= async ? "asynchronous " : string.Empty #>action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2);
 #>
-        public Reliable<#= optionalAsync #>Action(<#= tokenInputActionTypeCode #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Action(<#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : <#= interruptable ? "base(" : "this(action.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+<#
+            if (interruptable)
+            {
+#>
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
         }
 <#
+            }
+            else
+            {
+#>
+        { }
+<#
+            }
+#>
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
+        /// class that executes the given <#= async ? "asynchronous " : string.Empty #>action at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableActionCtorXmlDoc(indent: 2);
+#>
+        public Reliable<#= optionalAsync #>Action(<#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+            : <#= interruptable ? "base(" : "this(action.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+<#
+            if (interruptable)
+            {
+#>
+        {
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+        }
+<#
+            }
+            else
+            {
+#>
+        { }
+<#
+            }
+        }
         if (!async)
         {
 #>

@@ -18,8 +18,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3, T4}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, Task}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -37,8 +37,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3, T4}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, Task}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -56,8 +56,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3, T4}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, CancellationToken, Task}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -77,8 +77,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAsyncAction{T1, T2, T3, T4}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, CancellationToken, Task}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>

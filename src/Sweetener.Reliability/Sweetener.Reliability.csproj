@@ -51,11 +51,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Cancellation.Extensions.tt</DependentUpon>
     </Compile>
-    <Compile Update="Func\AsyncFunc.Extensions.T*.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AsyncFunc.Extensions.tt</DependentUpon>
-    </Compile>
     <Compile Update="Func\Func.Extensions.T*.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -119,10 +114,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Cancellation.Extensions.cs</LastGenOutput>
     </None>
-    <None Update="Func\AsyncFunc.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>AsyncFunc.Extensions.tt.out</LastGenOutput>
-    </None>
     <None Update="Func\Func.Extensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Func.Extensions.tt.out</LastGenOutput>
@@ -179,11 +170,6 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAsyncAction.Create.tt</DependentUpon>
-    </None>
-    <None Update="Func\AsyncFunc.Extensions.tt.out">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AsyncFunc.Extensions.tt</DependentUpon>
     </None>
     <None Update="Func\Func.Extensions.tt.out">
       <DesignTime>True</DesignTime>

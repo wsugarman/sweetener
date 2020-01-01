@@ -23,8 +23,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
-        /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -42,8 +42,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
-        /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -61,8 +61,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
-        /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, CancellationToken}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -82,8 +82,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/>
-        /// class that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, CancellationToken}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>

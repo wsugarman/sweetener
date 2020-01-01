@@ -8,8 +8,8 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
-        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -44,8 +44,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
-        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -80,8 +80,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
-        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -116,8 +116,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAction{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/>
-        /// that executes the given <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -149,5 +149,6 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
             => new ReliableAction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(action, maxRetries, exceptionPolicy, delayPolicy);
+
     }
 }

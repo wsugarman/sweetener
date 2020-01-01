@@ -19,12 +19,12 @@ namespace Sweetener.Reliability
     /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
     public sealed class ReliableFunc<T1, T2, T3, T4, T5, T6, T7, T8, TResult> : ReliableDelegate<TResult>
     {
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> _func;
+        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult> _func;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -37,15 +37,13 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
+            : this(func.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -58,15 +56,13 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
+            : this(func.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -80,15 +76,13 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
+            : this(func.IgnoreInterruption(), maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
-        /// class that executes the given <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/> at most a
-        /// specific number of times based on the provided policies.
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -102,6 +96,90 @@ namespace Sweetener.Reliability
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : this(func.IgnoreInterruption(), maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _func = func ?? throw new ArgumentNullException(nameof(func));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            : base(maxRetries, exceptionPolicy, delayPolicy)
+        {
+            _func = func ?? throw new ArgumentNullException(nameof(func));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        {
+            _func = func ?? throw new ArgumentNullException(nameof(func));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReliableFunc{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
+        /// class that executes the given function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+        /// <param name="func">The function to encapsulate.</param>
+        /// <param name="maxRetries">The maximum number of retry attempts.</param>
+        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
+        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
+        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        public ReliableFunc(Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
             : base(maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
         {
             _func = func ?? throw new ArgumentNullException(nameof(func));
@@ -148,7 +226,7 @@ namespace Sweetener.Reliability
             attempt++;
             try
             {
-                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, cancellationToken);
             }
             catch (Exception e)
             {
@@ -212,7 +290,7 @@ namespace Sweetener.Reliability
             attempt++;
             try
             {
-                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, cancellationToken);
             }
             catch (Exception e)
             {
@@ -286,7 +364,7 @@ namespace Sweetener.Reliability
                 attempt++;
                 try
                 {
-                    result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    result = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, cancellationToken);
                 }
                 catch (Exception e)
                 {

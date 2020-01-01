@@ -9,8 +9,8 @@ namespace Sweetener.Reliability
     {
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="Func{Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -32,8 +32,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="Func{Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -55,8 +55,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="Func{CancellationToken, Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -78,8 +78,8 @@ namespace Sweetener.Reliability
 
         /// <summary>
         /// Creates a new <see cref="ReliableAsyncAction"/>
-        /// that executes the given <see cref="Func{CancellationToken, Task}"/>
-        /// at most a specific number of times based on the provided policies.
+        /// that executes the given asynchronous action at most a specific number of times
+        /// based on the provided policies.
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -98,5 +98,6 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
             => new ReliableAsyncAction(action, maxRetries, exceptionPolicy, delayPolicy);
+
     }
 }
