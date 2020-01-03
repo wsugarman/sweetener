@@ -10,7 +10,7 @@ namespace Sweetener.Reliability.Test
     [TestClass]
     public sealed class ReliableAsyncAction4Test : ReliableDelegateTest
     {
-        private static readonly Func<ReliableAsyncAction<int, string, double, long>, InterruptableAsyncAction<int, string, double, long>> s_getAction = DynamicGetter.ForField<ReliableAsyncAction<int, string, double, long>, InterruptableAsyncAction<int, string, double, long>>("_action");
+        private static readonly Func<ReliableAsyncAction<int, string, double, long>, Func<int, string, double, long, CancellationToken, Task>> s_getAction = DynamicGetter.ForField<ReliableAsyncAction<int, string, double, long>, Func<int, string, double, long, CancellationToken, Task>>("_action");
 
         [TestMethod]
         public void Ctor_DelayPolicy()
@@ -45,7 +45,7 @@ namespace Sweetener.Reliability.Test
             => Ctor_Interruptable_ComplexDelayPolicy((a, m, d, e) => ReliableAsyncAction.Create(a, m, d, e));
 
         [TestMethod]
-        public void InvokeAsync_NoCancellationToken()
+        public void InvokeAsync()
             => InvokeAsync(passToken: false);
 
         [TestMethod]
@@ -54,64 +54,63 @@ namespace Sweetener.Reliability.Test
 
         #region Ctor
 
-        private void Ctor_DelayPolicy(Func<AsyncAction<int, string, double, long>, int, ExceptionPolicy, DelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
+        private void Ctor_DelayPolicy(Func<Func<int, string, double, long, Task>, int, ExceptionPolicy, DelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
         {
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>();
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>();
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.InvokeAsync, -2              , exceptionPolicy, delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.InvokeAsync, Retries.Infinite, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.InvokeAsync, Retries.Infinite, exceptionPolicy, null              ));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionPolicy, delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null           , delayPolicy.Invoke));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAsyncAction and validate
-            ReliableAsyncAction<int, string, double, long> actual = factory(action.InvokeAsync, 37, exceptionPolicy, delayPolicy.Invoke);
+            ReliableAsyncAction<int, string, double, long> actual = factory(action.Invoke, 37, exceptionPolicy, delayPolicy.Invoke);
 
             // Validate wrapped action
-            InterruptableAsyncAction<int, string, double, long> actualAction = s_getAction(actual);
+            Func<int, string, double, long, CancellationToken, Task> actualAction = s_getAction(actual);
             action.Invoking += Expect.Arguments<int, string, double, long>(Arguments.Validate);
+
             Assert.AreEqual(0, action.Calls);
-            actualAction(42, "foo", 3.14D, 1000L);
+            actualAction(42, "foo", 3.14D, 1000L, default);
             Assert.AreEqual(1, action.Calls);
 
             Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
 
-        private void Ctor_ComplexDelayPolicy(Func<AsyncAction<int, string, double, long>, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
+        private void Ctor_ComplexDelayPolicy(Func<Func<int, string, double, long, Task>, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
         {
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>();
-            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
-            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.InvokeAsync, -2              , exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.InvokeAsync, Retries.Infinite, null           , complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.InvokeAsync, Retries.Infinite, exceptionPolicy, null              ));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>();
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.FromHours(1);
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null           , delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAsyncAction and validate
-            ReliableAsyncAction<int, string, double, long> actual = factory(action.InvokeAsync, 37, exceptionPolicy, complexDelayPolicy);
+            ReliableAsyncAction<int, string, double, long> actual = factory(action.Invoke, 37, exceptionPolicy, delayPolicy);
 
             // Validate wrapped action
-            InterruptableAsyncAction<int, string, double, long> actualAction = s_getAction(actual);
+            Func<int, string, double, long, CancellationToken, Task> actualAction = s_getAction(actual);
             action.Invoking += Expect.Arguments<int, string, double, long>(Arguments.Validate);
+
             Assert.AreEqual(0, action.Calls);
-            actualAction(42, "foo", 3.14D, 1000L);
+            actualAction(42, "foo", 3.14D, 1000L, default);
             Assert.AreEqual(1, action.Calls);
 
-            Ctor(actual, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
 
-        private void Ctor_Interruptable_DelayPolicy(Func<InterruptableAsyncAction<int, string, double, long>, int, ExceptionPolicy, DelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
+        private void Ctor_Interruptable_DelayPolicy(Func<Func<int, string, double, long, CancellationToken, Task>, int, ExceptionPolicy, DelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
         {
-            InterruptableAsyncAction<int, string, double, long> action = (arg1, arg2, arg3, arg4, t) => Operation.NullAsync();
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
+            Func<int, string, double, long, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, token) => await Operation.NullAsync().ConfigureAwait(false);
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, delayPolicy.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null              ));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAsyncAction and validate
             ReliableAsyncAction<int, string, double, long> actual = factory(action, 37, exceptionPolicy, delayPolicy.Invoke);
@@ -120,24 +119,22 @@ namespace Sweetener.Reliability.Test
             Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
 
-        private void Ctor_Interruptable_ComplexDelayPolicy(Func<InterruptableAsyncAction<int, string, double, long>, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
+        private void Ctor_Interruptable_ComplexDelayPolicy(Func<Func<int, string, double, long, CancellationToken, Task>, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAsyncAction<int, string, double, long>> factory)
         {
-            InterruptableAsyncAction<int, string, double, long> action = (arg1, arg2, arg3, arg4, t) => Operation.NullAsync();
-            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
-            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null              ));
+            Func<int, string, double, long, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, token) => await Operation.NullAsync().ConfigureAwait(false);
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.FromHours(1);
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAsyncAction and validate
-            ReliableAsyncAction<int, string, double, long> actual = factory(action, 37, exceptionPolicy, complexDelayPolicy);
+            ReliableAsyncAction<int, string, double, long> actual = factory(action, 37, exceptionPolicy, delayPolicy);
 
             Assert.AreSame(action, s_getAction(actual));
-            Ctor(actual, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
-
         #endregion
 
         #region InvokeAsync
@@ -177,7 +174,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a "successful" user-defined action
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>(async (arg1, arg2, arg3, arg4) => await Operation.NullAsync().ConfigureAwait(false));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>(async (arg1, arg2, arg3, arg4) => await Operation.NullAsync().ConfigureAwait(false));
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>();
@@ -189,7 +186,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -230,7 +227,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>(async (arg1, arg2, arg3, arg4) => await Task.Run(() => throw new InvalidOperationException()).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>(async (arg1, arg2, arg3, arg4) => await Task.Run(() => throw new InvalidOperationException()).ConfigureAwait(false));
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Fail<InvalidOperationException>().Invoke);
@@ -242,7 +239,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -288,7 +285,7 @@ namespace Sweetener.Reliability.Test
 
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>(async (arg1, arg2, arg3, arg4) => await Task.Run(flakyAction).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>(async (arg1, arg2, arg3, arg4) => await Task.Run(flakyAction).ConfigureAwait(false));
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
@@ -300,7 +297,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -346,7 +343,7 @@ namespace Sweetener.Reliability.Test
 
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>(async (arg1, arg2, arg3, arg4) => await Task.Run(flakyAction).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>(async (arg1, arg2, arg3, arg4) => await Task.Run(flakyAction).ConfigureAwait(false));
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
@@ -358,7 +355,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -403,7 +400,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>(async (arg1, arg2, arg3, arg4) => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>(async (arg1, arg2, arg3, arg4) => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
@@ -415,7 +412,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 2,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -460,7 +457,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
-            AsyncActionProxy<int, string, double, long, CancellationToken> action = new AsyncActionProxy<int, string, double, long, CancellationToken>(async (arg1, arg2, arg3, arg4, token) =>
+            FuncProxy<int, string, double, long, CancellationToken, Task> action = new FuncProxy<int, string, double, long, CancellationToken, Task>(async (arg1, arg2, arg3, arg4, token) =>
             {
                 await Task.CompletedTask;
                 token.ThrowIfCancellationRequested();
@@ -477,7 +474,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);
@@ -529,7 +526,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
-            AsyncActionProxy<int, string, double, long> action = new AsyncActionProxy<int, string, double, long>(async (arg1, arg2, arg3, arg4) => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, Task> action = new FuncProxy<int, string, double, long, Task>(async (arg1, arg2, arg3, arg4) => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
 
             // Declare the various policy and event handler proxies
             FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
@@ -541,7 +538,7 @@ namespace Sweetener.Reliability.Test
 
             // Create ReliableAsyncAction
             ReliableAsyncAction<int, string, double, long> reliableAsyncAction = new ReliableAsyncAction<int, string, double, long>(
-                action.InvokeAsync,
+                action.Invoke,
                 Retries.Infinite,
                 exceptionPolicy.Invoke,
                 delayPolicy    .Invoke);

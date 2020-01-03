@@ -43,24 +43,22 @@
         "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
     };
 
-    public string GetTypeArguments(int count, string outputType = null, bool includeBrackets = true)
-    {
-        if (count == 0 && outputType == null)
-            return string.Empty;
-
-        IEnumerable<string> typeArgsEnumerable = typeArgs.Take(count);
-        if (outputType != null)
-            typeArgsEnumerable = typeArgsEnumerable.Concat(new string[] { outputType });
-
-        string result = string.Join(", ", typeArgsEnumerable);
-        if (includeBrackets)
-            result = "<" + result + ">";
-
-        return result;
-    }
-
-    public string GetTestArguments(int count)
+    public string GetArgumentValues(int count)
         => string.Join(", ", args.Take(count));
+
+    public string GetTypeArguments(int count, bool async = false, bool interruptable = false, string outputType = null)
+    {
+        List<string> additionalElements = new List<string>();
+        if (interruptable)
+            additionalElements.Add("CancellationToken");
+
+        if (outputType != null)
+            additionalElements.Add(async ? $"Task<{outputType}>" : outputType);
+        else if (async)
+            additionalElements.Add("Task");
+
+        return string.Join(", ", typeArgs.Take(count).Concat(additionalElements));
+    }
 
     public string GetDelegate(int argCount, string delegateName, bool async, bool interruptable = false)
     {

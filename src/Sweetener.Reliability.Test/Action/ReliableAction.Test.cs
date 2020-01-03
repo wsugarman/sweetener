@@ -10,7 +10,7 @@ namespace Sweetener.Reliability.Test
     [TestClass]
     public sealed class ReliableActionTest : ReliableDelegateTest
     {
-        private static readonly Func<ReliableAction, InterruptableAction> s_getAction = DynamicGetter.ForField<ReliableAction, InterruptableAction>("_action");
+        private static readonly Func<ReliableAction, Action<CancellationToken>> s_getAction = DynamicGetter.ForField<ReliableAction, Action<CancellationToken>>("_action");
 
         [TestMethod]
         public void Ctor_DelayPolicy()
@@ -45,7 +45,7 @@ namespace Sweetener.Reliability.Test
             => Ctor_Interruptable_ComplexDelayPolicy((a, m, d, e) => ReliableAction.Create(a, m, d, e));
 
         [TestMethod]
-        public void Invoke_NoCancellationToken()
+        public void Invoke()
             => Invoke(passToken: false);
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace Sweetener.Reliability.Test
             => Invoke(passToken: true);
 
         [TestMethod]
-        public void InvokeAsync_NoCancellationToken()
+        public void InvokeAsync()
             => InvokeAsync(passToken: false);
 
         [TestMethod]
@@ -61,7 +61,7 @@ namespace Sweetener.Reliability.Test
             => InvokeAsync(passToken: true);
 
         [TestMethod]
-        public void TryInvoke_NoCancellationToken()
+        public void TryInvoke()
             => TryInvoke(passToken: false);
 
         [TestMethod]
@@ -73,21 +73,21 @@ namespace Sweetener.Reliability.Test
         private void Ctor_DelayPolicy(Func<Action, int, ExceptionPolicy, DelayPolicy, ReliableAction> factory)
         {
             ActionProxy action = new ActionProxy();
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionPolicy, delayPolicy.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionPolicy, null              ));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAction and validate
             ReliableAction actual = factory(action.Invoke, 37, exceptionPolicy, delayPolicy.Invoke);
 
             // Validate wrapped action
-            InterruptableAction actualAction = s_getAction(actual);
+            Action<CancellationToken> actualAction = s_getAction(actual);
+
             Assert.AreEqual(0, action.Calls);
-            actualAction();
+            actualAction(default);
             Assert.AreEqual(1, action.Calls);
 
             Ctor(actual, 37, exceptionPolicy, delayPolicy);
@@ -96,36 +96,35 @@ namespace Sweetener.Reliability.Test
         private void Ctor_ComplexDelayPolicy(Func<Action, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAction> factory)
         {
             ActionProxy action = new ActionProxy();
-            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
-            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null           , complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionPolicy, null              ));
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.FromHours(1);
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null           , delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAction and validate
-            ReliableAction actual = factory(action.Invoke, 37, exceptionPolicy, complexDelayPolicy);
+            ReliableAction actual = factory(action.Invoke, 37, exceptionPolicy, delayPolicy);
 
             // Validate wrapped action
-            InterruptableAction actualAction = s_getAction(actual);
+            Action<CancellationToken> actualAction = s_getAction(actual);
+
             Assert.AreEqual(0, action.Calls);
-            actualAction();
+            actualAction(default);
             Assert.AreEqual(1, action.Calls);
 
-            Ctor(actual, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
 
-        private void Ctor_Interruptable_DelayPolicy(Func<InterruptableAction, int, ExceptionPolicy, DelayPolicy, ReliableAction> factory)
+        private void Ctor_Interruptable_DelayPolicy(Func<Action<CancellationToken>, int, ExceptionPolicy, DelayPolicy, ReliableAction> factory)
         {
-            InterruptableAction action = (t) => Operation.Null();
-            ExceptionPolicy          exceptionPolicy = ExceptionPolicies.Fatal;
-            FuncProxy<int, TimeSpan> delayPolicy     = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
+            Action<CancellationToken> action = (token) => Operation.Null();
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, delayPolicy.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , delayPolicy.Invoke));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null              ));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAction and validate
             ReliableAction actual = factory(action, 37, exceptionPolicy, delayPolicy.Invoke);
@@ -134,24 +133,22 @@ namespace Sweetener.Reliability.Test
             Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
 
-        private void Ctor_Interruptable_ComplexDelayPolicy(Func<InterruptableAction, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAction> factory)
+        private void Ctor_Interruptable_ComplexDelayPolicy(Func<Action<CancellationToken>, int, ExceptionPolicy, ComplexDelayPolicy, ReliableAction> factory)
         {
-            InterruptableAction action = (t) => Operation.Null();
-            ExceptionPolicy    exceptionPolicy    = ExceptionPolicies.Fatal;
-            ComplexDelayPolicy complexDelayPolicy = (i, e) => TimeSpan.FromHours(1);
-
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(null  , Retries.Infinite, exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , complexDelayPolicy));
-            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null              ));
+            Action<CancellationToken> action = (token) => Operation.Null();
+            ExceptionPolicy exceptionPolicy = ExceptionPolicies.Fatal;
+            ComplexDelayPolicy delayPolicy = (i, e) => TimeSpan.FromHours(1);
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionPolicy, delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null           , delayPolicy));
+            Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionPolicy, null));
 
             // Create a ReliableAction and validate
-            ReliableAction actual = factory(action, 37, exceptionPolicy, complexDelayPolicy);
+            ReliableAction actual = factory(action, 37, exceptionPolicy, delayPolicy);
 
             Assert.AreSame(action, s_getAction(actual));
-            Ctor(actual, 37, exceptionPolicy, complexDelayPolicy);
+            Ctor(actual, 37, exceptionPolicy, delayPolicy);
         }
-
         #endregion
 
         #region Invoke

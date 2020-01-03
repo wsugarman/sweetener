@@ -7,7 +7,7 @@ namespace Sweetener.Reliability.Test
     {
         public static readonly Action Null = NoOp;
 
-        public static readonly AsyncAction NullAsync = NoOpAsync;
+        public static readonly Func<Task> NullAsync = NoOpAsync;
 
         private static void NoOp()
         { }
