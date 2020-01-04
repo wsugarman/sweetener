@@ -1,4 +1,0 @@
-<#
-    bool async = true;
-#>
-<#@ include file="TextTemplating\ActionProxy.t4" #>

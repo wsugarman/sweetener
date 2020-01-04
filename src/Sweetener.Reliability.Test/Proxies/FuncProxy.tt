@@ -10,17 +10,18 @@ namespace Sweetener.Reliability.Test
 <#
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string optionalComma          = parameterCount > 0 ? ", " : string.Empty;
-        string arguments              = GetArguments     (parameterCount);
-        string parameters             = GetParameters    (parameterCount);
-        string typeParametersNoResult = GetTypeParameters(parameterCount);
-        string typeParameters         = typeParametersNoResult + optionalComma + "TResult";
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments         (parameterCount);
+        string parameters     = GetParameters        (parameterCount);
+        string typeParameters = GetFuncTypeParameters(parameterCount);
 #>
     #region FuncProxy<<#= typeParameters #>>
 
-    internal sealed class FuncProxy<<#= typeParameters #>> : DelegateProxy
+    internal sealed class FuncProxy<<#= typeParameters #>> : DelegateProxy<Func<<#= typeParameters #>>>
     {
-        public event Action<<#= typeParametersNoResult #><#= optionalComma #>CallContext> Invoking;
+        public new event Action<<#= GetActionTypeParameters(parameterCount) #><#= optionalComma #>CallContext> Invoking;
+
+        public override Func<<#= typeParameters #>> Proxy => Invoke;
 
         private readonly Func<<#= typeParameters #>> _func;
 
@@ -29,16 +30,21 @@ namespace Sweetener.Reliability.Test
         { }
 
         public FuncProxy(Func<<#= typeParameters #>> func)
-        {
-            _func = func ?? throw new ArgumentNullException(nameof(func));
-        }
+            : base(func)
+        { }
 
         public TResult Invoke(<#= parameters #>)
         {
             UpdateContext();
 
+            OnInvoking(<#= arguments #>);
+            return _delegate(<#= arguments #>);
+        }
+
+        private <#= parameterCount == 0 ? "new " : string.Empty #>void OnInvoking(<#= parameters #>)
+        {
             Invoking?.Invoke(<#= arguments #><#= optionalComma #>_context);
-            return _func(<#= arguments #>);
+            <#= parameterCount == 0 ? "base." : string.Empty #>OnInvoking();
         }
     }
 

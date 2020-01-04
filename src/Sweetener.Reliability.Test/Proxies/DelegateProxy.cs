@@ -2,13 +2,25 @@
 
 namespace Sweetener.Reliability.Test
 {
-    internal class DelegateProxy
+    internal abstract class DelegateProxy<T>
+        where T : Delegate
     {
         public int Calls => _context.Calls;
+
+        public event Action<CallContext> Invoking;
+
+        public abstract T Proxy { get; }
+
+        protected T _delegate { get; }
 
         protected CallContext _context = default;
 
         private DateTime _lastCallUtc = default;
+
+        public DelegateProxy(T underlyingDelegate)
+        {
+            _delegate = underlyingDelegate ?? throw new ArgumentNullException(nameof(underlyingDelegate));
+        }
 
         protected void UpdateContext()
         {
@@ -20,5 +32,8 @@ namespace Sweetener.Reliability.Test
             _context     = new CallContext(_context.Calls + 1, delay);
             _lastCallUtc = utcNow;
         }
+
+        protected void OnInvoking()
+            => Invoking?.Invoke(_context);
     }
 }
