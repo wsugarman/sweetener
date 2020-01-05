@@ -8,9 +8,6 @@ namespace Sweetener.Reliability.Test
         private static readonly Func<ReliableDelegate, ExceptionPolicy   > s_getExceptionPolicy = DynamicGetter.ForField<ReliableDelegate, ExceptionPolicy   >("_canRetry");
         private static readonly Func<ReliableDelegate, ComplexDelayPolicy> s_getDelayPolicy     = DynamicGetter.ForField<ReliableDelegate, ComplexDelayPolicy>("_getDelay");
 
-        internal void Ctor(ReliableDelegate reliableAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
-            => Ctor(reliableAction, expectedMaxRetries, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
-
         internal void Ctor(ReliableDelegate reliableAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, FuncProxy<int, TimeSpan> expectedDelayPolicy)
             => Ctor(reliableAction, expectedMaxRetries, expectedExceptionPolicy, actual =>
             {
@@ -21,6 +18,9 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(expectedDelay, actual(42, new ArgumentOutOfRangeException()));
                 Assert.AreEqual(expectedCalls, expectedDelayPolicy.Calls);
             });
+
+        internal void Ctor(ReliableDelegate reliableAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy expectedDelayPolicy)
+            => Ctor(reliableAction, expectedMaxRetries, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
 
         private void Ctor(ReliableDelegate reliableAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy> validateDelayPolicy)
         {

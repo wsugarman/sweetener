@@ -48,6 +48,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Func\ReliableAsyncFunc.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Func\ReliableFunc.T*.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -111,6 +116,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Func.Extensions.Test.tt.out</LastGenOutput>
     </None>
+    <None Update="Func\ReliableAsyncFunc.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAsyncFunc.Test.tt.out</LastGenOutput>
+    </None>
     <None Update="Func\ReliableFunc.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.Test.tt.out</LastGenOutput>
@@ -154,6 +163,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.Test.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableAsyncFunc.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Test.tt</DependentUpon>
     </None>
     <None Update="Func\ReliableFunc.Test.tt.out">
       <DesignTime>True</DesignTime>

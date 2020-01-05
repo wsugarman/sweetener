@@ -9,7 +9,7 @@ namespace Sweetener.Reliability.Test
     {
         public static void Validate(CancellationToken token)
         {
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg)
@@ -20,7 +20,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg, CancellationToken token)
         {
             Validate(arg);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2)
@@ -32,7 +32,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, CancellationToken token)
         {
             Validate(arg1, arg2);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3)
@@ -45,7 +45,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, CancellationToken token)
         {
             Validate(arg1, arg2, arg3);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4)
@@ -59,7 +59,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5)
@@ -74,7 +74,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6)
@@ -90,7 +90,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7)
@@ -107,7 +107,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8)
@@ -125,7 +125,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9)
@@ -144,7 +144,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10)
@@ -164,7 +164,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11)
@@ -185,7 +185,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12)
@@ -207,7 +207,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13)
@@ -230,7 +230,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14)
@@ -254,7 +254,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, float arg15)
@@ -279,7 +279,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, float arg15, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, float arg15, Guid arg16)
@@ -305,7 +305,7 @@ namespace Sweetener.Reliability.Test
         public static void Validate(int arg1, string arg2, double arg3, long arg4, ushort arg5, byte arg6, TimeSpan arg7, uint arg8, Tuple<bool, ulong> arg9, DateTime arg10, ulong arg11, sbyte arg12, decimal arg13, char arg14, float arg15, Guid arg16, CancellationToken token)
         {
             Validate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-            //Assert.AreNotEqual(default, token);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
     }

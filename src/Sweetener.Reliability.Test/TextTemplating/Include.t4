@@ -72,7 +72,19 @@
         return $"async ({args}{optionalToken}) => await Task.Run({delegateName}).ConfigureAwait(false)";
     }
 
-    public string GetThrowException<T>(int argCount, bool async, bool interruptable = false)
+    public string GetExpressionDelegate(int argCount, string expression, bool async, bool interruptable = false)
+    {
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
+
+        if (!async)
+            return $"({args}{optionalToken}) => {expression}";
+
+        return $"async ({args}{optionalToken}) => await Task.Run(() => {expression}).ConfigureAwait(false)";
+    }
+
+    public string GetThrowException<T>(int argCount, bool async, bool interruptable = false, string outputType = null)
         where T : Exception
     {
         string args          = GetArguments(argCount);
@@ -82,7 +94,10 @@
         if (!async)
             return $"({args}{optionalToken}) => throw new {typeof(T).Name}()";
 
-        return $"async ({args}{optionalToken}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
+        if (outputType == null)
+            return $"async ({args}{optionalToken}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
+        else
+            return $"async ({args}{optionalToken}) => await Task.Run((Func<{outputType}>)(() => throw new {typeof(T).Name}())).ConfigureAwait(false)";
     }
 
     public string GetNoOpDelegate(int argCount, bool async, bool interruptable = false)

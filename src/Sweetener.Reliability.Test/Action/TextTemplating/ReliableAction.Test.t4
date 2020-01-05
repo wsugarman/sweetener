@@ -23,7 +23,14 @@
 using System;
 using System.IO;
 using System.Threading;
+<#
+        if (async)
+        {
+#>
 using System.Threading.Tasks;
+<#
+        }
+#>
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -104,12 +111,13 @@ namespace Sweetener.Reliability.Test
         }
 #>
         #region Ctor
+
 <#
         foreach (bool interruptable in new bool[] { false, true })
         {
-            string ctorInputTypeArguments = interruptable ? tokenInputActionTypeArguments : inputActionTypeArguments;
-            string optionalActionInvoke   = !interruptable ? ".Invoke" : string.Empty;
-            string optionalProxy          = !interruptable ? "Proxy"   : string.Empty;
+            string ctorInputTypeArguments = interruptable  ? tokenInputActionTypeArguments : inputActionTypeArguments;
+            string optionalActionInvoke   = !interruptable ? ".Invoke"                     : string.Empty;
+            string optionalProxy          = !interruptable ? "Proxy"                       : string.Empty;
 
             foreach (bool useComplexPolicy in new bool[] { false, true })
             {
@@ -117,7 +125,6 @@ namespace Sweetener.Reliability.Test
                 string optionalPolicyInvoke = !useComplexPolicy ? ".Invoke"            : string.Empty;
                 string testName             = "Ctor" + (interruptable ? "_Interruptable" : string.Empty) + "_" + delayPolicyType;
 #>
-
         private void <#= testName #>(Func<<#= inputActionKind #><#= ctorInputTypeArguments #>, int, ExceptionPolicy, <#= delayPolicyType #>, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
         {
             <#= inputActionKind #><#= optionalProxy #><#= ctorInputTypeArguments #> action = <#= interruptable ? GetNoOpDelegate(parameterCount, async, interruptable: true) : $"new {inputActionKind}{optionalProxy}{ctorInputTypeArguments}()" #>;
@@ -144,40 +151,37 @@ namespace Sweetener.Reliability.Test
             // Create a Reliable<#= optionalAsync #>Action and validate
             Reliable<#= optionalAsync #>Action<#= typeArguments #> actual = factory(action<#= optionalActionInvoke #>, 37, exceptionPolicy, delayPolicy<#= optionalPolicyInvoke #>);
 
-<#
-                if (interruptable)
-                {
-#>
-            Assert.AreSame(action, s_getAction(actual));
-<#
-                }
-                else
-                {
-#>
-            // Validate wrapped action
-            <#= inputActionKind #><#= tokenInputActionTypeArguments #> actualAction = s_getAction(actual);
-<#
-                    if (parameterCount > 0)
-                    {
-#>
-            action.Invoking += Expect.Arguments<#= typeArguments #>(Arguments.Validate);
-<#
-                    }
-#>
-
-            Assert.AreEqual(0, action.Calls);
-            actualAction(<#= argumentValues #><#= optionalComma #>default);
-            Assert.AreEqual(1, action.Calls);
-
-<#
-                }
-#>
             Ctor(actual, 37, exceptionPolicy, delayPolicy);
+            CtorAction(actual, action);
         }
+
 <#
             }
         }
 #>
+        private void CtorAction(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> expected)
+            => CtorAction(reliableAction, actual =>
+            {
+<#
+        if (parameterCount > 0)
+        {
+#>
+                expected.Invoking += Expect.Arguments<#= typeArguments #>(Arguments.Validate);
+
+<#
+        }
+#>
+                Assert.AreEqual(0, expected.Calls);
+                actual(<#= argumentValues #><#= optionalComma #>default);
+                Assert.AreEqual(1, expected.Calls);
+            });
+
+        private void CtorAction(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, <#= inputActionKind #><#= tokenInputActionTypeArguments #> expected)
+            => CtorAction(reliableAction, actual => Assert.AreSame(expected, actual));
+
+        private void CtorAction(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, Action<<#= inputActionKind #><#= tokenInputActionTypeArguments #>> validateAction)
+            => validateAction(s_getAction(reliableAction));
+
         #endregion
 
 <#
@@ -287,8 +291,6 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Success(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> assertInvoke, bool addEventHandlers)
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
             // Create a "successful" user-defined action
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetNoOpDelegate(parameterCount, async) #>);
 
@@ -330,7 +332,8 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token);
 
             // Validate the number of calls
             Assert.AreEqual(1, action          .Calls);
@@ -347,8 +350,6 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_Failure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
             // Create an "unsuccessful" user-defined action
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<InvalidOperationException>(parameterCount, async) #>);
 
@@ -390,7 +391,8 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token, typeof(InvalidOperationException));
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token, typeof(InvalidOperationException));
 
             // Validate the number of calls
             Assert.AreEqual(1, action         .Calls);
@@ -411,8 +413,6 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualSuccess(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> assertInvoke, bool addEventHandlers)
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
@@ -461,7 +461,8 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token);
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token);
 
             // Validate the number of calls
             Assert.AreEqual(2, action         .Calls);
@@ -482,8 +483,6 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_EventualFailure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
@@ -532,7 +531,8 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token, typeof(InvalidOperationException));
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token, typeof(InvalidOperationException));
 
             // Validate the number of calls
             Assert.AreEqual(3, action         .Calls);
@@ -553,8 +553,6 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_RetriesExhausted(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
 
@@ -602,7 +600,8 @@ namespace Sweetener.Reliability.Test
             exhaustedHandler.Invoking += Expect.Exception(typeof(IOException));
 
             // Invoke
-            assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token, typeof(IOException));
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                assertInvoke(reliable<#= optionalAsync #>Action<#= optionalComma #><#= argumentValues #>, tokenSource.Token, typeof(IOException));
 
             // Validate the number of calls
             Assert.AreEqual(3, action         .Calls);
@@ -641,7 +640,7 @@ namespace Sweetener.Reliability.Test
             });
 
             // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Transient.Invoke);
             FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
 
             ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
@@ -705,7 +704,7 @@ namespace Sweetener.Reliability.Test
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
 
             // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<Exception, bool>          exceptionPolicy  = new FuncProxy<Exception, bool>(ExceptionPolicies.Transient.Invoke);
             FuncProxy<int, Exception, TimeSpan> delayPolicy      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
 
             ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
