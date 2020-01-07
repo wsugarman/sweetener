@@ -300,7 +300,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action((f, arg, t) => f.Invoke(arg, t), addEventHandlers);
+                    Invoke_Canceled_Func((f, arg, t) => f.Invoke(arg, t), addEventHandlers);
                     Invoke_Canceled_Delay ((f, arg, t) => f.Invoke(arg, t), addEventHandlers);
                 }
             }
@@ -337,7 +337,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action((f, arg, t) => f.InvokeAsync(arg, t).Wait(), addEventHandlers);
+                    Invoke_Canceled_Func((f, arg, t) => f.InvokeAsync(arg, t).Wait(), addEventHandlers);
                     Invoke_Canceled_Delay ((f, arg, t) => f.InvokeAsync(arg, t).Wait(), addEventHandlers);
                 }
             }
@@ -396,7 +396,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action((f, arg, t) => f.TryInvoke(arg, t, out string _), addEventHandlers);
+                    Invoke_Canceled_Func((f, arg, t) => f.TryInvoke(arg, t, out string _), addEventHandlers);
                     Invoke_Canceled_Delay ((f, arg, t) => f.TryInvoke(arg, t, out string _), addEventHandlers);
                 }
             }
@@ -903,9 +903,9 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
-        #region Invoke_Canceled_Action
+        #region Invoke_Canceled_Func
 
-        private void Invoke_Canceled_Action(Action<ReliableFunc<int, string>, int, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Func(Action<ReliableFunc<int, string>, int, CancellationToken> invoke, bool addEventHandlers)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 

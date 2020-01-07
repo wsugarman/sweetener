@@ -52,6 +52,8 @@ namespace Sweetener.Reliability.Test
 <#
         foreach (bool async in new bool[] { false, true })
         {
+            string optionalAsync = async ? "Async" : string.Empty;
+
             foreach (bool interruptable in new bool[] { false, true })
             {
                 string inputTypeArguments = Enclose(GetTypeArguments(parameterCount, async: false, interruptable: interruptable), BracketType.AngleBrackets);
@@ -67,39 +69,39 @@ namespace Sweetener.Reliability.Test
                     string testSuffix           = baseSuffix + (async ? "_Async" : string.Empty) + (interruptable ? "_WithToken" : string.Empty) +  "_" + (useComplexPolicy ? "ComplexDelayPolicy" : "DelayPolicy");
 #>
         [TestMethod]
-        public void WithRetry<#= testSuffix #>()
+        public void With<#= optionalAsync #>Retry<#= testSuffix #>()
         {
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> action     = <#= GetNoOpDelegate(parameterCount, async, interruptable) #>;
-            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithRetry( 4, ExceptionPolicies.Transient, <#= noDelayPolicy #>));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithRetry(-2, ExceptionPolicies.Transient, <#= noDelayPolicy #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithRetry( 4, null                       , <#= noDelayPolicy #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => action    .WithRetry( 4, ExceptionPolicies.Transient, (<#= useComplexPolicy ? "Complex" : string.Empty #>DelayPolicy)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, <#= noDelayPolicy #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .With<#= optionalAsync #>Retry(-2, ExceptionPolicies.Transient, <#= noDelayPolicy #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, null                       , <#= noDelayPolicy #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, (<#= useComplexPolicy ? "Complex" : string.Empty #>DelayPolicy)null));
 
             // Create the delegates necessary to test the WithRetry overload
             Func<Action<CancellationToken>, <#= inputActionType #>Proxy> actionFactory = a => new <#= inputActionType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ await Task.CompletedTask.ConfigureAwait(false); a({optionalToken}); }}" : $"a({optionalToken})" #>);
             Func<TimeSpan, <#= delayPolicyTypeProxy #>> delayPolicyFactory = t => new <#= delayPolicyTypeProxy #>((i<#= useComplexPolicy ? ", e" : string.Empty #>) => t);
-            Func<<#=inputActionType #>, int, ExceptionPolicy, <#= delayPolicyFunc #>, <#= inputActionType #>> withRetry = (a, r, e, d) => a.WithRetry(r, e, d.Invoke);
+            Func<<#= inputActionType #>, int, ExceptionPolicy, <#= delayPolicyFunc #>, <#= inputActionType #>> with<#= optionalAsync #>Retry = (a, r, e, d) => a.With<#= optionalAsync #>Retry(r, e, d.Invoke);
             Action<<#= inputActionType #><#= optionalComma #><#= typeArguments #>, CancellationToken> invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #><#= optionalCommaToken #>)<#= async ? ".Wait()" : string.Empty #>;
 
             Action<<#= inputActionType #>Proxy>           observeAction      = <#= interruptable || parameterCount > 0 ? $"a          => a.Invoking += Expect.Arguments{inputTypeArguments}(Arguments.Validate)" : "null" #>;
             Action<<#= inputActionType #>Proxy, TimeSpan> observeActionDelay = (a, delay) => a.Invoking += Expect.<#= interruptable || parameterCount > 0 ? $"ArgumentsAfterDelay{inputTypeArguments}(Arguments.Validate, delay)" : $"AfterDelay{inputTypeArguments}(delay)" #>;
 
             // Test each scenario
-            WithRetry<#= baseSuffix #>_Success         (actionFactory, delayPolicyFactory, withRetry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexPolicy ? ", Exception" : string.Empty #>>());
-            WithRetry<#= baseSuffix #>_Failure         (actionFactory, delayPolicyFactory, withRetry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexPolicy ? ", Exception" : string.Empty #>>());
-            WithRetry<#= baseSuffix #>_EventualSuccess (actionFactory, delayPolicyFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
-            WithRetry<#= baseSuffix #>_EventualFailure (actionFactory, delayPolicyFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
-            WithRetry<#= baseSuffix #>_RetriesExhausted(actionFactory, delayPolicyFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= baseSuffix #>_Success         (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexPolicy ? ", Exception" : string.Empty #>>());
+            WithRetry<#= baseSuffix #>_Failure         (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexPolicy ? ", Exception" : string.Empty #>>());
+            WithRetry<#= baseSuffix #>_EventualSuccess (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= baseSuffix #>_EventualFailure (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= baseSuffix #>_RetriesExhausted(actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
 <#
-        if (interruptable)
-        {
+                    if (interruptable)
+                    {
 #>
-            WithRetry<#= baseSuffix #>_Canceled_Action (actionFactory, delayPolicyFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= baseSuffix #>_Canceled_Action (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= baseSuffix #>_Canceled_Delay  (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
 <#
-        }
+                    }
 #>
-            WithRetry<#= baseSuffix #>_Canceled_Delay  (actionFactory, delayPolicyFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
         }
 
 <#
@@ -136,8 +138,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action);
             exceptionPolicy.Invoking += Expect.Nothing<Exception>();
+
+            observeAction     ?.Invoke(action);
             observeDelayPolicy?.Invoke(delayPolicy);
 
             // Invoke
@@ -181,8 +184,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action);
             exceptionPolicy.Invoking += Expect.Exception(typeof(InvalidOperationException));
+
+            observeAction     ?.Invoke(action);
             observeDelayPolicy?.Invoke(delayPolicy);
 
             // Invoke
@@ -227,8 +231,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action, Constants.MinDelay);
             exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            observeAction     ?.Invoke(action, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
 
             // Invoke
@@ -273,8 +278,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action, Constants.MinDelay);
             exceptionPolicy.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
+
+            observeAction     ?.Invoke(action, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
 
             // Invoke
@@ -318,8 +324,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action, Constants.MinDelay);
             exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            observeAction     ?.Invoke(action, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
 
             // Invoke
@@ -350,7 +357,7 @@ namespace Sweetener.Reliability.Test
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create a user-defined action that will throw an exception depending on whether its canceled
+            // Create a user-defined action that will throw an exception depending on whether it's canceled
             TActionProxy action = actionFactory(t =>
             {
                 t.ThrowIfCancellationRequested();
@@ -358,7 +365,7 @@ namespace Sweetener.Reliability.Test
             });
 
             // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Transient.Invoke);
             TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
 
             // Create the reliable action
@@ -369,8 +376,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action, Constants.MinDelay);
             exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            observeAction     ?.Invoke(action, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
 
             // Cancel the action on its 2nd attempt
@@ -411,7 +419,7 @@ namespace Sweetener.Reliability.Test
             TActionProxy action = actionFactory(t => throw new IOException());
 
             // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
+            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Transient.Invoke);
             TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
 
             // Create the reliable InterruptableAction
@@ -422,8 +430,9 @@ namespace Sweetener.Reliability.Test
                 delayPolicy.Proxy);
 
             // Define expectations
-            observeAction?.Invoke(action, Constants.MinDelay);
             exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+
+            observeAction     ?.Invoke(action, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
 
             // Cancel the delay on its 2nd invocation

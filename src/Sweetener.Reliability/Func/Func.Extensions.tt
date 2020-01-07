@@ -38,6 +38,8 @@ namespace Sweetener.Reliability
 <#
         foreach (bool async in new bool[] { false, true })
         {
+            string optionalAsync = async ? "Async" : string.Empty;
+
             foreach (bool interruptable in new bool[] { false, true })
             {
                 string inputTypeParameters       = GetFuncTypeParameters(parameterCount, async, interruptable);
@@ -54,8 +56,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
 #>
-        public static Func<<#= inputTypeParameters #>> WithRetry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => With<#= optionalAsync #>Retry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
@@ -64,8 +66,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
 #>
-        public static Func<<#= inputTypeParameters #>> WithRetry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            => With<#= optionalAsync #>Retry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
@@ -74,13 +76,13 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
 #>
-        public static Func<<#= inputTypeParameters #>> WithRetry<<#= typeParameters #>>(
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
             this Func<<#= inputTypeParameters #>> func,
             int                   maxRetries,
             ResultPolicy<TResult> resultPolicy,
             ExceptionPolicy       exceptionPolicy,
             DelayPolicy           delayPolicy)
-            => WithRetry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+            => With<#= optionalAsync #>Retry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
@@ -89,7 +91,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
 #>
-        public static Func<<#= inputTypeParameters #>> WithRetry<<#= typeParameters #>>(
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
             this Func<<#= inputTypeParameters #>> func,
             int                         maxRetries,
             ResultPolicy<TResult>       resultPolicy,

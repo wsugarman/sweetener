@@ -133,7 +133,7 @@ namespace Sweetener.Reliability.Test
             });
 
         private void CtorAction(ReliableAsyncAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction, Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken, Task> expected)
-            => CtorAction(reliableAction, actual => Assert.AreSame(expected, actual));
+            => CtorAction(reliableAction, (Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken, Task> actual) => Assert.AreSame(expected, actual));
 
         private void CtorAction(ReliableAsyncAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime> reliableAction, Action<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken, Task>> validateAction)
             => validateAction(s_getAction(reliableAction));

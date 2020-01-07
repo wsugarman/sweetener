@@ -177,7 +177,7 @@ namespace Sweetener.Reliability.Test
             });
 
         private void CtorAction(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, <#= inputActionKind #><#= tokenInputActionTypeArguments #> expected)
-            => CtorAction(reliableAction, actual => Assert.AreSame(expected, actual));
+            => CtorAction(reliableAction, (<#= inputActionKind #><#= tokenInputActionTypeArguments #> actual) => Assert.AreSame(expected, actual));
 
         private void CtorAction(Reliable<#= optionalAsync #>Action<#= typeArguments #> reliableAction, Action<<#= inputActionKind #><#= tokenInputActionTypeArguments #>> validateAction)
             => validateAction(s_getAction(reliableAction));

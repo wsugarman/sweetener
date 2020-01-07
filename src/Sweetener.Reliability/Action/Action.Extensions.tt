@@ -37,6 +37,8 @@ namespace Sweetener.Reliability
 <#
         foreach (bool async in new bool[] { false, true })
         {
+            string optionalAsync = async ? "Async" : string.Empty;
+
             foreach (bool interruptable in new bool[] { false, true })
             {
                 string inputActionType           = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable), BracketType.AngleBrackets);
@@ -52,8 +54,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static <#= inputActionType #> WithRetry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
+        public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => With<#= optionalAsync #>Retry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="action" />
@@ -62,7 +64,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static <#= inputActionType #> WithRetry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));

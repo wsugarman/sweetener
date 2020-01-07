@@ -279,7 +279,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action((f<#= optionalComma #><#= arguments #>, t) => f.Invoke(<#= arguments #><#= optionalComma #>t), addEventHandlers);
+                    Invoke_Canceled_Func((f<#= optionalComma #><#= arguments #>, t) => f.Invoke(<#= arguments #><#= optionalComma #>t), addEventHandlers);
                     Invoke_Canceled_Delay ((f<#= optionalComma #><#= arguments #>, t) => f.Invoke(<#= arguments #><#= optionalComma #>t), addEventHandlers);
                 }
             }
@@ -319,7 +319,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
+                    Invoke_Canceled_Func((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
                     Invoke_Canceled_Delay ((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
                 }
             }
@@ -382,7 +382,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action((f<#= optionalComma #><#= arguments #>, t) => f.TryInvoke(<#= arguments #><#= optionalComma #>t, out string _), addEventHandlers);
+                    Invoke_Canceled_Func((f<#= optionalComma #><#= arguments #>, t) => f.TryInvoke(<#= arguments #><#= optionalComma #>t, out string _), addEventHandlers);
                     Invoke_Canceled_Delay ((f<#= optionalComma #><#= arguments #>, t) => f.TryInvoke(<#= arguments #><#= optionalComma #>t, out string _), addEventHandlers);
                 }
             }
@@ -978,9 +978,9 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
-        #region Invoke_Canceled_Action
+        #region Invoke_Canceled_Func
 
-        private void Invoke_Canceled_Action(Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Func(Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken> invoke, bool addEventHandlers)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 

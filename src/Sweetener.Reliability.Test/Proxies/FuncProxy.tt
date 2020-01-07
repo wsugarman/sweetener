@@ -8,7 +8,7 @@ using System;
 namespace Sweetener.Reliability.Test
 {
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
     {
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
         string arguments      = GetArguments         (parameterCount);
@@ -22,8 +22,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<<#= GetActionTypeParameters(parameterCount) #><#= optionalComma #>CallContext> Invoking;
 
         public override Func<<#= typeParameters #>> Proxy => Invoke;
-
-        private readonly Func<<#= typeParameters #>> _func;
 
         public FuncProxy()
             : this((<#= arguments #>) => default)

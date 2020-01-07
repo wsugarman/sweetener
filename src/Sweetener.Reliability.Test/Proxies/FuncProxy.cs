@@ -11,8 +11,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<TResult> Proxy => Invoke;
 
-        private readonly Func<TResult> _func;
-
         public FuncProxy()
             : this(() => default)
         { }
@@ -45,8 +43,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T, CallContext> Invoking;
 
         public override Func<T, TResult> Proxy => Invoke;
-
-        private readonly Func<T, TResult> _func;
 
         public FuncProxy()
             : this((arg) => default)
@@ -81,8 +77,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2) => default)
         { }
@@ -115,8 +109,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, CallContext> Invoking;
 
         public override Func<T1, T2, T3, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3) => default)
@@ -151,8 +143,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4) => default)
         { }
@@ -185,8 +175,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, T4, T5, CallContext> Invoking;
 
         public override Func<T1, T2, T3, T4, T5, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, T4, T5, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5) => default)
@@ -221,8 +209,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, T5, T6, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, T5, T6, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6) => default)
         { }
@@ -255,8 +241,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, T4, T5, T6, T7, CallContext> Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => default)
@@ -291,8 +275,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => default)
         { }
@@ -325,8 +307,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CallContext> Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => default)
@@ -361,8 +341,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => default)
         { }
@@ -395,8 +373,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CallContext> Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => default)
@@ -431,8 +407,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => default)
         { }
@@ -465,8 +439,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CallContext> Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => default)
@@ -501,8 +473,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => default)
         { }
@@ -535,8 +505,6 @@ namespace Sweetener.Reliability.Test
         public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CallContext> Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> Proxy => Invoke;
-
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> _func;
 
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => default)
@@ -571,8 +539,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> Proxy => Invoke;
 
-        private readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> _func;
-
         public FuncProxy()
             : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => default)
         { }
@@ -592,6 +558,39 @@ namespace Sweetener.Reliability.Test
         private void OnInvoking(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16)
         {
             Invoking?.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, _context);
+            OnInvoking();
+        }
+    }
+
+    #endregion
+
+    #region FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult>
+
+    internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult>>
+    {
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, CallContext> Invoking;
+
+        public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> Proxy => Invoke;
+
+        public FuncProxy()
+            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17) => default)
+        { }
+
+        public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> func)
+            : base(func)
+        { }
+
+        public TResult Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17)
+        {
+            UpdateContext();
+
+            OnInvoking(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17);
+            return _delegate(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17);
+        }
+
+        private void OnInvoking(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17)
+        {
+            Invoking?.Invoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, _context);
             OnInvoking();
         }
     }
