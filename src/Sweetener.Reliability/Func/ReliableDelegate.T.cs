@@ -106,17 +106,17 @@ namespace Sweetener.Reliability
             {
                 if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
                 {
-                    Task.Delay(_getDelay(attempt, result, null), cancellationToken).Wait(cancellationToken);
-                    OnRetry(attempt, result, null);
+                    Task.Delay(_getDelay(attempt, result, default), cancellationToken).Wait(cancellationToken);
+                    OnRetry(attempt, result, default);
                     return true;
                 }
 
-                OnRetriesExhausted(result, null);
+                OnRetriesExhausted(result, default);
                 return false;
             }
             else
             {
-                OnFailure(result, null);
+                OnFailure(result, default);
                 return false;
             }
         }
@@ -149,17 +149,17 @@ namespace Sweetener.Reliability
             {
                 if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
                 {
-                    await Task.Delay(_getDelay(attempt, result, null), cancellationToken).ConfigureAwait(false);
-                    OnRetry(attempt, result, null);
+                    await Task.Delay(_getDelay(attempt, result, default), cancellationToken).ConfigureAwait(false);
+                    OnRetry(attempt, result, default);
                     return true;
                 }
 
-                OnRetriesExhausted(result, null);
+                OnRetriesExhausted(result, default);
                 return false;
             }
             else
             {
-                OnFailure(result, null);
+                OnFailure(result, default);
                 return false;
             }
         }

@@ -1030,10 +1030,10 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(2, func            .Calls);
+            Assert.AreEqual(3, func            .Calls);
             Assert.AreEqual(1, resultPolicy    .Calls);
             Assert.AreEqual(2, exceptionPolicy .Calls);
-            Assert.AreEqual(2, delayPolicy     .Calls);
+            Assert.AreEqual(3, delayPolicy     .Calls);
 
             if (addEventHandlers)
             {

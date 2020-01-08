@@ -1050,11 +1050,12 @@ namespace Sweetener.Reliability.Test
             observeFunc       ?.Invoke(func, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, 418, typeof(IOException));
 
-            // Cancel the delay after some invocations
-            int retries = passResultPolicy ? 2 : 1;
+            // Cancel the function after 2 or 3 invocations
+            int i = passResultPolicy ? 3 : 2;
+
             func.Invoking += c =>
             {
-                if (c.Calls == retries)
+                if (c.Calls == i)
                     tokenSource.Cancel();
             };
 
@@ -1062,11 +1063,13 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            int x = passResultPolicy ? 1 : 0;
-            Assert.AreEqual(retries    , func           .Calls);
-            Assert.AreEqual(retries - 1, resultPolicy   .Calls);
-            Assert.AreEqual(1          , exceptionPolicy.Calls);
-            Assert.AreEqual(retries    , delayPolicy    .Calls);
+            int r = i - 1;
+            int x = passResultPolicy ? r / 2 : 0;
+            int y = passResultPolicy ? r / 2 : r;
+            Assert.AreEqual(i, func           .Calls);
+            Assert.AreEqual(x, resultPolicy   .Calls);
+            Assert.AreEqual(y, exceptionPolicy.Calls);
+            Assert.AreEqual(r, delayPolicy    .Calls);
         }
 
         #endregion
@@ -1112,11 +1115,12 @@ namespace Sweetener.Reliability.Test
             observeFunc       ?.Invoke(func, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayPolicy, 418, typeof(IOException));
 
-            // Cancel the delay after some invocations
-            int retries = passResultPolicy ? 2 : 1;
+            // Cancel the delay after 1 or 2 invocations
+            int r = passResultPolicy ? 2 : 1;
+
             delayPolicy.Invoking += c =>
             {
-                if (c.Calls == retries)
+                if (c.Calls == r)
                     tokenSource.Cancel();
             };
 
@@ -1124,10 +1128,13 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(retries    , func           .Calls);
-            Assert.AreEqual(retries - 1, resultPolicy   .Calls);
-            Assert.AreEqual(1          , exceptionPolicy.Calls);
-            Assert.AreEqual(retries    , delayPolicy    .Calls);
+            int x = passResultPolicy ? r / 2 : 0;
+            int y = passResultPolicy ? r / 2 : r;
+            Assert.AreEqual(r, func           .Calls);
+            Assert.AreEqual(x, resultPolicy   .Calls);
+            Assert.AreEqual(y, exceptionPolicy.Calls);
+            Assert.AreEqual(r, delayPolicy    .Calls);
+            
         }
 
         #endregion

@@ -909,10 +909,10 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(2, func            .Calls);
+            Assert.AreEqual(3, func            .Calls);
             Assert.AreEqual(1, resultPolicy    .Calls);
             Assert.AreEqual(2, exceptionPolicy .Calls);
-            Assert.AreEqual(2, delayPolicy     .Calls);
+            Assert.AreEqual(3, delayPolicy     .Calls);
 
             if (addEventHandlers)
             {
