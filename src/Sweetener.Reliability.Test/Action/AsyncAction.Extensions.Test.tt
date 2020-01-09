@@ -1,0 +1,4 @@
+<#
+    bool async = true;
+#>
+<#@ include file="TextTemplating\Action.Extensions.Test.t4" #>

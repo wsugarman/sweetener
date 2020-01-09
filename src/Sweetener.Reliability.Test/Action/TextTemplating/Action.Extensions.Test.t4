@@ -1,0 +1,117 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
+    // Assume a boolean variable called "async" has been previously defined!
+    string optionalAsync   = async ? "Async" : string.Empty;
+    string inputActionKind = async ? "Func" : "Action";
+
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments     (parameterCount);
+        string typeArguments  = GetTypeArguments (parameterCount);
+        string suffix         = "T" + (parameterCount + 1);
+#>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Sweetener.Reliability.Test
+{
+    // Define type aliases for the various generic types used below as they can become pretty cumbersome
+    using TestAction                   = <#= inputActionKind #>     <#= Enclose(GetTypeArguments(parameterCount, async, interruptable: false), BracketType.AngleBrackets) #>;
+    using InterruptableTestAction      = <#= inputActionKind #>     <#= Enclose(GetTypeArguments(parameterCount, async, interruptable: true ), BracketType.AngleBrackets) #>;
+    using TestActionProxy              = <#= inputActionKind #>Proxy<#= Enclose(GetTypeArguments(parameterCount, async, interruptable: false), BracketType.AngleBrackets) #>;
+    using InterruptableTestActionProxy = <#= inputActionKind #>Proxy<#= Enclose(GetTypeArguments(parameterCount, async, interruptable: true ), BracketType.AngleBrackets) #>;
+    using DelayPolicyProxy             = FuncProxy<int, TimeSpan>;
+    using ComplexDelayPolicyProxy      = FuncProxy<int, Exception, TimeSpan>;
+
+<#
+        if (parameterCount == 0)
+        {
+#>
+    [TestClass]
+    public partial class <#= optionalAsync #>ActionExtensionsTest : BaseActionExtensionsTest
+<#
+        }
+        else
+        {
+#>
+    partial class <#= optionalAsync #>ActionExtensionsTest
+<#
+        }
+#>
+    {
+<#
+        foreach (bool interruptable in new bool[] { false, true })
+        {
+            string inputTypeArguments = Enclose(GetTypeArguments(parameterCount, async: false, interruptable: interruptable), BracketType.AngleBrackets);
+            string optionalToken      = interruptable ?                 "token" : "CancellationToken.None";
+            string optionalCommaToken = interruptable ? optionalComma + "token" : string.Empty;
+
+            foreach (bool useComplexPolicy in new bool[] { false, true })
+            {
+                string inputActionType      = (interruptable ? "Interruptable" : string.Empty) + "TestAction";
+                string delayPolicyFunc      = useComplexPolicy ? "Func<int, Exception, TimeSpan>" : "Func<int, TimeSpan>";
+                string delayPolicyTypeProxy = (useComplexPolicy ? "ComplexDelayPolicy" : "DelayPolicy") + "Proxy";
+                string noDelayPolicy        = useComplexPolicy ? "(i, e) => TimeSpan.Zero" : "DelayPolicies.None";
+                string testSuffix           = suffix + (async ? "_Async" : string.Empty) + (interruptable ? "_WithToken" : string.Empty) +  "_" + (useComplexPolicy ? "ComplexDelayPolicy" : "DelayPolicy");
+#>
+        [TestMethod]
+        public void With<#= optionalAsync #>Retry<#= testSuffix #>()
+        {
+            <#= inputActionType #> nullAction = null;
+            <#= inputActionType #> action     = <#= GetNoOpDelegate(parameterCount, async, interruptable) #>;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullAction.With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, <#= noDelayPolicy #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .With<#= optionalAsync #>Retry(-2, ExceptionPolicies.Transient, <#= noDelayPolicy #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, null                       , <#= noDelayPolicy #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, ExceptionPolicies.Transient, (<#= useComplexPolicy ? "Complex" : string.Empty #>DelayPolicy)null));
+
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Action<CancellationToken>, <#= inputActionType #>Proxy> actionFactory = a => new <#= inputActionType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ await Task.CompletedTask.ConfigureAwait(false); a({optionalToken}); }}" : $"a({optionalToken})" #>);
+            Func<TimeSpan, <#= delayPolicyTypeProxy #>> delayPolicyFactory = t => new <#= delayPolicyTypeProxy #>((i<#= useComplexPolicy ? ", e" : string.Empty #>) => t);
+            Func<<#= inputActionType #>, int, ExceptionPolicy, <#= delayPolicyFunc #>, <#= inputActionType #>> with<#= optionalAsync #>Retry = (a, r, e, d) => a.With<#= optionalAsync #>Retry(r, e, d.Invoke);
+            Action<<#= inputActionType #><#= optionalComma #><#= typeArguments #>, CancellationToken> invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #><#= optionalCommaToken #>)<#= async ? ".Wait()" : string.Empty #>;
+
+            Action<<#= inputActionType #>Proxy>           observeAction      = <#= interruptable || parameterCount > 0 ? $"a          => a.Invoking += Expect.Arguments{inputTypeArguments}(Arguments.Validate)" : "null" #>;
+            Action<<#= inputActionType #>Proxy, TimeSpan> observeActionDelay = (a, delay) => a.Invoking += Expect.<#= interruptable || parameterCount > 0 ? $"ArgumentsAfterDelay{inputTypeArguments}(Arguments.Validate, delay)" : $"AfterDelay{inputTypeArguments}(delay)" #>;
+
+            // Test each scenario
+            WithRetry<#= suffix #>_Success         (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexPolicy ? ", Exception" : string.Empty #>>());
+            WithRetry<#= suffix #>_Failure         (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexPolicy ? ", Exception" : string.Empty #>>());
+            WithRetry<#= suffix #>_EventualSuccess (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= suffix #>_EventualFailure (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= suffix #>_RetriesExhausted(actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+<#
+                    if (interruptable)
+                    {
+#>
+            WithRetry<#= suffix #>_Canceled_Action (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+            WithRetry<#= suffix #>_Canceled_Delay  (actionFactory, delayPolicyFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexPolicy ? "ExceptionAsc(e)" : "Asc()" #>);
+<#
+                    }
+#>
+        }
+<#
+                if (!interruptable) // Are there more iterations?
+                {
+#>
+
+<#
+                }
+            }
+        }
+#>
+    }
+}
+<#
+        string fileName = parameterCount == 0 ? $"{optionalAsync}Action.Extensions.Test.cs" : $"{optionalAsync}Action.Extensions.T{parameterCount}.Test.cs";
+        SaveOutput(fileName);
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully
