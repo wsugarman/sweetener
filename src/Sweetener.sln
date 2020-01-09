@@ -18,11 +18,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C5B9D6
 		Public.snk = Public.snk
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{2C6CE23B-6FBA-4071-A578-2D9F965219BE}"
-	ProjectSection(SolutionItems) = preProject
-		Build\Build.Template.yml = Build\Build.Template.yml
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{425E97F2-3F40-4711-8860-4618738A3AA4}"
 	ProjectSection(SolutionItems) = preProject
 		Test\CodeCoverage.runsettings = Test\CodeCoverage.runsettings
@@ -60,7 +55,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{2C6CE23B-6FBA-4071-A578-2D9F965219BE} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
 		{425E97F2-3F40-4711-8860-4618738A3AA4} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
 		{300BE535-1586-4CDF-B2FA-C5821F5BB75D} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
 	EndGlobalSection

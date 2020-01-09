@@ -4,6 +4,8 @@ trigger:
     - master
   paths:
     include:
+    - build/Build.Template.yml
+    - build/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 pr:
@@ -12,9 +14,11 @@ pr:
     - master
   paths:
     include:
+    - build/Build.Template.yml
+    - build/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 jobs:
-- template: ../Build/Build.Template.yml
+- template: Build.Template.yml
   parameters:
     project: 'Sweetener.Reliability'
