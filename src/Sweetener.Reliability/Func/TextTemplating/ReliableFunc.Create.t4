@@ -110,8 +110,12 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy<TResult> delayPolicy)
             => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
-
 <#
+            if (!interruptable) // Are there more iterations
+            {
+#>
+
+<#          }
         }
 #>
     }

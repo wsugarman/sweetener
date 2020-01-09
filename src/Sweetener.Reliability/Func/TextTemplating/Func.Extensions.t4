@@ -1,0 +1,190 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
+    // Assume a boolean variable called "async" has been previously defined!
+    string optionalAsync = async ? "Async" : string.Empty;
+
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments         (parameterCount);
+        string parameters     = GetParameters        (parameterCount);
+        string typeParameters = GetFuncTypeParameters(parameterCount);
+#>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Sweetener.Reliability
+{
+<#
+        if (parameterCount == 0)
+        {
+#>
+    /// <summary>
+    /// A collection of methods to reliablty invoke <#= async ? "asynchronous " : string.Empty #>user-defined functions.
+    /// </summary>
+    public static partial class <#= optionalAsync #>FuncExtensions
+<#
+        }
+        else
+        {
+#>
+    static partial class <#= optionalAsync #>FuncExtensions
+<#
+        }
+#>
+    {
+<#
+        foreach (bool interruptable in new bool[] { false, true })
+        {
+            string inputTypeParameters       = GetFuncTypeParameters(parameterCount, async, interruptable);
+            string optionalToken             = interruptable ? optionalComma + "cancellationToken" : string.Empty;
+            string optionalCancellationCheck = interruptable ? (async ? "t.IsCanceled()" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
+            string asyncOperationSuffx       = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
+#>
+        #region Func<<#= inputTypeParameters #>>
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+#>
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
+            => With<#= optionalAsync #>Retry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+#>
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
+            => With<#= optionalAsync #>Retry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+#>
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
+            this Func<<#= inputTypeParameters #>> func,
+            int                   maxRetries,
+            ResultPolicy<TResult> resultPolicy,
+            ExceptionPolicy       exceptionPolicy,
+            DelayPolicy           delayPolicy)
+            => With<#= optionalAsync #>Retry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+
+        /// <summary>
+        /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="func" />
+        /// that will retry the operation based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+#>
+        public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
+            this Func<<#= inputTypeParameters #>> func,
+            int                         maxRetries,
+            ResultPolicy<TResult>       resultPolicy,
+            ExceptionPolicy             exceptionPolicy,
+            ComplexDelayPolicy<TResult> delayPolicy)
+        {
+            if (func == null)
+                throw new ArgumentNullException(nameof(func));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (resultPolicy == null)
+                throw new ArgumentNullException(nameof(resultPolicy));
+
+            if (exceptionPolicy == null)
+                throw new ArgumentNullException(nameof(exceptionPolicy));
+
+            if (delayPolicy == null)
+                throw new ArgumentNullException(nameof(delayPolicy));
+
+            return <#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalToken #>) =>
+            {
+                <#= async ? "Task<TResult> t" : "TResult result" #>;
+                int attempt = 0;
+
+            Attempt:
+                attempt++;
+<#
+        if (async)
+        {
+#>
+                t = null;
+<#
+        }
+#>
+
+                try
+                {
+<#
+        if (async)
+        {
+#>
+                    t = func(<#= arguments #><#= optionalToken #>);
+                    await t.ConfigureAwait(false);
+<#
+        }
+        else
+        {
+#>
+                    result = func(<#= arguments #><#= optionalToken #>);
+<#
+        }
+#>
+                }
+                catch (Exception e)
+                {
+                    if (<#= optionalCancellationCheck #>!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
+
+                    <#= async ? "await " : string.Empty #>Task.Delay(delayPolicy(attempt, default, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
+                    goto Attempt;
+                }
+
+<#
+        if (async)
+        {
+#>
+                TResult result = t.Result;
+<#
+        }
+#>
+                ResultKind kind = resultPolicy(result);
+                if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    return result;
+
+                <#= async ? "await " : string.Empty #>Task.Delay(delayPolicy(attempt, result, default)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
+                goto Attempt;
+            };
+        }
+
+        #endregion
+<#
+            if (!interruptable) // Are there more iterations
+            {
+#>
+
+<#          }
+        }
+#>
+    }
+}
+<#
+        SaveOutput($"{optionalAsync}Func.Extensions.T{parameterCount + 1}.cs");
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully

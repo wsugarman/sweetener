@@ -208,6 +208,5 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy<TResult> delayPolicy)
             => new ReliableFunc<TResult>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
-
     }
 }

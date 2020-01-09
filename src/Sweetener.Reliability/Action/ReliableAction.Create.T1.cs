@@ -101,6 +101,5 @@ namespace Sweetener.Reliability
             ExceptionPolicy exceptionPolicy,
             ComplexDelayPolicy delayPolicy)
             => new ReliableAction<T>(action, maxRetries, exceptionPolicy, delayPolicy);
-
     }
 }
