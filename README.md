@@ -16,9 +16,7 @@ Each Sweetener library follows the same set of principles:
 
 ## Libraries
 ### Reliability
-![Build Status](https://img.shields.io/azure-devops/build/wsugarman/Sweetener/2/master.svg)
-![Test Summary](https://img.shields.io/azure-devops/tests/wsugarman/Sweetener/2/master.svg)
-![Code Coverage](https://img.shields.io/azure-devops/coverage/wsugarman/Sweetener/2/master.svg)
+[![Build Status](https://wsugarman.visualstudio.com/Sweetener/_apis/build/status/Sweetener.Reliability?branchName=master)](https://wsugarman.visualstudio.com/Sweetener/_build/latest?definitionId=2&branchName=master)
 
 The `Sweetener.Reliability` library provides an API for reliably running delegates that may
 ocassionally result in transient failures. The execution of these "reliable" actions
