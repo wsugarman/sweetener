@@ -7,9 +7,6 @@ namespace Sweetener.Reliability
 {
     internal static class InterruptableExtensions
     {
-        public static bool IsCanceled(this Task task)
-            => task != null && task.Status == TaskStatus.Canceled;
-
         public static bool IsCancellation(this Exception exception, CancellationToken cancellationToken)
         {
             OperationCanceledException oce = exception as OperationCanceledException;

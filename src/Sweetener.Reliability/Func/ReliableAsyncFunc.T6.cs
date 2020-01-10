@@ -210,12 +210,12 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, CancellationToken cancellationToken)
         {
-            Task<TResult> t;
+            Task<TResult> t = null;
             int attempt = 0;
 
         Attempt:
-            t = null;
             attempt++;
+
             try
             {
                 t = _func(arg1, arg2, arg3, arg4, arg5, cancellationToken);
@@ -223,7 +223,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (t.IsCanceled() || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                if (t.IsCanceled || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     throw;
 
                 goto Attempt;

@@ -212,6 +212,7 @@ namespace Sweetener.Reliability
 
         Attempt:
             attempt++;
+
             try
             {
                 result = _func(arg1, arg2, arg3, arg4, cancellationToken);
@@ -268,6 +269,7 @@ namespace Sweetener.Reliability
 
         Attempt:
             attempt++;
+
             try
             {
                 result = _func(arg1, arg2, arg3, arg4, cancellationToken);
@@ -331,9 +333,11 @@ namespace Sweetener.Reliability
         {
             int attempt = 0;
             bool retry = false;
+
             do
             {
                 attempt++;
+
                 try
                 {
                     result = _func(arg1, arg2, arg3, arg4, cancellationToken);

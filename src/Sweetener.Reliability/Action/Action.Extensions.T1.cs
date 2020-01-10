@@ -64,6 +64,7 @@ namespace Sweetener.Reliability
 
             Attempt:
                 attempt++;
+
                 try
                 {
                     action(arg);
@@ -139,6 +140,7 @@ namespace Sweetener.Reliability
 
             Attempt:
                 attempt++;
+
                 try
                 {
                     action(arg, cancellationToken);

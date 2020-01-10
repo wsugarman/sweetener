@@ -114,9 +114,11 @@ namespace Sweetener.Reliability
         public void Invoke(T arg, CancellationToken cancellationToken)
         {
             int attempt = 0;
+
             do
             {
                 attempt++;
+
                 try
                 {
                     _action(arg, cancellationToken);
@@ -157,9 +159,11 @@ namespace Sweetener.Reliability
         public async Task InvokeAsync(T arg, CancellationToken cancellationToken)
         {
             int attempt = 0;
+
             do
             {
                 attempt++;
+
                 try
                 {
                     _action(arg, cancellationToken);
@@ -203,9 +207,11 @@ namespace Sweetener.Reliability
         {
             int attempt = 0;
             Exception lastException;
+
             do
             {
                 attempt++;
+
                 try
                 {
                     _action(arg, cancellationToken);

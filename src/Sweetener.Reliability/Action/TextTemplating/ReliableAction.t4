@@ -120,9 +120,11 @@ namespace Sweetener.Reliability
         public void Invoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
             int attempt = 0;
+
             do
             {
                 attempt++;
+
                 try
                 {
                     _action(<#= arguments #><#= optionalComma #>cancellationToken);
@@ -180,6 +182,7 @@ namespace Sweetener.Reliability
         public async Task InvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
             int attempt = 0;
+
             do
             {
 <#
@@ -191,6 +194,7 @@ namespace Sweetener.Reliability
         }
 #>
                 attempt++;
+
                 try
                 {
 <#
@@ -212,7 +216,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (<#= async ? "t.IsCanceled()" : "e.IsCancellation(cancellationToken)" #> || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    if (<#= async ? "t.IsCanceled" : "e.IsCancellation(cancellationToken)" #> || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);
@@ -256,9 +260,11 @@ namespace Sweetener.Reliability
         {
             int attempt = 0;
             Exception lastException;
+
             do
             {
                 attempt++;
+
                 try
                 {
                     _action(<#= arguments #><#= optionalComma #>cancellationToken);

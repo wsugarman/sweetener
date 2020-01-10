@@ -117,10 +117,12 @@ namespace Sweetener.Reliability
         public async Task InvokeAsync(T1 arg1, T2 arg2, CancellationToken cancellationToken)
         {
             int attempt = 0;
+
             do
             {
                 Task t = null;
                 attempt++;
+
                 try
                 {
                     t = _action(arg1, arg2, cancellationToken);
@@ -129,7 +131,7 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (t.IsCanceled() || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    if (t.IsCanceled || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);

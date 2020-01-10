@@ -41,7 +41,7 @@ namespace Sweetener.Reliability
         foreach (bool interruptable in new bool[] { false, true })
         {
             string inputActionType           = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable), BracketType.AngleBrackets);
-            string optionalCancellationCheck = interruptable ? (async ? "t.IsCanceled()" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
+            string optionalCancellationCheck = interruptable ? (async ? "t.IsCanceled" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
             string asyncOperationSuffx       = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
 #>
         #region <#= inputActionType #>
@@ -83,7 +83,7 @@ namespace Sweetener.Reliability
             if (async)
             {
 #>
-                Task t;
+                Task t = null;
 <#
             }
 #>
@@ -91,14 +91,7 @@ namespace Sweetener.Reliability
 
             Attempt:
                 attempt++;
-<#
-            if (async)
-            {
-#>
-                t = null;
-<#
-            }
-#>
+
                 try
                 {
 <#

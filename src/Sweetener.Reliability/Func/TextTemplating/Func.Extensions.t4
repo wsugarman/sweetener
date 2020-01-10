@@ -43,7 +43,7 @@ namespace Sweetener.Reliability
         {
             string inputTypeParameters       = GetFuncTypeParameters(parameterCount, async, interruptable);
             string optionalToken             = interruptable ? optionalComma + "cancellationToken" : string.Empty;
-            string optionalCancellationCheck = interruptable ? (async ? "t.IsCanceled()" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
+            string optionalCancellationCheck = interruptable ? (async ? "t.IsCanceled" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
             string asyncOperationSuffx       = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
 #>
         #region Func<<#= inputTypeParameters #>>
@@ -114,19 +114,11 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalToken #>) =>
             {
-                <#= async ? "Task<TResult> t" : "TResult result" #>;
+                <#= async ? "Task<TResult> t = null" : "TResult result" #>;
                 int attempt = 0;
 
             Attempt:
                 attempt++;
-<#
-        if (async)
-        {
-#>
-                t = null;
-<#
-        }
-#>
 
                 try
                 {
