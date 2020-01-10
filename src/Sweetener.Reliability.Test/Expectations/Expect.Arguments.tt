@@ -4,7 +4,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,23 +13,13 @@ namespace Sweetener.Reliability.Test
     static partial class Expect
     {
 <#
-    for (int parameterCount = 1; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 1; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
     {
         string arguments      = GetArguments (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount);
 #>
-        public static Action<<#= typeParameters #>, CallContext> AfteDelay<<#= typeParameters #>>(TimeSpan delay)
-            => (<#= arguments #>, context) =>
-            {
-                if (context.Calls > 1)
-                    Assert.IsTrue(context.TimeSinceLastCall >= delay, $"Time since last call '{context.TimeSinceLastCall}' less than expected delay '{delay}'.");
-            };
-
         public static Action<<#= typeParameters #>, CallContext> Arguments<<#= typeParameters #>>(Action<<#= typeParameters #>> assertArguments)
-            => (<#= arguments #>, context) =>
-            {
-                assertArguments(<#= arguments #>);
-            };
+            => (<#= arguments #>, context) => assertArguments(<#= arguments #>);
 
         public static Action<<#= typeParameters #>, CallContext> ArgumentsAfterDelay<<#= typeParameters #>>(Action<<#= typeParameters #>> assertArguments, TimeSpan delay)
             => (<#= arguments #>, context) =>

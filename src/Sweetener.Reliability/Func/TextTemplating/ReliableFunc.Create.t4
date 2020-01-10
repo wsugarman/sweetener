@@ -1,0 +1,127 @@
+﻿<#@ template hostspecific="true" language="C#" #>
+<#@ output extension=".tt.out" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
+    // Assume a boolean variable called "async" has been previously defined!
+    string optionalAsync = async ? "Async" : string.Empty;
+
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    {
+        string arguments      = GetArguments         (parameterCount);
+        string parameters     = GetParameters        (parameterCount);
+        string typeParameters = GetFuncTypeParameters(parameterCount);
+#>
+// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading;
+<#
+        if (async)
+        {
+#>
+using System.Threading.Tasks;
+<#
+        }
+#>
+
+namespace Sweetener.Reliability
+{
+<#
+        if (parameterCount == 0)
+        {
+#>
+    /// <summary>
+    /// Provides a set of methods for creating reliable <#= async ? "asynchronous " : string.Empty #>functions.
+    /// </summary>
+    public static partial class Reliable<#= optionalAsync #>Func
+<#
+        }
+        else
+        {
+#>
+    static partial class Reliable<#= optionalAsync #>Func
+<#
+        }
+#>
+    {
+<#
+        foreach (bool interruptable in new bool[] { false, true })
+        {
+            string inputTypeParameters = GetFuncTypeParameters(parameterCount, async, interruptable);
+#>
+        /// <summary>
+        /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
+        /// that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+#>
+        public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
+            Func<<#= inputTypeParameters #>> func,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
+        /// that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+#>
+        public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
+            Func<<#= inputTypeParameters #>> func,
+            int maxRetries,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy<TResult> delayPolicy)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
+        /// that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+#>
+        public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
+            Func<<#= inputTypeParameters #>> func,
+            int maxRetries,
+            ResultPolicy<TResult> resultPolicy,
+            ExceptionPolicy exceptionPolicy,
+            DelayPolicy delayPolicy)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
+
+        /// <summary>
+        /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
+        /// that executes the given <#= async ? "asynchronous " : string.Empty #>function at most a specific number of times
+        /// based on the provided policies.
+        /// </summary>
+<#
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+#>
+        public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
+            Func<<#= inputTypeParameters #>> func,
+            int maxRetries,
+            ResultPolicy<TResult> resultPolicy,
+            ExceptionPolicy exceptionPolicy,
+            ComplexDelayPolicy<TResult> delayPolicy)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
+<#
+            if (!interruptable) // Are there more iterations
+            {
+#>
+
+<#          }
+        }
+#>
+    }
+}
+<#
+        SaveOutput($"Reliable{optionalAsync}Func.Create.T{parameterCount + 1}.cs");
+    }
+#>
+<#= GetTemplateFileName() #> ran successfully

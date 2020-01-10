@@ -7,13 +7,13 @@
 
   <!-- Generated Files -->
   <ItemGroup>
-    <Compile Update="Action\InterruptableAction.cs">
-      <DependentUpon>InterruptableAction.tt</DependentUpon>
+    <Compile Update="Action\Action.cs">
+      <DependentUpon>Action.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Update="Func\InterruptableFunc.cs">
-      <DependentUpon>InterruptableFunc.tt</DependentUpon>
+    <Compile Update="Func\Func.cs">
+      <DependentUpon>Func.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
@@ -26,12 +26,12 @@
 
   <!-- Text Templating Files -->
   <ItemGroup>
-    <None Update="Action\InterruptableAction.tt">
-      <LastGenOutput>InterruptableAction.cs</LastGenOutput>
+    <None Update="Action\Action.tt">
+      <LastGenOutput>Action.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
-    <None Update="Func\InterruptableFunc.tt">
-      <LastGenOutput>InterruptableFunc.cs</LastGenOutput>
+    <None Update="Func\Func.tt">
+      <LastGenOutput>Func.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
     <None Update="Func\TryFunc.tt">

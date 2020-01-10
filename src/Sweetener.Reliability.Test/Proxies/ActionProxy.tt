@@ -2,43 +2,48 @@
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
 using System;
 
 namespace Sweetener.Reliability.Test
 {
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
     {
         string optionalComma      = parameterCount > 0 ? ", " : string.Empty;
-        string arguments          = GetArguments     (parameterCount);
-        string parameters         = GetParameters    (parameterCount);
-        string typeParameters     = GetTypeParameters(parameterCount);
-        string typeParametersCode = parameterCount > 0 ? "<" + GetTypeParameters(parameterCount) + ">" : string.Empty;
+        string arguments          = GetArguments           (parameterCount);
+        string parameters         = GetParameters          (parameterCount);
+        string typeParameters     = GetActionTypeParameters(parameterCount);
+        string typeParametersCode = Enclose(typeParameters, BracketType.AngleBrackets);
 #>
     #region ActionProxy<#= typeParametersCode #>
 
-    internal sealed class ActionProxy<#= typeParametersCode #> : DelegateProxy
+    internal sealed class ActionProxy<#= typeParametersCode #> : DelegateProxy<Action<#= typeParametersCode #>>
     {
-        public event Action<<#= typeParameters #><#= optionalComma #>CallContext> Invoking;
+        public new event Action<<#= typeParameters #><#= optionalComma #>CallContext> Invoking;
 
-        private readonly Action<#= typeParametersCode #> _action;
+        public override Action<#= typeParametersCode #> Proxy => Invoke;
 
         public ActionProxy()
             : this((<#= arguments #>) => Operation.Null())
         { }
 
         public ActionProxy(Action<#= typeParametersCode #> action)
-        {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-        }
+            : base(action)
+        { }
 
         public void Invoke(<#= parameters #>)
         {
             UpdateContext();
 
+            OnInvoking(<#= arguments #>);
+            _delegate(<#= arguments #>);
+        }
+
+        private <#= parameterCount == 0 ? "new " : string.Empty #>void OnInvoking(<#= parameters #>)
+        {
             Invoking?.Invoke(<#= arguments #><#= optionalComma #>_context);
-            _action(<#= arguments #>);
+            <#= parameterCount == 0 ? "base." : string.Empty #>OnInvoking();
         }
     }
 

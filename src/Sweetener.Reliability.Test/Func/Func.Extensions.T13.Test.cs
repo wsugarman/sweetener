@@ -7,864 +7,283 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
 {
-    partial class FuncExtensionsTest
+    // Define type aliases for the various generic types used below as they can become pretty cumbersome
+    using TestFunc                   = Func     <int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>;
+    using InterruptableTestFunc      = Func     <int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int>;
+    using TestFuncProxy              = FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>;
+    using InterruptableTestFuncProxy = FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int>;
+    using DelayPolicyProxy           = FuncProxy<int, TimeSpan>;
+    using ComplexDelayPolicyProxy    = FuncProxy<int, int, Exception, TimeSpan>;
+
+    partial class FuncExtensionsTest : FuncExtensionsTestBase
     {
         [TestMethod]
         public void WithRetryT13_DelayPolicy()
         {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> nullFunc = null;
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 42;
+            TestFunc nullFunc = null;
+            TestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 12345;
             Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, ExceptionPolicies.Transient, DelayPolicies.None));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, ExceptionPolicies.Transient, DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                       , DelayPolicies.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, ExceptionPolicies.Transient, (DelayPolicy)null ));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, ExceptionPolicies.Transient, (DelayPolicy)null));
 
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke;
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry = (f, m, r, e, d) => f.WithRetry(m, e, d);
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => f(CancellationToken.None));
+            Func<TimeSpan, DelayPolicyProxy> delayPolicyFactory = t => new DelayPolicyProxy((i) => t);
+            Func<TestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, TimeSpan>, TestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, e, d.Invoke);
+            Func<TestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
 
-            // Without Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+            Action<TestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
+            Action<TestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, delay);
 
-            WithRetryT13_Success                   (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_Failure_Exception         (withRetry, invoke); // ResultPolicy is never called
-            WithRetryT13_EventualSuccess           (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke, useResultPolicy: false);
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: false);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
 
-            // With Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
-
-            WithRetryT13_Success                   (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_Failure_Exception         (withRetry, invoke); // ResultPolicy is never called
-            WithRetryT13_EventualSuccess           (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_Canceled                  (withRetry        , useResultPolicy: false);
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: false);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
         }
 
         [TestMethod]
         public void WithRetryT13_ComplexDelayPolicy()
         {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> nullFunc = null;
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 42;
-            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero   ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero   ));
-            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                       , (i, r, e) => TimeSpan.Zero   ));
+            TestFunc nullFunc = null;
+            TestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 12345;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                       , (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, ExceptionPolicies.Transient, (ComplexDelayPolicy<int>)null));
 
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke;
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry = (f, m, r, e, d) => f.WithRetry(m, e, d);
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => f(CancellationToken.None));
+            Func<TimeSpan, ComplexDelayPolicyProxy> delayPolicyFactory = t => new ComplexDelayPolicyProxy((i, r, e) => t);
+            Func<TestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, int, Exception, TimeSpan>, TestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, e, d.Invoke);
+            Func<TestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
 
-            // Without Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+            Action<TestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
+            Action<TestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, delay);
 
-            WithRetryT13_Success                   (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_Failure_Exception         (withRetry, invoke); // ResultPolicy is never called
-            WithRetryT13_EventualSuccess           (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke, useResultPolicy: false);
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: false);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
 
-            // With Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
-
-            WithRetryT13_Success                   (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_Failure_Exception         (withRetry, invoke); // ResultPolicy is never called
-            WithRetryT13_EventualSuccess           (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke, useResultPolicy: false);
-            WithRetryT13_Canceled                  (withRetry        , useResultPolicy: false);
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: false);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
         }
 
         [TestMethod]
         public void WithRetryT13_ResultPolicy_DelayPolicy()
         {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> nullFunc = null;
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 42;
+            TestFunc nullFunc = null;
+            TestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 12345;
             Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, DelayPolicies.None));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, r => ResultKind.Successful, ExceptionPolicies.Transient, DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                      , ExceptionPolicies.Transient, DelayPolicies.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, null                       , DelayPolicies.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (DelayPolicy)null ));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (DelayPolicy)null));
 
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke;
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry = (f, m, r, e, d) => f.WithRetry(m, r, e, d);
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => f(CancellationToken.None));
+            Func<TimeSpan, DelayPolicyProxy> delayPolicyFactory = t => new DelayPolicyProxy((i) => t);
+            Func<TestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, TimeSpan>, TestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, r, e, d.Invoke);
+            Func<TestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
 
-            // Without Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+            Action<TestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
+            Action<TestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, delay);
 
-            WithRetryT13_Success                   (withRetry, invoke);
-            WithRetryT13_Failure_Result            (withRetry, invoke);
-            WithRetryT13_Failure_Exception         (withRetry, invoke);
-            WithRetryT13_EventualSuccess           (withRetry, invoke);
-            WithRetryT13_EventualFailure_Result    (withRetry, invoke);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Result   (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke);
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: true);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
 
-            // With Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
+            // Failure (Result)
+            WithRetryT13_Failure_Result         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>());
+            WithRetryT13_EventualFailure_Result (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc());
+            WithRetryT13_RetriesExhausted_Result(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc());
 
-            WithRetryT13_Success                   (withRetry, invoke);
-            WithRetryT13_Failure_Result            (withRetry, invoke);
-            WithRetryT13_Failure_Exception         (withRetry, invoke);
-            WithRetryT13_EventualSuccess           (withRetry, invoke);
-            WithRetryT13_EventualFailure_Result    (withRetry, invoke);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Result   (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke);
-            WithRetryT13_Canceled                  (withRetry);
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: true);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
         }
 
         [TestMethod]
         public void WithRetryT13_ResultPolicy_ComplexDelayPolicy()
         {
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> nullFunc = null;
-            Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 42;
-            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero   ));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, r => ResultKind.Successful, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero   ));
-            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                      , ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero   ));
-            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, null                       , (i, r, e) => TimeSpan.Zero   ));
+            TestFunc nullFunc = null;
+            TestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 12345;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, r => ResultKind.Successful, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                      , ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, null                       , (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (ComplexDelayPolicy<int>)null));
 
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke;
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry = (f, m, r, e, d) => f.WithRetry(m, r, e, d);
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => f(CancellationToken.None));
+            Func<TimeSpan, ComplexDelayPolicyProxy> delayPolicyFactory = t => new ComplexDelayPolicyProxy((i, r, e) => t);
+            Func<TestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, int, Exception, TimeSpan>, TestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, r, e, d.Invoke);
+            Func<TestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
 
-            // Without Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+            Action<TestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
+            Action<TestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, delay);
 
-            WithRetryT13_Success                   (withRetry, invoke);
-            WithRetryT13_Failure_Result            (withRetry, invoke);
-            WithRetryT13_Failure_Exception         (withRetry, invoke);
-            WithRetryT13_EventualSuccess           (withRetry, invoke);
-            WithRetryT13_EventualFailure_Result    (withRetry, invoke);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Result   (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke);
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: true);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
 
-            // With Token
-            invoke = (func, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
+            // Failure (Result)
+            WithRetryT13_Failure_Result         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>());
+            WithRetryT13_EventualFailure_Result (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e));
+            WithRetryT13_RetriesExhausted_Result(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e));
 
-            WithRetryT13_Success                   (withRetry, invoke);
-            WithRetryT13_Failure_Result            (withRetry, invoke);
-            WithRetryT13_Failure_Exception         (withRetry, invoke);
-            WithRetryT13_EventualSuccess           (withRetry, invoke);
-            WithRetryT13_EventualFailure_Result    (withRetry, invoke);
-            WithRetryT13_EventualFailure_Exception (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Result   (withRetry, invoke);
-            WithRetryT13_RetriesExhausted_Exception(withRetry, invoke);
-            WithRetryT13_Canceled                  (withRetry);
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: true);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
         }
 
-        #region WithRetryT13_Success
-
-        private void WithRetryT13_Success(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_Success(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
-                    delayPolicy.Invoking += Expect.Nothing<int>();
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_Success(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_Success(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>();
-                    delayPolicy.Invoking += Expect.Nothing<int, int, Exception>();
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_Success<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory,
-            bool useResultPolicy)
-            where T : DelegateProxy
+        [TestMethod]
+        public void WithRetryT13_WithToken_DelayPolicy()
         {
-            // Create a "successful" user-defined function
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 200);
+            InterruptableTestFunc nullFunc = null;
+            InterruptableTestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => 12345;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                       , DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, ExceptionPolicies.Transient, (DelayPolicy)null));
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(n => n == 200 ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
-            T delayPolicy = delayPolicyFactory();
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(token));
+            Func<TimeSpan, DelayPolicyProxy> delayPolicyFactory = t => new DelayPolicyProxy((i) => t);
+            Func<InterruptableTestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, TimeSpan>, InterruptableTestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, e, d.Invoke);
+            Func<InterruptableTestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
 
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
+            Action<InterruptableTestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate);
+            Action<InterruptableTestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate, delay);
 
-            // Define expectations
-            func           .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
-            resultPolicy   .Invoking += Expect.Result(200);
-            exceptionPolicy.Invoking += Expect.Nothing<Exception>();
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: false);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
 
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.AreEqual(200, invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: false);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
 
-            // Validate the number of calls
-            int x = useResultPolicy ? 1 : 0;
-            Assert.AreEqual(1, func           .Calls);
-            Assert.AreEqual(x, resultPolicy   .Calls);
-            Assert.AreEqual(0, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            // Cancel
+            WithRetryT13_Canceled_Func (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
+            WithRetryT13_Canceled_Delay(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: false);
         }
-
-        #endregion
-
-        #region WithRetryT13_Failure_Result
-
-        private void WithRetryT13_Failure_Result(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_Failure_Result(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
-                    delayPolicy.Invoking += Expect.Nothing<int>();
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_Failure_Result(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_Failure_Result(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>();
-                    delayPolicy.Invoking += Expect.Nothing<int, int, Exception>();
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_Failure_Result<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        [TestMethod]
+        public void WithRetryT13_WithToken_ComplexDelayPolicy()
         {
-            // Create an "unsuccessful" user-defined func
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => 500);
+            InterruptableTestFunc nullFunc = null;
+            InterruptableTestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => 12345;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                       , (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, ExceptionPolicies.Transient, (ComplexDelayPolicy<int>)null));
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(n => n == 200 ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
-            T delayPolicy = delayPolicyFactory();
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(token));
+            Func<TimeSpan, ComplexDelayPolicyProxy> delayPolicyFactory = t => new ComplexDelayPolicyProxy((i, r, e) => t);
+            Func<InterruptableTestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, int, Exception, TimeSpan>, InterruptableTestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, e, d.Invoke);
+            Func<InterruptableTestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
 
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
+            Action<InterruptableTestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate);
+            Action<InterruptableTestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate, delay);
 
-            // Define expectations
-            func           .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
-            resultPolicy   .Invoking += Expect.Result(500);
-            exceptionPolicy.Invoking += Expect.Nothing<Exception>();
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: false);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
 
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.AreEqual(500, invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: false);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
 
-            // Validate the number of calls
-            Assert.AreEqual(1, func           .Calls);
-            Assert.AreEqual(1, resultPolicy   .Calls);
-            Assert.AreEqual(0, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            // Cancel
+            WithRetryT13_Canceled_Func (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
+            WithRetryT13_Canceled_Delay(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultPolicy: false);
         }
-
-        #endregion
-
-        #region WithRetryT13_Failure_Exception
-
-        private void WithRetryT13_Failure_Exception(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_Failure_Exception(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>();
-                    delayPolicy.Invoking += Expect.Nothing<int>();
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_Failure_Exception(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_Failure_Exception(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>();
-                    delayPolicy.Invoking += Expect.Nothing<int, int, Exception>();
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_Failure_Exception<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
+        [TestMethod]
+        public void WithRetryT13_WithToken_ResultPolicy_DelayPolicy()
         {
-            // Create an "unsuccessful" user-defined func
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => throw new InvalidOperationException());
+            InterruptableTestFunc nullFunc = null;
+            InterruptableTestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => 12345;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, r => ResultKind.Successful, ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                      , ExceptionPolicies.Transient, DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, null                       , DelayPolicies.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (DelayPolicy)null));
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>();
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
-            T delayPolicy = delayPolicyFactory();
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(token));
+            Func<TimeSpan, DelayPolicyProxy> delayPolicyFactory = t => new DelayPolicyProxy((i) => t);
+            Func<InterruptableTestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, TimeSpan>, InterruptableTestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, r, e, d.Invoke);
+            Func<InterruptableTestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
 
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
+            Action<InterruptableTestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate);
+            Action<InterruptableTestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate, delay);
 
-            // Define expectations
-            func           .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate);
-            resultPolicy   .Invoking += Expect.Nothing<int>();
-            exceptionPolicy.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: true);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
 
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
+            // Failure (Result)
+            WithRetryT13_Failure_Result         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>());
+            WithRetryT13_EventualFailure_Result (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc());
+            WithRetryT13_RetriesExhausted_Result(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc());
 
-            // Validate the number of calls
-            Assert.AreEqual(1, func           .Calls);
-            Assert.AreEqual(0, resultPolicy   .Calls);
-            Assert.AreEqual(1, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int>(), passResultPolicy: true);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
+
+            // Cancel
+            WithRetryT13_Canceled_Func (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
+            WithRetryT13_Canceled_Delay(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultPolicy: true);
         }
-
-        #endregion
-
-        #region WithRetryT13_EventualSuccess
-
-        private void WithRetryT13_EventualSuccess(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_EventualSuccess(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-                    delayPolicy.Invoking += Expect.Asc();
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_EventualSuccess(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_EventualSuccess(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>((i, r, e) => Constants.Delay);
-
-                    if (useResultPolicy)
-                        delayPolicy.Invoking += Expect.AlternatingAsc(418, typeof(IOException));
-                    else
-                        delayPolicy.Invoking += Expect.OnlyExceptionAsc<int>(typeof(IOException));
-
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_EventualSuccess<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory,
-            bool useResultPolicy)
-            where T : DelegateProxy
+        [TestMethod]
+        public void WithRetryT13_WithToken_ResultPolicy_ComplexDelayPolicy()
         {
-            // Create a "successful" user-defined action that completes after either
-            // (1) 2 IOExceptions OR
-            // (2) an IOException and a transient 418 result
-            Func<int> flakyFunc = useResultPolicy
-                ? FlakyFunc.Create<int, IOException>(418, 200, 2)
-                : FlakyFunc.Create<int, IOException>(     200, 2);
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => flakyFunc());
+            InterruptableTestFunc nullFunc = null;
+            InterruptableTestFunc func     = (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => 12345;
+            Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithRetry(-2, r => ResultKind.Successful, ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, null                      , ExceptionPolicies.Transient, (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, null                       , (i, r, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => func    .WithRetry( 4, r => ResultKind.Successful, ExceptionPolicies.Transient, (ComplexDelayPolicy<int>)null));
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r =>
-                r switch
-                {
-                    418 => ResultKind.Transient,
-                    200 => ResultKind.Successful,
-                    _   => ResultKind.Fatal,
-                });
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
+            // Create the delegates necessary to test the WithRetry overload
+            Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(token));
+            Func<TimeSpan, ComplexDelayPolicyProxy> delayPolicyFactory = t => new ComplexDelayPolicyProxy((i, r, e) => t);
+            Func<InterruptableTestFunc, int, ResultPolicy<int>, ExceptionPolicy, Func<int, int, Exception, TimeSpan>, InterruptableTestFunc> withRetry = (f, m, r, e, d) => f.WithRetry(m, r, e, d.Invoke);
+            Func<InterruptableTestFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke = (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => f(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token);
 
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
+            Action<InterruptableTestFuncProxy>           observeFunc      = f          => f.Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate);
+            Action<InterruptableTestFuncProxy, TimeSpan> observeFuncDelay = (f, delay) => f.Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken>(Arguments.Validate, delay);
 
-            // Define expectations
-            func           .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, Constants.MinDelay);
-            resultPolicy   .Invoking += Expect.Results(418, 200, 1);
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+            // Success
+            WithRetryT13_Success        (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: true);
+            WithRetryT13_EventualSuccess(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
 
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.AreEqual(200, invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
+            // Failure (Result)
+            WithRetryT13_Failure_Result         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>());
+            WithRetryT13_EventualFailure_Result (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e));
+            WithRetryT13_RetriesExhausted_Result(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e));
 
-            // Validate the number of calls
-            int x = useResultPolicy ? 2 : 0;
-            int y = useResultPolicy ? 1 : 2;
-            Assert.AreEqual(3, func           .Calls);
-            Assert.AreEqual(x, resultPolicy   .Calls);
-            Assert.AreEqual(y, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
+            // Failure (Exception)
+            WithRetryT13_Failure_Exception         (funcFactory, delayPolicyFactory, withRetry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int, int, Exception>(), passResultPolicy: true);
+            WithRetryT13_EventualFailure_Exception (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
+            WithRetryT13_RetriesExhausted_Exception(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
+
+            // Cancel
+            WithRetryT13_Canceled_Func (funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
+            WithRetryT13_Canceled_Delay(funcFactory, delayPolicyFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultPolicy: true);
         }
-
-        #endregion
-
-        #region WithRetryT13_EventualFailure_Result
-
-        private void WithRetryT13_EventualFailure_Result(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_EventualFailure_Result(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-                    delayPolicy.Invoking += Expect.Asc();
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_EventualFailure_Result(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_EventualFailure_Result(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>((i, r, e) => Constants.Delay);
-                    delayPolicy.Invoking += Expect.AlternatingAsc(418, typeof(IOException));
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_EventualFailure_Result<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
-        {
-            // Create an "unsuccessful" user-defined action that completes after a transient result and exception
-            Func<int> flakyFunc = FlakyFunc.Create<int, IOException>(418, 500, 2);
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => flakyFunc());
-
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r =>
-                r switch
-                {
-                    418 => ResultKind.Transient,
-                    500 => ResultKind.Fatal,
-                    _   => ResultKind.Successful,
-                });
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
-
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            // Define expectations
-            func           .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, Constants.MinDelay);
-            resultPolicy   .Invoking += Expect.Results(418, 500, 1);
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
-
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.AreEqual(500, invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
-
-            // Validate the number of calls
-            Assert.AreEqual(3, func           .Calls);
-            Assert.AreEqual(2, resultPolicy   .Calls);
-            Assert.AreEqual(1, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
-        }
-
-        #endregion
-
-        #region WithRetryT13_EventualFailure_Exception
-
-        private void WithRetryT13_EventualFailure_Exception(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_EventualFailure_Exception(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-                    delayPolicy.Invoking += Expect.Asc();
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_EventualFailure_Exception(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_EventualFailure_Exception(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>((i, r, e) => Constants.Delay);
-
-                    if (useResultPolicy)
-                        delayPolicy.Invoking += Expect.AlternatingAsc(418, typeof(IOException));
-                    else
-                        delayPolicy.Invoking += Expect.OnlyExceptionAsc<int>(typeof(IOException));
-
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_EventualFailure_Exception<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory,
-            bool useResultPolicy)
-            where T : DelegateProxy
-        {
-            // Create an "unsuccessful" user-defined action that completes after either
-            // (1) 2 IOExceptions OR
-            // (2) an IOException and a transient 418 result
-            Func<int> flakyFunc = useResultPolicy
-                ? FlakyFunc.Create<int, IOException, InvalidOperationException>(418, 2)
-                : FlakyFunc.Create<int, IOException, InvalidOperationException>(     2);
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => flakyFunc());
-
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
-
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            // Define expectations
-            func           .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, Constants.MinDelay);
-            resultPolicy   .Invoking += Expect.Result(418);
-            exceptionPolicy.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), useResultPolicy ? 1 : 2);
-
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
-
-            // Validate the number of calls
-            int x = useResultPolicy ? 1 : 0;
-            int y = useResultPolicy ? 2 : 3;
-            Assert.AreEqual(3, func           .Calls);
-            Assert.AreEqual(x, resultPolicy   .Calls);
-            Assert.AreEqual(y, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
-        }
-
-        #endregion
-
-        #region WithRetryT13_RetriesExhausted_Result
-
-        private void WithRetryT13_RetriesExhausted_Result(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_RetriesExhausted_Result(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-                    delayPolicy.Invoking += Expect.Asc();
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_RetriesExhausted_Result(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke)
-            => WithRetryT13_RetriesExhausted_Result(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>((i, r, e) => Constants.Delay);
-                    delayPolicy.Invoking += Expect.AlternatingAsc(418, typeof(IOException));
-                    return delayPolicy;
-                });
-
-        private void WithRetryT13_RetriesExhausted_Result<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory)
-            where T : DelegateProxy
-        {
-            // Create an "unsuccessful" user-defined action that eventually exhausts all of its retries
-            Func<int> flakyFunc = FlakyFunc.Create<int, IOException>(418);
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => flakyFunc());
-
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
-
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                3,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            // Define expectations
-            func           .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, Constants.MinDelay);
-            resultPolicy   .Invoking += Expect.Result(418);
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
-
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.AreEqual(418, invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
-
-            // Validate the number of calls
-            Assert.AreEqual(4, func           .Calls);
-            Assert.AreEqual(2, resultPolicy   .Calls);
-            Assert.AreEqual(2, exceptionPolicy.Calls);
-            Assert.AreEqual(3, delayPolicy    .Calls);
-        }
-
-        #endregion
-
-        #region WithRetryT13_RetriesExhausted_Exception
-
-        private void WithRetryT13_RetriesExhausted_Exception(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_RetriesExhausted_Exception(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-                    delayPolicy.Invoking += Expect.Asc();
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_RetriesExhausted_Exception(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            bool useResultPolicy = true)
-            => WithRetryT13_RetriesExhausted_Exception(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                invoke,
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>((i, r, e) => Constants.Delay);
-
-                    if (useResultPolicy)
-                        delayPolicy.Invoking += Expect.AlternatingAsc(418, typeof(IOException));
-                    else
-                        delayPolicy.Invoking += Expect.OnlyExceptionAsc<int>(typeof(IOException));
-
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_RetriesExhausted_Exception<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, CancellationToken, int> invoke,
-            Func<T> delayPolicyFactory,
-            bool useResultPolicy)
-            where T : DelegateProxy
-        {
-            // Create an "unsuccessful" user-defined action that eventually exhausts all of its retries
-            Func<int> flakyFunc = useResultPolicy
-                ? FlakyFunc.Create<int, IOException>(418)
-                : () => throw new IOException();
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => flakyFunc());
-
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
-
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                2,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            // Define expectations
-            func           .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, Constants.MinDelay);
-            resultPolicy   .Invoking += Expect.Result(418);
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
-
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<IOException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
-
-            // Validate the number of calls
-            int x = useResultPolicy ? 1 : 0;
-            int y = useResultPolicy ? 2 : 3;
-            Assert.AreEqual(3, func           .Calls);
-            Assert.AreEqual(x, resultPolicy   .Calls);
-            Assert.AreEqual(y, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
-        }
-
-        #endregion
-
-        #region WithRetryT13_Canceled
-
-        private void WithRetryT13_Canceled(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, DelayPolicy, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            bool useResultPolicy = true)
-            => WithRetryT13_Canceled(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                () =>
-                {
-                    FuncProxy<int, TimeSpan> delayPolicy = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
-                    delayPolicy.Invoking += Expect.Asc();
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_Canceled(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, ComplexDelayPolicy<int>, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            bool useResultPolicy = true)
-            => WithRetryT13_Canceled(
-                (f, m, r, e, d) => withRetry(f, m, r, e, d.Invoke),
-                () =>
-                {
-                    FuncProxy<int, int, Exception, TimeSpan> delayPolicy = new FuncProxy<int, int, Exception, TimeSpan>((i, r, e) => Constants.Delay);
-
-                    if (useResultPolicy)
-                        delayPolicy.Invoking += Expect.AlternatingAsc(418, typeof(IOException));
-                    else
-                        delayPolicy.Invoking += Expect.OnlyExceptionAsc<int>(typeof(IOException));
-
-                    return delayPolicy;
-                },
-                useResultPolicy);
-
-        private void WithRetryT13_Canceled<T>(
-            Func<Func<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>, int, ResultPolicy<int>, ExceptionPolicy, T, InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>> withRetry,
-            Func<T> delayPolicyFactory,
-            bool useResultPolicy)
-            where T : DelegateProxy
-        {
-            using ManualResetEvent        cancellationTrigger = new ManualResetEvent(false);
-            using CancellationTokenSource tokenSource         = new CancellationTokenSource();
-
-            // Create an "unsuccessful" user-defined func that continues to fail with transient exceptions until it's canceled
-            Func<int> flakyFunc = useResultPolicy
-                ? FlakyFunc.Create<int, IOException>(418)
-                : () => throw new IOException();
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => flakyFunc());
-
-            // Declare the various policy and event handler proxies
-            FuncProxy<int, ResultKind> resultPolicy    = new FuncProxy<int, ResultKind>(r => r == 418 ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            T delayPolicy = delayPolicyFactory();
-
-            // Create the reliable InterruptableFunc
-            InterruptableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, int> reliableFunc = withRetry(
-                func.Invoke,
-                Retries.Infinite,
-                resultPolicy   .Invoke,
-                exceptionPolicy.Invoke,
-                delayPolicy);
-
-            // Define expectations
-            func           .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte>(Arguments.Validate, Constants.MinDelay);
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
-
-            // Trigger the event upon retry
-            int minRetries = useResultPolicy ? 2 : 1;
-            func.Invoking += (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, c) =>
-            {
-                if (c.Calls > minRetries)
-                    cancellationTrigger.Set();
-            };
-
-            // Create a task whose job is to cancel the invocation after at least 1 retry
-            Task cancellationTask = Task.Factory.StartNew((state) =>
-            {
-                (ManualResetEvent e, CancellationTokenSource s) = ((ManualResetEvent, CancellationTokenSource))state;
-                e.WaitOne();
-                s.Cancel();
-
-            }, (cancellationTrigger, tokenSource));
-
-            // Begin the invocation
-            Assert.That.ThrowsException<OperationCanceledException>(() => reliableFunc(42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, tokenSource.Token));
-
-            // Validate the number of calls
-            int calls      = func.Calls;
-            int results    = useResultPolicy ? calls / 2 : 0;
-            int exceptions = calls - results;
-            Assert.IsTrue(calls > minRetries);
-
-            Assert.AreEqual(results   , resultPolicy    .Calls);
-            Assert.AreEqual(exceptions, exceptionPolicy .Calls);
-            Assert.AreEqual(calls     , delayPolicy     .Calls);
-        }
-
-        #endregion
-
     }
 }

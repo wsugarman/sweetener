@@ -3,15 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AE0F665-3CE8-4201-9525-DF7CD3573B1C}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		Build.Template.yml = Build.Template.yml
-		CodeCoverage.runsettings = CodeCoverage.runsettings
-		Directory.Build.props = Directory.Build.props
-		..\README.md = ..\README.md
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Core", "Sweetener.Core\Sweetener.Core.csproj", "{3BFD876F-BFF2-421B-8A6A-026056EB5B10}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Core.Test", "Sweetener.Core.Test\Sweetener.Core.Test.csproj", "{842608C5-6455-4F30-9689-F537A84E8FFA}"
@@ -19,6 +10,19 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Reliability", "Sweetener.Reliability\Sweetener.Reliability.csproj", "{2CC0F13B-B8DA-4871-A1DE-6D7144C2F29D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Reliability.Test", "Sweetener.Reliability.Test\Sweetener.Reliability.Test.csproj", "{3DF3C424-F337-4E13-8123-6E1F6FD43461}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		CodeCoverage.runsettings = CodeCoverage.runsettings
+		Directory.Build.props = Directory.Build.props
+		Public.snk = Public.snk
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTemplating", "{300BE535-1586-4CDF-B2FA-C5821F5BB75D}"
+	ProjectSection(SolutionItems) = preProject
+		TextTemplating\Include.t4 = TextTemplating\Include.t4
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{300BE535-1586-4CDF-B2FA-C5821F5BB75D} = {C5B9D60E-5095-4B7E-9BD7-4464B72DDD26}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F6F03838-0E0B-40B6-A87B-2A71309475AC}

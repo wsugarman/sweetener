@@ -84,7 +84,7 @@ namespace Sweetener.Reliability
         { }
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, resultPolicy, exceptionPolicy, delayPolicy != null ? (i, r, e) => delayPolicy(i) : (ComplexDelayPolicy<T>)null)
+            : this(maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<T>(delayPolicy))
         { }
 
         internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)
@@ -106,17 +106,17 @@ namespace Sweetener.Reliability
             {
                 if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
                 {
-                    Task.Delay(_getDelay(attempt, result, null), cancellationToken).Wait(cancellationToken);
-                    OnRetry(attempt, result, null);
+                    Task.Delay(_getDelay(attempt, result, default), cancellationToken).Wait(cancellationToken);
+                    OnRetry(attempt, result, default);
                     return true;
                 }
 
-                OnRetriesExhausted(result, null);
+                OnRetriesExhausted(result, default);
                 return false;
             }
             else
             {
-                OnFailure(result, null);
+                OnFailure(result, default);
                 return false;
             }
         }
@@ -131,6 +131,49 @@ namespace Sweetener.Reliability
             else if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
             {
                 Task.Delay(_getDelay(attempt, default, exception), cancellationToken).Wait(cancellationToken);
+                OnRetry(attempt, default, exception);
+                return true;
+            }
+            else
+            {
+                OnRetriesExhausted(default, exception);
+                return false;
+            }
+        }
+
+        internal async Task<bool> CanRetryAsync(int attempt, T result, ResultKind kind, CancellationToken cancellationToken)
+        {
+            Debug.Assert(kind != ResultKind.Successful, "Successful results should not attempt to retry.");
+
+            if (kind == ResultKind.Transient)
+            {
+                if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+                {
+                    await Task.Delay(_getDelay(attempt, result, default), cancellationToken).ConfigureAwait(false);
+                    OnRetry(attempt, result, default);
+                    return true;
+                }
+
+                OnRetriesExhausted(result, default);
+                return false;
+            }
+            else
+            {
+                OnFailure(result, default);
+                return false;
+            }
+        }
+
+        internal async Task<bool> CanRetryAsync(int attempt, Exception exception, CancellationToken cancellationToken)
+        {
+            if (!_canRetry(exception))
+            {
+                OnFailure(default, exception);
+                return false;
+            }
+            else if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+            {
+                await Task.Delay(_getDelay(attempt, default, exception), cancellationToken).ConfigureAwait(false);
                 OnRetry(attempt, default, exception);
                 return true;
             }

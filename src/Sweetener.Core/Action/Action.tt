@@ -1,0 +1,27 @@
+<#@ template hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #> ran successfully
+namespace Sweetener
+{
+<#
+    for (int parameterCount = MaxDelegateParameters + 1; parameterCount <= MaxDelegateParameters + 4; parameterCount++)
+    {
+        string arguments      = GetArguments     (parameterCount);
+        string parameters     = GetParameters    (parameterCount);
+        string typeParameters = "<" + GetTypeParameters(parameterCount, variance: "in") + ">";
+#>
+    /// <summary>
+    /// Encapsulates a method that has <#= GetWord(parameterCount) #> parameter<#= parameterCount == 1 ? string.Empty : "s" #> and does not return a value.
+    /// </summary>
+<#
+        PrintDelegateTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: false);
+        PrintDelegateParamsXmlDoc    (parameterCount, indent: 1);
+#>
+    public delegate void Action<#= typeParameters #>(<#= parameters #>);
+
+<#
+}
+#>
+}

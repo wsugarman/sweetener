@@ -90,6 +90,26 @@ namespace Sweetener.Reliability
             }
         }
 
+        internal async Task<bool> CanRetryAsync(int attempt, Exception exception, CancellationToken cancellationToken)
+        {
+            if (!_canRetry(exception))
+            {
+                OnFailure(exception);
+                return false;
+            }
+            else if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+            {
+                await Task.Delay(_getDelay(attempt, exception), cancellationToken).ConfigureAwait(false);
+                OnRetry(attempt, exception);
+                return true;
+            }
+            else
+            {
+                OnRetriesExhausted(exception);
+                return false;
+            }
+        }
+
         internal virtual void OnFailure(Exception exception)
             => Failed?.Invoke(exception);
 

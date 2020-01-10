@@ -23,6 +23,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\Action.Extensions.*Test.Base.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Action.Extensions.Test.Base.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\AsyncAction.Extensions.*Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\ReliableAction.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -33,10 +43,35 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\ReliableAsyncAction.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\ReliableAsyncAction.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncAction.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\AsyncFunc.Extensions.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncFunc.Extensions.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Func\Func.Extensions.T*.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\Func.Extensions.T*.Test.Base.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Func.Extensions.Test.Base.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\ReliableAsyncFunc.T*.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Test.tt</DependentUpon>
     </Compile>
     <Compile Update="Func\ReliableFunc.T*.Test.cs">
       <DesignTime>True</DesignTime>
@@ -81,9 +116,21 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Action.Extensions.Test.tt.out</LastGenOutput>
     </None>
+    <None Update="Action\Action.Extensions.Test.Base.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Action.Extensions.Test.Base.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\AsyncAction.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncAction.Extensions.Test.tt.out</LastGenOutput>
+    </None>
     <None Update="Action\ReliableAction.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAction.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\ReliableAsyncAction.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAsyncAction.Test.tt.out</LastGenOutput>
     </None>
     <None Update="Expectations\Arguments.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -93,9 +140,21 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Expect.Arguments.cs</LastGenOutput>
     </None>
+    <None Update="Func\AsyncFunc.Extensions.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AsyncFunc.Extensions.Test.tt.out</LastGenOutput>
+    </None>
     <None Update="Func\Func.Extensions.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Func.Extensions.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\Func.Extensions.Test.Base.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Func.Extensions.Test.Base.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\ReliableAsyncFunc.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReliableAsyncFunc.Test.tt.out</LastGenOutput>
     </None>
     <None Update="Func\ReliableFunc.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -126,20 +185,55 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Action.Extensions.Test.tt</DependentUpon>
     </None>
+    <None Update="Action\Action.Extensions.Test.Base.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Action.Extensions.Test.Base.tt</DependentUpon>
+    </None>
+    <None Update="Action\AsyncAction.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncAction.Extensions.Test.tt</DependentUpon>
+    </None>
     <None Update="Action\ReliableAction.Test.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableAction.Test.tt</DependentUpon>
+    </None>
+    <None Update="Action\ReliableAsyncAction.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncAction.Test.tt</DependentUpon>
+    </None>
+    <None Update="Func\AsyncFunc.Extensions.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AsyncFunc.Extensions.Test.tt</DependentUpon>
     </None>
     <None Update="Func\Func.Extensions.Test.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Func.Extensions.Test.tt</DependentUpon>
     </None>
+    <None Update="Func\Func.Extensions.Test.Base.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Func.Extensions.Test.Base.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableAsyncFunc.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Test.tt</DependentUpon>
+    </None>
     <None Update="Func\ReliableFunc.Test.tt.out">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
+    </None>
+    <None Update="Func\ReliableAsyncFunc.Test.tt.out">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReliableAsyncFunc.Test.tt</DependentUpon>
     </None>
   </ItemGroup>
 

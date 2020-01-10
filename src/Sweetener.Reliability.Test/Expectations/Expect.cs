@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -21,6 +22,13 @@ namespace Sweetener.Reliability.Test
                     Assert.IsTrue(context.TimeSinceLastCall >= delay, $"Time since last call '{context.TimeSinceLastCall}' less than expected delay '{delay}'.");
             };
 
+        public static Action<CancellationToken, CallContext> AfterDelayWithToken(TimeSpan delay)
+            => (token, context) =>
+            {
+                if (context.Calls > 1)
+                    Assert.IsTrue(context.TimeSinceLastCall >= delay, $"Time since last call '{context.TimeSinceLastCall}' less than expected delay '{delay}'.");
+            };
+
         #endregion
 
         #region Alternating
@@ -37,7 +45,7 @@ namespace Sweetener.Reliability.Test
                 else
                 {
                     Assert.AreEqual(default, r);
-                    Assert.That.ExceptionType(transientException, e);
+                    Assert.AreEqual(transientException, e.GetType());
                 }
             };
 
@@ -55,7 +63,7 @@ namespace Sweetener.Reliability.Test
                     else
                     {
                         Assert.AreEqual(default, r);
-                        Assert.That.ExceptionType(transientException, e);
+                        Assert.AreEqual(transientException, e.GetType());
                     }
                 }
                 else
@@ -79,13 +87,13 @@ namespace Sweetener.Reliability.Test
                     else
                     {
                         Assert.AreEqual(default, r);
-                        Assert.That.ExceptionType(transientException, e);
+                        Assert.AreEqual(transientException, e.GetType());
                     }
                 }
                 else
                 {
                     Assert.AreEqual(default, r);
-                    Assert.That.ExceptionType(fatalException, e);
+                    Assert.AreEqual(fatalException, e.GetType());
                 }
             };
 
@@ -94,27 +102,27 @@ namespace Sweetener.Reliability.Test
         #region Exception(s)
 
         public static Action<Exception, CallContext> Exception(Type t)
-            => (e, c) => Assert.That.ExceptionType(t, e);
+            => (e, c) => Assert.AreEqual(t, e.GetType());
 
         public static Action<int, Exception, CallContext> ExceptionAsc(Type t)
             => (i, e, c) =>
             {
                 Assert.AreEqual(c.Calls, i);
-                Assert.That.ExceptionType(t, e);
+                Assert.AreEqual(t, e.GetType());
             };
 
         public static Action<Exception, CallContext> Exceptions(Type transientType, Type fatalType, int transientCount)
             => (e, c) =>
             {
                 Type expectedType = c.Calls <= transientCount ? transientType : fatalType;
-                Assert.That.ExceptionType(expectedType, e);
+                Assert.AreEqual(expectedType, e.GetType());
             };
 
         public static Action<T, Exception, CallContext> OnlyException<T>(Type t)
             => (r, e, c) =>
             {
                 Assert.AreEqual(default, r);
-                Assert.That.ExceptionType(t, e);
+                Assert.AreEqual(t, e.GetType());
             };
 
         public static Action<int, T, Exception, CallContext> OnlyExceptionAsc<T>(Type t)
@@ -122,7 +130,7 @@ namespace Sweetener.Reliability.Test
             {
                 Assert.AreEqual(c.Calls, i);
                 Assert.AreEqual(default, r);
-                Assert.That.ExceptionType(t, e);
+                Assert.AreEqual(t, e.GetType());
             };
 
         #endregion

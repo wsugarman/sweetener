@@ -4,17 +4,24 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
-<#@ include file="..\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
 using System;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
 {
     internal static class Arguments
     {
+        public static void Validate(CancellationToken token)
+        {
+            Assert.AreNotEqual(CancellationToken.None, token);
+        }
+
 <#
     for (int parameterCount = 1; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
+        string arguments  = GetArguments (          parameterCount);
         string parameters = GetParameters(typeArgs, parameterCount);
 #>
         public static void Validate(<#= parameters #>)
@@ -28,6 +35,12 @@ namespace Sweetener.Reliability.Test
 <#
             }
 #>
+        }
+
+        public static void Validate(<#= parameters #>, CancellationToken token)
+        {
+            Validate(<#= arguments #>);
+            Assert.AreNotEqual(CancellationToken.None, token);
         }
 
 <#

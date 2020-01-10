@@ -2,7 +2,7 @@
 <#@ import namespace="System" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq" #>
-<#@ include file="..\..\Sweetener.Reliability\TextTemplating\Include.t4" #><#+
+<#@ include file="$(SrcDirectory)Sweetener.Reliability\TextTemplating\Include.t4" #><#+
     static string[] typeArgs = new string[]
     {
         "int",
@@ -43,22 +43,72 @@
         "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
     };
 
-    public string GetTypeArguments(int count, string outputType = null, bool includeBrackets = true)
+    public string GetArgumentValues(int count)
+        => string.Join(", ", args.Take(count));
+
+    public string GetTypeArguments(int count, bool async = false, bool interruptable = false, string outputType = null)
     {
-        if (count == 0 && outputType == null)
-            return string.Empty;
+        List<string> additionalElements = new List<string>();
+        if (interruptable)
+            additionalElements.Add("CancellationToken");
 
-        IEnumerable<string> typeArgsEnumerable = typeArgs.Take(count);
         if (outputType != null)
-            typeArgsEnumerable = typeArgsEnumerable.Concat(new string[] { outputType });
+            additionalElements.Add(async ? $"Task<{outputType}>" : outputType);
+        else if (async)
+            additionalElements.Add("Task");
 
-        string result = string.Join(", ", typeArgsEnumerable);
-        if (includeBrackets)
-            result = "<" + result + ">";
-
-        return result;
+        return string.Join(", ", typeArgs.Take(count).Concat(additionalElements));
     }
 
-    public string GetTestArguments(int count)
-        => string.Join(", ", args.Take(count));
+    public string GetDelegate(int argCount, string delegateName, bool async, bool interruptable = false)
+    {
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
+
+        if (!async)
+            return $"({args}{optionalToken}) => {delegateName}()";
+
+        return $"async ({args}{optionalToken}) => await Task.Run({delegateName}).ConfigureAwait(false)";
+    }
+
+    public string GetExpressionDelegate(int argCount, string expression, bool async, bool interruptable = false)
+    {
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
+
+        if (!async)
+            return $"({args}{optionalToken}) => {expression}";
+
+        return $"async ({args}{optionalToken}) => await Task.Run(() => {expression}).ConfigureAwait(false)";
+    }
+
+    public string GetThrowException<T>(int argCount, bool async, bool interruptable = false, string outputType = null)
+        where T : Exception
+    {
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
+
+        if (!async)
+            return $"({args}{optionalToken}) => throw new {typeof(T).Name}()";
+
+        if (outputType == null)
+            return $"async ({args}{optionalToken}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
+        else
+            return $"async ({args}{optionalToken}) => await Task.Run((Func<{outputType}>)(() => throw new {typeof(T).Name}())).ConfigureAwait(false)";
+    }
+
+    public string GetNoOpDelegate(int argCount, bool async, bool interruptable = false)
+    {
+        string args          = GetArguments(argCount);
+        string optionalComma = argCount > 0 ? ", " : string.Empty;
+        string optionalToken = interruptable ? optionalComma + "token" : string.Empty;
+
+        if (!async)
+            return $"({args}{optionalToken}) => Operation.Null()";
+
+        return $"async ({args}{optionalToken}) => await Operation.NullAsync().ConfigureAwait(false)";
+    }
 #>

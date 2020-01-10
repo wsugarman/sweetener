@@ -1,6 +1,6 @@
 ﻿<#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="..\..\Sweetener\TextTemplating\Include.Common.t4" #><#+
+<#@ include file="$(SrcDirectory)TextTemplating\Include.t4" #><#+
 
     const int MaxExceptionParameters = 8;
 
@@ -43,13 +43,13 @@
         }
     }
 
-    public void PrintReliableFuncCtorParamsXmlDoc(int indent, int typeParameterCount = -1, bool includeResultPolicy = false)
-        => PrintReliableCtorParamsXmlDoc(indent, typeParameterCount, isFunc: true, includeResultPolicy: includeResultPolicy);
+    public void PrintReliableFuncCtorXmlDoc(int indent, int typeParameterCount = -1, bool includeResultPolicy = false, bool includeReturnsXmlDoc = false)
+        => PrintReliableCtorXmlDoc(indent, typeParameterCount, isFunc: true, includeResultPolicy, includeReturnsXmlDoc);
 
-    public void PrintReliableActionCtorParamsXmlDoc(int indent, int typeParameterCount = -1)
-        => PrintReliableCtorParamsXmlDoc(indent, typeParameterCount, isFunc: false, includeResultPolicy: false);
+    public void PrintReliableActionCtorXmlDoc(int indent, int typeParameterCount = -1, bool includeReturnsXmlDoc = false)
+        => PrintReliableCtorXmlDoc(indent, typeParameterCount, isFunc: false, includeResultPolicy: false, includeReturnsXmlDoc: includeReturnsXmlDoc);
 
-    private void PrintReliableCtorParamsXmlDoc(int indent, int typeParameterCount, bool isFunc, bool includeResultPolicy)
+    private void PrintReliableCtorXmlDoc(int indent, int typeParameterCount, bool isFunc, bool includeResultPolicy, bool includeReturnsXmlDoc)
     {
         if (typeParameterCount < -1)
             throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
@@ -62,7 +62,7 @@
 
         string spaces = new string(' ', indent * SpacesPerTab);
 #>
-<#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The underlying <#= isFunc ? "function" : "action" #> to invoke.</param>
+<#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The <#= isFunc ? "function" : "action" #> to encapsulate.</param>
 <#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
 <#+
         if (includeResultPolicy)
@@ -74,6 +74,14 @@
 #>
 <#= spaces #>/// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
 <#= spaces #>/// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+<#+
+        if (includeReturnsXmlDoc)
+        {
+#>
+<#= spaces #>/// <returns>A reliable delegate that encapsulates the <paramref name="<#= isFunc ? "func" : "action" #>" />.</returns>
+<#+
+        }
+#>
 <#= spaces #>/// <exception cref="ArgumentNullException">
 <#= spaces #>/// <paramref name="<#= isFunc ? "func" : "action" #>" />, <#= includeResultPolicy ? "<paramref name=\"resultPolicy\" /> " : "" #><paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
 <#= spaces #>/// </exception>

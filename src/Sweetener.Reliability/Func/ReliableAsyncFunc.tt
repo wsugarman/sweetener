@@ -1,0 +1,4 @@
+﻿<#
+    bool async = true;
+#>
+<#@ include file="TextTemplating\ReliableFunc.t4" #>
