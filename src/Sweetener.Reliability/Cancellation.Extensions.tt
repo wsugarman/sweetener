@@ -25,7 +25,7 @@ namespace Sweetener.Reliability
         #region Action
 
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 2; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma        = parameterCount > 0 ? ", " : string.Empty;
         string arguments            = GetArguments(parameterCount);
@@ -43,7 +43,7 @@ namespace Sweetener.Reliability
         #region Func
 
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 2; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma        = parameterCount > 0 ? ", " : string.Empty;
         string arguments            = GetArguments(parameterCount);
