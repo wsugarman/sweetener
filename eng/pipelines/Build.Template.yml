@@ -58,7 +58,7 @@ jobs:
     displayName: 'Pack Library'
     inputs:
       command: 'pack'
-      projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+      packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
       nobuild: true
 
   - task: PublishBuildArtifacts@1
