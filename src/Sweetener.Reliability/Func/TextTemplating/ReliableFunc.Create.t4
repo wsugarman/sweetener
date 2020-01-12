@@ -55,14 +55,14 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= inputTypeParameters #>> func,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            DelayPolicy delayPolicy)
-            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, exceptionPolicy, delayPolicy);
+            int              maxRetries,
+            ExceptionHandler exceptionHandler,
+            DelayHandler     delayHandler)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
@@ -70,14 +70,14 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: false, includeReturnsXmlDoc: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= inputTypeParameters #>> func,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            ComplexDelayPolicy<TResult> delayPolicy)
-            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, exceptionPolicy, delayPolicy);
+            int                          maxRetries,
+            ExceptionHandler             exceptionHandler,
+            ComplexDelayHandler<TResult> delayHandler)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
@@ -85,15 +85,15 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= inputTypeParameters #>> func,
-            int maxRetries,
-            ResultPolicy<TResult> resultPolicy,
-            ExceptionPolicy exceptionPolicy,
-            DelayPolicy delayPolicy)
-            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
+            int                    maxRetries,
+            ResultHandler<TResult> resultHandler,
+            ExceptionHandler       exceptionHandler,
+            DelayHandler           delayHandler)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultHandler, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Func{<#= typeParameters #>}"/>
@@ -101,15 +101,15 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultPolicy: true, includeReturnsXmlDoc: true);
+        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
 #>
         public static Reliable<#= optionalAsync #>Func<<#= typeParameters #>> Create<<#= typeParameters #>>(
             Func<<#= inputTypeParameters #>> func,
-            int maxRetries,
-            ResultPolicy<TResult> resultPolicy,
-            ExceptionPolicy exceptionPolicy,
-            ComplexDelayPolicy<TResult> delayPolicy)
-            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultPolicy, exceptionPolicy, delayPolicy);
+            int                          maxRetries,
+            ResultHandler<TResult>       resultHandler,
+            ExceptionHandler              exceptionHandler,
+            ComplexDelayHandler<TResult> delayHandler)
+            => new Reliable<#= optionalAsync #>Func<<#= typeParameters #>>(func, maxRetries, resultHandler, exceptionHandler, delayHandler);
 <#
             if (!interruptable) // Are there more iterations
             {

@@ -25,6 +25,9 @@
         GenerationEnvironment.Length = 0; // Remove everything written thus far
     }
 
+    public string GetTypeParameters(int count)
+        => GetInputTypeParameters(count);
+
     public string GetActionTypeParameters(int count, bool async = false, bool interruptable = false, bool contravariant = false)
         => GetInputTypeParameters(count, interruptable, contravariant) + (async ? (count > 0 || interruptable ? ", Task" : "Task") : string.Empty);
 

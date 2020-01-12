@@ -32,16 +32,16 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="action" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Task> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            : this(action.IgnoreInterruption(), maxRetries, exceptionHandler, delayHandler)
         { }
 
         /// <summary>
@@ -51,16 +51,16 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="action" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-            : this(action.IgnoreInterruption(), maxRetries, exceptionPolicy, delayPolicy)
+        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            : this(action.IgnoreInterruption(), maxRetries, exceptionHandler, delayHandler)
         { }
 
         /// <summary>
@@ -70,16 +70,16 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="action" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken, Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
+        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken, Task> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            : base(maxRetries, exceptionHandler, delayHandler)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
         }
@@ -91,16 +91,16 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="action" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="action" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken, Task> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-            : base(maxRetries, exceptionPolicy, delayPolicy)
+        public ReliableAsyncAction(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            : base(maxRetries, exceptionHandler, delayHandler)
         {
             _action = action ?? throw new ArgumentNullException(nameof(action));
         }

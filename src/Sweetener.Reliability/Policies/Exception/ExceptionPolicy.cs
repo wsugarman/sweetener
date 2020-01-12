@@ -3,10 +3,27 @@
 namespace Sweetener.Reliability
 {
     /// <summary>
-    /// Determines whether an operation can be retried given the <see cref="Exception" />.
+    /// Contains common <see cref="ExceptionHandler"/> implementations.
     /// </summary>
-    /// <param name="exception">The exception thrown by the operation.</param>
-    /// <returns><see langword="true" /> if the operation can be retried; otherwise <see langword="false" />.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
-    public delegate bool ExceptionPolicy(Exception exception);
+    public static partial class ExceptionPolicy
+    {
+        /// <summary>
+        /// An <see cref="ExceptionHandler" /> that treats any <see cref="Exception" /> as fatal.
+        /// </summary>
+        public static readonly ExceptionHandler Fatal = CreateUniformPolicy(isTransient: false);
+
+        /// <summary>
+        /// An <see cref="ExceptionHandler" /> that treats any <see cref="Exception" /> as transient.
+        /// </summary>
+        public static readonly ExceptionHandler Transient = CreateUniformPolicy(isTransient: true);
+
+        private static ExceptionHandler CreateUniformPolicy(bool isTransient)
+            => (exception) =>
+            {
+                if (exception == null)
+                    throw new ArgumentNullException(nameof(exception));
+
+                return isTransient;
+            };
+    }
 }

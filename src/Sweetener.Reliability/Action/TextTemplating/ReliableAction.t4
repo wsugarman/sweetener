@@ -46,8 +46,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2);
 #>
-        public Reliable<#= optionalAsync #>Action(<#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : <#= interruptable ? "base(" : "this(action.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Action(<#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            : <#= interruptable ? "base(" : "this(action.IgnoreInterruption(), " #>maxRetries, exceptionHandler, delayHandler)
 <#
             if (interruptable)
             {
@@ -73,8 +73,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2);
 #>
-        public Reliable<#= optionalAsync #>Action(<#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
-            : <#= interruptable ? "base(" : "this(action.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Action(<#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            : <#= interruptable ? "base(" : "this(action.IgnoreInterruption(), " #>maxRetries, exceptionHandler, delayHandler)
 <#
             if (interruptable)
             {

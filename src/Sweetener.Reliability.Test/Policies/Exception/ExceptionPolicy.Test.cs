@@ -4,17 +4,17 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Reliability.Test
 {
     [TestClass]
-    public sealed partial class ExceptionPoliciesTest
+    public sealed partial class ExceptionPolicyTest
     {
         [TestMethod]
         public void Fatal()
-            => UniformExceptionPolicy(ExceptionPolicies.Fatal, expected: false);
+            => UniformExceptionPolicy(ExceptionPolicy.Fatal, expected: false);
 
         [TestMethod]
         public void Transient()
-            => UniformExceptionPolicy(ExceptionPolicies.Transient, expected: true);
+            => UniformExceptionPolicy(ExceptionPolicy.Transient, expected: true);
 
-        private void UniformExceptionPolicy(ExceptionPolicy isTransient, bool expected)
+        private void UniformExceptionPolicy(ExceptionHandler isTransient, bool expected)
         {
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 

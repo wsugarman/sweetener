@@ -88,15 +88,15 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Expect.Arguments.tt</DependentUpon>
     </Compile>
-    <Compile Update="Policies\Exception\ExceptionPolicies.Fail.Test.cs">
+    <Compile Update="Policies\Exception\ExceptionPolicy.Fail.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ExceptionPolicies.Fail.Test.tt</DependentUpon>
+      <DependentUpon>ExceptionPolicy.Fail.Test.tt</DependentUpon>
     </Compile>
-    <Compile Update="Policies\Exception\ExceptionPolicies.Retry.Test.cs">
+    <Compile Update="Policies\Exception\ExceptionPolicy.Retry.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ExceptionPolicies.Retry.Test.tt</DependentUpon>
+      <DependentUpon>ExceptionPolicy.Retry.Test.tt</DependentUpon>
     </Compile>
     <Compile Update="Proxies\ActionProxy.cs">
       <DesignTime>True</DesignTime>
@@ -160,13 +160,13 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.Test.tt.out</LastGenOutput>
     </None>
-    <None Update="Policies\Exception\ExceptionPolicies.Fail.Test.tt">
+    <None Update="Policies\Exception\ExceptionPolicy.Fail.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExceptionPolicies.Fail.Test.cs</LastGenOutput>
+      <LastGenOutput>ExceptionPolicy.Fail.Test.cs</LastGenOutput>
     </None>
-    <None Update="Policies\Exception\ExceptionPolicies.Retry.Test.tt">
+    <None Update="Policies\Exception\ExceptionPolicy.Retry.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExceptionPolicies.Retry.Test.cs</LastGenOutput>
+      <LastGenOutput>ExceptionPolicy.Retry.Test.cs</LastGenOutput>
     </None>
     <None Update="Proxies\ActionProxy.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

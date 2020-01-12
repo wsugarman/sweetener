@@ -69,25 +69,23 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        internal readonly ResultPolicy<T>       _validate;
-        private  readonly ExceptionPolicy       _canRetry;
-        private  readonly ComplexDelayPolicy<T> _getDelay;
+        internal readonly ResultHandler<T>       _validate;
+        private  readonly ExceptionHandler       _canRetry;
+        private  readonly ComplexDelayHandler<T> _getDelay;
 
-        internal static readonly ResultPolicy<T> DefaultResultPolicy = r => ResultKind.Successful;
-
-        internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<T>(delayPolicy))
+        internal ReliableDelegate(int maxRetries, ExceptionHandler exceptionPolicy, DelayHandler delayPolicy)
+            : this(maxRetries, ResultPolicy.Default<T>(), exceptionPolicy, delayPolicy.ToComplex<T>())
         { }
 
-        internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)
-            : this(maxRetries, DefaultResultPolicy, exceptionPolicy, delayPolicy)
+        internal ReliableDelegate(int maxRetries, ExceptionHandler exceptionPolicy, ComplexDelayHandler<T> delayPolicy)
+            : this(maxRetries, ResultPolicy.Default<T>(), exceptionPolicy, delayPolicy)
         { }
 
-        internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<T>(delayPolicy))
+        internal ReliableDelegate(int maxRetries, ResultHandler<T> resultPolicy, ExceptionHandler exceptionPolicy, DelayHandler delayPolicy)
+            : this(maxRetries, resultPolicy, exceptionPolicy, delayPolicy.ToComplex<T>())
         { }
 
-        internal ReliableDelegate(int maxRetries, ResultPolicy<T> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<T> delayPolicy)
+        internal ReliableDelegate(int maxRetries, ResultHandler<T> resultPolicy, ExceptionHandler exceptionPolicy, ComplexDelayHandler<T> delayPolicy)
         {
             if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));

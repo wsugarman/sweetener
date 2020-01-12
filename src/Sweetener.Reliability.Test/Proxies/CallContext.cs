@@ -10,7 +10,7 @@ namespace Sweetener.Reliability.Test
 
         public CallContext(int calls, TimeSpan timeSinceLastCall)
         {
-            Calls = calls;
+            Calls             = calls;
             TimeSinceLastCall = timeSinceLastCall;
         }
     }

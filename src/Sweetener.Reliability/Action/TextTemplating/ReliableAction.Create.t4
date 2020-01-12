@@ -47,10 +47,10 @@ namespace Sweetener.Reliability
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
             <#= inputActionType #> action,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            DelayPolicy delayPolicy)
-            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
+            int              maxRetries,
+            ExceptionHandler exceptionHandler,
+            DelayHandler     delayHandler)
+            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Creates a new <see cref="Reliable<#= optionalAsync #>Action<#= typeParametersComment #>"/>
@@ -62,10 +62,10 @@ namespace Sweetener.Reliability
 #>
         public static Reliable<#= optionalAsync #>Action<#= typeParametersCode #> Create<#= typeParametersCode #>(
             <#= inputActionType #> action,
-            int maxRetries,
-            ExceptionPolicy exceptionPolicy,
-            ComplexDelayPolicy delayPolicy)
-            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionPolicy, delayPolicy);
+            int                 maxRetries,
+            ExceptionHandler    exceptionHandler,
+            ComplexDelayHandler delayHandler)
+            => new Reliable<#= optionalAsync #>Action<#= typeParametersCode #>(action, maxRetries, exceptionHandler, delayHandler);
 <#
             if (!interruptable) // Are there more iterations
             {

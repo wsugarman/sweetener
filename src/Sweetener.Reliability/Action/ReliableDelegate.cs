@@ -53,21 +53,21 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        private readonly ExceptionPolicy    _canRetry;
-        private readonly ComplexDelayPolicy _getDelay;
+        private readonly ExceptionHandler    _canRetry;
+        private readonly ComplexDelayHandler _getDelay;
 
-        internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : this(maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy))
+        internal ReliableDelegate(int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            : this(maxRetries, exceptionHandler, delayHandler.ToComplex())
         { }
 
-        internal ReliableDelegate(int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        internal ReliableDelegate(int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
             MaxRetries = maxRetries;
-            _canRetry  = exceptionPolicy ?? throw new ArgumentNullException(nameof(exceptionPolicy));
-            _getDelay  = delayPolicy     ?? throw new ArgumentNullException(nameof(delayPolicy    ));
+            _canRetry  = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+            _getDelay  = delayHandler     ?? throw new ArgumentNullException(nameof(delayHandler    ));
         }
 
         internal bool CanRetry(int attempt, Exception exception, CancellationToken cancellationToken)

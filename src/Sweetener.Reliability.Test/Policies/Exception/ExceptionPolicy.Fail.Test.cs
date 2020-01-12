@@ -1,16 +1,16 @@
-﻿// Generated from ExceptionPolicies.Fail.Test.tt
+﻿// Generated from ExceptionPolicy.Fail.Test.tt
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
 {
-    partial class ExceptionPoliciesTest
+    partial class ExceptionPolicyTest
     {
         [TestMethod]
         public void Fail_1()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -28,7 +28,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_2()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -46,7 +46,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_3()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException, InvalidOperationException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException, InvalidOperationException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -64,7 +64,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_4()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -82,7 +82,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_5()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -100,7 +100,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_6()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -118,7 +118,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_7()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException, OperationCanceledException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException, OperationCanceledException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 
@@ -136,7 +136,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Fail_8()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException, OperationCanceledException, OverflowException>();
+            ExceptionHandler isTransient = ExceptionPolicy.Fail<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException, OperationCanceledException, OverflowException>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 

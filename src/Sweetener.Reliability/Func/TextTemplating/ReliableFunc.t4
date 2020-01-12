@@ -41,10 +41,10 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: false, includeReturnsXmlDoc: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultHandler: false, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, exceptionHandler, delayHandler)
 <#
             if (interruptable)
             {
@@ -68,10 +68,10 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: false, includeReturnsXmlDoc: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultHandler: false, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, exceptionHandler, delayHandler)
 <#
             if (interruptable)
             {
@@ -95,10 +95,10 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: true, includeReturnsXmlDoc: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultHandler: true, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ResultHandler<TResult> resultHandler, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, resultHandler, exceptionHandler, delayHandler)
 <#
             if (interruptable)
             {
@@ -122,10 +122,10 @@ namespace Sweetener.Reliability
         /// based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultPolicy: true, includeReturnsXmlDoc: false);
+        PrintReliableFuncCtorXmlDoc(indent: 2, includeResultHandler: true, includeReturnsXmlDoc: false);
 #>
-        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ResultPolicy<TResult> resultPolicy, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, resultPolicy, exceptionPolicy, delayPolicy)
+        public Reliable<#= optionalAsync #>Func(Func<<#= inputTypeParameters #>> func, int maxRetries, ResultHandler<TResult> resultHandler, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
+            : <#= interruptable ? "base(" : "this(func.IgnoreInterruption(), " #>maxRetries, resultHandler, exceptionHandler, delayHandler)
 <#
             if (interruptable)
             {

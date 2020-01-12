@@ -4,26 +4,26 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Reliability.Test
 {
     [TestClass]
-    public sealed class DelayPoliciesTest
+    public sealed class DelayPolicyTest
     {
         [TestMethod]
         public void Constant_TimeSpan()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Constant(TimeSpan.FromMilliseconds(-1)));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Constant(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(TimeSpan.FromMilliseconds(-1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
 
-            Constant(DelayPolicies.Constant(TimeSpan.FromMilliseconds(100)), 100);
+            Constant(DelayPolicy.Constant(TimeSpan.FromMilliseconds(100)), 100);
         }
 
         [TestMethod]
         public void Constant_int()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Constant(-1));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(-1));
 
-            Constant(DelayPolicies.Constant(100), 100);
+            Constant(DelayPolicy.Constant(100), 100);
         }
 
-        private void Constant(DelayPolicy getDelay, int expectedMilliseconds)
+        private void Constant(DelayHandler getDelay, int expectedMilliseconds)
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => getDelay(0));
 
@@ -35,46 +35,46 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Exponential_TimeSpan()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds(-1)));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds( 1)));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds(-1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds( 1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
 
-            Exponential(DelayPolicies.Exponential(TimeSpan.FromMilliseconds(100)), 100);
+            Exponential(DelayPolicy.Exponential(TimeSpan.FromMilliseconds(100)), 100);
         }
 
         [TestMethod]
         public void Exponential_TimeSpan_Random()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds(-1), new Random()));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds( 1), new Random()));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds((double)int.MaxValue + 1), new Random()));
-            Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicies.Exponential(TimeSpan.FromMilliseconds( 2), null));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds(-1), new Random()));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds( 1), new Random()));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds((double)int.MaxValue + 1), new Random()));
+            Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds( 2), null));
 
             NotSoRandom rand = new NotSoRandom();
-            Exponential(DelayPolicies.Exponential(TimeSpan.FromMilliseconds(100), rand), 100, rand);
+            Exponential(DelayPolicy.Exponential(TimeSpan.FromMilliseconds(100), rand), 100, rand);
         }
 
         [TestMethod]
         public void Exponential_int()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(-1));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential( 1));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(-1));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential( 1));
 
-            Exponential(DelayPolicies.Exponential(100), 100);
+            Exponential(DelayPolicy.Exponential(100), 100);
         }
 
         [TestMethod]
         public void Exponential_int_Random()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential(-1, new Random()));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Exponential( 1, new Random()));
-            Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicies.Exponential( 2, null        ));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(-1, new Random()));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential( 1, new Random()));
+            Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicy.Exponential( 2, null        ));
 
             NotSoRandom rand = new NotSoRandom();
-            Exponential(DelayPolicies.Exponential(100, rand), 100, rand);
+            Exponential(DelayPolicy.Exponential(100, rand), 100, rand);
         }
 
-        private void Exponential(DelayPolicy getDelay, int unitMilliseconds, NotSoRandom rand = null)
+        private void Exponential(DelayHandler getDelay, int unitMilliseconds, NotSoRandom rand = null)
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => getDelay( 0));
             Assert.ThrowsException<OverflowException          >(() => getDelay(32)); // 2^32 > int.MaxValue (32 bits)
@@ -85,7 +85,7 @@ namespace Sweetener.Reliability.Test
             if (rand != null)
             {
                 int attempt = 0;
-                DelayPolicy getDelayWrapper = x =>
+                DelayHandler getDelayWrapper = x =>
                 {
                     // First assign the attempt so we can use it to later validate arguments in OnNextRange
                     attempt = x;
@@ -110,7 +110,7 @@ namespace Sweetener.Reliability.Test
             }
             else
             {
-                Action<DelayPolicy, int, int> validateRange = (policy, unit, attempt) =>
+                Action<DelayHandler, int, int> validateRange = (policy, unit, attempt) =>
                 {
                     TimeSpan actual = policy(attempt);
 
@@ -130,23 +130,23 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Linear_TimeSpan()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Linear(TimeSpan.FromMilliseconds(-1)));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Linear(TimeSpan.FromMilliseconds( 1)));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Linear(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Linear(TimeSpan.FromMilliseconds(-1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Linear(TimeSpan.FromMilliseconds( 1)));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Linear(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
 
-            Linear(DelayPolicies.Linear(TimeSpan.FromMilliseconds(100)), 100);
+            Linear(DelayPolicy.Linear(TimeSpan.FromMilliseconds(100)), 100);
         }
 
         [TestMethod]
         public void Linear_int()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Linear(-1));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicies.Linear( 1));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Linear(-1));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Linear( 1));
 
-            Linear(DelayPolicies.Linear(100), 100);
+            Linear(DelayPolicy.Linear(100), 100);
         }
 
-        private void Linear(DelayPolicy getDelay, int slopeMilliseconds)
+        private void Linear(DelayHandler getDelay, int slopeMilliseconds)
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => getDelay(0));
 
