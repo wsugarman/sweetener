@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
 {
-    partial class ExceptionPoliciesTest
+    partial class ExceptionPolicyTest
     {
 <#
     for (int parameterCount = 1; parameterCount <= MaxExceptionParameters; parameterCount++)
@@ -21,7 +21,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Retry_<#= parameterCount #>()
         {
-            ExceptionPolicy isTransient = ExceptionPolicies.Retry<#= PrintTypeArgs(parameterCount) #>();
+            ExceptionHandler isTransient = ExceptionPolicy.Retry<#= PrintTypeArgs(parameterCount) #>();
 
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
 

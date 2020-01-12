@@ -15,7 +15,7 @@ namespace Sweetener.Reliability.Test
 <#
     for (int parameterCount = 1; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
     {
-        string arguments      = GetArguments (parameterCount);
+        string arguments      = GetArguments     (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount);
 #>
         public static Action<<#= typeParameters #>, CallContext> Arguments<<#= typeParameters #>>(Action<<#= typeParameters #>> assertArguments)

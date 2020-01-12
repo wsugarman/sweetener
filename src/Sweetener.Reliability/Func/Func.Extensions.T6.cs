@@ -21,17 +21,17 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<T1, T2, T3, T4, T5, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+        public static Func<T1, T2, T3, T4, T5, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => WithRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler.ToComplex<TResult>());
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -45,17 +45,17 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<T1, T2, T3, T4, T5, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
+        public static Func<T1, T2, T3, T4, T5, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
+            => WithRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -69,23 +69,23 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="resultHandler">A function that determines which results are valid.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="resultHandler" /> <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(
             this Func<T1, T2, T3, T4, T5, TResult> func,
-            int                   maxRetries,
-            ResultPolicy<TResult> resultPolicy,
-            ExceptionPolicy       exceptionPolicy,
-            DelayPolicy           delayPolicy)
-            => WithRetry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+            int                    maxRetries,
+            ResultHandler<TResult> resultHandler,
+            ExceptionHandler       exceptionHandler,
+            DelayHandler           delayHandler)
+            => WithRetry(func, maxRetries, resultHandler, exceptionHandler, delayHandler.ToComplex<TResult>());
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -99,22 +99,22 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="resultHandler">A function that determines which results are valid.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="resultHandler" /> <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(
             this Func<T1, T2, T3, T4, T5, TResult> func,
-            int                         maxRetries,
-            ResultPolicy<TResult>       resultPolicy,
-            ExceptionPolicy             exceptionPolicy,
-            ComplexDelayPolicy<TResult> delayPolicy)
+            int                          maxRetries,
+            ResultHandler<TResult>       resultHandler,
+            ExceptionHandler             exceptionHandler,
+            ComplexDelayHandler<TResult> delayHandler)
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
@@ -122,14 +122,14 @@ namespace Sweetener.Reliability
             if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            if (resultPolicy == null)
-                throw new ArgumentNullException(nameof(resultPolicy));
+            if (resultHandler == null)
+                throw new ArgumentNullException(nameof(resultHandler));
 
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
 
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
 
             return (arg1, arg2, arg3, arg4, arg5) =>
             {
@@ -145,18 +145,18 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
-                    Task.Delay(delayPolicy(attempt, default, e)).Wait();
+                    Task.Delay(delayHandler(attempt, default, e)).Wait();
                     goto Attempt;
                 }
 
-                ResultKind kind = resultPolicy(result);
+                ResultKind kind = resultHandler(result);
                 if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;
 
-                Task.Delay(delayPolicy(attempt, result, default)).Wait();
+                Task.Delay(delayHandler(attempt, result, default)).Wait();
                 goto Attempt;
             };
         }
@@ -177,17 +177,17 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<T1, T2, T3, T4, T5, CancellationToken, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, CancellationToken, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+        public static Func<T1, T2, T3, T4, T5, CancellationToken, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, CancellationToken, TResult> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => WithRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler.ToComplex<TResult>());
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -201,17 +201,17 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Func<T1, T2, T3, T4, T5, CancellationToken, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, CancellationToken, TResult> func, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy<TResult> delayPolicy)
-            => WithRetry(func, maxRetries, ReliableDelegate<TResult>.DefaultResultPolicy, exceptionPolicy, delayPolicy);
+        public static Func<T1, T2, T3, T4, T5, CancellationToken, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, CancellationToken, TResult> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
+            => WithRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler);
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -225,23 +225,23 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="resultHandler">A function that determines which results are valid.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="resultHandler" /> <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, CancellationToken, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(
             this Func<T1, T2, T3, T4, T5, CancellationToken, TResult> func,
-            int                   maxRetries,
-            ResultPolicy<TResult> resultPolicy,
-            ExceptionPolicy       exceptionPolicy,
-            DelayPolicy           delayPolicy)
-            => WithRetry(func, maxRetries, resultPolicy, exceptionPolicy, DelayPolicies.Complex<TResult>(delayPolicy));
+            int                    maxRetries,
+            ResultHandler<TResult> resultHandler,
+            ExceptionHandler       exceptionHandler,
+            DelayHandler           delayHandler)
+            => WithRetry(func, maxRetries, resultHandler, exceptionHandler, delayHandler.ToComplex<TResult>());
 
         /// <summary>
         /// Creates a reliable wrapper around the given <paramref name="func" />
@@ -255,22 +255,22 @@ namespace Sweetener.Reliability
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
-        /// <param name="resultPolicy">The policy that determines which results are valid.</param>
-        /// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-        /// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+        /// <param name="resultHandler">A function that determines which results are valid.</param>
+        /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+        /// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
         /// <returns>A reliable delegate that encapsulates the <paramref name="func" />.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="func" />, <paramref name="resultPolicy" /> <paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+        /// <paramref name="func" />, <paramref name="resultHandler" /> <paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, CancellationToken, TResult> WithRetry<T1, T2, T3, T4, T5, TResult>(
             this Func<T1, T2, T3, T4, T5, CancellationToken, TResult> func,
-            int                         maxRetries,
-            ResultPolicy<TResult>       resultPolicy,
-            ExceptionPolicy             exceptionPolicy,
-            ComplexDelayPolicy<TResult> delayPolicy)
+            int                          maxRetries,
+            ResultHandler<TResult>       resultHandler,
+            ExceptionHandler             exceptionHandler,
+            ComplexDelayHandler<TResult> delayHandler)
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
@@ -278,14 +278,14 @@ namespace Sweetener.Reliability
             if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            if (resultPolicy == null)
-                throw new ArgumentNullException(nameof(resultPolicy));
+            if (resultHandler == null)
+                throw new ArgumentNullException(nameof(resultHandler));
 
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
 
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
 
             return (arg1, arg2, arg3, arg4, arg5, cancellationToken) =>
             {
@@ -301,18 +301,18 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (e.IsCancellation(cancellationToken) || !exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
-                    Task.Delay(delayPolicy(attempt, default, e), cancellationToken).Wait(cancellationToken);
+                    Task.Delay(delayHandler(attempt, default, e), cancellationToken).Wait(cancellationToken);
                     goto Attempt;
                 }
 
-                ResultKind kind = resultPolicy(result);
+                ResultKind kind = resultHandler(result);
                 if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return result;
 
-                Task.Delay(delayPolicy(attempt, result, default), cancellationToken).Wait(cancellationToken);
+                Task.Delay(delayHandler(attempt, result, default), cancellationToken).Wait(cancellationToken);
                 goto Attempt;
             };
         }

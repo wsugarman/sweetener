@@ -5,9 +5,9 @@ namespace Sweetener.Reliability.Test
     internal abstract class DelegateProxy<T>
         where T : Delegate
     {
-        public int Calls => _context.Calls;
-
         public event Action<CallContext> Invoking;
+
+        public int Calls => _context.Calls;
 
         public abstract T Proxy { get; }
 
@@ -25,9 +25,7 @@ namespace Sweetener.Reliability.Test
         protected void UpdateContext()
         {
             DateTime utcNow = DateTime.UtcNow;
-            TimeSpan delay = _lastCallUtc == default
-                ? TimeSpan.FromMilliseconds(-1)
-                : utcNow - _lastCallUtc;
+            TimeSpan delay  = _lastCallUtc == default ? TimeSpan.FromMilliseconds(-1) : utcNow - _lastCallUtc;
 
             _context     = new CallContext(_context.Calls + 1, delay);
             _lastCallUtc = utcNow;

@@ -43,13 +43,13 @@
         }
     }
 
-    public void PrintReliableFuncCtorXmlDoc(int indent, int typeParameterCount = -1, bool includeResultPolicy = false, bool includeReturnsXmlDoc = false)
-        => PrintReliableCtorXmlDoc(indent, typeParameterCount, isFunc: true, includeResultPolicy, includeReturnsXmlDoc);
+    public void PrintReliableFuncCtorXmlDoc(int indent, int typeParameterCount = -1, bool includeResultHandler = false, bool includeReturnsXmlDoc = false)
+        => PrintReliableCtorXmlDoc(indent, typeParameterCount, isFunc: true, includeResultHandler, includeReturnsXmlDoc);
 
     public void PrintReliableActionCtorXmlDoc(int indent, int typeParameterCount = -1, bool includeReturnsXmlDoc = false)
-        => PrintReliableCtorXmlDoc(indent, typeParameterCount, isFunc: false, includeResultPolicy: false, includeReturnsXmlDoc: includeReturnsXmlDoc);
+        => PrintReliableCtorXmlDoc(indent, typeParameterCount, isFunc: false, includeResultHandler: false, includeReturnsXmlDoc: includeReturnsXmlDoc);
 
-    private void PrintReliableCtorXmlDoc(int indent, int typeParameterCount, bool isFunc, bool includeResultPolicy, bool includeReturnsXmlDoc)
+    private void PrintReliableCtorXmlDoc(int indent, int typeParameterCount, bool isFunc, bool includeResultHandler, bool includeReturnsXmlDoc)
     {
         if (typeParameterCount < -1)
             throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
@@ -65,15 +65,15 @@
 <#= spaces #>/// <param name="<#= isFunc ? "func" : "action" #>">The <#= isFunc ? "function" : "action" #> to encapsulate.</param>
 <#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
 <#+
-        if (includeResultPolicy)
+        if (includeResultHandler)
         {
 #>
-<#= spaces #>/// <param name="resultPolicy">The policy that determines which results are valid.</param>
+<#= spaces #>/// <param name="resultHandler">A function that determines which results are valid.</param>
 <#+
         }
 #>
-<#= spaces #>/// <param name="exceptionPolicy">The policy that determines which errors are transient.</param>
-<#= spaces #>/// <param name="delayPolicy">The policy that determines how long wait to wait between retries.</param>
+<#= spaces #>/// <param name="exceptionHandler">A function that determines which errors are transient.</param>
+<#= spaces #>/// <param name="delayHandler">A function that determines how long wait to wait between retries.</param>
 <#+
         if (includeReturnsXmlDoc)
         {
@@ -83,7 +83,7 @@
         }
 #>
 <#= spaces #>/// <exception cref="ArgumentNullException">
-<#= spaces #>/// <paramref name="<#= isFunc ? "func" : "action" #>" />, <#= includeResultPolicy ? "<paramref name=\"resultPolicy\" /> " : "" #><paramref name="exceptionPolicy" />, or <paramref name="delayPolicy" /> is <see langword="null" />.
+<#= spaces #>/// <paramref name="<#= isFunc ? "func" : "action" #>" />, <#= includeResultHandler ? "<paramref name=\"resultHandler\" /> " : "" #><paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
 <#= spaces #>/// </exception>
 <#= spaces #>/// <exception cref="ArgumentOutOfRangeException">
 <#= spaces #>/// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.

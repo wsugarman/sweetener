@@ -5,17 +5,17 @@ namespace Sweetener.Reliability.Test
 {
     public class ReliableDelegateTest<T>
     {
-        protected static readonly Func<ReliableDelegate<T>, ResultPolicy<T>      > s_getResultPolicy    = DynamicGetter.ForField<ReliableDelegate<T>, ResultPolicy<T>      >("_validate");
-        protected static readonly Func<ReliableDelegate<T>, ExceptionPolicy      > s_getExceptionPolicy = DynamicGetter.ForField<ReliableDelegate<T>, ExceptionPolicy      >("_canRetry");
-        protected static readonly Func<ReliableDelegate<T>, ComplexDelayPolicy<T>> s_getDelayPolicy     = DynamicGetter.ForField<ReliableDelegate<T>, ComplexDelayPolicy<T>>("_getDelay");
+        protected static readonly Func<ReliableDelegate<T>, ResultHandler<T>      > s_getResultHandler    = DynamicGetter.ForField<ReliableDelegate<T>, ResultHandler<T>      >("_validate");
+        protected static readonly Func<ReliableDelegate<T>, ExceptionHandler      > s_getExceptionHandler = DynamicGetter.ForField<ReliableDelegate<T>, ExceptionHandler      >("_canRetry");
+        protected static readonly Func<ReliableDelegate<T>, ComplexDelayHandler<T>> s_getDelayHandler     = DynamicGetter.ForField<ReliableDelegate<T>, ComplexDelayHandler<T>>("_getDelay");
 
-        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, FuncProxy<int, TimeSpan> expectedDelayPolicy)
-            => Ctor(reliableAction, expectedMaxRetries, ReliableDelegate<T>.DefaultResultPolicy, expectedExceptionPolicy, expectedDelayPolicy);
+        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ExceptionHandler expectedExceptionPolicy, FuncProxy<int, TimeSpan> expectedDelayPolicy)
+            => Ctor(reliableAction, expectedMaxRetries, ResultPolicy.Default<T>(), expectedExceptionPolicy, expectedDelayPolicy);
 
-        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy<T> expectedDelayPolicy)
-            => Ctor(reliableAction, expectedMaxRetries, ReliableDelegate<T>.DefaultResultPolicy, expectedExceptionPolicy, expectedDelayPolicy);
+        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ExceptionHandler expectedExceptionPolicy, ComplexDelayHandler<T> expectedDelayPolicy)
+            => Ctor(reliableAction, expectedMaxRetries, ResultPolicy.Default<T>(), expectedExceptionPolicy, expectedDelayPolicy);
 
-        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ResultPolicy<T> expectedResultPolicy, ExceptionPolicy expectedExceptionPolicy, FuncProxy<int, TimeSpan> expectedDelayPolicy)
+        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ResultHandler<T> expectedResultPolicy, ExceptionHandler expectedExceptionPolicy, FuncProxy<int, TimeSpan> expectedDelayPolicy)
             => Ctor(reliableAction, expectedMaxRetries, expectedResultPolicy, expectedExceptionPolicy, actual =>
             {
                 TimeSpan expectedDelay = expectedDelayPolicy.Invoke(42);
@@ -26,16 +26,16 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(expectedCalls, expectedDelayPolicy.Calls);
             });
 
-        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ResultPolicy<T> expectedResultPolicy, ExceptionPolicy expectedExceptionPolicy, ComplexDelayPolicy<T> expectedDelayPolicy)
+        internal void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ResultHandler<T> expectedResultPolicy, ExceptionHandler expectedExceptionPolicy, ComplexDelayHandler<T> expectedDelayPolicy)
             => Ctor(reliableAction, expectedMaxRetries, expectedResultPolicy, expectedExceptionPolicy, actual => Assert.AreSame(expectedDelayPolicy, actual));
 
-        private void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ResultPolicy<T> expectedResultPolicy, ExceptionPolicy expectedExceptionPolicy, Action<ComplexDelayPolicy<T>> validateDelayPolicy)
+        private void Ctor(ReliableDelegate<T> reliableAction, int expectedMaxRetries, ResultHandler<T> expectedResultPolicy, ExceptionHandler expectedExceptionPolicy, Action<ComplexDelayHandler<T>> validateDelayPolicy)
         {
             Assert.AreEqual(expectedMaxRetries, reliableAction.MaxRetries);
-            Assert.AreSame(expectedResultPolicy   , s_getResultPolicy   (reliableAction));
-            Assert.AreSame(expectedExceptionPolicy, s_getExceptionPolicy(reliableAction));
+            Assert.AreSame(expectedResultPolicy   , s_getResultHandler   (reliableAction));
+            Assert.AreSame(expectedExceptionPolicy, s_getExceptionHandler(reliableAction));
 
-            validateDelayPolicy(s_getDelayPolicy(reliableAction));
+            validateDelayPolicy(s_getDelayHandler(reliableAction));
         }
     }
 }

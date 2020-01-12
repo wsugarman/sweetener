@@ -12,8 +12,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_Success<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy> observeAction,
             Action<TDelayPolicyProxy> observeDelayPolicy)
@@ -25,31 +25,31 @@ namespace Sweetener.Reliability.Test
             // Create a "successful" user-defined action
             TActionProxy action = actionFactory(t => Operation.Null());
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>();
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(TimeSpan.Zero);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>();
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable action
             TAction reliableAction = withRetry(
                 action.Proxy,
                 Retries.Infinite,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Nothing<Exception>();
+            exceptionHandler.Invoking += Expect.Nothing<Exception>();
 
             observeAction     ?.Invoke(action);
-            observeDelayPolicy?.Invoke(delayPolicy);
+            observeDelayPolicy?.Invoke(delayHandler);
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
                 invoke(reliableAction, 42, "foo", 3.14D, tokenSource.Token);
 
             // Validate the number of calls
-            Assert.AreEqual(1, action         .Calls);
-            Assert.AreEqual(0, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            Assert.AreEqual(1, action          .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
         }
 
         #endregion
@@ -58,8 +58,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_Failure<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy> observeAction,
             Action<TDelayPolicyProxy> observeDelayPolicy)
@@ -71,31 +71,31 @@ namespace Sweetener.Reliability.Test
             // Create an "unsuccessful" user-defined action
             TActionProxy action = actionFactory(t => throw new InvalidOperationException());
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Fail<InvalidOperationException>().Invoke);
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(TimeSpan.Zero);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable action
             TAction reliableAction = withRetry(
                 action.Proxy,
                 Retries.Infinite,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(InvalidOperationException));
 
             observeAction     ?.Invoke(action);
-            observeDelayPolicy?.Invoke(delayPolicy);
+            observeDelayPolicy?.Invoke(delayHandler);
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
                 Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction, 42, "foo", 3.14D, tokenSource.Token));
 
             // Validate the number of calls
-            Assert.AreEqual(1, action         .Calls);
-            Assert.AreEqual(1, exceptionPolicy.Calls);
-            Assert.AreEqual(0, delayPolicy    .Calls);
+            Assert.AreEqual(1, action          .Calls);
+            Assert.AreEqual(1, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
         }
 
         #endregion
@@ -104,8 +104,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_EventualSuccess<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy, TimeSpan> observeAction,
             Action<TDelayPolicyProxy, Type> observeDelayPolicy)
@@ -118,31 +118,31 @@ namespace Sweetener.Reliability.Test
             Action flakyAction = FlakyAction.Create<IOException>(1);
             TActionProxy action = actionFactory(t => flakyAction());
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(Constants.Delay);
 
             // Create the reliable action
             TAction reliableAction = withRetry(
                 action.Proxy,
                 Retries.Infinite,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(IOException));
 
             observeAction     ?.Invoke(action, Constants.MinDelay);
-            observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
+            observeDelayPolicy?.Invoke(delayHandler, typeof(IOException));
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
                 invoke(reliableAction, 42, "foo", 3.14D, tokenSource.Token);
 
             // Validate the number of calls
-            Assert.AreEqual(2, action         .Calls);
-            Assert.AreEqual(1, exceptionPolicy.Calls);
-            Assert.AreEqual(1, delayPolicy    .Calls);
+            Assert.AreEqual(2, action          .Calls);
+            Assert.AreEqual(1, exceptionHandler.Calls);
+            Assert.AreEqual(1, delayHandler    .Calls);
         }
 
         #endregion
@@ -151,8 +151,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_EventualFailure<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy, TimeSpan> observeAction,
             Action<TDelayPolicyProxy, Type> observeDelayPolicy)
@@ -165,22 +165,22 @@ namespace Sweetener.Reliability.Test
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
             TActionProxy action = actionFactory(t => flakyAction());
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(Constants.Delay);
 
             // Create the reliable action
             TAction reliableAction = withRetry(
                 action.Proxy,
                 Retries.Infinite,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
+            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
 
             observeAction     ?.Invoke(action, Constants.MinDelay);
-            observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
+            observeDelayPolicy?.Invoke(delayHandler, typeof(IOException));
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
@@ -188,8 +188,8 @@ namespace Sweetener.Reliability.Test
 
             // Validate the number of calls
             Assert.AreEqual(3, action          .Calls);
-            Assert.AreEqual(3, exceptionPolicy .Calls);
-            Assert.AreEqual(2, delayPolicy     .Calls);
+            Assert.AreEqual(3, exceptionHandler.Calls);
+            Assert.AreEqual(2, delayHandler    .Calls);
         }
 
         #endregion
@@ -198,8 +198,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_RetriesExhausted<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy, TimeSpan> observeAction,
             Action<TDelayPolicyProxy, Type> observeDelayPolicy)
@@ -211,22 +211,22 @@ namespace Sweetener.Reliability.Test
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
             TActionProxy action = actionFactory(t => throw new IOException());
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Retry<IOException>().Invoke);
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(Constants.Delay);
 
             // Create the reliable action
             TAction reliableAction = withRetry(
                 action.Proxy,
                 2,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(IOException));
 
             observeAction     ?.Invoke(action, Constants.MinDelay);
-            observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
+            observeDelayPolicy?.Invoke(delayHandler, typeof(IOException));
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
@@ -234,8 +234,8 @@ namespace Sweetener.Reliability.Test
 
             // Validate the number of calls
             Assert.AreEqual(3, action          .Calls);
-            Assert.AreEqual(3, exceptionPolicy .Calls);
-            Assert.AreEqual(2, delayPolicy     .Calls);
+            Assert.AreEqual(3, exceptionHandler.Calls);
+            Assert.AreEqual(2, delayHandler    .Calls);
         }
 
         #endregion
@@ -244,8 +244,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_Canceled_Action<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy, TimeSpan> observeAction,
             Action<TDelayPolicyProxy, Type> observeDelayPolicy)
@@ -263,22 +263,22 @@ namespace Sweetener.Reliability.Test
                 throw new IOException();
             });
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Transient.Invoke);
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(Constants.Delay);
 
             // Create the reliable action
             TAction reliableAction = withRetry(
                 action.Proxy,
                 Retries.Infinite,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(IOException));
 
             observeAction     ?.Invoke(action, Constants.MinDelay);
-            observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
+            observeDelayPolicy?.Invoke(delayHandler, typeof(IOException));
 
             // Cancel the action on its 2nd attempt
             action.Invoking += c =>
@@ -291,9 +291,9 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableAction, 42, "foo", 3.14D, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(2, action         .Calls);
-            Assert.AreEqual(1, exceptionPolicy.Calls);
-            Assert.AreEqual(1, delayPolicy    .Calls);
+            Assert.AreEqual(2, action          .Calls);
+            Assert.AreEqual(1, exceptionHandler.Calls);
+            Assert.AreEqual(1, delayHandler    .Calls);
         }
 
         #endregion
@@ -302,8 +302,8 @@ namespace Sweetener.Reliability.Test
 
         internal void WithRetryT4_Canceled_Delay<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
             Func<Action<CancellationToken>, TActionProxy> actionFactory,
-            Func<TimeSpan, TDelayPolicyProxy> delayPolicyFactory,
-            Func<TAction, int, ExceptionPolicy, TDelayPolicy, TAction> withRetry,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, CancellationToken> invoke,
             Action<TActionProxy, TimeSpan> observeAction,
             Action<TDelayPolicyProxy, Type> observeDelayPolicy)
@@ -317,25 +317,25 @@ namespace Sweetener.Reliability.Test
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
             TActionProxy action = actionFactory(t => throw new IOException());
 
-            // Declare the various policy and event handler proxies
-            FuncProxy<Exception, bool> exceptionPolicy = new FuncProxy<Exception, bool>(ExceptionPolicies.Transient.Invoke);
-            TDelayPolicyProxy delayPolicy = delayPolicyFactory(Constants.Delay);
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(Constants.Delay);
 
             // Create the reliable InterruptableAction
             TAction reliableAction = withRetry(
                 action.Proxy,
                 Retries.Infinite,
-                exceptionPolicy.Invoke,
-                delayPolicy.Proxy);
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
 
             // Define expectations
-            exceptionPolicy.Invoking += Expect.Exception(typeof(IOException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(IOException));
 
             observeAction     ?.Invoke(action, Constants.MinDelay);
-            observeDelayPolicy?.Invoke(delayPolicy, typeof(IOException));
+            observeDelayPolicy?.Invoke(delayHandler, typeof(IOException));
 
             // Cancel the delay on its 2nd invocation
-            delayPolicy.Invoking += c =>
+            delayHandler.Invoking += c =>
             {
                 if (c.Calls == 2)
                     tokenSource.Cancel();
@@ -345,9 +345,9 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableAction, 42, "foo", 3.14D, tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(2, action         .Calls);
-            Assert.AreEqual(2, exceptionPolicy.Calls);
-            Assert.AreEqual(2, delayPolicy    .Calls);
+            Assert.AreEqual(2, action          .Calls);
+            Assert.AreEqual(2, exceptionHandler.Calls);
+            Assert.AreEqual(2, delayHandler    .Calls);
         }
 
         #endregion

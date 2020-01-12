@@ -86,15 +86,15 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
     </Compile>
-    <Compile Update="Policies\Exception\ExceptionPolicies.Fail.cs">
+    <Compile Update="Policies\Exception\ExceptionPolicy.Fail.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ExceptionPolicies.Fail.tt</DependentUpon>
+      <DependentUpon>ExceptionPolicy.Fail.tt</DependentUpon>
     </Compile>
-    <Compile Update="Policies\Exception\ExceptionPolicies.Retry.cs">
+    <Compile Update="Policies\Exception\ExceptionPolicy.Retry.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ExceptionPolicies.Retry.tt</DependentUpon>
+      <DependentUpon>ExceptionPolicy.Retry.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
@@ -152,13 +152,13 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.Create.tt.out</LastGenOutput>
     </None>
-    <None Update="Policies\Exception\ExceptionPolicies.Fail.tt">
+    <None Update="Policies\Exception\ExceptionPolicy.Fail.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExceptionPolicies.Fail.cs</LastGenOutput>
+      <LastGenOutput>ExceptionPolicy.Fail.cs</LastGenOutput>
     </None>
-    <None Update="Policies\Exception\ExceptionPolicies.Retry.tt">
+    <None Update="Policies\Exception\ExceptionPolicy.Retry.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExceptionPolicies.Retry.cs</LastGenOutput>
+      <LastGenOutput>ExceptionPolicy.Retry.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

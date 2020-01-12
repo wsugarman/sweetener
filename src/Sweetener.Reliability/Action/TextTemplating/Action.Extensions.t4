@@ -53,8 +53,8 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, DelayPolicy delayPolicy)
-            => With<#= optionalAsync #>Retry(action, maxRetries, exceptionPolicy, DelayPolicies.Complex(delayPolicy));
+        public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => With<#= optionalAsync #>Retry(action, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Creates a reliable wrapper around the given <#= async ? "asynchronous " : string.Empty #><paramref name="action" />
@@ -63,7 +63,7 @@ namespace Sweetener.Reliability
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
-        public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionPolicy exceptionPolicy, ComplexDelayPolicy delayPolicy)
+        public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -71,11 +71,11 @@ namespace Sweetener.Reliability
             if (maxRetries < Retries.Infinite)
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
-            if (exceptionPolicy == null)
-                throw new ArgumentNullException(nameof(exceptionPolicy));
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
 
-            if (delayPolicy == null)
-                throw new ArgumentNullException(nameof(delayPolicy));
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>) =>
             {
@@ -113,10 +113,10 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (<#= optionalCancellationCheck #>!exceptionPolicy(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
-                    <#= async ? "await " : string.Empty #>Task.Delay(delayPolicy(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
+                    <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
                     goto Attempt;
                 }
             };
