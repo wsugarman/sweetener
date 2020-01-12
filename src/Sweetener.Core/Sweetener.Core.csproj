@@ -9,6 +9,12 @@
     <VersionSuffix>alpha.1</VersionSuffix>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
+      <_Parameter1>3238523c-5921-4100-9eb9-17cfa9a03121</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <!-- Generated Files -->
   <ItemGroup>
     <Compile Update="Action\Action.cs">
