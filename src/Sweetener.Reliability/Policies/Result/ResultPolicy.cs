@@ -1,21 +1,21 @@
 ﻿namespace Sweetener.Reliability
 {
     /// <summary>
-    /// Contains common <see cref="ResultHandler{T}"/> implementations.
+    /// Contains common <see cref="ResultHandler{TResult}"/> implementations.
     /// </summary>
     public static class ResultPolicy
     {
         /// <summary>
-        /// Returns a default <see cref="ResultHandler{T}"/> that always indicates success.
+        /// Returns a default <see cref="ResultHandler{TResult}"/> that always indicates success.
         /// </summary>
-        /// <typeparam name="T">The type of the return value of the method.</typeparam>
-        /// <returns>A default <see cref="ResultHandler{T}"/>.</returns>
-        public static ResultHandler<T> Default<T>()
-            => DefaultResultHandler<T>.Value;
+        /// <typeparam name="TResult">The type of the return value of the method.</typeparam>
+        /// <returns>A default <see cref="ResultHandler{TResult}"/>.</returns>
+        public static ResultHandler<TResult> Default<TResult>()
+            => DefaultResultHandler<TResult>.Value;
 
-        private static class DefaultResultHandler<T>
+        private static class DefaultResultHandler<TResult>
         {
-            public static readonly ResultHandler<T> Value = r => ResultKind.Successful;
+            public static readonly ResultHandler<TResult> Value = r => ResultKind.Successful;
         }
     }
 }
