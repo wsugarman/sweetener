@@ -13,22 +13,23 @@ jobs:
 
   steps:
   - task: DotNetCoreCLI@2
-    displayName: 'Build ${{ parameters.Project }}'
+    displayName: 'Build'
     inputs:
       command: 'build'
       projects: |
         src/${{ parameters.Project }}/${{ parameters.Project }}.csproj
         src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj
-      arguments: '-c $(BuildConfiguration)'
+      arguments: '-c $(BuildConfiguration) -p:ContinuousIntegrationBuild=true'
 
   - task: DownloadSecureFile@1
     name: SigningKey
     displayName: 'Download Signing Key'
     inputs:
       secureFile: 'Sweetener.snk'
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: PowerShell@2
-    displayName: 'Sign ${{ parameters.Project }}'
+    displayName: 'Enhanced Strong Name Signing'
     inputs:
       targetType: 'inline'
       script: |
@@ -38,11 +39,24 @@ jobs:
             Start-Process -FilePath "${{ parameters.netfxTools }}/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
         }
       pwsh: true
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   # Note that "Debug" code coverage may result in inaccurate code coverage metrics
   - task: DotNetCoreCLI@2
-    displayName: 'Test ${{ parameters.Project }}'
+    displayName: 'Test'
     inputs:
       command: 'test'
       projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
       arguments: '-c $(BuildConfiguration) --no-build --collect "Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Pack'
+    inputs:
+      command: 'pack'
+      projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+      nobuild: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Build Artifacts'
+    inputs:
+      artifactName: 'pkg'
