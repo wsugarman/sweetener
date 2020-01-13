@@ -44,6 +44,7 @@
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
+        <NoWarn>NU5105</NoWarn> <!-- Ignore warnings about requiring SemVar 2.0. We want to use it! -->
         <Product>Sweetener</Product>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
