@@ -10,9 +10,9 @@ Each Sweetener library follows the same set of principles:
 4. Ensure compatability across .NET implementations
 
 ## Table of Contents
-  1. [Libraries](#Libraries)
-     1. [Reliability](#Reliability)
-  2. [License](#License)
+1. [Libraries](#Libraries)
+    1. [Reliability](#Reliability)
+2. [License](#License)
 
 ## Libraries
 ### Reliability
