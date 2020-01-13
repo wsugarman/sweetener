@@ -1,12 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Description>API for executing user-defined delegates despite transient failures</Description>
+    <PackageTags>action delegate failure func reliable retry</PackageTags>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix>alpha.1</VersionSuffix>
   </PropertyGroup>
 
-  <!-- TODO: Remove ProjectReference after package has been published -->
   <ItemGroup>
-    <ProjectReference Include="..\Sweetener.Core\Sweetener.Core.csproj" />
+    <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
+      <_Parameter1>eb226990-2782-431c-9ff1-e17f53718e82</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- TODO: Remove these inclusions after Sweetener.Core has been published -->
+  <ItemGroup>
+    <Compile Include="..\Sweetener.Core\Action\Action.cs">
+      <Link>Core\Action.cs</Link>
+    </Compile>
+    <Compile Include="..\Sweetener.Core\Func\Func.cs">
+      <Link>Core\Func.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <!-- Generated Files -->

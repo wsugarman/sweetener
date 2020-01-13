@@ -1,9 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Description>Common APIs that sweeten the .NET foundational class libraries</Description>
+    <PackageTags>common</PackageTags>
     <RootNamespace>Sweetener</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix>alpha.1</VersionSuffix>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
+      <_Parameter1>3238523c-5921-4100-9eb9-17cfa9a03121</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <!-- Generated Files -->
   <ItemGroup>

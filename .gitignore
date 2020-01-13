@@ -77,4 +77,5 @@ msbuild.binlog
 *.nuget.props
 *.nuget.targets
 *.nupkg
+*.snupkg
 **/packages/*
