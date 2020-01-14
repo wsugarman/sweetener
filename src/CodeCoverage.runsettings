@@ -7,7 +7,7 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
-          <Format>json</Format>
+          <Format>cobertura</Format>
           <Exclude>[Sweetener*.Test]*</Exclude>
           <Include>[Sweetener*]*</Include>
           <ExcludeByAttribute>ExcludeFromCodeCoverage</ExcludeByAttribute>

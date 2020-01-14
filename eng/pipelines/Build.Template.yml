@@ -33,13 +33,28 @@ jobs:
       projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
       arguments: '-c $(BuildConfiguration)'
 
-  # Note that "Debug" code coverage may result in inaccurate code coverage metrics
   - task: DotNetCoreCLI@2
     displayName: 'Run Tests'
     inputs:
       command: 'test'
       projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
-      arguments: '-c $(BuildConfiguration) --no-build --collect "Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal'
+      arguments: '-c $(BuildConfiguration) --no-build --collect "XPlat Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Install Report Generator Tool'
+    inputs:
+      command: custom
+      custom: tool
+      arguments: install --tool-path coverlet/tool/ dotnet-reportgenerator-globaltool
+
+  - script: coverlet/tool/reportgenerator -reports:src/${{ parameters.Project }}/bin/TestResults/**/coverage.cobertura.xml -targetdir:coverlet/reports -reporttypes:"Cobertura"
+    displayName: 'Generate Cobertura Code Coverage Report'
+
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish Code Coverage'
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: coverlet/reports/Cobertura.xml
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
