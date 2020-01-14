@@ -4,8 +4,8 @@ trigger:
     - master
   paths:
     include:
-    - build/Build.Template.yml
-    - build/Sweetener.Reliability.yml
+    - eng/pipelines/Build.Template.yml
+    - eng/pipelines/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 pr:
