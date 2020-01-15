@@ -18,6 +18,7 @@ jobs:
       command: 'build'
       projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
       arguments: '-c $(BuildConfiguration) -p:ContinuousIntegrationBuild=true'
+      nugetConfigPath: 'NuGet.config'
 
   - task: DownloadSecureFile@1
     name: SigningKey
@@ -32,6 +33,7 @@ jobs:
       command: 'build'
       projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
       arguments: '-c $(BuildConfiguration)'
+      nugetConfigPath: 'NuGet.config'
 
   - task: DotNetCoreCLI@2
     displayName: 'Run Tests'
@@ -40,21 +42,11 @@ jobs:
       projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
       arguments: '-c $(BuildConfiguration) --no-build --collect "XPlat Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal'
 
-  - task: DotNetCoreCLI@2
-    displayName: 'Install Report Generator Tool'
-    inputs:
-      command: custom
-      custom: tool
-      arguments: install --tool-path coverlet/tool/ dotnet-reportgenerator-globaltool
-
-  - script: coverlet/tool/reportgenerator -reports:src/${{ parameters.Project }}/bin/TestResults/**/coverage.cobertura.xml -targetdir:coverlet/reports -reporttypes:"Cobertura"
-    displayName: 'Generate Cobertura Code Coverage Report'
-
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish Code Coverage'
     inputs:
       codeCoverageTool: Cobertura
-      summaryFileLocation: coverlet/reports/Cobertura.xml
+      summaryFileLocation: 'src/${{ parameters.Project }}.Test/bin/TestResults/**/coverage.cobertura.xml'
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
@@ -75,6 +67,7 @@ jobs:
       command: 'pack'
       packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
       nobuild: true
+      nugetConfigPath: 'NuGet.config'
       verbosityPack: 'normal'
 
   - task: PublishBuildArtifacts@1
