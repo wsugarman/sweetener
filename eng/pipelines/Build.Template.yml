@@ -46,7 +46,7 @@ jobs:
     displayName: 'Publish Code Coverage'
     inputs:
       codeCoverageTool: Cobertura
-      summaryFileLocation: 'src/${{ parameters.Project }}.Test/bin/TestResults/**/coverage.cobertura.xml'
+      summaryFileLocation: '$(Build.Repository.LocalPath)/src/${{ parameters.Project }}.Test/bin/TestResults/**/coverage.cobertura.xml'
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
