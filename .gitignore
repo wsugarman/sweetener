@@ -8,6 +8,7 @@ syntax: glob
 # Tool Runtime Dir
 .dotnet/
 .packages/
+.store/
 .tools/
 
 # User-specific files
