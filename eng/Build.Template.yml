@@ -61,7 +61,6 @@ jobs:
     displayName: 'Download Signing Key'
     inputs:
       secureFile: 'Sweetener.snk'
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
@@ -74,7 +73,6 @@ jobs:
             Start-Process -FilePath "${{ parameters.netfxTools }}/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
         }
       pwsh: true
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: DotNetCoreCLI@2
     displayName: 'Pack Library'
