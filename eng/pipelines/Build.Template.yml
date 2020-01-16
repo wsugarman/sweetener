@@ -3,10 +3,10 @@ parameters:
   netfxTools: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
 
 jobs:
-- job: Build
+- job: Validation
 
   pool:
-    vmImage: 'windows-latest'
+    vmImage: 'ubuntu-latest'
 
   variables:
     disable.coverage.autogenerate: 'true'
@@ -42,6 +42,18 @@ jobs:
       summaryFileLocation: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
       reportDirectory: 'report'
       failIfCoverageEmpty: true
+
+- job: Build
+
+  pool:
+    vmImage: 'windows-latest'
+
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET Core 3.x'
+    inputs:
+      packageType: 'sdk'
+      version: '3.x'
 
   - task: DotNetCoreCLI@2
     displayName: 'Build Library'
