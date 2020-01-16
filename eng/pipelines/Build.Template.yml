@@ -13,6 +13,12 @@ jobs:
     disable.coverage.autogenerate: 'true'
 
   steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET Core 3.x'
+    inputs:
+      packageType: 'sdk'
+      version: '3.x'
+
   - task: DotNetCoreCLI@2
     displayName: 'Build Library'
     inputs:
@@ -46,7 +52,7 @@ jobs:
   - task: ReportGenerator@4
     displayName: 'Generate Code Coverage Report'
     inputs:
-      reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+      reports: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
       targetdir: 'report'
       reporttypes: 'HtmlInline_AzurePipelines'
       tag: ''
@@ -55,7 +61,7 @@ jobs:
     displayName: 'Publish Code Coverage'
     inputs:
       codeCoverageTool: 'Cobertura'
-      summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+      summaryFileLocation: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
       reportDirectory: 'report'
       failIfCoverageEmpty: true
 
