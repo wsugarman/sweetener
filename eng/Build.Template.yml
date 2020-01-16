@@ -2,14 +2,67 @@ parameters:
   project: ''
 
 jobs:
-- job: Validation
+- job: Build
+  pool:
+    vmImage: 'windows-latest'
+  variables:
+    buildConfiguration: 'Release'
+    netfxTools: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET Core 3.x'
+    inputs:
+      packageType: 'sdk'
+      version: '3.x'
 
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Library'
+    inputs:
+      command: 'build'
+      projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+      arguments: '-c $(BuildConfiguration) -p:ContinuousIntegrationBuild=true'
+      nugetConfigPath: 'NuGet.config'
+
+  - task: DownloadSecureFile@1
+    name: SigningKey
+    displayName: 'Download Signing Key'
+    inputs:
+      secureFile: 'Sweetener.snk'
+
+  - task: PowerShell@2
+    displayName: 'Sign Library with an Enhanced Strong Name'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $assemblies = @(Get-ChildItem -Path "src/${{ parameters.Project }}/bin/$(BuildConfiguration)/" -Recurse -Include ${{ parameters.Project }}.dll)
+        foreach ($assembly in $assemblies)
+        {
+            Start-Process -FilePath "$(NetfxTools)/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
+        }
+      pwsh: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Pack Library'
+    inputs:
+      command: 'pack'
+      packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+      configurationToPack: '$(BuildConfiguration)'
+      nobuild: true
+      nugetConfigPath: 'NuGet.config'
+      verbosityPack: 'normal'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Build Artifacts'
+    inputs:
+      artifactName: 'pkg'
+
+- job: Validation
+  dependsOn: Build
+  condition: succeeded()
   pool:
     vmImage: 'ubuntu-latest'
-
   variables:
     buildConfiguration: 'Debug'
-
   steps:
   - task: UseDotNet@2
     displayName: 'Install .NET Core 3.x'
@@ -31,62 +84,3 @@ jobs:
       codeCoverageTool: 'Cobertura'
       summaryFileLocation: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
       failIfCoverageEmpty: true
-
-- job: Build
-
-  pool:
-    vmImage: 'windows-latest'
-
-  variables:
-    buildConfiguration: 'Release'
-    netfxTools: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
-
-  steps:
-  - task: UseDotNet@2
-    displayName: 'Install .NET Core 3.x'
-    inputs:
-      packageType: 'sdk'
-      version: '3.x'
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Build Library'
-    inputs:
-      command: 'build'
-      projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-      arguments: '-c $(BuildConfiguration) -p:ContinuousIntegrationBuild=true'
-      nugetConfigPath: 'NuGet.config'
-
-  - task: DownloadSecureFile@1
-    name: SigningKey
-    displayName: 'Download Signing Key'
-    inputs:
-      secureFile: 'Sweetener.snk'
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
-  - task: PowerShell@2
-    displayName: 'Sign Library with an Enhanced Strong Name'
-    inputs:
-      targetType: 'inline'
-      script: |
-        $assemblies = @(Get-ChildItem -Path "src/${{ parameters.Project }}/bin/$(BuildConfiguration)/" -Recurse -Include ${{ parameters.Project }}.dll)
-        foreach ($assembly in $assemblies)
-        {
-            Start-Process -FilePath "${{ parameters.netfxTools }}/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
-        }
-      pwsh: true
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Pack Library'
-    inputs:
-      command: 'pack'
-      packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-      configurationToPack: '$(BuildConfiguration)'
-      nobuild: true
-      nugetConfigPath: 'NuGet.config'
-      verbosityPack: 'normal'
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Build Artifacts'
-    inputs:
-      artifactName: 'pkg'
