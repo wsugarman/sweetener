@@ -46,17 +46,18 @@ jobs:
   - task: ReportGenerator@4
     displayName: 'Generate Code Coverage Report'
     inputs:
-      reports: 'src/${{ parameters.Project }}.Test/bin/TestResults/**/coverage.cobertura.xml'
-      targetdir: 'coverage'
-      reporttypes: 'HtmlInline_AzurePipelines;Cobertura'
+      reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+      targetdir: 'report'
+      reporttypes: 'HtmlInline_AzurePipelines'
       tag: ''
 
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish Code Coverage'
     inputs:
       codeCoverageTool: 'Cobertura'
-      summaryFileLocation: 'coverage/Cobertura.xml'
-      reportDirectory: 'coverage'
+      summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+      reportDirectory: 'report'
+      failIfCoverageEmpty: true
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
