@@ -20,11 +20,13 @@ jobs:
       version: '3.x'
 
   - task: DotNetCoreCLI@2
-    displayName: 'Build Library'
+    displayName: 'Build Assemblies'
     inputs:
       command: 'build'
-      projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-      arguments: '-c $(BuildConfiguration) -p:ContinuousIntegrationBuild=true'
+      projects: |
+        src/${{ parameters.Project }}/${{ parameters.Project }}.csproj
+        src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj
+      arguments: '-c $(BuildConfiguration)' # Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#363 is fixed
       nugetConfigPath: 'NuGet.config'
 
   - task: DownloadSecureFile@1
@@ -35,26 +37,11 @@ jobs:
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - task: DotNetCoreCLI@2
-    displayName: 'Build Test Project'
-    inputs:
-      command: 'build'
-      projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
-      arguments: '-c $(BuildConfiguration)'
-      nugetConfigPath: 'NuGet.config'
-
-  - task: DotNetCoreCLI@2
     displayName: 'Run Tests'
     inputs:
       command: 'test'
       projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
       arguments: '-c $(BuildConfiguration) --no-build --collect "XPlat Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal'
-
-# Publish test artifacts for debugging
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(Agent.TempDirectory)'
-      artifactName: 'temp'
-      publishLocation: 'Container'
 
   - task: ReportGenerator@4
     displayName: 'Generate Code Coverage Report'
