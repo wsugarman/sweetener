@@ -164,6 +164,9 @@ namespace Sweetener.Reliability.Test
                     Invoke_Canceled_Delay (invoke, addEventHandlers);
                 }
             }
+
+            // Test retrying without a delay
+            Invoke_NoDelay((r, t, e) => Assert.That.ThrowsException(() => invoke(r, t), e));
         }
 
         #endregion
@@ -391,6 +394,9 @@ namespace Sweetener.Reliability.Test
         #region Invoke_RetriesExhausted
 
         private void Invoke_RetriesExhausted(Action<ReliableAsyncAction, CancellationToken, Type> assertInvoke, bool addEventHandlers)
+            => Invoke_RetriesExhausted(assertInvoke, addEventHandlers, Constants.Delay, Constants.MinDelay);
+
+        private void Invoke_RetriesExhausted(Action<ReliableAsyncAction, CancellationToken, Type> assertInvoke, bool addEventHandlers, TimeSpan delay, TimeSpan minExpectedDelay)
         {
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
             FuncProxy<Task> action = new FuncProxy<Task>(async () => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
@@ -574,6 +580,13 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(0, exhaustedHandler.Calls);
             }
         }
+
+        #endregion
+
+        #region Invoke_NoDelay
+
+        private void Invoke_NoDelay(Action<ReliableAsyncAction, CancellationToken, Type> assertInvoke)
+            => Invoke_RetriesExhausted(assertInvoke, false, TimeSpan.Zero, TimeSpan.Zero);
 
         #endregion
     }
