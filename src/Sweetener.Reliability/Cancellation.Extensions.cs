@@ -5,15 +5,12 @@ using System.Threading.Tasks;
 
 namespace Sweetener.Reliability
 {
-    internal static class InterruptableExtensions
+    internal static class CancellationExtensions
     {
         public static bool IsCancellation(this Exception exception, CancellationToken cancellationToken)
-        {
-            OperationCanceledException oce = exception as OperationCanceledException;
-            return oce != null
+            => exception is OperationCanceledException oce
                 && oce.CancellationToken == cancellationToken
                 && cancellationToken.IsCancellationRequested;
-        }
 
         #region Action
 
