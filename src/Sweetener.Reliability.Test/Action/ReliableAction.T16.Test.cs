@@ -470,53 +470,56 @@ namespace Sweetener.Reliability.Test
 
         private void Invoke_RetriesExhausted(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
-            // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
-            ActionProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> action = new ActionProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => throw new IOException());
-
-            // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
-
-            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
-            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
-            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
-
-            // Create ReliableAction
-            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
-                action.Invoke,
-                2,
-                exceptionHandler.Invoke,
-                delayHandler    .Invoke);
-
-            if (addEventHandlers)
+            foreach (bool useDelay in new bool[] { false, true })
             {
-                reliableAction.Retrying         += retryHandler    .Invoke;
-                reliableAction.Failed           += failedHandler   .Invoke;
-                reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
-            }
+                // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
+                ActionProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> action = new ActionProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => throw new IOException());
 
-            // Define expectations
-            action          .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(Arguments.Validate, Constants.MinDelay);
-            exceptionHandler.Invoking += Expect.Exception(typeof(IOException));
-            delayHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
-            retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
-            failedHandler   .Invoking += Expect.Nothing<Exception>();
-            exhaustedHandler.Invoking += Expect.Exception(typeof(IOException));
+                // Declare the various proxies for the input delegates and event handlers
+                FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+                FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => useDelay ? Constants.Delay : TimeSpan.Zero);
 
-            // Invoke
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"), tokenSource.Token, typeof(IOException));
+                ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+                ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+                ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
 
-            // Validate the number of calls
-            Assert.AreEqual(3, action          .Calls);
-            Assert.AreEqual(3, exceptionHandler.Calls);
-            Assert.AreEqual(2, delayHandler    .Calls);
+                // Create ReliableAction
+                ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(
+                    action.Invoke,
+                    2,
+                    exceptionHandler.Invoke,
+                    delayHandler    .Invoke);
 
-            if (addEventHandlers)
-            {
-                Assert.AreEqual(2, retryHandler    .Calls);
-                Assert.AreEqual(0, failedHandler   .Calls);
-                Assert.AreEqual(1, exhaustedHandler.Calls);
+                if (addEventHandlers)
+                {
+                    reliableAction.Retrying         += retryHandler    .Invoke;
+                    reliableAction.Failed           += failedHandler   .Invoke;
+                    reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
+                }
+
+                // Define expectations
+                action          .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, Guid>(Arguments.Validate, useDelay ? Constants.MinDelay : TimeSpan.Zero);
+                exceptionHandler.Invoking += Expect.Exception(typeof(IOException));
+                delayHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+                retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
+                failedHandler   .Invoking += Expect.Nothing<Exception>();
+                exhaustedHandler.Invoking += Expect.Exception(typeof(IOException));
+
+                // Invoke
+                using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+                    assertInvoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, '!', 0.1F, Guid.Parse("53710ff0-eaa3-4fac-a068-e5be641d446b"), tokenSource.Token, typeof(IOException));
+
+                // Validate the number of calls
+                Assert.AreEqual(3, action          .Calls);
+                Assert.AreEqual(3, exceptionHandler.Calls);
+                Assert.AreEqual(2, delayHandler    .Calls);
+
+                if (addEventHandlers)
+                {
+                    Assert.AreEqual(2, retryHandler    .Calls);
+                    Assert.AreEqual(0, failedHandler   .Calls);
+                    Assert.AreEqual(1, exhaustedHandler.Calls);
+                }
             }
         }
 
