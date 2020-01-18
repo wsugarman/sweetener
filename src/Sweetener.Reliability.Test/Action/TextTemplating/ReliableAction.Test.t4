@@ -365,7 +365,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<InvalidOperationException>(parameterCount, async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowDelegate<InvalidOperationException>(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
@@ -429,7 +429,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetActionInvokeDelegate(parameterCount, "flakyAction", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -499,7 +499,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetActionInvokeDelegate(parameterCount, "flakyAction", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -568,7 +568,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowDelegate<IOException>(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -735,7 +735,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowDelegate<IOException>(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);

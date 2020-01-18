@@ -60,7 +60,7 @@
         return string.Join(", ", typeArgs.Take(count).Concat(additionalElements));
     }
 
-    public string GetDelegate(int argCount, string delegateName, bool async, bool interruptable = false)
+    public string GetActionInvokeDelegate(int argCount, string delegateName, bool async, bool interruptable = false)
     {
         string args          = GetArguments(argCount);
         string optionalComma = argCount > 0 ? ", " : string.Empty;
@@ -69,7 +69,7 @@
         if (!async)
             return $"({args}{optionalToken}) => {delegateName}()";
 
-        return $"async ({args}{optionalToken}) => await Task.Run({delegateName}).ConfigureAwait(false)";
+        return $"async ({args}{optionalToken}) => {{ {delegateName}(); await Task.CompletedTask; }}";
     }
 
     public string GetExpressionDelegate(int argCount, string expression, bool async, bool interruptable = false)
@@ -81,10 +81,10 @@
         if (!async)
             return $"({args}{optionalToken}) => {expression}";
 
-        return $"async ({args}{optionalToken}) => await Task.Run(() => {expression}).ConfigureAwait(false)";
+        return $"async ({args}{optionalToken}) => await Task.FromResult({expression})";
     }
 
-    public string GetThrowException<T>(int argCount, bool async, bool interruptable = false, string outputType = null)
+    public string GetThrowDelegate<T>(int argCount, bool async, bool interruptable = false, string outputType = null)
         where T : Exception
     {
         string args          = GetArguments(argCount);
@@ -95,9 +95,9 @@
             return $"({args}{optionalToken}) => throw new {typeof(T).Name}()";
 
         if (outputType == null)
-            return $"async ({args}{optionalToken}) => await Task.Run(() => throw new {typeof(T).Name}()).ConfigureAwait(false)";
+            return $"async ({args}{optionalToken}) => await Task.FromException(new {typeof(T).Name}())";
         else
-            return $"async ({args}{optionalToken}) => await Task.Run((Func<{outputType}>)(() => throw new {typeof(T).Name}())).ConfigureAwait(false)";
+            return $"async ({args}{optionalToken}) => await Task.FromException<{outputType}>(new {typeof(T).Name}())";
     }
 
     public string GetNoOpDelegate(int argCount, bool async, bool interruptable = false)
@@ -109,6 +109,6 @@
         if (!async)
             return $"({args}{optionalToken}) => Operation.Null()";
 
-        return $"async ({args}{optionalToken}) => await Operation.NullAsync().ConfigureAwait(false)";
+        return $"async ({args}{optionalToken}) => await Task.CompletedTask";
     }
 #>

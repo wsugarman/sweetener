@@ -548,7 +548,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure_Exception(Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined function that throws a fatal exception
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetThrowException<InvalidOperationException>(parameterCount, async, outputType: "string") #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetThrowDelegate<InvalidOperationException>(parameterCount, async, outputType: "string") #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>();
@@ -616,7 +616,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a user-defined function that eventually succeeds after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry", "Success", 2);
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetDelegate(parameterCount, "flakyFunc", async) #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r =>
@@ -696,7 +696,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a user-defined function that eventually fails after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry", "Failure", 2);
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetDelegate(parameterCount, "flakyFunc", async) #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r =>
@@ -776,7 +776,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a user-defined function that eventually fails after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException, InvalidOperationException>("Retry", 2);
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetDelegate(parameterCount, "flakyFunc", async) #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
@@ -850,7 +850,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a user-defined function that eventually exhausts the maximum number of retries after transient results and exceptions
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetDelegate(parameterCount, "flakyFunc", async) #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
@@ -924,7 +924,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a user-defined function that eventually exhausts the maximum number of retries after transient results and exceptions
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetDelegate(parameterCount, "flakyFunc", async) #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
@@ -1101,7 +1101,7 @@ namespace Sweetener.Reliability.Test
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
-            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetDelegate(parameterCount, "flakyFunc", async) #>);
+            FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);

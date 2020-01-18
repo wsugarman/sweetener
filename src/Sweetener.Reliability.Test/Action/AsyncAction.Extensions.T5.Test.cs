@@ -21,7 +21,7 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_DelayHandler()
         {
             TestAction nullAction = null;
-            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Operation.NullAsync().ConfigureAwait(false);
+            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , DelayPolicy.None));
@@ -48,7 +48,7 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_ComplexDelayHandler()
         {
             TestAction nullAction = null;
-            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Operation.NullAsync().ConfigureAwait(false);
+            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , (i, e) => TimeSpan.Zero));
@@ -75,7 +75,7 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_WithToken_DelayHandler()
         {
             InterruptableTestAction nullAction = null;
-            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Operation.NullAsync().ConfigureAwait(false);
+            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , DelayPolicy.None));
@@ -107,7 +107,7 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_WithToken_ComplexDelayHandler()
         {
             InterruptableTestAction nullAction = null;
-            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Operation.NullAsync().ConfigureAwait(false);
+            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , (i, e) => TimeSpan.Zero));
