@@ -467,9 +467,8 @@ namespace Sweetener.Reliability.Test
                 : new FuncProxy<int, string, double, long, CancellationToken, Task>(
                     async (arg1, arg2, arg3, arg4, token) =>
                     {
-                        await Task.CompletedTask;
                         token.ThrowIfCancellationRequested();
-                        throw new IOException();
+                        await Task.FromException(new IOException());
                     });
 
             // Declare the various proxies for the input delegates and event handlers

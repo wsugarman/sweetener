@@ -73,7 +73,7 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, ExceptionPolicy.Transient, (<#= useComplexHandler ? "Complex" : string.Empty #>DelayHandler)null));
 
             // Create the delegates necessary to test the WithRetry overload
-            Func<Action<CancellationToken>, <#= inputActionType #>Proxy> actionFactory = a => new <#= inputActionType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ await Task.CompletedTask; a({optionalToken}); }}" : $"a({optionalToken})" #>);
+            Func<Action<CancellationToken>, <#= inputActionType #>Proxy> actionFactory = a => new <#= inputActionType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ a({optionalToken}); await Task.CompletedTask; }}" : $"a({optionalToken})" #>);
             Func<TimeSpan, <#= delayHandlerTypeProxy #>> delayHandlerFactory = t => new <#= delayHandlerTypeProxy #>((i<#= useComplexHandler ? ", e" : string.Empty #>) => t);
             Func<<#= inputActionType #>, int, ExceptionHandler, <#= delayHandlerFunc #>, <#= inputActionType #>> with<#= optionalAsync #>Retry = (a, r, e, d) => a.With<#= optionalAsync #>Retry(r, e, d.Invoke);
             Action<<#= inputActionType #><#= optionalComma #><#= typeArguments #>, CancellationToken> invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #><#= optionalCommaToken #>)<#= async ? ".Wait()" : string.Empty #>;
