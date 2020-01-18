@@ -162,7 +162,8 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action(invoke, addEventHandlers);
+                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: true );
                     Invoke_Canceled_Delay (invoke, addEventHandlers);
                 }
             }
@@ -450,17 +451,24 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled_Action
 
-        private void Invoke_Canceled_Action(Action<ReliableAsyncAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Action(Action<ReliableAsyncAction<int, string, double, long, ushort>, int, string, double, long, ushort, CancellationToken> invoke, bool addEventHandlers, bool useSynchronousAction)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
-            FuncProxy<int, string, double, long, ushort, CancellationToken, Task> action = new FuncProxy<int, string, double, long, ushort, CancellationToken, Task>(async (arg1, arg2, arg3, arg4, arg5, token) =>
-            {
-                await Task.CompletedTask;
-                token.ThrowIfCancellationRequested();
-                throw new IOException();
-            });
+            // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
+            FuncProxy<int, string, double, long, ushort, CancellationToken, Task> action = useSynchronousAction
+                ? new FuncProxy<int, string, double, long, ushort, CancellationToken, Task>((arg1, arg2, arg3, arg4, arg5, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    throw new IOException();
+                })
+                : new FuncProxy<int, string, double, long, ushort, CancellationToken, Task>(async (arg1, arg2, arg3, arg4, arg5, token) =>
+                {
+                    await Task.CompletedTask;
+                    token.ThrowIfCancellationRequested();
+                    throw new IOException();
+                });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);

@@ -172,7 +172,8 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (t.IsCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                    if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);

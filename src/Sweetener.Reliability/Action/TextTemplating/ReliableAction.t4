@@ -216,7 +216,15 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (<#= async ? "t.IsCanceled" : "e.IsCancellation(cancellationToken)" #> || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+<#
+        if (async)
+        {
+#>
+                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+<#
+        }
+#>
+                    if (<#= async ? "isCanceled" : "e.IsCancellation(cancellationToken)" #> || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                         throw;
                 }
             } while (true);
