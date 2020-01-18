@@ -285,7 +285,8 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Func ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => f.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers);
+                    Invoke_Canceled_Func ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => f.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers, useSynchronousFunc: false);
+                    Invoke_Canceled_Func ((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => f.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers, useSynchronousFunc: true );
                     Invoke_Canceled_Delay((f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => f.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers);
                 }
             }
@@ -788,18 +789,27 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled_Func
 
-        private void Invoke_Canceled_Func(Action<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Func(Action<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke, bool addEventHandlers, bool useSynchronousFunc)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken, Task<string>> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken, Task<string>>(async (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) =>
-            {
-                await Task.CompletedTask;
-                token.ThrowIfCancellationRequested();
-                return flakyFunc();
-            });
+            // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
+            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken, Task<string>> func = useSynchronousFunc
+                ? new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken, Task<string>>(
+                    (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        return Task.FromResult(flakyFunc());
+                    })
+                : new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken, Task<string>>(
+                    async (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) =>
+                    {
+                        await Task.CompletedTask;
+                        token.ThrowIfCancellationRequested();
+                        return flakyFunc();
+                    });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);

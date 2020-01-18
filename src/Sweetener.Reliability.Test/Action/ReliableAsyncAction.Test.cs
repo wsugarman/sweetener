@@ -454,17 +454,19 @@ namespace Sweetener.Reliability.Test
             // Create a user-defined action that will throw an exception depending on whether its canceled
             // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
             FuncProxy<CancellationToken, Task> action = useSynchronousAction
-                ? new FuncProxy<CancellationToken, Task>((token) =>
-                {
-                    token.ThrowIfCancellationRequested();
-                    throw new IOException();
-                })
-                : new FuncProxy<CancellationToken, Task>(async (token) =>
-                {
-                    await Task.CompletedTask;
-                    token.ThrowIfCancellationRequested();
-                    throw new IOException();
-                });
+                ? new FuncProxy<CancellationToken, Task>(
+                    (token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        throw new IOException();
+                    })
+                : new FuncProxy<CancellationToken, Task>(
+                    async (token) =>
+                    {
+                        await Task.CompletedTask;
+                        token.ThrowIfCancellationRequested();
+                        throw new IOException();
+                    });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);

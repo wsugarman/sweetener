@@ -60,10 +60,11 @@ namespace Sweetener.Reliability
 
             return async (arg) =>
             {
-                Task t = null;
+                Task t;
                 int attempt = 0;
 
             Attempt:
+                t = null;
                 attempt++;
 
                 try
@@ -138,10 +139,11 @@ namespace Sweetener.Reliability
 
             return async (arg, cancellationToken) =>
             {
-                Task t = null;
+                Task t;
                 int attempt = 0;
 
             Attempt:
+                t = null;
                 attempt++;
 
                 try

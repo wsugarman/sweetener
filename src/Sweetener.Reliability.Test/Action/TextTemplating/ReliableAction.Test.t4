@@ -645,27 +645,30 @@ namespace Sweetener.Reliability.Test
 #>
             // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
             <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #> action = useSynchronousAction
-                ? new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>((<#= arguments #><#= optionalComma #>token) =>
-                {
-                    token.ThrowIfCancellationRequested();
-                    throw new IOException();
-                })
-                : new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalComma #>token) =>
-                {
-                    await Task.CompletedTask;
-                    token.ThrowIfCancellationRequested();
-                    throw new IOException();
-                });
+                ? new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(
+                    (<#= arguments #><#= optionalComma #>token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        throw new IOException();
+                    })
+                : new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(
+                    async (<#= arguments #><#= optionalComma #>token) =>
+                    {
+                        await Task.CompletedTask;
+                        token.ThrowIfCancellationRequested();
+                        throw new IOException();
+                    });
 <#
         }
         else
         {
 #>
-            <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalComma #>token) =>
-            {
-                token.ThrowIfCancellationRequested();
-                throw new IOException();
-            });
+            <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(
+                (<#= arguments #><#= optionalComma #>token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    throw new IOException();
+                });
 <#
         }
 #>

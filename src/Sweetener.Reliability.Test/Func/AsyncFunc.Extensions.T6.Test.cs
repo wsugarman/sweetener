@@ -176,6 +176,10 @@ namespace Sweetener.Reliability.Test
             // Cancel
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
+
+            // Cancel (Synchronous)
+            funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, token) => Task.FromResult(f(token)));
+            WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
         }
         [TestMethod]
         public void WithAsyncRetryT6_Async_WithToken_ComplexDelayHandler()
@@ -208,6 +212,10 @@ namespace Sweetener.Reliability.Test
             // Cancel
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
+
+            // Cancel (Synchronous)
+            funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, token) => Task.FromResult(f(token)));
+            WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
         }
         [TestMethod]
         public void WithAsyncRetryT6_Async_WithToken_ResultPolicy_DelayHandler()
@@ -246,6 +254,10 @@ namespace Sweetener.Reliability.Test
             // Cancel
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
+
+            // Cancel (Synchronous)
+            funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, token) => Task.FromResult(f(token)));
+            WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
         }
         [TestMethod]
         public void WithAsyncRetryT6_Async_WithToken_ResultPolicy_ComplexDelayHandler()
@@ -284,6 +296,10 @@ namespace Sweetener.Reliability.Test
             // Cancel
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultHandler: true);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultHandler: true);
+
+            // Cancel (Synchronous)
+            funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, arg5, token) => Task.FromResult(f(token)));
+            WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultHandler: true);
         }
     }
 }

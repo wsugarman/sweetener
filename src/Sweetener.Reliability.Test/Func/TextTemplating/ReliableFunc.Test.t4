@@ -319,7 +319,21 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+<#
+        if (async)
+        {
+#>
+                    Invoke_Canceled_Func ((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers, useSynchronousFunc: false);
+                    Invoke_Canceled_Func ((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers, useSynchronousFunc: true );
+<#
+        }
+        else
+        {
+#>
                     Invoke_Canceled_Func ((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
+<#
+        }
+#>
                     Invoke_Canceled_Delay((f<#= optionalComma #><#= arguments #>, t) => f.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
                 }
             }
@@ -980,25 +994,45 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled_Func
 
-        private void Invoke_Canceled_Func(Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Func(Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken> invoke, bool addEventHandlers<#= async ? ", bool useSynchronousFunc" : string.Empty #>)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
-            FuncProxy<#= tokenInputFuncTypeArguments #> func = new FuncProxy<#= tokenInputFuncTypeArguments #>(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalComma #>token) =>
-            {
 <#
         if (async)
         {
 #>
-                await Task.CompletedTask;
+            // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
+            FuncProxy<#= tokenInputFuncTypeArguments #> func = useSynchronousFunc
+                ? new FuncProxy<#= tokenInputFuncTypeArguments #>(
+                    (<#= arguments #><#= optionalComma #>token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        return Task.FromResult(flakyFunc());
+                    })
+                : new FuncProxy<#= tokenInputFuncTypeArguments #>(
+                    async (<#= arguments #><#= optionalComma #>token) =>
+                    {
+                        await Task.CompletedTask;
+                        token.ThrowIfCancellationRequested();
+                        return flakyFunc();
+                    });
+<#
+        }
+        else
+        {
+#>
+            FuncProxy<#= tokenInputFuncTypeArguments #> func = new FuncProxy<#= tokenInputFuncTypeArguments #>(
+                (<#= arguments #><#= optionalComma #>token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    return flakyFunc();
+                });
 <#
         }
 #>
-                token.ThrowIfCancellationRequested();
-                return flakyFunc();
-            });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);

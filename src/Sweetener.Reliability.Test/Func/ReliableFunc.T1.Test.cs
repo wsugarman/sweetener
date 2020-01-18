@@ -906,11 +906,12 @@ namespace Sweetener.Reliability.Test
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
-            FuncProxy<CancellationToken, string> func = new FuncProxy<CancellationToken, string>((token) =>
-            {
-                token.ThrowIfCancellationRequested();
-                return flakyFunc();
-            });
+            FuncProxy<CancellationToken, string> func = new FuncProxy<CancellationToken, string>(
+                (token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    return flakyFunc();
+                });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);

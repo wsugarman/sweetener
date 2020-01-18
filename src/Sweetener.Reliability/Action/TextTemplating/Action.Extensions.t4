@@ -83,13 +83,21 @@ namespace Sweetener.Reliability
             if (async)
             {
 #>
-                Task t = null;
+                Task t;
 <#
             }
 #>
                 int attempt = 0;
 
             Attempt:
+<#
+        if (async)
+        {
+#>
+                t = null;
+<#
+        }
+#>
                 attempt++;
 
                 try
