@@ -243,7 +243,21 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+<#
+        if (async)
+        {
+#>
+                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: true );
+<#
+        }
+        else
+        {
+#>
                     Invoke_Canceled_Action(invoke, addEventHandlers);
+<#
+        }
+#>
                     Invoke_Canceled_Delay (invoke, addEventHandlers);
                 }
             }
@@ -351,7 +365,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<InvalidOperationException>(parameterCount, async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowDelegate<InvalidOperationException>(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
@@ -415,7 +429,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetActionInvokeDelegate(parameterCount, "flakyAction", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -485,7 +499,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetDelegate(parameterCount, "flakyAction", async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetActionInvokeDelegate(parameterCount, "flakyAction", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -554,7 +568,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowDelegate<IOException>(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -620,24 +634,43 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled_Action
 
-        private void Invoke_Canceled_Action(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Action(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> invoke, bool addEventHandlers<#= async ? ", bool useSynchronousAction" : string.Empty #>)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
-            <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalComma #>token) =>
-            {
 <#
         if (async)
         {
 #>
-                await Task.CompletedTask;
+            // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
+            <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #> action = useSynchronousAction
+                ? new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(
+                    (<#= arguments #><#= optionalComma #>token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        throw new IOException();
+                    })
+                : new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(
+                    async (<#= arguments #><#= optionalComma #>token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.FromException(new IOException());
+                    });
+<#
+        }
+        else
+        {
+#>
+            <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= tokenInputActionTypeArguments #>(
+                (<#= arguments #><#= optionalComma #>token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    throw new IOException();
+                });
 <#
         }
 #>
-                token.ThrowIfCancellationRequested();
-                throw new IOException();
-            });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
@@ -701,7 +734,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
-            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowException<IOException>(parameterCount, async) #>);
+            <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetThrowDelegate<IOException>(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);

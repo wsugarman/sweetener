@@ -21,14 +21,14 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_DelayHandler()
         {
             TestAction nullAction = null;
-            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Operation.NullAsync().ConfigureAwait(false);
+            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (DelayHandler)null));
 
             // Create the delegates necessary to test the WithRetry overload
-            Func<Action<CancellationToken>, TestActionProxy> actionFactory = a => new TestActionProxy(async (arg1, arg2, arg3, arg4, arg5) => { await Task.CompletedTask.ConfigureAwait(false); a(CancellationToken.None); });
+            Func<Action<CancellationToken>, TestActionProxy> actionFactory = a => new TestActionProxy(async (arg1, arg2, arg3, arg4, arg5) => { a(CancellationToken.None); await Task.CompletedTask; });
             Func<TimeSpan, DelayHandlerProxy> delayHandlerFactory = t => new DelayHandlerProxy((i) => t);
             Func<TestAction, int, ExceptionHandler, Func<int, TimeSpan>, TestAction> withAsyncRetry = (a, r, e, d) => a.WithAsyncRetry(r, e, d.Invoke);
             Action<TestAction, int, string, double, long, ushort, CancellationToken> invoke = (action, arg1, arg2, arg3, arg4, arg5, token) => action(arg1, arg2, arg3, arg4, arg5).Wait();
@@ -48,14 +48,14 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_ComplexDelayHandler()
         {
             TestAction nullAction = null;
-            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Operation.NullAsync().ConfigureAwait(false);
+            TestAction action     = async (arg1, arg2, arg3, arg4, arg5) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
             // Create the delegates necessary to test the WithRetry overload
-            Func<Action<CancellationToken>, TestActionProxy> actionFactory = a => new TestActionProxy(async (arg1, arg2, arg3, arg4, arg5) => { await Task.CompletedTask.ConfigureAwait(false); a(CancellationToken.None); });
+            Func<Action<CancellationToken>, TestActionProxy> actionFactory = a => new TestActionProxy(async (arg1, arg2, arg3, arg4, arg5) => { a(CancellationToken.None); await Task.CompletedTask; });
             Func<TimeSpan, ComplexDelayHandlerProxy> delayHandlerFactory = t => new ComplexDelayHandlerProxy((i, e) => t);
             Func<TestAction, int, ExceptionHandler, Func<int, Exception, TimeSpan>, TestAction> withAsyncRetry = (a, r, e, d) => a.WithAsyncRetry(r, e, d.Invoke);
             Action<TestAction, int, string, double, long, ushort, CancellationToken> invoke = (action, arg1, arg2, arg3, arg4, arg5, token) => action(arg1, arg2, arg3, arg4, arg5).Wait();
@@ -75,14 +75,14 @@ namespace Sweetener.Reliability.Test
         public void WithAsyncRetryT6_Async_WithToken_DelayHandler()
         {
             InterruptableTestAction nullAction = null;
-            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Operation.NullAsync().ConfigureAwait(false);
+            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (DelayHandler)null));
 
             // Create the delegates necessary to test the WithRetry overload
-            Func<Action<CancellationToken>, InterruptableTestActionProxy> actionFactory = a => new InterruptableTestActionProxy(async (arg1, arg2, arg3, arg4, arg5, token) => { await Task.CompletedTask.ConfigureAwait(false); a(token); });
+            Func<Action<CancellationToken>, InterruptableTestActionProxy> actionFactory = a => new InterruptableTestActionProxy(async (arg1, arg2, arg3, arg4, arg5, token) => { a(token); await Task.CompletedTask; });
             Func<TimeSpan, DelayHandlerProxy> delayHandlerFactory = t => new DelayHandlerProxy((i) => t);
             Func<InterruptableTestAction, int, ExceptionHandler, Func<int, TimeSpan>, InterruptableTestAction> withAsyncRetry = (a, r, e, d) => a.WithAsyncRetry(r, e, d.Invoke);
             Action<InterruptableTestAction, int, string, double, long, ushort, CancellationToken> invoke = (action, arg1, arg2, arg3, arg4, arg5, token) => action(arg1, arg2, arg3, arg4, arg5, token).Wait();
@@ -98,19 +98,23 @@ namespace Sweetener.Reliability.Test
             WithRetryT6_RetriesExhausted(actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.Asc());
             WithRetryT6_Canceled_Action (actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.Asc());
             WithRetryT6_Canceled_Delay  (actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.Asc());
+
+            // We also want to test the scenario where a user passes a synchronous method that returns a Task
+            actionFactory = a => new InterruptableTestActionProxy((arg1, arg2, arg3, arg4, arg5, token) => { a(token); return Task.CompletedTask; });
+            WithRetryT6_Canceled_Action (actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.Asc());
         }
         [TestMethod]
         public void WithAsyncRetryT6_Async_WithToken_ComplexDelayHandler()
         {
             InterruptableTestAction nullAction = null;
-            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Operation.NullAsync().ConfigureAwait(false);
+            InterruptableTestAction action     = async (arg1, arg2, arg3, arg4, arg5, token) => await Task.CompletedTask;
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.WithAsyncRetry( 4, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .WithAsyncRetry(-2, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, null                     , (i, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
             // Create the delegates necessary to test the WithRetry overload
-            Func<Action<CancellationToken>, InterruptableTestActionProxy> actionFactory = a => new InterruptableTestActionProxy(async (arg1, arg2, arg3, arg4, arg5, token) => { await Task.CompletedTask.ConfigureAwait(false); a(token); });
+            Func<Action<CancellationToken>, InterruptableTestActionProxy> actionFactory = a => new InterruptableTestActionProxy(async (arg1, arg2, arg3, arg4, arg5, token) => { a(token); await Task.CompletedTask; });
             Func<TimeSpan, ComplexDelayHandlerProxy> delayHandlerFactory = t => new ComplexDelayHandlerProxy((i, e) => t);
             Func<InterruptableTestAction, int, ExceptionHandler, Func<int, Exception, TimeSpan>, InterruptableTestAction> withAsyncRetry = (a, r, e, d) => a.WithAsyncRetry(r, e, d.Invoke);
             Action<InterruptableTestAction, int, string, double, long, ushort, CancellationToken> invoke = (action, arg1, arg2, arg3, arg4, arg5, token) => action(arg1, arg2, arg3, arg4, arg5, token).Wait();
@@ -126,6 +130,10 @@ namespace Sweetener.Reliability.Test
             WithRetryT6_RetriesExhausted(actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.ExceptionAsc(e));
             WithRetryT6_Canceled_Action (actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.ExceptionAsc(e));
             WithRetryT6_Canceled_Delay  (actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.ExceptionAsc(e));
+
+            // We also want to test the scenario where a user passes a synchronous method that returns a Task
+            actionFactory = a => new InterruptableTestActionProxy((arg1, arg2, arg3, arg4, arg5, token) => { a(token); return Task.CompletedTask; });
+            WithRetryT6_Canceled_Action (actionFactory, delayHandlerFactory, withAsyncRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.ExceptionAsc(e));
         }
     }
 }

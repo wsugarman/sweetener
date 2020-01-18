@@ -90,7 +90,7 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_Interruptable_DelayHandler(Func<Func<int, string, double, long, ushort, byte, CancellationToken, Task>, int, ExceptionHandler, DelayHandler, ReliableAsyncAction<int, string, double, long, ushort, byte>> factory)
         {
-            Func<int, string, double, long, ushort, byte, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, arg5, arg6, token) => await Operation.NullAsync().ConfigureAwait(false);
+            Func<int, string, double, long, ushort, byte, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, arg5, arg6, token) => await Task.CompletedTask;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler.Invoke));
@@ -107,7 +107,7 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_Interruptable_ComplexDelayHandler(Func<Func<int, string, double, long, ushort, byte, CancellationToken, Task>, int, ExceptionHandler, ComplexDelayHandler, ReliableAsyncAction<int, string, double, long, ushort, byte>> factory)
         {
-            Func<int, string, double, long, ushort, byte, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, arg5, arg6, token) => await Operation.NullAsync().ConfigureAwait(false);
+            Func<int, string, double, long, ushort, byte, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, arg5, arg6, token) => await Task.CompletedTask;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler delayHandler = (i, e) => TimeSpan.FromHours(1);
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler));
@@ -162,7 +162,8 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action(invoke, addEventHandlers);
+                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: true );
                     Invoke_Canceled_Delay (invoke, addEventHandlers);
                 }
             }
@@ -175,7 +176,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Success(Action<ReliableAsyncAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> assertInvoke, bool addEventHandlers)
         {
             // Create a "successful" user-defined action
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Operation.NullAsync().ConfigureAwait(false));
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.CompletedTask);
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>();
@@ -227,7 +228,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure(Action<ReliableAsyncAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.Run(() => throw new InvalidOperationException()).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.FromException(new InvalidOperationException()));
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
@@ -284,7 +285,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create a "successful" user-defined action that completes after 1 IOException
             Action flakyAction = FlakyAction.Create<IOException>(1);
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.Run(flakyAction).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => { flakyAction(); await Task.CompletedTask; });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -341,7 +342,7 @@ namespace Sweetener.Reliability.Test
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
             Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.Run(flakyAction).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => { flakyAction(); await Task.CompletedTask; });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -397,7 +398,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_RetriesExhausted(Action<ReliableAsyncAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action that exhausts the configured number of retries
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.FromException(new IOException()));
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
@@ -450,17 +451,25 @@ namespace Sweetener.Reliability.Test
 
         #region Invoke_Canceled_Action
 
-        private void Invoke_Canceled_Action(Action<ReliableAsyncAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke, bool addEventHandlers)
+        private void Invoke_Canceled_Action(Action<ReliableAsyncAction<int, string, double, long, ushort, byte>, int, string, double, long, ushort, byte, CancellationToken> invoke, bool addEventHandlers, bool useSynchronousAction)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
-            FuncProxy<int, string, double, long, ushort, byte, CancellationToken, Task> action = new FuncProxy<int, string, double, long, ushort, byte, CancellationToken, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6, token) =>
-            {
-                await Task.CompletedTask;
-                token.ThrowIfCancellationRequested();
-                throw new IOException();
-            });
+            // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
+            FuncProxy<int, string, double, long, ushort, byte, CancellationToken, Task> action = useSynchronousAction
+                ? new FuncProxy<int, string, double, long, ushort, byte, CancellationToken, Task>(
+                    (arg1, arg2, arg3, arg4, arg5, arg6, token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        throw new IOException();
+                    })
+                : new FuncProxy<int, string, double, long, ushort, byte, CancellationToken, Task>(
+                    async (arg1, arg2, arg3, arg4, arg5, arg6, token) =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.FromException(new IOException());
+                    });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
@@ -524,7 +533,7 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create an "unsuccessful" user-defined action that continues to fail with transient exceptions until it's canceled
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.Run(() => throw new IOException()).ConfigureAwait(false));
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.FromException(new IOException()));
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);

@@ -66,10 +66,11 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4) =>
             {
-                Task t = null;
+                Task t;
                 int attempt = 0;
 
             Attempt:
+                t = null;
                 attempt++;
 
                 try
@@ -150,10 +151,11 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4, cancellationToken) =>
             {
-                Task t = null;
+                Task t;
                 int attempt = 0;
 
             Attempt:
+                t = null;
                 attempt++;
 
                 try
@@ -164,7 +166,8 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
-                    if (t.IsCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                    if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);

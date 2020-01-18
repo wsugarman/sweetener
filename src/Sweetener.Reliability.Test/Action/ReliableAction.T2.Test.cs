@@ -529,11 +529,12 @@ namespace Sweetener.Reliability.Test
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
             // Create a user-defined action that will throw an exception depending on whether its canceled
-            ActionProxy<int, string, CancellationToken> action = new ActionProxy<int, string, CancellationToken>((arg1, arg2, token) =>
-            {
-                token.ThrowIfCancellationRequested();
-                throw new IOException();
-            });
+            ActionProxy<int, string, CancellationToken> action = new ActionProxy<int, string, CancellationToken>(
+                (arg1, arg2, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    throw new IOException();
+                });
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);

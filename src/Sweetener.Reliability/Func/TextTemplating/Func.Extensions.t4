@@ -43,7 +43,7 @@ namespace Sweetener.Reliability
         {
             string inputTypeParameters       = GetFuncTypeParameters(parameterCount, async, interruptable);
             string optionalToken             = interruptable ? optionalComma + "cancellationToken" : string.Empty;
-            string optionalCancellationCheck = interruptable ? (async ? "t.IsCanceled" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
+            string optionalCancellationCheck = interruptable ? (async ? "isCanceled" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
             string asyncOperationSuffx       = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
 #>
         #region Func<<#= inputTypeParameters #>>
@@ -114,10 +114,18 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalToken #>) =>
             {
-                <#= async ? "Task<TResult> t = null" : "TResult result" #>;
+                <#= async ? "Task<TResult> t" : "TResult result" #>;
                 int attempt = 0;
 
             Attempt:
+<#
+        if (async)
+        {
+#>
+                t = null;
+<#
+        }
+#>
                 attempt++;
 
                 try
@@ -140,6 +148,14 @@ namespace Sweetener.Reliability
                 }
                 catch (Exception e)
                 {
+<#
+        if (async && interruptable)
+        {
+#>
+                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+<#
+        }
+#>
                     if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 

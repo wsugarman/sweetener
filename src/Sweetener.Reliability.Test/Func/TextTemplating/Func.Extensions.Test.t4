@@ -96,7 +96,7 @@ namespace Sweetener.Reliability.Test
 #>
 
             // Create the delegates necessary to test the WithRetry overload
-            Func<Func<CancellationToken, int>, <#= inputFuncType #>Proxy> funcFactory = f => new <#= inputFuncType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ await Task.CompletedTask.ConfigureAwait(false); return f({optionalToken}); }}" : $"f({optionalToken})" #>);
+            Func<Func<CancellationToken, int>, <#= inputFuncType #>Proxy> funcFactory = f => new <#= inputFuncType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"await Task.FromResult(f({optionalToken}))" : $"f({optionalToken})" #>);
             Func<TimeSpan, <#= delayHandlerTypeProxy #>> delayHandlerFactory = t => new <#= delayHandlerTypeProxy #>((i<#= useComplexHandler ? ", r, e" : string.Empty #>) => t);
             Func<<#= inputFuncType #>, int, ResultHandler<int>, ExceptionHandler, <#= delayHandlerFunc #>, <#= inputFuncType #>> with<#= optionalAsync #>Retry = (f, m, r, e, d) => f.With<#= optionalAsync #>Retry(m<#= passResultHandler ? ", r" : string.Empty #>, e, d.Invoke);
             Func<<#= inputFuncType #><#= optionalComma #><#= typeArguments #>, CancellationToken, int> invoke = (f<#= optionalComma #><#= arguments #>, token) => f(<#= arguments #><#= optionalCommaToken #>)<#= async ? ".Result" : string.Empty #>;
@@ -133,6 +133,15 @@ namespace Sweetener.Reliability.Test
             WithRetry<#= suffix #>_Canceled_Func (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
             WithRetry<#= suffix #>_Canceled_Delay(funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
 <#
+                            if (async)
+                            {
+#>
+
+            // Cancel (Synchronous)
+            funcFactory = f => new <#= inputFuncType #>Proxy((<#= arguments #><#= optionalCommaToken #>) => Task.FromResult(f(<#= optionalToken #>)));
+            WithRetry<#= suffix #>_Canceled_Func (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
+<#
+                            }
                         }
 #>
         }
