@@ -6,12 +6,13 @@ trigger:
     - master
   paths:
     include:
-    - eng/Build.Template.yml
+    - eng/Steps.Validate.yml
+    - eng/CI/Jobs.yml
+    - eng/CI/Steps.Build.yml
     - eng/CI/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 jobs:
-- template: ../Build.Template.yml
+- template: Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
-    sign: true

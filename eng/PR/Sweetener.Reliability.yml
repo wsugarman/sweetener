@@ -6,11 +6,13 @@ pr:
     - master
   paths:
     include:
-    - eng/Build.Template.yml
+    - eng/Steps.Validate.yml
+    - eng/PR/Jobs.yml
+    - eng/PR/Steps.Build.yml
     - eng/PR/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 jobs:
-- template: ../Build.Template.yml
+- template: Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
