@@ -14,20 +14,12 @@ steps:
     version: '3.x'
 
 - task: DotNetCoreCLI@2
-  displayName: 'Build Library'
-  inputs:
-    command: 'build'
-    projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true'
-    nugetConfigPath: 'NuGet.config'
-
-- task: DotNetCoreCLI@2
-  displayName: 'Pack Library'
+  displayName: 'Build and Pack Library'
   inputs:
     command: 'pack'
     packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     configurationToPack: '${{ parameters.BuildConfiguration }}'
-    nobuild: true
+    buildProperties: 'ContinuousIntegrationBuild=true'
     nugetConfigPath: 'NuGet.config'
     verbosityPack: 'normal'
 
