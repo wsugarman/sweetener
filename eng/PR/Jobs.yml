@@ -1,4 +1,3 @@
-# Note: Only certain pipelines have access to the necessary resources for signing
 parameters:
 - name: project
   type: string

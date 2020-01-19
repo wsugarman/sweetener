@@ -1,4 +1,4 @@
-# Note: Only certain pipelines have access to the necessary resources for signing
+# Note: Only the CI pipelines have sufficient permissions for signing assemblies and packages
 parameters:
 - name: project
   type: string
