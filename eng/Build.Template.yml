@@ -1,5 +1,11 @@
+# Note: Only certain pipelines have access to the necessary resources for signing
 parameters:
-  project: ''
+- name: project
+  type: string
+  default: ''
+- name: sign
+  type: boolean
+  default: false
 
 jobs:
 - job: Build
@@ -28,6 +34,7 @@ jobs:
     displayName: 'Download Signing Key'
     inputs:
       secureFile: 'Sweetener.snk'
+    condition: and(succeeded(), eq('${{ parameters.Sign }}', true))
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
@@ -40,6 +47,7 @@ jobs:
             Start-Process -FilePath "$(NetfxTools)/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
         }
       pwsh: true
+    condition: and(succeeded(), eq('${{ parameters.Sign }}', true))
 
   - task: DotNetCoreCLI@2
     displayName: 'Pack Library'

@@ -1,3 +1,5 @@
+# Note: Triggers are configured in Azure Pipeline for security purposes
+# The values here are meant to reflect what is configured and cannot be changed
 trigger:
   branches:
     include:
@@ -5,20 +7,11 @@ trigger:
   paths:
     include:
     - eng/Build.Template.yml
-    - eng/Sweetener.Reliability.yml
-    - src/Sweetener.Reliability/*
-
-pr:
-  branches:
-    include:
-    - master
-  paths:
-    include:
-    - eng/Build.Template.yml
-    - eng/Sweetener.Reliability.yml
+    - eng/CI/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 jobs:
 - template: Build.Template.yml
   parameters:
     project: 'Sweetener.Reliability'
+    sign: true

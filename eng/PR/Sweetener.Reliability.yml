@@ -1,0 +1,16 @@
+# Note: Triggers are configured in Azure Pipeline for security purposes
+# The values here are meant to reflect what is configured and cannot be changed
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - eng/Build.Template.yml
+    - eng/PR/Sweetener.Reliability.yml
+    - src/Sweetener.Reliability/*
+
+jobs:
+- template: Build.Template.yml
+  parameters:
+    project: 'Sweetener.Reliability'
