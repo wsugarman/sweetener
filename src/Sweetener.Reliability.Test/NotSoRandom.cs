@@ -17,10 +17,10 @@ namespace Sweetener.Reliability.Test
         public override int Next(int minValue, int maxValue)
         {
             if (NextValue < minValue)
-                throw new InvalidOperationException($"{nameof(NextValue)} '{NextValue}' is too small for {nameof(minValue)} '{minValue}'");
+                throw new ArgumentOutOfRangeException($"{nameof(NextValue)} '{NextValue}' is too small for {nameof(minValue)} '{minValue}'");
 
             if (NextValue >= maxValue)
-                throw new InvalidOperationException($"{nameof(NextValue)} '{NextValue}' is too large for {nameof(maxValue)} '{maxValue}'");
+                throw new ArgumentOutOfRangeException($"{nameof(NextValue)} '{NextValue}' is too large for {nameof(maxValue)} '{maxValue}'");
 
             OnNext?.Invoke(minValue, maxValue);
             return NextValue;

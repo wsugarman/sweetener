@@ -411,11 +411,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure_Exception(Action<ReliableAsyncFunc<string>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined function that throws a fatal exception
-            FuncProxy<Task<string>> func = new FuncProxy<Task<string>>(async () => await Task.FromException<string>(new InvalidOperationException()));
+            FuncProxy<Task<string>> func = new FuncProxy<Task<string>>(async () => await Task.FromException<string>(new OutOfMemoryException()));
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>();
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
+            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
             FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
 
             ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
@@ -439,15 +439,15 @@ namespace Sweetener.Reliability.Test
 
             // Define expectations
             resultHandler   .Invoking += Expect.Nothing<string>();
-            exceptionHandler.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(OutOfMemoryException));
             delayHandler    .Invoking += Expect.Nothing<int, string, Exception>();
             retryHandler    .Invoking += Expect.Nothing<int, string, Exception>();
-            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(InvalidOperationException));
+            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(OutOfMemoryException));
             exhaustedHandler.Invoking += Expect.Nothing<string, Exception>();
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableFunc, tokenSource.Token, typeof(InvalidOperationException));
+                assertInvoke(reliableFunc, tokenSource.Token, typeof(OutOfMemoryException));
 
             // Validate the number of calls
             Assert.AreEqual(1, func             .Calls);
@@ -604,7 +604,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_EventualFailure_Exception(Action<ReliableAsyncFunc<string>, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually fails after a transient result and exception
-            Func<string> flakyFunc = FlakyFunc.Create<string, IOException, InvalidOperationException>("Retry", 2);
+            Func<string> flakyFunc = FlakyFunc.Create<string, IOException, OutOfMemoryException>("Retry", 2);
             FuncProxy<Task<string>> func = new FuncProxy<Task<string>>(async () => await Task.FromResult(flakyFunc()));
 
             // Declare the various proxies for the input delegates and event handlers
@@ -634,15 +634,15 @@ namespace Sweetener.Reliability.Test
             // Define expectations
             func            .Invoking += Expect.AfterDelay(Constants.MinDelay);
             resultHandler   .Invoking += Expect.Result("Retry");
-            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 1);
+            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(OutOfMemoryException), 1);
             delayHandler    .Invoking += Expect.AlternatingAsc("Retry", typeof(IOException));
             retryHandler    .Invoking += Expect.AlternatingAsc("Retry", typeof(IOException));
-            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(InvalidOperationException));
+            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(OutOfMemoryException));
             exhaustedHandler.Invoking += Expect.Nothing<string, Exception>();
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableFunc, tokenSource.Token, typeof(InvalidOperationException));
+                assertInvoke(reliableFunc, tokenSource.Token, typeof(OutOfMemoryException));
 
             // Validate the number of calls
             Assert.AreEqual(3, func             .Calls);

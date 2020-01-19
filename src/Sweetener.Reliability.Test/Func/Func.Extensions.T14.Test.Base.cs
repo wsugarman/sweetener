@@ -127,7 +127,7 @@ namespace Sweetener.Reliability.Test
             where TDelayPolicyProxy : DelegateProxy<TDelayPolicy>
         {
             // Create an "unsuccessful" user-defined func
-            TFuncProxy func = funcFactory(t => throw new InvalidOperationException());
+            TFuncProxy func = funcFactory(t => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>();
@@ -144,14 +144,14 @@ namespace Sweetener.Reliability.Test
 
             // Define expectations
             resultHandler   .Invoking += Expect.Nothing<int>();
-            exceptionHandler.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(OutOfMemoryException));
 
             observeFunc       ?.Invoke(func);
             observeDelayPolicy?.Invoke(delayHandler);
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, tokenSource.Token));
+                Assert.That.ThrowsException<OutOfMemoryException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, tokenSource.Token));
 
             // Validate the number of calls
             Assert.AreEqual(1, func            .Calls);
@@ -302,8 +302,8 @@ namespace Sweetener.Reliability.Test
             // (1) 2 IOExceptions OR
             // (2) an IOException and a transient 418 result
             Func<int> flakyFunc = passResultHandler
-                ? FlakyFunc.Create<int, IOException, InvalidOperationException>(418, 2)
-                : FlakyFunc.Create<int, IOException, InvalidOperationException>(     2);
+                ? FlakyFunc.Create<int, IOException, OutOfMemoryException>(418, 2)
+                : FlakyFunc.Create<int, IOException, OutOfMemoryException>(     2);
             TFuncProxy func = funcFactory(t => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
@@ -321,14 +321,14 @@ namespace Sweetener.Reliability.Test
 
             // Define expectations
             resultHandler   .Invoking += Expect.Result(418);
-            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), passResultHandler ? 1 : 2);
+            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(OutOfMemoryException), passResultHandler ? 1 : 2);
 
             observeFunc       ?.Invoke(func, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayHandler, 418, typeof(IOException));
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, tokenSource.Token));
+                Assert.That.ThrowsException<OutOfMemoryException>(() => invoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), 321UL, (sbyte)-7, -24.68M, tokenSource.Token));
 
             // Validate the number of calls
             int x = passResultHandler ? 1 : 0;
