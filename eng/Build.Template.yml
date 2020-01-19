@@ -34,7 +34,7 @@ jobs:
     displayName: 'Download Signing Key'
     inputs:
       secureFile: 'Sweetener.snk'
-    condition: and(succeeded(), eq('${{ parameters.Sign }}', true))
+    condition: and(succeeded(), eq(false, true))
 
   - task: PowerShell@2
     displayName: 'Sign Library with an Enhanced Strong Name'
