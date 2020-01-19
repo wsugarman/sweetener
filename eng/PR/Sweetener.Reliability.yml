@@ -11,6 +11,6 @@ pr:
     - src/Sweetener.Reliability/*
 
 jobs:
-- template: Build.Template.yml
+- template: ../Build.Template.yml
   parameters:
     project: 'Sweetener.Reliability'
