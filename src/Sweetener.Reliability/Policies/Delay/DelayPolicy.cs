@@ -178,7 +178,7 @@ namespace Sweetener.Reliability
         {
             long slopeMilliseconds = (long)slope.TotalMilliseconds;
             if (slopeMilliseconds > int.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(slopeMilliseconds));
+                throw new ArgumentOutOfRangeException(nameof(slope));
 
             return Linear((int)slopeMilliseconds);
         }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -69,9 +68,9 @@ namespace Sweetener.Reliability
         /// </value>
         public int MaxRetries { get; }
 
-        internal readonly ResultHandler<T>       _validate;
-        private  readonly ExceptionHandler       _canRetry;
-        private  readonly ComplexDelayHandler<T> _getDelay;
+        private readonly ResultHandler<T>       _validate;
+        private readonly ExceptionHandler       _canRetry;
+        private readonly ComplexDelayHandler<T> _getDelay;
 
         internal ReliableDelegate(int maxRetries, ExceptionHandler exceptionPolicy, DelayHandler delayPolicy)
             : this(maxRetries, ResultPolicy.Default<T>(), exceptionPolicy, delayPolicy.ToComplex<T>())
@@ -96,26 +95,25 @@ namespace Sweetener.Reliability
             _getDelay  = delayPolicy     ?? throw new ArgumentNullException(nameof(delayPolicy    ));
         }
 
-        internal bool CanRetry(int attempt, T result, ResultKind kind, CancellationToken cancellationToken)
+        internal FunctionState MoveNext(int attempt, T result, CancellationToken cancellationToken)
         {
-            Debug.Assert(kind != ResultKind.Successful, "Successful results should not attempt to retry.");
-
-            if (kind == ResultKind.Transient)
+            switch (_validate(result))
             {
-                if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
-                {
-                    Task.Delay(_getDelay(attempt, result, default), cancellationToken).Wait(cancellationToken);
-                    OnRetry(attempt, result, default);
-                    return true;
-                }
+                case ResultKind.Successful:
+                    return FunctionState.ReturnSuccess;
+                case ResultKind.Transient:
+                    if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+                    {
+                        Task.Delay(_getDelay(attempt, result, default), cancellationToken).Wait(cancellationToken);
+                        OnRetry(attempt, result, default);
+                        return FunctionState.Retry;
+                    }
 
-                OnRetriesExhausted(result, default);
-                return false;
-            }
-            else
-            {
-                OnFailure(result, default);
-                return false;
+                    OnRetriesExhausted(result, default);
+                    return FunctionState.ReturnFailure;
+                default:
+                    OnFailure(result, default);
+                    return FunctionState.ReturnFailure;
             }
         }
 
@@ -139,26 +137,25 @@ namespace Sweetener.Reliability
             }
         }
 
-        internal async Task<bool> CanRetryAsync(int attempt, T result, ResultKind kind, CancellationToken cancellationToken)
+        internal async Task<FunctionState> MoveNextAsync(int attempt, T result, CancellationToken cancellationToken)
         {
-            Debug.Assert(kind != ResultKind.Successful, "Successful results should not attempt to retry.");
-
-            if (kind == ResultKind.Transient)
+            switch (_validate(result))
             {
-                if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
-                {
-                    await Task.Delay(_getDelay(attempt, result, default), cancellationToken).ConfigureAwait(false);
-                    OnRetry(attempt, result, default);
-                    return true;
-                }
+                case ResultKind.Successful:
+                    return FunctionState.ReturnSuccess;
+                case ResultKind.Transient:
+                    if (MaxRetries == Retries.Infinite || attempt <= MaxRetries)
+                    {
+                        await Task.Delay(_getDelay(attempt, result, default), cancellationToken).ConfigureAwait(false);
+                        OnRetry(attempt, result, default);
+                        return FunctionState.Retry;
+                    }
 
-                OnRetriesExhausted(result, default);
-                return false;
-            }
-            else
-            {
-                OnFailure(result, default);
-                return false;
+                    OnRetriesExhausted(result, default);
+                    return FunctionState.ReturnFailure;
+                default:
+                    OnFailure(result, default);
+                    return FunctionState.ReturnFailure;
             }
         }
 
@@ -190,5 +187,12 @@ namespace Sweetener.Reliability
 
         internal virtual void OnRetry(int attempt, T result, Exception exception)
             => Retrying?.Invoke(attempt, result, exception);
+
+        internal enum FunctionState
+        {
+            ReturnFailure = 0,
+            Retry         = 1,
+            ReturnSuccess = 2,
+        }
     }
 }
