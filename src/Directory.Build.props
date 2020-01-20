@@ -60,6 +60,7 @@
       <PropertyGroup>
         <Authors>William Sugarman</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReleaseNotes>https://wsugarman.github.io/Sweetener/ReleaseNotes/$(MSBuildProjectName)</PackageReleaseNotes>
         <MinClientVersion>4.3.0</MinClientVersion>
       </PropertyGroup>
 
@@ -75,7 +76,7 @@
         <AdditionalFiles Include="$(SrcDirectory).editorconfig" />
       </ItemGroup>
 
-      <!-- Tools -->
+      <!-- Library Tools -->
       <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All" />
       </ItemGroup>

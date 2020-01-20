@@ -10,6 +10,7 @@ trigger:
     - eng/Build/CI/Jobs.yml
     - eng/Build/CI/Steps.Package.yml
     - eng/Build/CI/Sweetener.Reliability.yml
+    - src/Directory.Build.props
     - src/Sweetener.Reliability/*
 
 jobs:
