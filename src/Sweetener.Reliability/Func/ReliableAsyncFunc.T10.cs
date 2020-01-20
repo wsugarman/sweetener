@@ -244,8 +244,7 @@ namespace Sweetener.Reliability
             }
 
             TResult result = t.Result;
-            ResultKind kind = _validate(result);
-            if (kind == ResultKind.Successful || !await CanRetryAsync(attempt, result, kind, cancellationToken).ConfigureAwait(false))
+            if (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false) != FunctionState.Retry)
                 return result;
 
             goto Attempt;
