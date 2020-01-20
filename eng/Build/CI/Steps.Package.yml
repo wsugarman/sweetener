@@ -49,7 +49,7 @@ steps:
   inputs:
     command: 'build'
     projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package)'
+    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File)'
     nugetConfigPath: 'NuGet.config'
 
 - task: PowerShell@2
@@ -70,6 +70,7 @@ steps:
     command: 'pack'
     packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     configurationToPack: '${{ parameters.BuildConfiguration }}'
+    buildProperties: 'ContinuousIntegrationBuild=true;PackageVersion=$(Version.Package)'
     nobuild: true
     nugetConfigPath: 'NuGet.config'
     verbosityPack: 'normal'
