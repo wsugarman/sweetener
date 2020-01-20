@@ -1,0 +1,31 @@
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: buildConfiguration
+  type: string
+  default: 'Debug'
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build and Pack Library'
+  inputs:
+    command: 'pack'
+    packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    configurationToPack: '${{ parameters.BuildConfiguration }}'
+    buildProperties: 'ContinuousIntegrationBuild=true'
+    nugetConfigPath: 'NuGet.config'
+    verbosityPack: 'normal'
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish NuPkg'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'pkg'
+    publishLocation: 'pipeline'

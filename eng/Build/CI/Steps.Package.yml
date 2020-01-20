@@ -1,0 +1,61 @@
+# Note: Only the CI pipelines have sufficient permissions for signing assemblies and packages
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: buildConfiguration
+  type: string
+  default: 'Debug'
+- name: netfxTools
+  type: string
+  default: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
+
+steps:
+- task: DownloadSecureFile@1
+  name: SigningKey
+  displayName: 'Download Signing Key'
+  inputs:
+    secureFile: 'Sweetener.snk'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build Library'
+  inputs:
+    command: 'build'
+    projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true'
+    nugetConfigPath: 'NuGet.config'
+
+- task: PowerShell@2
+  displayName: 'Sign Library with an Enhanced Strong Name'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $assemblies = @(Get-ChildItem -Path "src/${{ parameters.Project }}/bin/$(BuildConfiguration)/" -Recurse -Include ${{ parameters.Project }}.dll)
+      foreach ($assembly in $assemblies)
+      {
+          Start-Process -FilePath "${{ parameters.NetFXTools }}/sn.exe" -ArgumentList "-Ra","$assembly","$(SigningKey.SecureFilePath)" -NoNewWindow -Wait
+      }
+    pwsh: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Pack Library'
+  inputs:
+    command: 'pack'
+    packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    configurationToPack: '${{ parameters.BuildConfiguration }}'
+    nobuild: true
+    nugetConfigPath: 'NuGet.config'
+    verbosityPack: 'normal'
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish NuPkg'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'pkg'
+    publishLocation: 'pipeline'
