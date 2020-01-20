@@ -13,6 +13,6 @@ pr:
     - src/Sweetener.Reliability/*
 
 jobs:
-- template: ../CI/Jobs.yml
+- template: Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
