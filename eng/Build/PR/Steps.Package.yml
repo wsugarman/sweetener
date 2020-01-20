@@ -13,13 +13,30 @@ steps:
     packageType: 'sdk'
     version: '3.x'
 
+- task: PowerShell@2
+  name: Version
+  displayName: 'Parse Version.json'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $VersionParts = Get-Content "src/${{ parameters.Project }}/Version.json" | Out-String | ConvertFrom-Json
+      $AssemblyVersion = [string]::Format("{0}.0.0.0"            , $VersionParts.Major)
+      $FileVersion     = [string]::Format("{0}.{1}.{2}.{3}"      , $VersionParts.Major, $VersionParts.Minor, $VersionParts.Patch, $(Build.BuildId))
+      $PackageVersion  = [string]::Format("{0}.{1}.{2}-build.{3}", $VersionParts.Major, $VersionParts.Minor, $VersionParts.Patch, $(Build.BuildId))
+
+      # Output variables to be used in the build
+      Write-Host "##vso[task.setvariable variable=Assembly;isOutput=true]$AssemblyVersion"
+      Write-Host "##vso[task.setvariable variable=File;isOutput=true]$FileVersion"
+      Write-Host "##vso[task.setvariable variable=Package;isOutput=true]$PackageVersion"
+    pwsh: true
+
 - task: DotNetCoreCLI@2
   displayName: 'Build and Pack Library'
   inputs:
     command: 'pack'
     packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     configurationToPack: '${{ parameters.BuildConfiguration }}'
-    buildProperties: 'ContinuousIntegrationBuild=true'
+    buildProperties: 'ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package)'
     nugetConfigPath: 'NuGet.config'
     verbosityPack: 'normal'
 
