@@ -6,10 +6,10 @@ trigger:
     - master
   paths:
     include:
-    - eng/Steps.Validate.yml
-    - eng/CI/Jobs.yml
-    - eng/CI/Steps.Build.yml
-    - eng/CI/Sweetener.Reliability.yml
+    - eng/Build/Steps.Validate.yml
+    - eng/Build/CI/Jobs.yml
+    - eng/Build/CI/Steps.Build.yml
+    - eng/Build/CI/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 jobs:

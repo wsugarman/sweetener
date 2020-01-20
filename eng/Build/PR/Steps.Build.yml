@@ -23,7 +23,9 @@ steps:
     nugetConfigPath: 'NuGet.config'
     verbosityPack: 'normal'
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Build Artifacts'
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish NuPkg'
   inputs:
-    artifactName: 'pkg'
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'pkg'
+    publishLocation: 'pipeline'

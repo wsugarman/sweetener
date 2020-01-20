@@ -6,10 +6,10 @@ pr:
     - master
   paths:
     include:
-    - eng/Steps.Validate.yml
-    - eng/PR/Jobs.yml
-    - eng/PR/Steps.Build.yml
-    - eng/PR/Sweetener.Reliability.yml
+    - eng/Build/Steps.Validate.yml
+    - eng/Build/PR/Jobs.yml
+    - eng/Build/PR/Steps.Build.yml
+    - eng/Build/PR/Sweetener.Reliability.yml
     - src/Sweetener.Reliability/*
 
 jobs:
