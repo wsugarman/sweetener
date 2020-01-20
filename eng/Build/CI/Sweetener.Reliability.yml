@@ -3,14 +3,7 @@
 trigger:
   branches:
     include:
-    - master
-  paths:
-    include:
-    - eng/Build/Steps.Validate.yml
-    - eng/Build/CI/Jobs.yml
-    - eng/Build/CI/Steps.Package.yml
-    - eng/Build/CI/Sweetener.Reliability.yml
-    - src/Sweetener.Reliability/*
+    - '*'
 
 jobs:
 - template: Jobs.yml
