@@ -15,7 +15,7 @@ jobs:
       project: '${{ parameters.Project }}'
       buildConfiguration: '$(BuildConfiguration)'
 
-- job: Build
+- job: Package
   dependsOn: Validate
   condition: succeeded()
   pool:
@@ -23,7 +23,7 @@ jobs:
   variables:
     buildConfiguration: 'Release'
   steps:
-  - template: Steps.Build.yml
+  - template: Steps.Package.yml
     parameters:
       project: '${{ parameters.Project }}'
       buildConfiguration: '$(BuildConfiguration)'
