@@ -4,8 +4,6 @@
     <Description>API for executing user-defined delegates despite transient failures</Description>
     <PackageTags>action delegate failure func reliable retry</PackageTags>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <VersionSuffix>alpha.1</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>

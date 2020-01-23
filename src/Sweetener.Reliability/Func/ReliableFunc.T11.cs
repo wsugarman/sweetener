@@ -243,8 +243,7 @@ namespace Sweetener.Reliability
                 goto Attempt;
             }
 
-            ResultKind kind = _validate(result);
-            if (kind == ResultKind.Successful || !CanRetry(attempt, result, kind, cancellationToken))
+            if (MoveNext(attempt, result, cancellationToken) != FunctionState.Retry)
                 return result;
 
             goto Attempt;
@@ -312,8 +311,7 @@ namespace Sweetener.Reliability
                 goto Attempt;
             }
 
-            ResultKind kind = _validate(result);
-            if (kind == ResultKind.Successful || !await CanRetryAsync(attempt, result, kind, cancellationToken).ConfigureAwait(false))
+            if (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false) != FunctionState.Retry)
                 return result;
 
             goto Attempt;
@@ -393,11 +391,11 @@ namespace Sweetener.Reliability
                     continue;
                 }
 
-                ResultKind kind = _validate(result);
-                if (kind == ResultKind.Successful)
+                FunctionState nextState = MoveNext(attempt, result, cancellationToken);
+                if (nextState == FunctionState.ReturnSuccess)
                     return true;
 
-                retry = CanRetry(attempt, result, kind, cancellationToken);
+                retry = nextState == FunctionState.Retry;
             } while (retry);
 
             result = default;

@@ -1,0 +1,29 @@
+parameters:
+- name: project
+  type: string
+  default: ''
+
+jobs:
+- job: Validate
+  pool:
+    vmImage: 'ubuntu-latest'
+  variables:
+    buildConfiguration: 'Debug'
+  steps:
+  - template: ../Steps.Validate.yml
+    parameters:
+      project: '${{ parameters.Project }}'
+      buildConfiguration: '$(BuildConfiguration)'
+
+- job: Package
+  dependsOn: Validate
+  condition: succeeded()
+  pool:
+    vmImage: 'ubuntu-latest'
+  variables:
+    buildConfiguration: 'Release'
+  steps:
+  - template: Steps.Package.yml
+    parameters:
+      project: '${{ parameters.Project }}'
+      buildConfiguration: '$(BuildConfiguration)'
