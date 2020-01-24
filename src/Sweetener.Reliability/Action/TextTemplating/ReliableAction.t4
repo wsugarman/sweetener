@@ -175,6 +175,14 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+<#
+        if (async)
+        {
+#>
+        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
+<#
+        }
+#>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
@@ -202,6 +210,9 @@ namespace Sweetener.Reliability
         {
 #>
                     t = _action(<#= arguments #><#= optionalComma #>cancellationToken);
+                    if (t == null)
+                        break;
+
                     await t.ConfigureAwait(false);
 <#
         }
@@ -228,6 +239,15 @@ namespace Sweetener.Reliability
                         throw;
                 }
             } while (true);
+<#
+        if (async)
+        {
+#>
+
+            throw new InvalidOperationException("Operation resulted in a null Task.");
+<#
+        }
+#>
         }
 <#
         if (!async)

@@ -62,6 +62,12 @@ namespace Sweetener.Reliability
         /// </summary>
 <#
         PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+        if (async)
+        {
+#>
+        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
+<#
+        }
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -79,62 +85,67 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>) =>
             {
-<#
-            if (async)
-            {
-#>
-                Task t;
-<#
-            }
-#>
                 int attempt = 0;
 
-            Attempt:
-<#
-        if (async)
-        {
-#>
-                t = null;
-<#
-        }
-#>
-                attempt++;
-
-                try
+                do
                 {
 <#
             if (async)
             {
 #>
-                    t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
-                    await t.ConfigureAwait(false);
+                    Task t = null;
+<#
+            }
+#>
+                    attempt++;
+
+                    try
+                    {
+<#
+            if (async)
+            {
+#>
+                        t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
+                        if (t == null)
+                            break;
+
+                        await t.ConfigureAwait(false);
 <#
             }
             else
             {
 #>
-                    action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
+                        action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
 <#
             }
 #>
-                    return;
-                }
-                catch (Exception e)
-                {
+                        return;
+                    }
+                    catch (Exception e)
+                    {
 <#
         if (async && interruptable)
         {
 #>
-                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                        bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
 <#
         }
 #>
-                    if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw;
+                        if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                            throw;
 
-                    <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
-                    goto Attempt;
-                }
+                        <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
+                    }
+                } while (true);
+<#
+            if (async)
+            {
+#>
+
+                throw new InvalidOperationException("Operation resulted in a null Task.");
+<#
+            }
+#>
             };
         }
 

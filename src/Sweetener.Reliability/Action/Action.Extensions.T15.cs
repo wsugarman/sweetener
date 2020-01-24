@@ -90,22 +90,23 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-            Attempt:
-                attempt++;
-
-                try
+                do
                 {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw;
+                    attempt++;
 
-                    Task.Delay(delayHandler(attempt, e)).Wait();
-                    goto Attempt;
-                }
+                    try
+                    {
+                        action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                            throw;
+
+                        Task.Delay(delayHandler(attempt, e)).Wait();
+                    }
+                } while (true);
             };
         }
 
@@ -194,22 +195,23 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-            Attempt:
-                attempt++;
-
-                try
+                do
                 {
-                    action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, cancellationToken);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw;
+                    attempt++;
 
-                    Task.Delay(delayHandler(attempt, e), cancellationToken).Wait(cancellationToken);
-                    goto Attempt;
-                }
+                    try
+                    {
+                        action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, cancellationToken);
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                            throw;
+
+                        Task.Delay(delayHandler(attempt, e), cancellationToken).Wait(cancellationToken);
+                    }
+                } while (true);
             };
         }
 

@@ -62,22 +62,23 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-            Attempt:
-                attempt++;
-
-                try
+                do
                 {
-                    action(arg);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw;
+                    attempt++;
 
-                    Task.Delay(delayHandler(attempt, e)).Wait();
-                    goto Attempt;
-                }
+                    try
+                    {
+                        action(arg);
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                            throw;
+
+                        Task.Delay(delayHandler(attempt, e)).Wait();
+                    }
+                } while (true);
             };
         }
 
@@ -138,22 +139,23 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-            Attempt:
-                attempt++;
-
-                try
+                do
                 {
-                    action(arg, cancellationToken);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                        throw;
+                    attempt++;
 
-                    Task.Delay(delayHandler(attempt, e), cancellationToken).Wait(cancellationToken);
-                    goto Attempt;
-                }
+                    try
+                    {
+                        action(arg, cancellationToken);
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                            throw;
+
+                        Task.Delay(delayHandler(attempt, e), cancellationToken).Wait(cancellationToken);
+                    }
+                } while (true);
             };
         }
 
