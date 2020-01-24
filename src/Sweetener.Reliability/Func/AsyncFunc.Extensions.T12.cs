@@ -36,6 +36,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => WithAsyncRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler.ToComplex<TResult>());
 
@@ -65,6 +68,9 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
             => WithAsyncRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler);
@@ -96,6 +102,9 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(
             this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> func,
@@ -132,6 +141,9 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(
             this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Task<TResult>> func,
@@ -167,6 +179,9 @@ namespace Sweetener.Reliability
                 try
                 {
                     t = func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                 }
                 catch (Exception e)
@@ -185,6 +200,9 @@ namespace Sweetener.Reliability
 
                 await Task.Delay(delayHandler(attempt, result, default)).ConfigureAwait(false);
                 goto Attempt;
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 
@@ -219,6 +237,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => WithAsyncRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler.ToComplex<TResult>());
 
@@ -248,6 +269,9 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
             => WithAsyncRetry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler);
@@ -279,6 +303,9 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(
             this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> func,
@@ -316,6 +343,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> WithAsyncRetry<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(
             this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, Task<TResult>> func,
             int                          maxRetries,
@@ -350,6 +380,9 @@ namespace Sweetener.Reliability
                 try
                 {
                     t = func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, cancellationToken);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                 }
                 catch (Exception e)
@@ -369,6 +402,9 @@ namespace Sweetener.Reliability
 
                 await Task.Delay(delayHandler(attempt, result, default), cancellationToken).ConfigureAwait(false);
                 goto Attempt;
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 

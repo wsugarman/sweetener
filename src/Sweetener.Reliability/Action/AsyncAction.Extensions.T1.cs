@@ -44,7 +44,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public static Func<T, Task> WithAsyncRetry<T>(this Func<T, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
@@ -63,30 +65,30 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-                do
+            Attempt:
+                Task t = null;
+                attempt++;
+
+                try
                 {
-                    Task t = null;
-                    attempt++;
+                    t = action(arg);
+                    if (t == null)
+                        goto Invalid;
 
-                    try
-                    {
-                        t = action(arg);
-                        if (t == null)
-                            break;
+                    await t.ConfigureAwait(false);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
 
-                        await t.ConfigureAwait(false);
-                        return;
-                    }
-                    catch (Exception e)
-                    {
-                        if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                            throw;
+                    await Task.Delay(delayHandler(attempt, e)).ConfigureAwait(false);
+                    goto Attempt;
+                }
 
-                        await Task.Delay(delayHandler(attempt, e)).ConfigureAwait(false);
-                    }
-                } while (true);
-
-                throw new InvalidOperationException("Operation resulted in a null Task.");
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 
@@ -129,7 +131,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public static Func<T, CancellationToken, Task> WithAsyncRetry<T>(this Func<T, CancellationToken, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
@@ -148,31 +152,31 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-                do
+            Attempt:
+                Task t = null;
+                attempt++;
+
+                try
                 {
-                    Task t = null;
-                    attempt++;
+                    t = action(arg, cancellationToken);
+                    if (t == null)
+                        goto Invalid;
 
-                    try
-                    {
-                        t = action(arg, cancellationToken);
-                        if (t == null)
-                            break;
+                    await t.ConfigureAwait(false);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                    if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
 
-                        await t.ConfigureAwait(false);
-                        return;
-                    }
-                    catch (Exception e)
-                    {
-                        bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                        if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                            throw;
+                    await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
+                    goto Attempt;
+                }
 
-                        await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
-                    }
-                } while (true);
-
-                throw new InvalidOperationException("Operation resulted in a null Task.");
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 

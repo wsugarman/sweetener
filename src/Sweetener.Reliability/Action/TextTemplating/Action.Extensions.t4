@@ -51,7 +51,7 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+            PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => With<#= optionalAsync #>Retry(action, maxRetries, exceptionHandler, delayHandler.ToComplex());
@@ -61,13 +61,15 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
-        if (async)
-        {
+            PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+            if (async)
+            {
 #>
-        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
 <#
-        }
+            }
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -87,62 +89,62 @@ namespace Sweetener.Reliability
             {
                 int attempt = 0;
 
-                do
+            Attempt:
+<#
+            if (async)
+            {
+#>
+                Task t = null;
+<#
+            }
+#>
+                attempt++;
+
+                try
                 {
 <#
             if (async)
             {
 #>
-                    Task t = null;
-<#
-            }
-#>
-                    attempt++;
+                    t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
+                    if (t == null)
+                        goto Invalid;
 
-                    try
-                    {
-<#
-            if (async)
-            {
-#>
-                        t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
-                        if (t == null)
-                            break;
-
-                        await t.ConfigureAwait(false);
+                    await t.ConfigureAwait(false);
 <#
             }
             else
             {
 #>
-                        action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
+                    action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
 <#
             }
 #>
-                        return;
-                    }
-                    catch (Exception e)
-                    {
+                    return;
+                }
+                catch (Exception e)
+                {
 <#
         if (async && interruptable)
         {
 #>
-                        bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
 <#
         }
 #>
-                        if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
-                            throw;
+                    if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                        throw;
 
-                        <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
-                    }
-                } while (true);
+                    <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
+                    goto Attempt;
+                }
 <#
             if (async)
             {
 #>
 
-                throw new InvalidOperationException("Operation resulted in a null Task.");
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
 <#
             }
 #>

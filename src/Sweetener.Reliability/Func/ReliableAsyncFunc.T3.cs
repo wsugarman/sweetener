@@ -185,6 +185,9 @@ namespace Sweetener.Reliability
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2)
             => await InvokeAsync(arg1, arg2, CancellationToken.None).ConfigureAwait(false);
 
@@ -197,6 +200,9 @@ namespace Sweetener.Reliability
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, CancellationToken cancellationToken)
@@ -211,6 +217,9 @@ namespace Sweetener.Reliability
             try
             {
                 t = _func(arg1, arg2, cancellationToken);
+                if (t == null)
+                    goto Invalid;
+
                 await t.ConfigureAwait(false);
             }
             catch (Exception e)
@@ -227,6 +236,9 @@ namespace Sweetener.Reliability
                 return result;
 
             goto Attempt;
+
+        Invalid:
+            throw new InvalidOperationException("Method resulted in an invalid Task.");
         }
     }
 }

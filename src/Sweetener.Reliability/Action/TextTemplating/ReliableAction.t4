@@ -121,21 +121,20 @@ namespace Sweetener.Reliability
         {
             int attempt = 0;
 
-            do
-            {
-                attempt++;
+        Attempt:
+            attempt++;
 
-                try
-                {
-                    _action(<#= arguments #><#= optionalComma #>cancellationToken);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken) || !CanRetry<#= optionalAsync #>(attempt, e, cancellationToken))
-                        throw;
-                }
-            } while (true);
+            try
+            {
+                _action(<#= arguments #><#= optionalComma #>cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken) || !CanRetry<#= optionalAsync #>(attempt, e, cancellationToken))
+                    throw;
+
+                goto Attempt;
+            }
         }
 <#
         }
@@ -154,6 +153,14 @@ namespace Sweetener.Reliability
 <#
         }
         PrintParamsXmlDoc(parameterCount, indent: 2);
+        if (async)
+        {
+#>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
+<#
+        }
 #>
         public async Task InvokeAsync(<#= parameters #>)
             => await InvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None).ConfigureAwait(false);
@@ -175,76 +182,87 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
 <#
         if (async)
         {
 #>
-        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
 <#
         }
 #>
-        /// <exception cref="ObjectDisposedException">
-        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
-        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
+<#
+        if (async)
+        {
+#>
+            Task t;
+<#
+        }
+#>
             int attempt = 0;
 
-            do
+        Attempt:
+<#
+        if (async)
+        {
+#>
+            t = null;
+<#
+        }
+#>
+            attempt++;
+
+            try
             {
 <#
         if (async)
         {
 #>
-                Task t = null;
-<#
-        }
-#>
-                attempt++;
+                t = _action(<#= arguments #><#= optionalComma #>cancellationToken);
+                if (t == null)
+                    goto Invalid;
 
-                try
-                {
-<#
-        if (async)
-        {
-#>
-                    t = _action(<#= arguments #><#= optionalComma #>cancellationToken);
-                    if (t == null)
-                        break;
-
-                    await t.ConfigureAwait(false);
+                await t.ConfigureAwait(false);
 <#
         }
         else
         {
 #>
-                    _action(<#= arguments #><#= optionalComma #>cancellationToken);
+                _action(<#= arguments #><#= optionalComma #>cancellationToken);
 <#
         }
 #>
-                    return;
-                }
-                catch (Exception e)
-                {
+                return;
+            }
+            catch (Exception e)
+            {
 <#
         if (async)
         {
 #>
-                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
 <#
         }
 #>
-                    if (<#= async ? "isCanceled" : "e.IsCancellation(cancellationToken)" #> || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
-                        throw;
-                }
-            } while (true);
+                if (<#= async ? "isCanceled" : "e.IsCancellation(cancellationToken)" #> || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    throw;
+
+                goto Attempt;
+            }
 <#
         if (async)
         {
 #>
 
-            throw new InvalidOperationException("Operation resulted in a null Task.");
+        Invalid:
+            throw new InvalidOperationException("Method resulted in an invalid Task.");
 <#
         }
 #>

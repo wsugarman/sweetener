@@ -107,6 +107,9 @@ namespace Sweetener.Reliability
         /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg5">The fifth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public async Task InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
             => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, CancellationToken.None).ConfigureAwait(false);
 
@@ -122,38 +125,42 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
-        /// <exception cref="InvalidOperationException">The <paramref name="action"/> returns <see langword="null"/>.</exception>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, CancellationToken cancellationToken)
         {
+            Task t;
             int attempt = 0;
 
-            do
+        Attempt:
+            t = null;
+            attempt++;
+
+            try
             {
-                Task t = null;
-                attempt++;
+                t = _action(arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken);
+                if (t == null)
+                    goto Invalid;
 
-                try
-                {
-                    t = _action(arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken);
-                    if (t == null)
-                        break;
+                await t.ConfigureAwait(false);
+                return;
+            }
+            catch (Exception e)
+            {
+                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                if (isCanceled || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    throw;
 
-                    await t.ConfigureAwait(false);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                    if (isCanceled || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
-                        throw;
-                }
-            } while (true);
+                goto Attempt;
+            }
 
-            throw new InvalidOperationException("Operation resulted in a null Task.");
+        Invalid:
+            throw new InvalidOperationException("Method resulted in an invalid Task.");
         }
     }
 }
