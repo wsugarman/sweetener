@@ -51,6 +51,15 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
             PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
@@ -61,15 +70,17 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-            PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
             if (async)
             {
 #>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
-        /// </exception>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
 <#
             }
+            PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {

@@ -13,6 +13,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -32,6 +36,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -43,9 +51,6 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T, Task> WithAsyncRetry<T>(this Func<T, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -100,6 +105,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -119,6 +128,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T">The type of the parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -130,9 +143,6 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T, CancellationToken, Task> WithAsyncRetry<T>(this Func<T, CancellationToken, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {

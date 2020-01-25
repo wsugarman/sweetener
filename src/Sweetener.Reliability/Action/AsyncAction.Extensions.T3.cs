@@ -13,6 +13,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -34,6 +38,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -47,9 +55,6 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, Task> WithAsyncRetry<T1, T2, T3>(this Func<T1, T2, T3, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -104,6 +109,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -125,6 +134,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -138,9 +151,6 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public static Func<T1, T2, T3, CancellationToken, Task> WithAsyncRetry<T1, T2, T3>(this Func<T1, T2, T3, CancellationToken, Task> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {

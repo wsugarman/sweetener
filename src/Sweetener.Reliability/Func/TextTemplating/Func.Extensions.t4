@@ -53,15 +53,17 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
             if (async)
             {
 #>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
-        /// </exception>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
 <#
             }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
+
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => With<#= optionalAsync #>Retry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler.ToComplex<TResult>());
@@ -71,15 +73,16 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
             if (async)
             {
 #>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
-        /// </exception>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
 <#
             }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
             => With<#= optionalAsync #>Retry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler);
@@ -89,15 +92,16 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
             if (async)
             {
 #>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
-        /// </exception>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
 <#
             }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
             this Func<<#= inputTypeParameters #>> func,
@@ -112,15 +116,17 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
             if (async)
             {
 #>
-        /// <exception cref="InvalidOperationException">
-        /// The <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
-        /// </exception>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
 <#
             }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
+
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
             this Func<<#= inputTypeParameters #>> func,
