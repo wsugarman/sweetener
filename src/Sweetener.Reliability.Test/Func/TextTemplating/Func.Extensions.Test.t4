@@ -8,10 +8,11 @@
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string optionalComma = parameterCount > 0 ? ", " : string.Empty;
-        string arguments     = GetArguments    (parameterCount);
-        string typeArguments = GetTypeArguments(parameterCount);
-        string suffix        = "T" + (parameterCount + 1);
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments    (parameterCount);
+        string argumentValues = GetArgumentValues(parameterCount);
+        string typeArguments  = GetTypeArguments(parameterCount);
+        string suffix         = "T" + (parameterCount + 1);
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
@@ -57,6 +58,7 @@ namespace Sweetener.Reliability.Test
             {
                 foreach (bool useComplexHandler in new bool[] { false, true })
                 {
+                    bool   printMoreMethods        = !interruptable || !passResultHandler || !useComplexHandler;
                     string inputFuncType           = (interruptable ? "Interruptable" : string.Empty) + "TestFunc";
                     string delayHandlerFunc        = useComplexHandler ? "Func<int, int, Exception, TimeSpan>" : "Func<int, TimeSpan>";
                     string delayHandlerTypeProxy   = (useComplexHandler ? "ComplexDelayHandler" : "DelayHandler") + "Proxy";
@@ -74,8 +76,8 @@ namespace Sweetener.Reliability.Test
             <#= inputFuncType #> nullFunc = null;
             <#= inputFuncType #> func     = <#= GetExpressionDelegate(parameterCount, "12345", async, interruptable) #>;
 <#
-                        if (passResultHandler)
-                        {
+                    if (passResultHandler)
+                    {
 #>
             Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.With<#= optionalAsync #>Retry( 4, r => ResultKind.Successful, ExceptionPolicy.Transient, <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .With<#= optionalAsync #>Retry(-2, r => ResultKind.Successful, ExceptionPolicy.Transient, <#= noDelayHandler #>));
@@ -83,16 +85,27 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .With<#= optionalAsync #>Retry( 4, r => ResultKind.Successful, null                     , <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .With<#= optionalAsync #>Retry( 4, r => ResultKind.Successful, ExceptionPolicy.Transient, (<#= useComplexHandler ? "ComplexDelayHandler<int>" : "DelayHandler" #>)null));
 <#
-                        }
-                        else
-                        {
+                    }
+                    else
+                    {
 #>
             Assert.ThrowsException<ArgumentNullException      >(() => nullFunc.With<#= optionalAsync #>Retry( 4, ExceptionPolicy.Transient, <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .With<#= optionalAsync #>Retry(-2, ExceptionPolicy.Transient, <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .With<#= optionalAsync #>Retry( 4, null                     , <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .With<#= optionalAsync #>Retry( 4, ExceptionPolicy.Transient, (<#= useComplexHandler ? "ComplexDelayHandler<int>" : "DelayHandler" #>)null));
 <#
-                        }
+                    }
+
+                    if (async)
+                    {
+#>
+
+            // Test a function that returns a null Task
+            <#= inputFuncType #> nullTaskFunc         = (<#= arguments #><#= interruptable ? optionalComma + "token" : string.Empty #>) => null;
+            <#= inputFuncType #> nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, <#= passResultHandler ? "ResultPolicy.Default<int>(), " : string.Empty #>ExceptionPolicy.Transient, <#= noDelayHandler #>);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(<#= argumentValues #><#= interruptable ? optionalComma + "CancellationToken.None" : string.Empty #>)).Wait();
+<#
+                    }
 #>
 
             // Create the delegates necessary to test the WithRetry overload
@@ -109,8 +122,8 @@ namespace Sweetener.Reliability.Test
             WithRetry<#= suffix #>_EventualSuccess(funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
 
 <#
-                        if (passResultHandler)
-                        {
+                    if (passResultHandler)
+                    {
 #>
             // Failure (Result)
             WithRetry<#= suffix #>_Failure_Result         (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int<#= useComplexHandler ? ", int, Exception" : string.Empty #>>());
@@ -118,35 +131,35 @@ namespace Sweetener.Reliability.Test
             WithRetry<#= suffix #>_RetriesExhausted_Result(funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>);
 
 <#
-                        }
+                    }
 #>
             // Failure (Exception)
             WithRetry<#= suffix #>_Failure_Exception         (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFunc     ,  d        => d.Invoking += Expect.Nothing<int<#= useComplexHandler ? ", int, Exception" : string.Empty #>>(), passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
             WithRetry<#= suffix #>_EventualFailure_Exception (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
             WithRetry<#= suffix #>_RetriesExhausted_Exception(funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
 <#
-                        if (interruptable)
-                        {
+                    if (interruptable)
+                    {
 #>
 
             // Cancel
             WithRetry<#= suffix #>_Canceled_Func (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
             WithRetry<#= suffix #>_Canceled_Delay(funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
 <#
-                            if (async)
-                            {
+                        if (async)
+                        {
 #>
 
             // Cancel (Synchronous)
             funcFactory = f => new <#= inputFuncType #>Proxy((<#= arguments #><#= optionalCommaToken #>) => Task.FromResult(f(<#= optionalToken #>)));
             WithRetry<#= suffix #>_Canceled_Func (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
 <#
-                            }
                         }
+                    }
 #>
         }
 <#
-                    if (!interruptable) // Are there more iterations
+                    if (printMoreMethods)
                     {
 #>
 

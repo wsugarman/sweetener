@@ -53,7 +53,17 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
+
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => With<#= optionalAsync #>Retry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler.ToComplex<TResult>());
@@ -63,7 +73,16 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: false, includeReturnsXmlDoc: true);
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(this Func<<#= inputTypeParameters #>> func, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
             => With<#= optionalAsync #>Retry(func, maxRetries, ResultPolicy.Default<TResult>(), exceptionHandler, delayHandler);
@@ -73,7 +92,16 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
             this Func<<#= inputTypeParameters #>> func,
@@ -88,7 +116,17 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
+            PrintReliableFuncCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeResultHandler: true, includeReturnsXmlDoc: true);
+
 #>
         public static Func<<#= inputTypeParameters #>> With<#= optionalAsync #>Retry<<#= typeParameters #>>(
             this Func<<#= inputTypeParameters #>> func,
@@ -119,42 +157,45 @@ namespace Sweetener.Reliability
 
             Attempt:
 <#
-        if (async)
-        {
+            if (async)
+            {
 #>
                 t = null;
 <#
-        }
+            }
 #>
                 attempt++;
 
                 try
                 {
 <#
-        if (async)
-        {
+            if (async)
+            {
 #>
                     t = func(<#= arguments #><#= optionalToken #>);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
 <#
-        }
-        else
-        {
+            }
+            else
+            {
 #>
                     result = func(<#= arguments #><#= optionalToken #>);
 <#
-        }
+            }
 #>
                 }
                 catch (Exception e)
                 {
 <#
-        if (async && interruptable)
-        {
+            if (async && interruptable)
+            {
 #>
                     bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
 <#
-        }
+            }
 #>
                     if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
@@ -164,12 +205,12 @@ namespace Sweetener.Reliability
                 }
 
 <#
-        if (async)
-        {
+            if (async)
+            {
 #>
                 TResult result = t.Result;
 <#
-        }
+            }
 #>
                 ResultKind kind = resultHandler(result);
                 if (kind != ResultKind.Transient || (maxRetries != Retries.Infinite && attempt > maxRetries))
@@ -177,6 +218,16 @@ namespace Sweetener.Reliability
 
                 <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, result, default)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
                 goto Attempt;
+<#
+            if (async)
+            {
+#>
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
+<#
+            }
+#>
             };
         }
 

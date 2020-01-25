@@ -16,6 +16,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -35,6 +39,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -54,6 +62,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -79,6 +91,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -126,6 +142,9 @@ namespace Sweetener.Reliability
                 try
                 {
                     t = func();
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                 }
                 catch (Exception e)
@@ -144,6 +163,9 @@ namespace Sweetener.Reliability
 
                 await Task.Delay(delayHandler(attempt, result, default)).ConfigureAwait(false);
                 goto Attempt;
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 
@@ -155,6 +177,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -174,6 +200,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -193,6 +223,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -218,6 +252,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="func" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -265,6 +303,9 @@ namespace Sweetener.Reliability
                 try
                 {
                     t = func(cancellationToken);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                 }
                 catch (Exception e)
@@ -284,6 +325,9 @@ namespace Sweetener.Reliability
 
                 await Task.Delay(delayHandler(attempt, result, default), cancellationToken).ConfigureAwait(false);
                 goto Attempt;
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 

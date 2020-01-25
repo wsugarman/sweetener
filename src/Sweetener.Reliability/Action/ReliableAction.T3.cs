@@ -121,21 +121,20 @@ namespace Sweetener.Reliability
         {
             int attempt = 0;
 
-            do
-            {
-                attempt++;
+        Attempt:
+            attempt++;
 
-                try
-                {
-                    _action(arg1, arg2, arg3, cancellationToken);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken) || !CanRetry(attempt, e, cancellationToken))
-                        throw;
-                }
-            } while (true);
+            try
+            {
+                _action(arg1, arg2, arg3, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken) || !CanRetry(attempt, e, cancellationToken))
+                    throw;
+
+                goto Attempt;
+            }
         }
 
         /// <summary>
@@ -170,21 +169,21 @@ namespace Sweetener.Reliability
         {
             int attempt = 0;
 
-            do
-            {
-                attempt++;
+        Attempt:
+            attempt++;
 
-                try
-                {
-                    _action(arg1, arg2, arg3, cancellationToken);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken) || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
-                        throw;
-                }
-            } while (true);
+            try
+            {
+                _action(arg1, arg2, arg3, cancellationToken);
+                return;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken) || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    throw;
+
+                goto Attempt;
+            }
         }
 
         /// <summary>

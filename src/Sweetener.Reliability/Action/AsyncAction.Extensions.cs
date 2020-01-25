@@ -16,6 +16,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
@@ -34,6 +38,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
@@ -61,16 +69,18 @@ namespace Sweetener.Reliability
 
             return async () =>
             {
-                Task t;
                 int attempt = 0;
 
             Attempt:
-                t = null;
+                Task t = null;
                 attempt++;
 
                 try
                 {
                     t = action();
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                     return;
                 }
@@ -82,6 +92,9 @@ namespace Sweetener.Reliability
                     await Task.Delay(delayHandler(attempt, e)).ConfigureAwait(false);
                     goto Attempt;
                 }
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 
@@ -93,6 +106,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
@@ -111,6 +128,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <param name="action">The action to encapsulate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
         /// <param name="exceptionHandler">A function that determines which errors are transient.</param>
@@ -138,16 +159,18 @@ namespace Sweetener.Reliability
 
             return async (cancellationToken) =>
             {
-                Task t;
                 int attempt = 0;
 
             Attempt:
-                t = null;
+                Task t = null;
                 attempt++;
 
                 try
                 {
                     t = action(cancellationToken);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                     return;
                 }
@@ -160,6 +183,9 @@ namespace Sweetener.Reliability
                     await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
                     goto Attempt;
                 }
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 

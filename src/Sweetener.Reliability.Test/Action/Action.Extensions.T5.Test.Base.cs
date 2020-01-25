@@ -69,10 +69,10 @@ namespace Sweetener.Reliability.Test
             where TDelayPolicyProxy : DelegateProxy<TDelayPolicy>
         {
             // Create an "unsuccessful" user-defined action
-            TActionProxy action = actionFactory(t => throw new InvalidOperationException());
+            TActionProxy action = actionFactory(t => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable action
@@ -83,14 +83,14 @@ namespace Sweetener.Reliability.Test
                 delayHandler.Proxy);
 
             // Define expectations
-            exceptionHandler.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(OutOfMemoryException));
 
             observeAction     ?.Invoke(action);
             observeDelayPolicy?.Invoke(delayHandler);
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, tokenSource.Token));
+                Assert.That.ThrowsException<OutOfMemoryException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, tokenSource.Token));
 
             // Validate the number of calls
             Assert.AreEqual(1, action          .Calls);
@@ -162,7 +162,7 @@ namespace Sweetener.Reliability.Test
             where TDelayPolicyProxy : DelegateProxy<TDelayPolicy>
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
-            Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
+            Action flakyAction = FlakyAction.Create<IOException, OutOfMemoryException>(2);
             TActionProxy action = actionFactory(t => flakyAction());
 
             // Declare the various proxies for the input delegates and event handlers
@@ -177,14 +177,14 @@ namespace Sweetener.Reliability.Test
                 delayHandler.Proxy);
 
             // Define expectations
-            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
+            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(OutOfMemoryException), 2);
 
             observeAction     ?.Invoke(action, Constants.MinDelay);
             observeDelayPolicy?.Invoke(delayHandler, typeof(IOException));
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                Assert.That.ThrowsException<InvalidOperationException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, tokenSource.Token));
+                Assert.That.ThrowsException<OutOfMemoryException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, tokenSource.Token));
 
             // Validate the number of calls
             Assert.AreEqual(3, action          .Calls);

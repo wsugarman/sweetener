@@ -150,6 +150,10 @@ namespace Sweetener.Reliability.Test
             else
                 invoke = (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, t) => r.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7).Wait();
 
+            // Test an action that returns a null Task
+            ReliableAsyncAction<int, string, double, long, ushort, byte, TimeSpan> badAction = new ReliableAsyncAction<int, string, double, long, ushort, byte, TimeSpan>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.That.ThrowsException<InvalidOperationException>(() => invoke(badAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), CancellationToken.None));
+
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
@@ -228,10 +232,10 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure(Action<ReliableAsyncAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, Task> action = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => await Task.FromException(new InvalidOperationException()));
+            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, Task> action = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => await Task.FromException(new OutOfMemoryException()));
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
+            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
             FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => Constants.Delay);
 
             ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
@@ -254,15 +258,15 @@ namespace Sweetener.Reliability.Test
 
             // Define expectations
             action          .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan>(Arguments.Validate);
-            exceptionHandler.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(OutOfMemoryException));
             delayHandler    .Invoking += Expect.Nothing<int, Exception>();
             retryHandler    .Invoking += Expect.Nothing<int, Exception>();
-            failedHandler   .Invoking += Expect.Exception(typeof(InvalidOperationException));
+            failedHandler   .Invoking += Expect.Exception(typeof(OutOfMemoryException));
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableAsyncAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), tokenSource.Token, typeof(InvalidOperationException));
+                assertInvoke(reliableAsyncAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), tokenSource.Token, typeof(OutOfMemoryException));
 
             // Validate the number of calls
             Assert.AreEqual(1, action          .Calls);
@@ -341,7 +345,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_EventualFailure(Action<ReliableAsyncAction<int, string, double, long, ushort, byte, TimeSpan>, int, string, double, long, ushort, byte, TimeSpan, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined action that fails after 2 transient exceptions
-            Action flakyAction = FlakyAction.Create<IOException, InvalidOperationException>(2);
+            Action flakyAction = FlakyAction.Create<IOException, OutOfMemoryException>(2);
             FuncProxy<int, string, double, long, ushort, byte, TimeSpan, Task> action = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => { flakyAction(); await Task.CompletedTask; });
 
             // Declare the various proxies for the input delegates and event handlers
@@ -368,15 +372,15 @@ namespace Sweetener.Reliability.Test
 
             // Define expectations
             action          .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan>(Arguments.Validate, Constants.MinDelay);
-            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 2);
+            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(OutOfMemoryException), 2);
             delayHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
             retryHandler    .Invoking += Expect.ExceptionAsc(typeof(IOException));
-            failedHandler   .Invoking += Expect.Exception(typeof(InvalidOperationException));
+            failedHandler   .Invoking += Expect.Exception(typeof(OutOfMemoryException));
             exhaustedHandler.Invoking += Expect.Nothing<Exception>();
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableAsyncAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), tokenSource.Token, typeof(InvalidOperationException));
+                assertInvoke(reliableAsyncAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), tokenSource.Token, typeof(OutOfMemoryException));
 
             // Validate the number of calls
             Assert.AreEqual(3, action          .Calls);

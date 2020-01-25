@@ -531,11 +531,11 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Failure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create an "unsuccessful" user-defined function that throws a fatal exception
-            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => throw new InvalidOperationException());
+            FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>();
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<InvalidOperationException>().Invoke);
+            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
             FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
 
             ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
@@ -560,15 +560,15 @@ namespace Sweetener.Reliability.Test
             // Define expectations
             func            .Invoking += Expect.Arguments<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate);
             resultHandler   .Invoking += Expect.Nothing<string>();
-            exceptionHandler.Invoking += Expect.Exception(typeof(InvalidOperationException));
+            exceptionHandler.Invoking += Expect.Exception(typeof(OutOfMemoryException));
             delayHandler    .Invoking += Expect.Nothing<int, string, Exception>();
             retryHandler    .Invoking += Expect.Nothing<int, string, Exception>();
-            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(InvalidOperationException));
+            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(OutOfMemoryException));
             exhaustedHandler.Invoking += Expect.Nothing<string, Exception>();
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), tokenSource.Token, typeof(InvalidOperationException));
+                assertInvoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), tokenSource.Token, typeof(OutOfMemoryException));
 
             // Validate the number of calls
             Assert.AreEqual(1, func             .Calls);
@@ -725,7 +725,7 @@ namespace Sweetener.Reliability.Test
         private void Invoke_EventualFailure_Exception(Action<ReliableFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, CancellationToken, Type> assertInvoke, bool addEventHandlers)
         {
             // Create a user-defined function that eventually fails after a transient result and exception
-            Func<string> flakyFunc = FlakyFunc.Create<string, IOException, InvalidOperationException>("Retry", 2);
+            Func<string> flakyFunc = FlakyFunc.Create<string, IOException, OutOfMemoryException>("Retry", 2);
             FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string> func = new FuncProxy<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
@@ -755,15 +755,15 @@ namespace Sweetener.Reliability.Test
             // Define expectations
             func            .Invoking += Expect.ArgumentsAfterDelay<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime>(Arguments.Validate, Constants.MinDelay);
             resultHandler   .Invoking += Expect.Result("Retry");
-            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(InvalidOperationException), 1);
+            exceptionHandler.Invoking += Expect.Exceptions(typeof(IOException), typeof(OutOfMemoryException), 1);
             delayHandler    .Invoking += Expect.AlternatingAsc("Retry", typeof(IOException));
             retryHandler    .Invoking += Expect.AlternatingAsc("Retry", typeof(IOException));
-            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(InvalidOperationException));
+            failedHandler   .Invoking += Expect.OnlyException<string>(typeof(OutOfMemoryException));
             exhaustedHandler.Invoking += Expect.Nothing<string, Exception>();
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), tokenSource.Token, typeof(InvalidOperationException));
+                assertInvoke(reliableFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, Tuple.Create(true, 64UL), new DateTime(2019, 10, 06), tokenSource.Token, typeof(OutOfMemoryException));
 
             // Validate the number of calls
             Assert.AreEqual(3, func             .Calls);

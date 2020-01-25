@@ -13,6 +13,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -41,6 +45,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -78,16 +86,18 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) =>
             {
-                Task t;
                 int attempt = 0;
 
             Attempt:
-                t = null;
+                Task t = null;
                 attempt++;
 
                 try
                 {
                     t = action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                     return;
                 }
@@ -99,6 +109,9 @@ namespace Sweetener.Reliability
                     await Task.Delay(delayHandler(attempt, e)).ConfigureAwait(false);
                     goto Attempt;
                 }
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 
@@ -110,6 +123,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -138,6 +155,10 @@ namespace Sweetener.Reliability
         /// Creates a reliable wrapper around the given asynchronous <paramref name="action" />
         /// that will retry the operation based on the provided policies.
         /// </summary>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
         /// <typeparam name="T1">The type of the first parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T2">The type of the second parameter of the method that this reliable delegate encapsulates.</typeparam>
         /// <typeparam name="T3">The type of the third parameter of the method that this reliable delegate encapsulates.</typeparam>
@@ -175,16 +196,18 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, cancellationToken) =>
             {
-                Task t;
                 int attempt = 0;
 
             Attempt:
-                t = null;
+                Task t = null;
                 attempt++;
 
                 try
                 {
                     t = action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, cancellationToken);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
                     return;
                 }
@@ -197,6 +220,9 @@ namespace Sweetener.Reliability
                     await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
                     goto Attempt;
                 }
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
             };
         }
 

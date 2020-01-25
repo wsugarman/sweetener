@@ -51,7 +51,16 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
+            PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => With<#= optionalAsync #>Retry(action, maxRetries, exceptionHandler, delayHandler.ToComplex());
@@ -61,7 +70,17 @@ namespace Sweetener.Reliability
         /// that will retry the operation based on the provided policies.
         /// </summary>
 <#
-        PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+            if (async)
+            {
+#>
+        /// <remarks>
+        /// The resulting action will throw <see cref="InvalidOperationException"/> if the given
+        /// <paramref name="action"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </remarks>
+<#
+            }
+            PrintReliableActionCtorXmlDoc(indent: 2, typeParameterCount: parameterCount, includeReturnsXmlDoc: true);
+
 #>
         public static <#= inputActionType #> With<#= optionalAsync #>Retry<#= typeParameters #>(this <#= inputActionType #> action, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -79,24 +98,16 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>) =>
             {
-<#
-            if (async)
-            {
-#>
-                Task t;
-<#
-            }
-#>
                 int attempt = 0;
 
             Attempt:
 <#
-        if (async)
-        {
+            if (async)
+            {
 #>
-                t = null;
+                Task t = null;
 <#
-        }
+            }
 #>
                 attempt++;
 
@@ -107,6 +118,9 @@ namespace Sweetener.Reliability
             {
 #>
                     t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
+                    if (t == null)
+                        goto Invalid;
+
                     await t.ConfigureAwait(false);
 <#
             }
@@ -135,6 +149,16 @@ namespace Sweetener.Reliability
                     <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;
                     goto Attempt;
                 }
+<#
+            if (async)
+            {
+#>
+
+            Invalid:
+                throw new InvalidOperationException("Method resulted in an invalid Task.");
+<#
+            }
+#>
             };
         }
 

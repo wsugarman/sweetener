@@ -207,6 +207,9 @@ namespace Sweetener.Reliability
         /// <param name="arg12">The twelfth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13)
             => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, CancellationToken.None).ConfigureAwait(false);
 
@@ -231,6 +234,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, CancellationToken cancellationToken)
         {
@@ -244,6 +250,9 @@ namespace Sweetener.Reliability
             try
             {
                 t = _func(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, cancellationToken);
+                if (t == null)
+                    goto Invalid;
+
                 await t.ConfigureAwait(false);
             }
             catch (Exception e)
@@ -260,6 +269,9 @@ namespace Sweetener.Reliability
                 return result;
 
             goto Attempt;
+
+        Invalid:
+            throw new InvalidOperationException("Method resulted in an invalid Task.");
         }
     }
 }
