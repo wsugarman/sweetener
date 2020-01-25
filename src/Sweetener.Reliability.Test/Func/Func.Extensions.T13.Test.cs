@@ -177,6 +177,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT13_Canceled_Func (funcFactory, delayHandlerFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
             WithRetryT13_Canceled_Delay(funcFactory, delayHandlerFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
         }
+
         [TestMethod]
         public void WithRetryT13_WithToken_ComplexDelayHandler()
         {
@@ -209,6 +210,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT13_Canceled_Func (funcFactory, delayHandlerFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
             WithRetryT13_Canceled_Delay(funcFactory, delayHandlerFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
         }
+
         [TestMethod]
         public void WithRetryT13_WithToken_ResultPolicy_DelayHandler()
         {
@@ -247,6 +249,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT13_Canceled_Func (funcFactory, delayHandlerFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
             WithRetryT13_Canceled_Delay(funcFactory, delayHandlerFactory, withRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
         }
+
         [TestMethod]
         public void WithRetryT13_WithToken_ResultPolicy_ComplexDelayHandler()
         {

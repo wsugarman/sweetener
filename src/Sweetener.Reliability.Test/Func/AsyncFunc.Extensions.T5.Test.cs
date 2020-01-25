@@ -27,6 +27,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                     , DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (DelayHandler)null));
 
+            // Test a function that returns a null Task
+            TestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4) => null;
+            TestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L)).Wait();
+
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy(async (arg1, arg2, arg3, arg4) => await Task.FromResult(f(CancellationToken.None)));
             Func<TimeSpan, DelayHandlerProxy> delayHandlerFactory = t => new DelayHandlerProxy((i) => t);
@@ -55,6 +60,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithAsyncRetry(-2, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                     , (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (ComplexDelayHandler<int>)null));
+
+            // Test a function that returns a null Task
+            TestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4) => null;
+            TestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L)).Wait();
 
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy(async (arg1, arg2, arg3, arg4) => await Task.FromResult(f(CancellationToken.None)));
@@ -85,6 +95,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                      , ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, null                     , DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, ExceptionPolicy.Transient, (DelayHandler)null));
+
+            // Test a function that returns a null Task
+            TestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4) => null;
+            TestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ResultPolicy.Default<int>(), ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L)).Wait();
 
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy(async (arg1, arg2, arg3, arg4) => await Task.FromResult(f(CancellationToken.None)));
@@ -121,6 +136,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, null                     , (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, ExceptionPolicy.Transient, (ComplexDelayHandler<int>)null));
 
+            // Test a function that returns a null Task
+            TestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4) => null;
+            TestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ResultPolicy.Default<int>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L)).Wait();
+
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, TestFuncProxy> funcFactory = f => new TestFuncProxy(async (arg1, arg2, arg3, arg4) => await Task.FromResult(f(CancellationToken.None)));
             Func<TimeSpan, ComplexDelayHandlerProxy> delayHandlerFactory = t => new ComplexDelayHandlerProxy((i, r, e) => t);
@@ -155,6 +175,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                     , DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (DelayHandler)null));
 
+            // Test a function that returns a null Task
+            InterruptableTestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4, token) => null;
+            InterruptableTestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L, CancellationToken.None)).Wait();
+
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy(async (arg1, arg2, arg3, arg4, token) => await Task.FromResult(f(token)));
             Func<TimeSpan, DelayHandlerProxy> delayHandlerFactory = t => new DelayHandlerProxy((i) => t);
@@ -181,6 +206,7 @@ namespace Sweetener.Reliability.Test
             funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, token) => Task.FromResult(f(token)));
             WithRetryT5_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
         }
+
         [TestMethod]
         public void WithAsyncRetryT5_Async_WithToken_ComplexDelayHandler()
         {
@@ -190,6 +216,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => func    .WithAsyncRetry(-2, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                     , (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, ExceptionPolicy.Transient, (ComplexDelayHandler<int>)null));
+
+            // Test a function that returns a null Task
+            InterruptableTestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4, token) => null;
+            InterruptableTestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L, CancellationToken.None)).Wait();
 
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy(async (arg1, arg2, arg3, arg4, token) => await Task.FromResult(f(token)));
@@ -217,6 +248,7 @@ namespace Sweetener.Reliability.Test
             funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, token) => Task.FromResult(f(token)));
             WithRetryT5_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
         }
+
         [TestMethod]
         public void WithAsyncRetryT5_Async_WithToken_ResultPolicy_DelayHandler()
         {
@@ -227,6 +259,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                      , ExceptionPolicy.Transient, DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, null                     , DelayPolicy.None));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, ExceptionPolicy.Transient, (DelayHandler)null));
+
+            // Test a function that returns a null Task
+            InterruptableTestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4, token) => null;
+            InterruptableTestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ResultPolicy.Default<int>(), ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L, CancellationToken.None)).Wait();
 
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy(async (arg1, arg2, arg3, arg4, token) => await Task.FromResult(f(token)));
@@ -259,6 +296,7 @@ namespace Sweetener.Reliability.Test
             funcFactory = f => new InterruptableTestFuncProxy((arg1, arg2, arg3, arg4, token) => Task.FromResult(f(token)));
             WithRetryT5_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
         }
+
         [TestMethod]
         public void WithAsyncRetryT5_Async_WithToken_ResultPolicy_ComplexDelayHandler()
         {
@@ -269,6 +307,11 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, null                      , ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, null                     , (i, r, e) => TimeSpan.Zero));
             Assert.ThrowsException<ArgumentNullException      >(() => func    .WithAsyncRetry( 4, r => ResultKind.Successful, ExceptionPolicy.Transient, (ComplexDelayHandler<int>)null));
+
+            // Test a function that returns a null Task
+            InterruptableTestFunc nullTaskFunc         = (arg1, arg2, arg3, arg4, token) => null;
+            InterruptableTestFunc nullTaskReliableFunc = nullTaskFunc.WithAsyncRetry(Retries.Infinite, ResultPolicy.Default<int>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableFunc(42, "foo", 3.14D, 1000L, CancellationToken.None)).Wait();
 
             // Create the delegates necessary to test the WithRetry overload
             Func<Func<CancellationToken, int>, InterruptableTestFuncProxy> funcFactory = f => new InterruptableTestFuncProxy(async (arg1, arg2, arg3, arg4, token) => await Task.FromResult(f(token)));

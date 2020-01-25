@@ -9,10 +9,11 @@
 
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
-        string optionalComma = parameterCount > 0 ? ", " : string.Empty;
-        string arguments     = GetArguments     (parameterCount);
-        string typeArguments = GetTypeArguments (parameterCount);
-        string suffix        = "T" + (parameterCount + 1);
+        string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
+        string arguments      = GetArguments     (parameterCount);
+        string argumentValues = GetArgumentValues(parameterCount);
+        string typeArguments  = GetTypeArguments (parameterCount);
+        string suffix         = "T" + (parameterCount + 1);
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
@@ -56,10 +57,11 @@ namespace Sweetener.Reliability.Test
 
             foreach (bool useComplexHandler in new bool[] { false, true })
             {
+                bool   printMoreMethods      = !interruptable || !useComplexHandler;
                 string inputActionType       = (interruptable ? "Interruptable" : string.Empty) + "TestAction";
                 string delayHandlerFunc      = useComplexHandler ? "Func<int, Exception, TimeSpan>" : "Func<int, TimeSpan>";
                 string delayHandlerTypeProxy = (useComplexHandler ? "ComplexDelayHandler" : "DelayHandler") + "Proxy";
-                string noDelayHandler         = useComplexHandler ? "(i, e) => TimeSpan.Zero" : "DelayPolicy.None";
+                string noDelayHandler        = useComplexHandler ? "(i, e) => TimeSpan.Zero" : "DelayPolicy.None";
                 string testSuffix            = suffix + (async ? "_Async" : string.Empty) + (interruptable ? "_WithToken" : string.Empty) +  "_" + (useComplexHandler ? "ComplexDelayHandler" : "DelayHandler");
 #>
         [TestMethod]
@@ -72,6 +74,18 @@ namespace Sweetener.Reliability.Test
             Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, null                     , <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, ExceptionPolicy.Transient, (<#= useComplexHandler ? "Complex" : string.Empty #>DelayHandler)null));
 
+<#
+                if (async)
+                {
+#>
+            // Test an action that returns a null Task
+            <#= inputActionType #> nullTaskAction         = (<#= arguments #><#= interruptable ? optionalComma + "token" : string.Empty #>) => null;
+            <#= inputActionType #> nullTaskReliableAction = nullTaskAction.WithAsyncRetry(Retries.Infinite, ExceptionPolicy.Transient, <#= noDelayHandler #>);
+            Assert.ThrowsExceptionAsync<InvalidOperationException>(() => nullTaskReliableAction(<#= argumentValues #><#= interruptable ? optionalComma + "CancellationToken.None" : string.Empty #>)).Wait();
+
+<#
+                }
+#>
             // Create the delegates necessary to test the WithRetry overload
             Func<Action<CancellationToken>, <#= inputActionType #>Proxy> actionFactory = a => new <#= inputActionType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ a({optionalToken}); await Task.CompletedTask; }}" : $"a({optionalToken})" #>);
             Func<TimeSpan, <#= delayHandlerTypeProxy #>> delayHandlerFactory = t => new <#= delayHandlerTypeProxy #>((i<#= useComplexHandler ? ", e" : string.Empty #>) => t);
@@ -88,26 +102,26 @@ namespace Sweetener.Reliability.Test
             WithRetry<#= suffix #>_EventualFailure (actionFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexHandler ? "ExceptionAsc(e)" : "Asc()" #>);
             WithRetry<#= suffix #>_RetriesExhausted(actionFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexHandler ? "ExceptionAsc(e)" : "Asc()" #>);
 <#
-                    if (interruptable)
-                    {
+                if (interruptable)
+                {
 #>
             WithRetry<#= suffix #>_Canceled_Action (actionFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexHandler ? "ExceptionAsc(e)" : "Asc()" #>);
             WithRetry<#= suffix #>_Canceled_Delay  (actionFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexHandler ? "ExceptionAsc(e)" : "Asc()" #>);
 <#
-                        if (async)
-                        {
+                    if (async)
+                    {
 #>
 
             // We also want to test the scenario where a user passes a synchronous method that returns a Task
             actionFactory = a => new <#= inputActionType #>Proxy((<#= arguments #><#= optionalCommaToken #>) => { a(<#= optionalToken #>); return Task.CompletedTask; });
             WithRetry<#= suffix #>_Canceled_Action (actionFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.<#= useComplexHandler ? "ExceptionAsc(e)" : "Asc()" #>);
 <#
-                        }
                     }
+                }
 #>
         }
 <#
-                if (!interruptable) // Are there more iterations?
+                if (printMoreMethods)
                 {
 #>
 

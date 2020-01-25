@@ -99,6 +99,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT16_Canceled_Action (actionFactory, delayHandlerFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.Asc());
             WithRetryT16_Canceled_Delay  (actionFactory, delayHandlerFactory, withRetry, invoke, observeActionDelay, (d, e) => d.Invoking += Expect.Asc());
         }
+
         [TestMethod]
         public void WithRetryT16_WithToken_ComplexDelayHandler()
         {

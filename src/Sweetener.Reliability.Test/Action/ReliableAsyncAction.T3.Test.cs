@@ -150,6 +150,10 @@ namespace Sweetener.Reliability.Test
             else
                 invoke = (r, arg1, arg2, arg3, t) => r.InvokeAsync(arg1, arg2, arg3).Wait();
 
+            // Test an action that returns a null Task
+            ReliableAsyncAction<int, string, double> badAction = new ReliableAsyncAction<int, string, double>((arg1, arg2, arg3) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.That.ThrowsException<InvalidOperationException>(() => invoke(badAction, 42, "foo", 3.14D, CancellationToken.None));
+
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
