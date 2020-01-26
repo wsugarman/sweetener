@@ -19,10 +19,11 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      # Ignore any specified suffix and instead use the suffix "build"
       $VersionParts = Get-Content "src/${{ parameters.Project }}/Version.json" | Out-String | ConvertFrom-Json
-      $AssemblyVersion = [string]::Format("{0}.0.0.0"            , $VersionParts.Major)
-      $FileVersion     = [string]::Format("{0}.{1}.{2}.{3}"      , $VersionParts.Major, $VersionParts.Minor, $VersionParts.Patch, $(Build.BuildId))
-      $PackageVersion  = [string]::Format("{0}.{1}.{2}-build.{3}", $VersionParts.Major, $VersionParts.Minor, $VersionParts.Patch, $(Build.BuildId))
+      $AssemblyVersion = [string]::Format("{0}.0.0.0"            , $VersionParts.major)
+      $FileVersion     = [string]::Format("{0}.{1}.{2}.{3}"      , $VersionParts.major, $VersionParts.minor, $VersionParts.patch, $(Build.BuildId))
+      $PackageVersion  = [string]::Format("{0}.{1}.{2}-build.{3}", $VersionParts.major, $VersionParts.minor, $VersionParts.patch, $(Build.BuildId))
 
       # Output variables to be used in the build
       Write-Host "##vso[task.setvariable variable=Assembly;isOutput=true]$AssemblyVersion"
@@ -41,7 +42,7 @@ steps:
     verbosityPack: 'normal'
 
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish NuPkg'
+  displayName: 'Publish NuPkg Artifact'
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
     artifact: 'pkg'
