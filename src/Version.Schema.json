@@ -23,7 +23,7 @@
         "suffix": {
             "description": "The optional pre-release suffix",
             "type": "string",
-            "pattern": "^[a-zA-Z]+\\.\\d+)"
+            "pattern": "^[a-zA-Z]+\\.\\d+"
         }
     },
     "required": [ "major", "minor", "patch" ]
