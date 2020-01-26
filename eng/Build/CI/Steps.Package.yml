@@ -76,7 +76,7 @@ steps:
     verbosityPack: 'normal'
 
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish NuPkg'
+  displayName: 'Publish NuPkg Artifact'
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
     artifact: 'pkg'
