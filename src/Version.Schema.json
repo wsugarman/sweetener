@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "https://raw.githubusercontent.com/wsugarman/Sweetener/master/src/Version.Schema.json",
     "title": "Version",
     "description": "The version of a library that follows the SemVer 2.0 specification",
     "type": "object",
