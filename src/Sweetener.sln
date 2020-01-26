@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C5B9D6
 		CodeCoverage.runsettings = CodeCoverage.runsettings
 		Directory.Build.props = Directory.Build.props
 		Public.snk = Public.snk
+		Version.Schema.json = Version.Schema.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTemplating", "{300BE535-1586-4CDF-B2FA-C5821F5BB75D}"
