@@ -306,7 +306,6 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
-
         #region TryInvokeAsync
 
         private void TryInvokeAsync(bool passToken)
@@ -316,6 +315,10 @@ namespace Sweetener.Reliability.Test
                 tryInvokeAsync = (r, arg, t) => r.TryInvokeAsync(arg, t).Result;
             else
                 tryInvokeAsync = (r, arg, t) => r.TryInvokeAsync(arg).Result;
+
+            // Test a function that returns a null Task
+            ReliableAsyncFunc<int, string> badFunc = new ReliableAsyncFunc<int, string>((arg) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badFunc, 42, CancellationToken.None));
 
             Action<ReliableAsyncFunc<int, string>, int, CancellationToken, string> assertSuccess =
                 (f, arg, t, r) =>

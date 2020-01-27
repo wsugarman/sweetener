@@ -306,7 +306,6 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
-
         #region TryInvokeAsync
 
         private void TryInvokeAsync(bool passToken)
@@ -316,6 +315,10 @@ namespace Sweetener.Reliability.Test
                 tryInvokeAsync = (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Result;
             else
                 tryInvokeAsync = (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8).Result;
+
+            // Test a function that returns a null Task
+            ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string> badFunc = new ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badFunc, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, CancellationToken.None));
 
             Action<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, string>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken, string> assertSuccess =
                 (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t, r) =>
