@@ -200,7 +200,10 @@ namespace Sweetener.Reliability
         /// <param name="arg8">The eighth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg9">The ninth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg10">The tenth parameter of the method that this reliable delegate encapsulates.</param>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
@@ -221,10 +224,10 @@ namespace Sweetener.Reliability
         /// <param name="arg9">The ninth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg10">The tenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
-        /// <exception cref="ObjectDisposedException">
-        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
-        /// </exception>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
@@ -282,9 +285,10 @@ namespace Sweetener.Reliability
         /// <param name="arg9">The ninth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg10">The tenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// A named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/> flag, indicating
-        /// the success of the encapsulated method, and its result, if it succeeded. Otherwise
-        /// the default value is present in the tuple if it failed.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
@@ -307,9 +311,10 @@ namespace Sweetener.Reliability
         /// <param name="arg10">The tenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>
-        /// A named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/> flag, indicating
-        /// the success of the encapsulated method, and its result, if it succeeded. Otherwise
-        /// the default value is present in the tuple if it failed.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.

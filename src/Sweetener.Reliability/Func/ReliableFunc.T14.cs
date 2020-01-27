@@ -277,7 +277,10 @@ namespace Sweetener.Reliability
         /// <param name="arg11">The eleventh parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg12">The twelfth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13)
             => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, CancellationToken.None).ConfigureAwait(false);
 
@@ -301,10 +304,10 @@ namespace Sweetener.Reliability
         /// <param name="arg12">The twelfth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
-        /// <exception cref="ObjectDisposedException">
-        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
-        /// </exception>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
@@ -448,9 +451,10 @@ namespace Sweetener.Reliability
         /// <param name="arg12">The twelfth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// A named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/> flag, indicating
-        /// the success of the encapsulated method, and its result, if it succeeded. Otherwise
-        /// the default value is present in the tuple if it failed.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
         /// </returns>
         public async Task<(bool Success, TResult Result)> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13)
             => await TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, CancellationToken.None).ConfigureAwait(false);
@@ -473,9 +477,10 @@ namespace Sweetener.Reliability
         /// <param name="arg13">The thirteenth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>
-        /// A named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/> flag, indicating
-        /// the success of the encapsulated method, and its result, if it succeeded. Otherwise
-        /// the default value is present in the tuple if it failed.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.

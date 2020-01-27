@@ -109,6 +109,7 @@ namespace Sweetener.Reliability
         /// <param name="arg5">The fifth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>A task that represents the asynchronous invoke operation.</returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
@@ -128,6 +129,7 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <returns>A task that represents the asynchronous invoke operation.</returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
@@ -177,8 +179,9 @@ namespace Sweetener.Reliability
         /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
-        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
+        /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
@@ -200,8 +203,9 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
-        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
+        /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.

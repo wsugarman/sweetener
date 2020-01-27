@@ -146,6 +146,7 @@ namespace Sweetener.Reliability
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>A task that represents the asynchronous invoke operation.</returns>
         public async Task InvokeAsync(T1 arg1, T2 arg2, T3 arg3)
             => await InvokeAsync(arg1, arg2, arg3, CancellationToken.None).ConfigureAwait(false);
 
@@ -161,6 +162,7 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <returns>A task that represents the asynchronous invoke operation.</returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
@@ -247,8 +249,9 @@ namespace Sweetener.Reliability
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
-        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
+        /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public async Task<bool> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3)
             => await TryInvokeAsync(arg1, arg2, arg3, CancellationToken.None).ConfigureAwait(false);
@@ -263,8 +266,9 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
-        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
+        /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
