@@ -227,20 +227,20 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvoke(bool passToken)
         {
-            Func<ReliableAction<int>, int, CancellationToken, bool> tryInvokeAsync;
+            Func<ReliableAction<int>, int, CancellationToken, bool> tryInvoke;
             if (passToken)
-                tryInvokeAsync = (r, arg, t) => r.TryInvoke(arg, t);
+                tryInvoke = (r, arg, t) => r.TryInvoke(arg, t);
             else
-                tryInvokeAsync = (r, arg, t) => r.TryInvoke(arg);
+                tryInvoke = (r, arg, t) => r.TryInvoke(arg);
 
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
-                Invoke_Success         ((r, arg, t   ) => Assert.IsTrue (tryInvokeAsync(r, arg, t)), addEventHandlers);
-                Invoke_EventualSuccess ((r, arg, t   ) => Assert.IsTrue (tryInvokeAsync(r, arg, t)), addEventHandlers);
-                Invoke_Failure         ((r, arg, t, e) => Assert.IsFalse(tryInvokeAsync(r, arg, t)), addEventHandlers);
-                Invoke_EventualFailure ((r, arg, t, e) => Assert.IsFalse(tryInvokeAsync(r, arg, t)), addEventHandlers);
-                Invoke_RetriesExhausted((r, arg, t, e) => Assert.IsFalse(tryInvokeAsync(r, arg, t)), addEventHandlers);
+                Invoke_Success         ((r, arg, t   ) => Assert.IsTrue (tryInvoke(r, arg, t)), addEventHandlers);
+                Invoke_EventualSuccess ((r, arg, t   ) => Assert.IsTrue (tryInvoke(r, arg, t)), addEventHandlers);
+                Invoke_Failure         ((r, arg, t, e) => Assert.IsFalse(tryInvoke(r, arg, t)), addEventHandlers);
+                Invoke_EventualFailure ((r, arg, t, e) => Assert.IsFalse(tryInvoke(r, arg, t)), addEventHandlers);
+                Invoke_RetriesExhausted((r, arg, t, e) => Assert.IsFalse(tryInvoke(r, arg, t)), addEventHandlers);
 
                 if (passToken)
                 {

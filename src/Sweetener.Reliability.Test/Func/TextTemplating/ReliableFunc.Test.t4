@@ -302,11 +302,11 @@ namespace Sweetener.Reliability.Test
 
         private void InvokeAsync(bool passToken)
         {
-            Func<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> invoke;
+            Func<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> invokeAsync;
             if (passToken)
-                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #><#= optionalComma #>t).Result;
+                invokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #><#= optionalComma #>t).Result;
             else
-                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #>).Result;
+                invokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #>).Result;
 
 <#
         if (async)
@@ -314,7 +314,7 @@ namespace Sweetener.Reliability.Test
 #>
             // Test a function that returns a null Task
             ReliableAsyncFunc<<#= typeArguments #>> badFunc = new ReliableAsyncFunc<<#= typeArguments #>>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
-            Assert.That.ThrowsException<InvalidOperationException>(() => invoke(badFunc<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+            Assert.That.ThrowsException<InvalidOperationException>(() => invokeAsync(badFunc<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
 
 <#
         }
@@ -323,18 +323,18 @@ namespace Sweetener.Reliability.Test
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
                 // Success
-                Invoke_Success                ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invoke(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_EventualSuccess        ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invoke(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_Success                ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invokeAsync(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualSuccess        ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invokeAsync(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
 
                 // Failure (Result)
-                Invoke_Failure_Result         ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invoke(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_EventualFailure_Result ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invoke(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_RetriesExhausted_Result((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invoke(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_Failure_Result         ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invokeAsync(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualFailure_Result ((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invokeAsync(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_RetriesExhausted_Result((f<#= optionalComma #><#= arguments #>, t, r) => Assert.AreEqual(r, invokeAsync(f<#=optionalComma #><#= arguments #>, t)), addEventHandlers);
 
                 // Failure (Exception)
-                Invoke_Failure_Exception         ((f<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(f<#=optionalComma #><#= arguments #>, t), e), addEventHandlers);
-                Invoke_EventualFailure_Exception ((f<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(f<#=optionalComma #><#= arguments #>, t), e), addEventHandlers);
-                Invoke_RetriesExhausted_Exception((f<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(f<#=optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_Failure_Exception         ((f<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invokeAsync(f<#=optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_EventualFailure_Exception ((f<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invokeAsync(f<#=optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_RetriesExhausted_Exception((f<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invokeAsync(f<#=optionalComma #><#= arguments #>, t), e), addEventHandlers);
 
                 if (passToken)
                 {

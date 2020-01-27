@@ -292,20 +292,20 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvoke(bool passToken)
         {
-            Func<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, bool> tryInvokeAsync;
+            Func<ReliableAction<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, bool> tryInvoke;
             if (passToken)
-                tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #><#= optionalComma #>t);
+                tryInvoke = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #><#= optionalComma #>t);
             else
-                tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #>);
+                tryInvoke = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvoke(<#= arguments #>);
 
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
-                Invoke_Success         ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_EventualSuccess ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
-                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_Success         ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualSuccess ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvoke(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
 
                 if (passToken)
                 {
