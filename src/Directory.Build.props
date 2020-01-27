@@ -74,7 +74,7 @@
 
       <!-- FxCop -->
       <ItemGroup>
-        <AdditionalFiles Include="$(SrcDirectory).editorconfig" />
+        <AdditionalFiles Include="$(SrcDirectory).editorconfig" Visible="false" />
       </ItemGroup>
 
       <!-- Library Tools -->
