@@ -18,7 +18,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -41,7 +41,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -64,7 +64,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -93,7 +93,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -179,7 +179,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -202,7 +202,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -225,7 +225,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>
@@ -254,7 +254,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
         /// <typeparam name="TResult">The type of the return value of the method that this reliable delegate encapsulates.</typeparam>
         /// <param name="func">The function to encapsulate.</param>

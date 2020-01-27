@@ -225,7 +225,10 @@ namespace Sweetener.Reliability
         /// <remarks>
         /// If the encapsulated method succeeds without retrying, the method executes synchronously.
         /// </remarks>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         public async Task<TResult> InvokeAsync()
             => await InvokeAsync(CancellationToken.None).ConfigureAwait(false);
 
@@ -236,7 +239,10 @@ namespace Sweetener.Reliability
         /// If the encapsulated method succeeds without retrying, the method executes synchronously.
         /// </remarks>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
@@ -276,7 +282,7 @@ namespace Sweetener.Reliability
         /// is passed unitialized; any value originally supplied in result will be overwritten.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed successfully
+        /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryInvoke(out TResult result)
@@ -292,7 +298,7 @@ namespace Sweetener.Reliability
         /// is passed unitialized; any value originally supplied in result will be overwritten.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed successfully
+        /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
@@ -302,34 +308,102 @@ namespace Sweetener.Reliability
         public bool TryInvoke(CancellationToken cancellationToken, out TResult result)
         {
             int attempt = 0;
-            bool retry = false;
 
-            do
+        Attempt:
+            attempt++;
+
+            try
             {
-                attempt++;
+                result = _func(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
 
-                try
-                {
-                    result = _func(cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken))
-                        throw;
+                if (!CanRetry(attempt, e, cancellationToken))
+                    goto Fail;
 
-                    retry = CanRetry(attempt, e, cancellationToken);
-                    continue;
-                }
+                goto Attempt;
+            }
 
-                FunctionState nextState = MoveNext(attempt, result, cancellationToken);
-                if (nextState == FunctionState.ReturnSuccess)
+            switch (MoveNext(attempt, result, cancellationToken))
+            {
+                case FunctionState.ReturnSuccess:
                     return true;
+                case FunctionState.ReturnFailure:
+                    goto Fail;
+                default:
+                    goto Attempt;
+            }
 
-                retry = nextState == FunctionState.Retry;
-            } while (retry);
-
+        Fail:
             result = default;
             return false;
+        }
+
+
+         /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// </returns>
+        public async Task<(bool Success, TResult Result)> TryInvokeAsync()
+            => await TryInvokeAsync(CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<(bool Success, TResult Result)> TryInvokeAsync(CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+
+        Attempt:
+            TResult result;
+            attempt++;
+
+            try
+            {
+                result = _func(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    goto Fail;
+
+                goto Attempt;
+            }
+
+            switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
+            {
+                case FunctionState.ReturnSuccess:
+                    return (Success: true, Result: result);
+                case FunctionState.ReturnFailure:
+                    goto Fail;
+                default:
+                    goto Attempt;
+            }
+
+        Fail:
+            return (Success: false, Result: default);
         }
     }
 }

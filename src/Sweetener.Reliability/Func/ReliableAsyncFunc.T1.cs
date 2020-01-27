@@ -180,9 +180,12 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
         /// </summary>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
         public async Task<TResult> InvokeAsync()
             => await InvokeAsync(CancellationToken.None).ConfigureAwait(false);
@@ -191,12 +194,15 @@ namespace Sweetener.Reliability
         /// Asynchronously invokes the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
-        /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains the return value of the method that this reliable delegate encapsulates.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
+        /// </exception>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(CancellationToken cancellationToken)
@@ -230,6 +236,84 @@ namespace Sweetener.Reliability
                 return result;
 
             goto Attempt;
+
+        Invalid:
+            throw new InvalidOperationException("Method resulted in an invalid Task.");
+        }
+
+         /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
+        /// </exception>
+        public async Task<(bool Success, TResult Result)> TryInvokeAsync()
+            => await TryInvokeAsync(CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
+        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
+        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<(bool Success, TResult Result)> TryInvokeAsync(CancellationToken cancellationToken)
+        {
+            Task<TResult> t;
+            int attempt = 0;
+
+        Attempt:
+            t = null;
+            attempt++;
+
+            try
+            {
+                t = _func(cancellationToken);
+                if (t == null)
+                    goto Invalid;
+
+                await t.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    goto Fail;
+
+                goto Attempt;
+            }
+
+            TResult result = t.Result;
+            switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
+            {
+                case FunctionState.ReturnSuccess:
+                    return (Success: true, Result: result);
+                case FunctionState.ReturnFailure:
+                    goto Fail;
+                default:
+                    goto Attempt;
+            }
+
+        Fail:
+            return (Success: false, Result: default);
 
         Invalid:
             throw new InvalidOperationException("Method resulted in an invalid Task.");

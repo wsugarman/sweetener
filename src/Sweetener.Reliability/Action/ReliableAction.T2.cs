@@ -142,6 +142,7 @@ namespace Sweetener.Reliability
         /// </remarks>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>A task that represents the asynchronous invoke operation.</returns>
         public async Task InvokeAsync(T1 arg1, T2 arg2)
             => await InvokeAsync(arg1, arg2, CancellationToken.None).ConfigureAwait(false);
 
@@ -156,6 +157,7 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <returns>A task that represents the asynchronous invoke operation.</returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
@@ -187,7 +189,7 @@ namespace Sweetener.Reliability
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryInvoke(T1 arg1, T2 arg2)
@@ -202,7 +204,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
@@ -212,27 +214,79 @@ namespace Sweetener.Reliability
         public bool TryInvoke(T1 arg1, T2 arg2, CancellationToken cancellationToken)
         {
             int attempt = 0;
-            Exception lastException;
 
-            do
+        Attempt:
+            attempt++;
+
+            try
             {
-                attempt++;
+                _action(arg1, arg2, cancellationToken);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
 
-                try
-                {
-                    _action(arg1, arg2, cancellationToken);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken))
-                        throw;
+                if (!CanRetry(attempt, e, cancellationToken))
+                    return false;
 
-                    lastException = e;
-                }
-            } while (CanRetry(attempt, lastException, cancellationToken));
+                goto Attempt;
+            }
+        }
 
-            return false;
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
+        /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        public async Task<bool> TryInvokeAsync(T1 arg1, T2 arg2)
+            => await TryInvokeAsync(arg1, arg2, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+        /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
+        /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<bool> TryInvokeAsync(T1 arg1, T2 arg2, CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+
+            try
+            {
+                _action(arg1, arg2, cancellationToken);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    return false;
+
+                goto Attempt;
+            }
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Sweetener.Reliability
 #>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
 <#
             }
@@ -78,7 +78,7 @@ namespace Sweetener.Reliability
 #>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
 <#
             }
@@ -97,7 +97,7 @@ namespace Sweetener.Reliability
 #>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
 <#
             }
@@ -121,7 +121,7 @@ namespace Sweetener.Reliability
 #>
         /// <remarks>
         /// The resulting function will throw <see cref="InvalidOperationException"/> if the given
-        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// <paramref name="func"/> returns <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </remarks>
 <#
             }

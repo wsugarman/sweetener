@@ -99,6 +99,14 @@ namespace Sweetener.Reliability.Test
         public void TryInvoke_CancellationToken()
             => TryInvoke(passToken: true);
 
+        [TestMethod]
+        public void TryInvokeAsync()
+            => TryInvokeAsync(passToken: false);
+
+        [TestMethod]
+        public void TryInvokeAsync_CancellationToken()
+            => TryInvokeAsync(passToken: true);
+
         #region Ctor
 
         private void Ctor_DelayHandler(Func<Func<string>, int, ExceptionHandler, DelayHandler, ReliableFunc<string>> factory)
@@ -310,28 +318,28 @@ namespace Sweetener.Reliability.Test
 
         private void InvokeAsync(bool passToken)
         {
-            Func<ReliableFunc<string>, CancellationToken, string> invoke;
+            Func<ReliableFunc<string>, CancellationToken, string> invokeAsync;
             if (passToken)
-                invoke = (r, t) => r.InvokeAsync(t).Result;
+                invokeAsync = (r, t) => r.InvokeAsync(t).Result;
             else
-                invoke = (r, t) => r.InvokeAsync().Result;
+                invokeAsync = (r, t) => r.InvokeAsync().Result;
 
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
                 // Success
-                Invoke_Success                ((f, t, r) => Assert.AreEqual(r, invoke(f, t)), addEventHandlers);
-                Invoke_EventualSuccess        ((f, t, r) => Assert.AreEqual(r, invoke(f, t)), addEventHandlers);
+                Invoke_Success                ((f, t, r) => Assert.AreEqual(r, invokeAsync(f, t)), addEventHandlers);
+                Invoke_EventualSuccess        ((f, t, r) => Assert.AreEqual(r, invokeAsync(f, t)), addEventHandlers);
 
                 // Failure (Result)
-                Invoke_Failure_Result         ((f, t, r) => Assert.AreEqual(r, invoke(f, t)), addEventHandlers);
-                Invoke_EventualFailure_Result ((f, t, r) => Assert.AreEqual(r, invoke(f, t)), addEventHandlers);
-                Invoke_RetriesExhausted_Result((f, t, r) => Assert.AreEqual(r, invoke(f, t)), addEventHandlers);
+                Invoke_Failure_Result         ((f, t, r) => Assert.AreEqual(r, invokeAsync(f, t)), addEventHandlers);
+                Invoke_EventualFailure_Result ((f, t, r) => Assert.AreEqual(r, invokeAsync(f, t)), addEventHandlers);
+                Invoke_RetriesExhausted_Result((f, t, r) => Assert.AreEqual(r, invokeAsync(f, t)), addEventHandlers);
 
                 // Failure (Exception)
-                Invoke_Failure_Exception         ((f, t, e) => Assert.That.ThrowsException(() => invoke(f, t), e), addEventHandlers);
-                Invoke_EventualFailure_Exception ((f, t, e) => Assert.That.ThrowsException(() => invoke(f, t), e), addEventHandlers);
-                Invoke_RetriesExhausted_Exception((f, t, e) => Assert.That.ThrowsException(() => invoke(f, t), e), addEventHandlers);
+                Invoke_Failure_Exception         ((f, t, e) => Assert.That.ThrowsException(() => invokeAsync(f, t), e), addEventHandlers);
+                Invoke_EventualFailure_Exception ((f, t, e) => Assert.That.ThrowsException(() => invokeAsync(f, t), e), addEventHandlers);
+                Invoke_RetriesExhausted_Exception((f, t, e) => Assert.That.ThrowsException(() => invokeAsync(f, t), e), addEventHandlers);
 
                 if (passToken)
                 {
@@ -404,6 +412,68 @@ namespace Sweetener.Reliability.Test
 
             bool TryInvokeFuncWithToken(ReliableFunc<string> reliableFunc, CancellationToken token, out string result)
                 => reliableFunc.TryInvoke(token, out result);
+        }
+
+        #endregion
+
+        #region TryInvokeAsync
+
+        private void TryInvokeAsync(bool passToken)
+        {
+            Func<ReliableFunc<string>, CancellationToken, (bool Success, string Result)> tryInvokeAsync;
+            if (passToken)
+                tryInvokeAsync = (r, t) => r.TryInvokeAsync(t).Result;
+            else
+                tryInvokeAsync = (r, t) => r.TryInvokeAsync().Result;
+
+            Action<ReliableFunc<string>, CancellationToken, string> assertSuccess =
+                (f, t, r) =>
+                {
+                    (bool success, string result) = tryInvokeAsync(f, t);
+                    Assert.IsTrue(success);
+                    Assert.AreEqual(r, result);
+                };
+
+            Action<ReliableFunc<string>, CancellationToken, string> assertResultFailure =
+                (f, t, r) =>
+                {
+                    // TryInvokeAsync returns the default value instead of the failed value 'r'
+                    (bool success, string result) = tryInvokeAsync(f, t);
+                    Assert.IsFalse(success);
+                    Assert.AreEqual(default, result);
+                };
+
+            Action<ReliableFunc<string>, CancellationToken, Type> assertExceptionFailure =
+                (f, t, e) =>
+                {
+                    // TryInvokeAsync returns false instead of throwing the provided exception 'e'
+                    (bool success, string result) = tryInvokeAsync(f, t);
+                    Assert.IsFalse(success);
+                    Assert.AreEqual(default, result);
+                };
+
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                // Success
+                Invoke_Success                (assertSuccess, addEventHandlers);
+                Invoke_EventualSuccess        (assertSuccess, addEventHandlers);
+
+                // Failure (Result)
+                Invoke_Failure_Result         (assertResultFailure, addEventHandlers);
+                Invoke_EventualFailure_Result (assertResultFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Result(assertResultFailure, addEventHandlers);
+
+                // Failure (Exception)
+                Invoke_Failure_Exception         (assertExceptionFailure, addEventHandlers);
+                Invoke_EventualFailure_Exception (assertExceptionFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Exception(assertExceptionFailure, addEventHandlers);
+
+                if (passToken)
+                {
+                    Invoke_Canceled_Func ((f, t) => f.TryInvokeAsync(t).Wait(), addEventHandlers);
+                    Invoke_Canceled_Delay((f, t) => f.TryInvokeAsync(t).Wait(), addEventHandlers);
+                }
+            }
         }
 
         #endregion

@@ -52,6 +52,14 @@ namespace Sweetener.Reliability.Test
         public void InvokeAsync_CancellationToken()
             => InvokeAsync(passToken: true);
 
+        [TestMethod]
+        public void TryInvokeAsync()
+            => TryInvokeAsync(passToken: false);
+
+        [TestMethod]
+        public void TryInvokeAsync_CancellationToken()
+            => TryInvokeAsync(passToken: true);
+
         #region Ctor
 
         private void Ctor_DelayHandler(Func<Func<int, string, Task>, int, ExceptionHandler, DelayHandler, ReliableAsyncAction<int, string>> factory)
@@ -144,31 +152,65 @@ namespace Sweetener.Reliability.Test
 
         private void InvokeAsync(bool passToken)
         {
-            Action<ReliableAsyncAction<int, string>, int, string, CancellationToken> invoke;
+            Action<ReliableAsyncAction<int, string>, int, string, CancellationToken> invokeAsync;
             if (passToken)
-                invoke = (r, arg1, arg2, t) => r.InvokeAsync(arg1, arg2, t).Wait();
+                invokeAsync = (r, arg1, arg2, t) => r.InvokeAsync(arg1, arg2, t).Wait();
             else
-                invoke = (r, arg1, arg2, t) => r.InvokeAsync(arg1, arg2).Wait();
+                invokeAsync = (r, arg1, arg2, t) => r.InvokeAsync(arg1, arg2).Wait();
 
             // Test an action that returns a null Task
             ReliableAsyncAction<int, string> badAction = new ReliableAsyncAction<int, string>((arg1, arg2) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
-            Assert.That.ThrowsException<InvalidOperationException>(() => invoke(badAction, 42, "foo", CancellationToken.None));
+            Assert.That.ThrowsException<InvalidOperationException>(() => invokeAsync(badAction, 42, "foo", CancellationToken.None));
 
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
-                Invoke_Success        (invoke, addEventHandlers);
-                Invoke_EventualSuccess(invoke, addEventHandlers);
+                Invoke_Success        (invokeAsync, addEventHandlers);
+                Invoke_EventualSuccess(invokeAsync, addEventHandlers);
 
-                Invoke_Failure         ((r, arg1, arg2, t, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, t), e), addEventHandlers);
-                Invoke_EventualFailure ((r, arg1, arg2, t, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, t), e), addEventHandlers);
-                Invoke_RetriesExhausted((r, arg1, arg2, t, e) => Assert.That.ThrowsException(() => invoke(r, arg1, arg2, t), e), addEventHandlers);
+                Invoke_Failure         ((r, arg1, arg2, t, e) => Assert.That.ThrowsException(() => invokeAsync(r, arg1, arg2, t), e), addEventHandlers);
+                Invoke_EventualFailure ((r, arg1, arg2, t, e) => Assert.That.ThrowsException(() => invokeAsync(r, arg1, arg2, t), e), addEventHandlers);
+                Invoke_RetriesExhausted((r, arg1, arg2, t, e) => Assert.That.ThrowsException(() => invokeAsync(r, arg1, arg2, t), e), addEventHandlers);
 
                 if (passToken)
                 {
-                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: false);
-                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: true );
-                    Invoke_Canceled_Delay (invoke, addEventHandlers);
+                    Invoke_Canceled_Action(invokeAsync, addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action(invokeAsync, addEventHandlers, useSynchronousAction: true );
+                    Invoke_Canceled_Delay (invokeAsync, addEventHandlers);
+                }
+            }
+        }
+
+        #endregion
+
+        #region TryInvokeAsync
+
+        private void TryInvokeAsync(bool passToken)
+        {
+            Func<ReliableAsyncAction<int, string>, int, string, CancellationToken, bool> tryInvokeAsync;
+            if (passToken)
+                tryInvokeAsync = (r, arg1, arg2, t) => r.TryInvokeAsync(arg1, arg2, t).Result;
+            else
+                tryInvokeAsync = (r, arg1, arg2, t) => r.TryInvokeAsync(arg1, arg2).Result;
+
+            // Test an action that returns a null Task
+            ReliableAsyncAction<int, string> badAction = new ReliableAsyncAction<int, string>((arg1, arg2) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badAction, 42, "foo", CancellationToken.None));
+
+            // Callers may optionally include event handlers
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                Invoke_Success         ((r, arg1, arg2, t   ) => Assert.IsTrue (tryInvokeAsync(r, arg1, arg2, t)), addEventHandlers);
+                Invoke_EventualSuccess ((r, arg1, arg2, t   ) => Assert.IsTrue (tryInvokeAsync(r, arg1, arg2, t)), addEventHandlers);
+                Invoke_Failure         ((r, arg1, arg2, t, e) => Assert.IsFalse(tryInvokeAsync(r, arg1, arg2, t)), addEventHandlers);
+                Invoke_EventualFailure ((r, arg1, arg2, t, e) => Assert.IsFalse(tryInvokeAsync(r, arg1, arg2, t)), addEventHandlers);
+                Invoke_RetriesExhausted((r, arg1, arg2, t, e) => Assert.IsFalse(tryInvokeAsync(r, arg1, arg2, t)), addEventHandlers);
+
+                if (passToken)
+                {
+                    Invoke_Canceled_Action((r, arg1, arg2, t) => r.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action((r, arg1, arg2, t) => r.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers, useSynchronousAction: true );
+                    Invoke_Canceled_Delay ((r, arg1, arg2, t) => r.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers);
                 }
             }
         }

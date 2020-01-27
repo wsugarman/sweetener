@@ -110,6 +110,14 @@ namespace Sweetener.Reliability.Test
 <#
         }
 #>
+        [TestMethod]
+        public void TryInvokeAsync()
+            => TryInvokeAsync(passToken: false);
+
+        [TestMethod]
+        public void TryInvokeAsync_CancellationToken()
+            => TryInvokeAsync(passToken: true);
+
         #region Ctor
 
 <#
@@ -225,11 +233,11 @@ namespace Sweetener.Reliability.Test
 
         private void InvokeAsync(bool passToken)
         {
-            Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> invoke;
+            Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> invokeAsync;
             if (passToken)
-                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait();
+                invokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #><#= optionalComma #>t).Wait();
             else
-                invoke = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #>).Wait();
+                invokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.InvokeAsync(<#= arguments #>).Wait();
 
 <#
         if (async)
@@ -237,7 +245,7 @@ namespace Sweetener.Reliability.Test
 #>
             // Test an action that returns a null Task
             ReliableAsyncAction<#= typeArguments #> badAction = new ReliableAsyncAction<#= typeArguments #>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
-            Assert.That.ThrowsException<InvalidOperationException>(() => invoke(badAction<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+            Assert.That.ThrowsException<InvalidOperationException>(() => invokeAsync(badAction<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
 
 <#
         }
@@ -245,12 +253,12 @@ namespace Sweetener.Reliability.Test
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
             {
-                Invoke_Success        (invoke, addEventHandlers);
-                Invoke_EventualSuccess(invoke, addEventHandlers);
+                Invoke_Success        (invokeAsync, addEventHandlers);
+                Invoke_EventualSuccess(invokeAsync, addEventHandlers);
 
-                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
-                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
-                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invoke(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invokeAsync(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invokeAsync(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
+                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.That.ThrowsException(() => invokeAsync(r<#= optionalComma #><#= arguments #>, t), e), addEventHandlers);
 
                 if (passToken)
                 {
@@ -258,18 +266,18 @@ namespace Sweetener.Reliability.Test
         if (async)
         {
 #>
-                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: false);
-                    Invoke_Canceled_Action(invoke, addEventHandlers, useSynchronousAction: true );
+                    Invoke_Canceled_Action(invokeAsync, addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action(invokeAsync, addEventHandlers, useSynchronousAction: true );
 <#
         }
         else
         {
 #>
-                    Invoke_Canceled_Action(invoke, addEventHandlers);
+                    Invoke_Canceled_Action(invokeAsync, addEventHandlers);
 <#
         }
 #>
-                    Invoke_Canceled_Delay (invoke, addEventHandlers);
+                    Invoke_Canceled_Delay (invokeAsync, addEventHandlers);
                 }
             }
         }
@@ -312,6 +320,60 @@ namespace Sweetener.Reliability.Test
 <#
         }
 #>
+        #region TryInvokeAsync
+
+        private void TryInvokeAsync(bool passToken)
+        {
+            Func<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken, bool> tryInvokeAsync;
+            if (passToken)
+                tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Result;
+            else
+                tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #>).Result;
+
+<#
+        if (async)
+        {
+#>
+            // Test an action that returns a null Task
+            ReliableAsyncAction<#= typeArguments #> badAction = new ReliableAsyncAction<#= typeArguments #>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
+            Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badAction<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+
+<#
+        }
+#>
+            // Callers may optionally include event handlers
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                Invoke_Success         ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualSuccess ((r<#= optionalComma #><#= arguments #>, t   ) => Assert.IsTrue (tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_Failure         ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_EventualFailure ((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+                Invoke_RetriesExhausted((r<#= optionalComma #><#= arguments #>, t, e) => Assert.IsFalse(tryInvokeAsync(r<#= optionalComma #><#= arguments #>, t)), addEventHandlers);
+
+                if (passToken)
+                {
+<#
+        if (async)
+        {
+#>
+                    Invoke_Canceled_Action((r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers, useSynchronousAction: false);
+                    Invoke_Canceled_Action((r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers, useSynchronousAction: true );
+<#
+        }
+        else
+        {
+#>
+                    Invoke_Canceled_Action((r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
+<#
+        }
+#>
+                    Invoke_Canceled_Delay ((r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
+                }
+            }
+        }
+
+        #endregion
+
         #region Invoke_Success
 
         private void Invoke_Success(Action<Reliable<#= optionalAsync #>Action<#= typeArguments #><#= optionalComma #><#= typeArgumentsNoBrackets #>, CancellationToken> assertInvoke, bool addEventHandlers)
