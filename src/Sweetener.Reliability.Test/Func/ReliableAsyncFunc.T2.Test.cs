@@ -84,6 +84,14 @@ namespace Sweetener.Reliability.Test
         public void InvokeAsync_CancellationToken()
             => InvokeAsync(passToken: true);
 
+        [TestMethod]
+        public void TryInvokeAsync()
+            => TryInvokeAsync(passToken: false);
+
+        [TestMethod]
+        public void TryInvokeAsync_CancellationToken()
+            => TryInvokeAsync(passToken: true);
+
         #region Ctor
 
         private void Ctor_DelayHandler(Func<Func<int, Task<string>>, int, ExceptionHandler, DelayHandler, ReliableAsyncFunc<int, string>> factory)
@@ -292,6 +300,70 @@ namespace Sweetener.Reliability.Test
                     Invoke_Canceled_Func ((f, arg, t) => f.InvokeAsync(arg, t).Wait(), addEventHandlers, useSynchronousFunc: false);
                     Invoke_Canceled_Func ((f, arg, t) => f.InvokeAsync(arg, t).Wait(), addEventHandlers, useSynchronousFunc: true );
                     Invoke_Canceled_Delay((f, arg, t) => f.InvokeAsync(arg, t).Wait(), addEventHandlers);
+                }
+            }
+        }
+
+        #endregion
+
+
+        #region TryInvokeAsync
+
+        private void TryInvokeAsync(bool passToken)
+        {
+            Func<ReliableAsyncFunc<int, string>, int, CancellationToken, (bool Success, string Result)> tryInvokeAsync;
+            if (passToken)
+                tryInvokeAsync = (r, arg, t) => r.TryInvokeAsync(arg, t).Result;
+            else
+                tryInvokeAsync = (r, arg, t) => r.TryInvokeAsync(arg).Result;
+
+            Action<ReliableAsyncFunc<int, string>, int, CancellationToken, string> assertSuccess =
+                (f, arg, t, r) =>
+                {
+                    (bool success, string result) = tryInvokeAsync(f, arg, t);
+                    Assert.IsTrue(success);
+                    Assert.AreEqual(r, result);
+                };
+
+            Action<ReliableAsyncFunc<int, string>, int, CancellationToken, string> assertResultFailure =
+                (f, arg, t, r) =>
+                {
+                    // TryInvokeAsync returns the default value instead of the failed value 'r'
+                    (bool success, string result) = tryInvokeAsync(f, arg, t);
+                    Assert.IsFalse(success);
+                    Assert.AreEqual(default, result);
+                };
+
+            Action<ReliableAsyncFunc<int, string>, int, CancellationToken, Type> assertExceptionFailure =
+                (f, arg, t, e) =>
+                {
+                    // TryInvokeAsync returns false instead of throwing the provided exception 'e'
+                    (bool success, string result) = tryInvokeAsync(f, arg, t);
+                    Assert.IsFalse(success);
+                    Assert.AreEqual(default, result);
+                };
+
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                // Success
+                Invoke_Success                (assertSuccess, addEventHandlers);
+                Invoke_EventualSuccess        (assertSuccess, addEventHandlers);
+
+                // Failure (Result)
+                Invoke_Failure_Result         (assertResultFailure, addEventHandlers);
+                Invoke_EventualFailure_Result (assertResultFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Result(assertResultFailure, addEventHandlers);
+
+                // Failure (Exception)
+                Invoke_Failure_Exception         (assertExceptionFailure, addEventHandlers);
+                Invoke_EventualFailure_Exception (assertExceptionFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Exception(assertExceptionFailure, addEventHandlers);
+
+                if (passToken)
+                {
+                    Invoke_Canceled_Func ((f, arg, t) => f.TryInvokeAsync(arg, t).Wait(), addEventHandlers, useSynchronousFunc: false);
+                    Invoke_Canceled_Func ((f, arg, t) => f.TryInvokeAsync(arg, t).Wait(), addEventHandlers, useSynchronousFunc: true );
+                    Invoke_Canceled_Delay((f, arg, t) => f.TryInvokeAsync(arg, t).Wait(), addEventHandlers);
                 }
             }
         }

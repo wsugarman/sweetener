@@ -141,6 +141,14 @@ namespace Sweetener.Reliability.Test
 <#
         }
 #>
+        [TestMethod]
+        public void TryInvokeAsync()
+            => TryInvokeAsync(passToken: false);
+
+        [TestMethod]
+        public void TryInvokeAsync_CancellationToken()
+            => TryInvokeAsync(passToken: true);
+
         #region Ctor
 
 <#
@@ -420,10 +428,86 @@ namespace Sweetener.Reliability.Test
         }
 
         #endregion
-
 <#
         }
 #>
+
+        #region TryInvokeAsync
+
+        private void TryInvokeAsync(bool passToken)
+        {
+            Func<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, (bool Success, string Result)> tryInvokeAsync;
+            if (passToken)
+                tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Result;
+            else
+                tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #>).Result;
+
+            Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> assertSuccess =
+                (f<#= optionalComma #><#= arguments #>, t, r) =>
+                {
+                    (bool success, string result) = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
+                    Assert.IsTrue(success);
+                    Assert.AreEqual(r, result);
+                };
+
+            Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> assertResultFailure =
+                (f<#= optionalComma #><#= arguments #>, t, r) =>
+                {
+                    // TryInvokeAsync returns the default value instead of the failed value 'r'
+                    (bool success, string result) = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
+                    Assert.IsFalse(success);
+                    Assert.AreEqual(default, result);
+                };
+
+            Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, Type> assertExceptionFailure =
+                (f<#= optionalComma #><#= arguments #>, t, e) =>
+                {
+                    // TryInvokeAsync returns false instead of throwing the provided exception 'e'
+                    (bool success, string result) = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
+                    Assert.IsFalse(success);
+                    Assert.AreEqual(default, result);
+                };
+
+            foreach (bool addEventHandlers in new bool[] { false, true })
+            {
+                // Success
+                Invoke_Success                (assertSuccess, addEventHandlers);
+                Invoke_EventualSuccess        (assertSuccess, addEventHandlers);
+
+                // Failure (Result)
+                Invoke_Failure_Result         (assertResultFailure, addEventHandlers);
+                Invoke_EventualFailure_Result (assertResultFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Result(assertResultFailure, addEventHandlers);
+
+                // Failure (Exception)
+                Invoke_Failure_Exception         (assertExceptionFailure, addEventHandlers);
+                Invoke_EventualFailure_Exception (assertExceptionFailure, addEventHandlers);
+                Invoke_RetriesExhausted_Exception(assertExceptionFailure, addEventHandlers);
+
+                if (passToken)
+                {
+<#
+        if (async)
+        {
+#>
+                    Invoke_Canceled_Func ((f<#= optionalComma #><#= arguments #>, t) => f.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers, useSynchronousFunc: false);
+                    Invoke_Canceled_Func ((f<#= optionalComma #><#= arguments #>, t) => f.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers, useSynchronousFunc: true );
+<#
+        }
+        else
+        {
+#>
+                    Invoke_Canceled_Func ((f<#= optionalComma #><#= arguments #>, t) => f.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
+<#
+        }
+#>
+                    Invoke_Canceled_Delay((f<#= optionalComma #><#= arguments #>, t) => f.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Wait(), addEventHandlers);
+                }
+            }
+        }
+
+        #endregion
+
         #region Invoke_Success
 
         private void Invoke_Success(Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> assertInvoke, bool addEventHandlers)
