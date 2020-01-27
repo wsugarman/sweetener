@@ -13,6 +13,13 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
   </PropertyGroup>
+  
+  <!-- Assembly Info -->
+  <ItemGroup>
+    <Compile Include="$(SrcDirectory)AssemblyInfo.Common.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
 
   <!-- Tools -->
   <ItemGroup>
@@ -44,6 +51,7 @@
 
       <!-- Assembly and Build Properties -->
       <PropertyGroup>
+        <CLSCompliant>true</CLSCompliant>
         <Copyright>Copyright © William Sugarman 2020</Copyright>
         <DelaySign>true</DelaySign>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>

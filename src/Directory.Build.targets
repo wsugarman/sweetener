@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup>
+    <DefineConstants Condition="'$(CLSCompliant)' == 'true'">CLSCompliant;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+</Project>
