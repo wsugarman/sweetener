@@ -13,13 +13,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
   </PropertyGroup>
-  
-  <!-- Assembly Info -->
-  <ItemGroup>
-    <Compile Include="$(SrcDirectory)AssemblyInfo.Common.cs">
-      <Link>Properties\AssemblyInfo.cs</Link>
-    </Compile>
-  </ItemGroup>
 
   <!-- Tools -->
   <ItemGroup>
@@ -51,7 +44,6 @@
 
       <!-- Assembly and Build Properties -->
       <PropertyGroup>
-        <CLSCompliant>true</CLSCompliant>
         <Copyright>Copyright © William Sugarman 2020</Copyright>
         <DelaySign>true</DelaySign>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -72,6 +64,13 @@
         <PackageReleaseNotes>https://wsugarman.github.io/Sweetener/ReleaseNotes/$(MSBuildProjectName)</PackageReleaseNotes>
         <MinClientVersion>4.3.0</MinClientVersion>
       </PropertyGroup>
+
+      <!-- Common Assembly Info -->
+      <ItemGroup>
+        <Compile Include="$(SrcDirectory)AssemblyInfo.Common.cs">
+          <Link>Properties\AssemblyInfo.cs</Link>
+        </Compile>
+      </ItemGroup>
 
       <!-- Dynamic Assembly Attributes -->
       <ItemGroup>
