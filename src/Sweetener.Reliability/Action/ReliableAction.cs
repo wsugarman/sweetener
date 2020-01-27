@@ -175,7 +175,7 @@ namespace Sweetener.Reliability
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryInvoke()
@@ -188,7 +188,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
@@ -223,7 +223,7 @@ namespace Sweetener.Reliability
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public async Task<bool> TryInvokeAsync()
@@ -236,7 +236,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">

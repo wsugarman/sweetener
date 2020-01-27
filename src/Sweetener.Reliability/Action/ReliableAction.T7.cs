@@ -217,7 +217,7 @@ namespace Sweetener.Reliability
         /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
@@ -237,7 +237,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
@@ -279,7 +279,7 @@ namespace Sweetener.Reliability
         /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
         /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public async Task<bool> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
@@ -299,7 +299,7 @@ namespace Sweetener.Reliability
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// <see langword="true"/> if the encapsulated method completed without throwing an exception
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">

@@ -196,7 +196,7 @@ namespace Sweetener.Reliability
         /// <param name="arg7">The seventh parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>The return value of the method that this reliable delegate encapsulates.</returns>
         /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
             => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, CancellationToken.None).ConfigureAwait(false);
@@ -217,7 +217,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
@@ -275,7 +275,7 @@ namespace Sweetener.Reliability
         /// the default value is present in the tuple if it failed.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
         public async Task<(bool Success, TResult Result)> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
             => await TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, CancellationToken.None).ConfigureAwait(false);
@@ -297,7 +297,7 @@ namespace Sweetener.Reliability
         /// the default value is present in the tuple if it failed.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
@@ -325,14 +325,14 @@ namespace Sweetener.Reliability
                 if (e.IsCancellation(cancellationToken))
                     throw;
 
-                if (!CanRetry(attempt, e, cancellationToken))
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     goto Fail;
 
                 goto Attempt;
             }
 
             TResult result = t.Result;
-            switch (MoveNext(attempt, result, cancellationToken))
+            switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
             {
                 case FunctionState.ReturnSuccess:
                     return (Success: true, Result: result);
