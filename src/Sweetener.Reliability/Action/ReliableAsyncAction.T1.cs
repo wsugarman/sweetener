@@ -98,7 +98,7 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         public async Task InvokeAsync(T arg)
             => await InvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
@@ -110,11 +110,11 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">
         /// A cancellation token to observe while waiting for the operation to complete.
         /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// The encapsulated method returns <see langword="null"/> instead of a valid <see cref="Task"/>.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T arg, CancellationToken cancellationToken)
@@ -140,6 +140,71 @@ namespace Sweetener.Reliability
                 bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
                 if (isCanceled || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     throw;
+
+                goto Attempt;
+            }
+
+        Invalid:
+            throw new InvalidOperationException("Method resulted in an invalid Task.");
+        }
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
+        public async Task<bool> TryInvokeAsync(T arg)
+            => await TryInvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task"/>.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<bool> TryInvokeAsync(T arg, CancellationToken cancellationToken)
+        {
+            Task t;
+            int attempt = 0;
+
+        Attempt:
+            t = null;
+            attempt++;
+
+            try
+            {
+                t = _action(arg, cancellationToken);
+                if (t == null)
+                    goto Invalid;
+
+                await t.ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    return false;
 
                 goto Attempt;
             }

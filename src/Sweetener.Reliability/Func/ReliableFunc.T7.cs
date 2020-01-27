@@ -270,6 +270,9 @@ namespace Sweetener.Reliability
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, CancellationToken cancellationToken)
         {
@@ -312,7 +315,7 @@ namespace Sweetener.Reliability
         /// is passed unitialized; any value originally supplied in result will be overwritten.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed successfully
+        /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, out TResult result)
@@ -334,7 +337,7 @@ namespace Sweetener.Reliability
         /// is passed unitialized; any value originally supplied in result will be overwritten.
         /// </param>
         /// <returns>
-        /// <see langword="true"/> if the delegate completed successfully
+        /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
@@ -344,34 +347,112 @@ namespace Sweetener.Reliability
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, CancellationToken cancellationToken, out TResult result)
         {
             int attempt = 0;
-            bool retry = false;
 
-            do
+        Attempt:
+            attempt++;
+
+            try
             {
-                attempt++;
+                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
 
-                try
-                {
-                    result = _func(arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken))
-                        throw;
+                if (!CanRetry(attempt, e, cancellationToken))
+                    goto Fail;
 
-                    retry = CanRetry(attempt, e, cancellationToken);
-                    continue;
-                }
+                goto Attempt;
+            }
 
-                FunctionState nextState = MoveNext(attempt, result, cancellationToken);
-                if (nextState == FunctionState.ReturnSuccess)
+            switch (MoveNext(attempt, result, cancellationToken))
+            {
+                case FunctionState.ReturnSuccess:
                     return true;
+                case FunctionState.ReturnFailure:
+                    goto Fail;
+                default:
+                    goto Attempt;
+            }
 
-                retry = nextState == FunctionState.Retry;
-            } while (retry);
-
+        Fail:
             result = default;
             return false;
+        }
+
+
+         /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg5">The fifth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>
+        /// A named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/> flag, indicating
+        /// the success of the encapsulated method, and its result, if it succeeded. Otherwise
+        /// the default value is present in the tuple if it failed.
+        /// </returns>
+        public async Task<(bool Success, TResult Result)> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+            => await TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg2">The second parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg3">The third parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg4">The fourth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg5">The fifth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="arg6">The sixth parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
+        /// <returns>
+        /// A named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/> flag, indicating
+        /// the success of the encapsulated method, and its result, if it succeeded. Otherwise
+        /// the default value is present in the tuple if it failed.
+        /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<(bool Success, TResult Result)> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+
+        Attempt:
+            TResult result;
+            attempt++;
+
+            try
+            {
+                result = _func(arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    goto Fail;
+
+                goto Attempt;
+            }
+
+            switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
+            {
+                case FunctionState.ReturnSuccess:
+                    return (Success: true, Result: result);
+                case FunctionState.ReturnFailure:
+                    goto Fail;
+                default:
+                    goto Attempt;
+            }
+
+        Fail:
+            return (Success: false, Result: default);
         }
     }
 }

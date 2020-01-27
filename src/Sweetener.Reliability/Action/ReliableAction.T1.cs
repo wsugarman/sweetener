@@ -205,27 +205,75 @@ namespace Sweetener.Reliability
         public bool TryInvoke(T arg, CancellationToken cancellationToken)
         {
             int attempt = 0;
-            Exception lastException;
 
-            do
+        Attempt:
+            attempt++;
+
+            try
             {
-                attempt++;
+                _action(arg, cancellationToken);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
 
-                try
-                {
-                    _action(arg, cancellationToken);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    if (e.IsCancellation(cancellationToken))
-                        throw;
+                if (!CanRetry(attempt, e, cancellationToken))
+                    return false;
 
-                    lastException = e;
-                }
-            } while (CanRetry(attempt, lastException, cancellationToken));
+                goto Attempt;
+            }
+        }
 
-            return false;
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        public async Task<bool> TryInvokeAsync(T arg)
+            => await TryInvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+
+        /// <summary>
+        /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
+        /// </summary>
+        /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
+        /// <param name="cancellationToken">
+        /// A cancellation token to observe while waiting for the operation to complete.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if the delegate completed without throwing an exception
+        /// within the maximum number of retries; otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        public async Task<bool> TryInvokeAsync(T arg, CancellationToken cancellationToken)
+        {
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+
+            try
+            {
+                _action(arg, cancellationToken);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                    return false;
+
+                goto Attempt;
+            }
         }
     }
 }
