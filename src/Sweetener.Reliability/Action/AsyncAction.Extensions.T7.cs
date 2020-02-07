@@ -105,7 +105,7 @@ namespace Sweetener.Reliability
                 }
 
             Invalid:
-                throw new InvalidOperationException("Method resulted in an invalid Task.");
+                throw new InvalidOperationException(SR.InvalidTaskResult);
             };
         }
 
@@ -210,7 +210,7 @@ namespace Sweetener.Reliability
                 }
 
             Invalid:
-                throw new InvalidOperationException("Method resulted in an invalid Task.");
+                throw new InvalidOperationException(SR.InvalidTaskResult);
             };
         }
 

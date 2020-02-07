@@ -49,8 +49,7 @@
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
-        <!-- TODO: Remove CA1303 after including localized resources -->
-        <NoWarn>NU5105;CA1303</NoWarn> <!-- Ignore warnings about requiring SemVar 2.0. We want to use it! -->
+        <NoWarn>NU5105</NoWarn> <!-- Ignore warnings about requiring SemVar 2.0. We want to use it! -->
         <Product>Sweetener</Product>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
