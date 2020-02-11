@@ -1,4 +1,4 @@
-# Note: Triggers are configured in Azure Pipeline for security purposes
+# Note: Triggers are configured in Azure Devops for the sake of security
 # The values here are meant to reflect what is configured and cannot be changed
 trigger:
   branches:

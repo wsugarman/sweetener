@@ -1,0 +1,22 @@
+# Note: Only the Release pipelines have sufficient permissions for pushing NuGet packages
+steps:
+- task: DownloadPipelineArtifact@2
+  displayName: Download Package
+  inputs:
+    buildType: 'current'
+    artifactName: 'pkg'
+    targetPath: '$(Pipeline.Workspace)'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+#- task: DotNetCoreCLI@2
+#  displayName: Push to NuGet.org
+#  inputs:
+#    command: 'push'
+#    packagesToPush: '$(Pipeline.Workspace)/pkg/*.nupkg'
+#    nuGetFeedType: 'external'
+#    publishFeedCredentials: 'NuGet.org Sweetener API Key'
