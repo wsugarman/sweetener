@@ -25,10 +25,16 @@ steps:
 
 - task: PowerShell@2
   name: Version
-  displayName: Parse Version.json
+  displayName: 'Parse Version.json'
   inputs:
-    filePath: 'eng/Build/ParseVersion.ps1'
-    arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json"'
+    targetType: 'inline'
+    script: |
+      # Parse Version.json
+      Invoke-Expression "eng/Build/ParseVersion.ps1 -VersionFilePath `"src/${{ parameters.Project }}/Version.json`""
+
+      # Determine whether version changed
+      $Changed = @(Invoke-Expression "git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)") -contains "src/${{ parameters.Project }}/Version.json"
+      Write-Host "##vso[task.setvariable variable=Changed;isOutput=true]$Changed"
     pwsh: true
 
 - task: DotNetCoreCLI@2
