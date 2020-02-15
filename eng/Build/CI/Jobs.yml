@@ -32,7 +32,7 @@ jobs:
 
 - job: Release
   dependsOn: Package
-  condition: and(succeeded(), or($(ReleaseOverride), eq(dependencies.Package.outputs['Version.Changed'], 'true')))
+  condition: and(succeeded(), or(eq(variables['ReleaseOverride'], 'true'), eq(dependencies.Package.outputs['Version.Changed'], 'true')))
   pool:
     vmImage: 'ubuntu-latest'
   steps:
