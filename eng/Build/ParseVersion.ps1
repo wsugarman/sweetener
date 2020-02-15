@@ -9,7 +9,8 @@ param
     $BuildId = $null
 )
 
-# Any error is terminating
+# Turn off trace and stop on any error
+Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 $VersionParts = Get-Content $VersionFilePath | Out-String | ConvertFrom-Json

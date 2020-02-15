@@ -3,7 +3,10 @@ parameters:
 - name: project
   type: string
   default: ''
-  
+- name: version
+  type: string
+  default: ''
+
 steps:
 - task: DownloadPipelineArtifact@2
   displayName: 'Download Package'
@@ -23,6 +26,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      Write-Output "Looking for $(Project).$(Version).nupkg..."
       $assemblies = @(Get-ChildItem -Path "$(Pipeline.Workspace)/pkg/" -Recurse)
       foreach ($file in $files)
       {

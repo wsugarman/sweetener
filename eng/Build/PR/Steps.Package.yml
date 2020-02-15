@@ -15,7 +15,7 @@ steps:
 
 - task: PowerShell@2
   name: Version
-  displayName: Parse Version.json
+  displayName: 'Parse Version.json'
   inputs:
     filePath: 'eng/Build/ParseVersion.ps1'
     arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json" -BuildId "$(Build.BuildId)"'

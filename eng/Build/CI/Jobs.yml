@@ -39,3 +39,4 @@ jobs:
   - template: Steps.Release.yml
     parameters:
       project: '${{ parameters.Project }}'
+      version: $[ dependencies.Package.outputs['Version.Package'] ]
