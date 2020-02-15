@@ -91,6 +91,7 @@ steps:
     buildProperties: 'ContinuousIntegrationBuild=true;PackageVersion=$(Version.Package)'
     nobuild: true
     nugetConfigPath: 'NuGet.config'
+    outputDir: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
     verbosityPack: 'normal'
 
 - task: PowerShell@2
@@ -107,8 +108,15 @@ steps:
                 -DotNetTools "${{ parameters.DotNetTools }}"'
     pwsh: true
 
+- task: CopyFiles@2
+  displayName: 'Copy NuGet Package to Staging Directory'
+  inputs:
+    SourceFolder: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
+    Contents: '*nupkg'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish NuPkg Artifact'
+  displayName: 'Publish NuGet Package Artifact'
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
     artifact: 'pkg'
