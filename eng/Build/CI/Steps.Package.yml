@@ -26,12 +26,11 @@ steps:
   inputs:
     secureFile: 'Sweetener.snk'
 
-- task: AzureKeyVault@1
-  displayName: 'Fetch Key Vault Secrets'
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 2.1.x'
   inputs:
-    azureSubscription: 'Sweetener-Pipelines-Test'
-    keyVaultName: 'Sugarman-KeyVault'
-    secretsFilter: 'Test-Client-Id,Test-Client-Secret'
+    packageType: 'sdk'
+    version: '2.1.x'
 
 - task: UseDotNet@2
   displayName: 'Install .NET Core 3.x'
@@ -61,6 +60,13 @@ steps:
     arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File)'
     nugetConfigPath: 'NuGet.config'
 
+- task: AzureKeyVault@1
+  displayName: 'Fetch Key Vault Secrets'
+  inputs:
+    azureSubscription: 'Sweetener-Pipelines-Test'
+    keyVaultName: 'Sugarman-KeyVault'
+    secretsFilter: 'Test-Client-Id,Test-Client-Secret'
+
 - task: PowerShell@2
   displayName: 'Sign Assemblies'
   inputs:
@@ -75,7 +81,7 @@ steps:
                 -NetFXTools "${{ parameters.NetFXTools }}"
                 -DotNetTools "${{ parameters.DotNetTools }}"'
     pwsh: true
-
+    
 - task: DotNetCoreCLI@2
   displayName: 'Pack Library'
   inputs:
