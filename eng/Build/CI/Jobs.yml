@@ -16,7 +16,7 @@ jobs:
 #      buildConfiguration: '$(BuildConfiguration)'
 
 - job: Package
-  dependsOn: Validate
+  #dependsOn: Validate
   #condition: succeeded()
   pool:
     vmImage: 'windows-latest'
