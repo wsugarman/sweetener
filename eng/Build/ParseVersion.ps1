@@ -27,7 +27,7 @@ if ($BuildId)
 else
 {
     $FileVersion    = [string]::Format("{0}.{1}.{2}.0", $VersionParts.major, $VersionParts.minor, $VersionParts.patch)
-    $PackageVersion = $FileVersion
+    $PackageVersion = [string]::Format("{0}.{1}.{2}"  , $VersionParts.major, $VersionParts.minor, $VersionParts.patch)
     if (![string]::IsNullOrWhiteSpace($VersionParts.suffix))
     {
         $PackageVersion += "-" + $VersionParts.suffix
