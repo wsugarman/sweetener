@@ -30,11 +30,11 @@ param
 
     [Parameter(Mandatory=$False)]
     [string]
-    $TimestampUrl = "http://timestamp.digicert.com",
+    $ProjectUrl = "https://wsugarman.github.io/Sweetener/",
 
     [Parameter(Mandatory=$False)]
     [string]
-    $ProjectUrl = "https://wsugarman.github.io/Sweetener/",
+    $TimestampUrl = "http://timestamp.digicert.com",
 
     [Parameter(Mandatory=$False)]
     [string]

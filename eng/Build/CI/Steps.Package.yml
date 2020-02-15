@@ -29,7 +29,7 @@ steps:
 - task: AzureKeyVault@1
   displayName: 'Fetch Key Vault Secrets'
   inputs:
-    azureSubscription: 'Sugarman Development'
+    azureSubscription: 'Sweetener-Pipelines-Test'
     keyVaultName: 'Sugarman-KeyVault'
     secretsFilter: 'Test-Client-Id,Test-Client-Secret'
 
