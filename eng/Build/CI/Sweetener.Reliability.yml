@@ -1,7 +1,7 @@
 # Note: Triggers are configured in Azure Devops for the sake of security
 # The values here are meant to reflect what is configured and cannot be changed
 schedules:
-- cron: "10 2 * * *"
+- cron: "30 2 * * *"
   displayName: Ad-hoc Build
   branches:
     include:
