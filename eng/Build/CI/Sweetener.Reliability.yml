@@ -1,17 +1,12 @@
 # Note: Triggers are configured in Azure Devops for the sake of security
 # The values here are meant to reflect what is configured and cannot be changed
-trigger:
+schedules:
+- cron: "10 2 * * *"
+  displayName: Ad-hoc Build
   branches:
     include:
-    - master
-  paths:
-    include:
-    - eng/Build/Steps.Validate.yml
-    - eng/Build/CI/Jobs.yml
-    - eng/Build/CI/Steps.Package.yml
-    - eng/Build/CI/Sweetener.Reliability.yml
-    - src/Directory.Build.props
-    - src/Sweetener.Reliability/*
+    - '*'
+  always: true
 
 jobs:
 - template: Jobs.yml
