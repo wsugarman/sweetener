@@ -1,0 +1,21 @@
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: sourcePipelineId
+  type: number
+  default: 0
+- name: sourceBranchOverride
+  type: string
+  default: 'refs/heads/master'
+
+jobs:
+- job: Release
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: Steps.Release.yml
+    parameters:
+      project: '${{ parameters.Project }}'
+      sourcePipelineId: ${{ parameters.SourcePipelineId }}
+      sourceBranchOverride: '${{ parameters.SourceBranchOverride }}'

@@ -1,4 +1,5 @@
-# Note: Only the CI pipelines have sufficient permissions for signing assemblies and packages
+# Note: Only CI pipelines have sufficient permissions to access Azure Key Vault,
+#       and they may only be run on the "master" branch
 parameters:
 - name: project
   type: string
@@ -42,14 +43,8 @@ steps:
   name: Version
   displayName: 'Parse Version.json'
   inputs:
-    targetType: 'inline'
-    script: |
-      # Parse Version.json
-      & eng/Build/ParseVersion.ps1 -VersionFilePath "src/${{ parameters.Project }}/Version.json"
-
-      # Determine whether version changed
-      $Changed = @(& git diff-tree --no-commit-id --name-only -r $(Build.SourceVersion)) -contains "src/${{ parameters.Project }}/Version.json"
-      Write-Host "##vso[task.setvariable variable=Changed;isOutput=true]$Changed"
+    filePath: 'eng/Scripts/ParseVersion.ps1'
+    arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json"'
     pwsh: true
 
 - task: DotNetCoreCLI@2
@@ -70,7 +65,7 @@ steps:
 - task: PowerShell@2
   displayName: 'Sign Assemblies'
   inputs:
-    filePath: 'eng/Build/CI/SignAssemblies.ps1'
+    filePath: 'eng/Scripts/SignAssemblies.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
                 -StrongNameKeyPath "$(SigningKey.SecureFilePath)"
@@ -97,7 +92,7 @@ steps:
 - task: PowerShell@2
   displayName: 'Sign NuGet Package'
   inputs:
-    filePath: 'eng/Build/CI/SignPackage.ps1'
+    filePath: 'eng/Scripts/SignPackage.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
                 -PackageVersion "$(Version.Package)"

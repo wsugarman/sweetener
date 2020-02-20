@@ -51,6 +51,11 @@ $ErrorActionPreference = "Stop"
 $NuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
 $Package               = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
 
+if (![System.IO.File]::Exists($Package))
+{
+    throw [System.IO.FileNotFoundException]::new("Cannot find '$Package'")
+}
+
 & $NuGetKeyVaultSignTool sign $Package `
   -fd sha256 `
   -kvu $KeyVaultUrl `

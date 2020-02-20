@@ -1,0 +1,53 @@
+# Note: Only CD pipelines have sufficient permissions to push to NuGet.org,
+#       and they may only be run on the "master" branch
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: sourcePipelineId
+  type: number
+  default: 0
+- name: sourceBranchOverride
+  type: string
+  default: 'refs/heads/master'
+
+steps:
+- task: DownloadBuildArtifacts@0
+  displayName: 'Download NuGet Package Artifact'
+  inputs:
+    buildType: 'specific'
+    project: '61e9611b-b79b-4562-8b8c-ff489f695f94'
+    pipeline: '$(SourcePipelineId)'
+    specificBuildWithTriggering: true
+    buildVersionToDownload: 'latestFromBranch'
+    branchName: '$(SourceBranchOverride)'
+    downloadType: 'single'
+    artifactName: 'pkg'
+    downloadPath: '$(Build.ArtifactStagingDirectory)'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+- task: PowerShell@2
+  displayName: 'Print Artifact Contents'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Output "Looking for $(Project)*.nupkg..."
+      $assemblies = @(Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/pkg/" -Recurse)
+      foreach ($file in $files)
+      {
+          Write-Output $file
+      }
+    pwsh: true
+
+#- task: DotNetCoreCLI@2
+#  displayName: 'Push to NuGet.org'
+#  inputs:
+#    command: 'push'
+#    packagesToPush: '$(Build.ArtifactStagingDirectory)/pkg/${{ parameters.Project }}*.nupkg'
+#    nuGetFeedType: 'external'
+#    publishFeedCredentials: 'NuGet.org Sweetener API Key'

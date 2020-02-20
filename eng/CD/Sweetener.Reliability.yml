@@ -1,0 +1,17 @@
+resources:
+  pipelines:
+  - pipeline: 'Sweetener.Reliability'
+    source: 'CI/Sweetener.Reliability - CI'
+    trigger: 
+      branches:
+        include: 
+        - master
+      paths:
+        include:
+        - src/Sweetener.Reliability/Version.json
+
+jobs:
+- template: Templates/Jobs.yml
+  parameters:
+    project: 'Sweetener.Reliability'
+    sourcePipelineId: 2

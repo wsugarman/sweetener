@@ -17,7 +17,7 @@ steps:
   name: Version
   displayName: 'Parse Version.json'
   inputs:
-    filePath: 'eng/Build/ParseVersion.ps1'
+    filePath: 'eng/Scripts/ParseVersion.ps1'
     arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json" -BuildId "$(Build.BuildId)"'
     pwsh: true
 
