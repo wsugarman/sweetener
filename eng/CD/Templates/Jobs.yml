@@ -4,7 +4,7 @@ parameters:
   default: ''
 - name: sourcePipelineId
   type: number
-  default: 0
+  default: ''
 - name: sourceBranchOverride
   type: string
   default: 'refs/heads/master'
@@ -17,5 +17,5 @@ jobs:
   - template: Steps.Release.yml
     parameters:
       project: '${{ parameters.Project }}'
-      sourcePipelineId: ${{ parameters.SourcePipelineId }}
+      sourcePipelineId: '${{ parameters.SourcePipelineId }}'
       sourceBranchOverride: '${{ parameters.SourceBranchOverride }}'

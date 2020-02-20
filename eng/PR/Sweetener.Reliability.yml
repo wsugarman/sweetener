@@ -12,6 +12,7 @@ pr:
     - src/Directory.Build.props
     - src/Sweetener.sln
     - src/Sweetener.Reliability/*
+trigger: none
 
 jobs:
 - template: Templates/Jobs.yml
