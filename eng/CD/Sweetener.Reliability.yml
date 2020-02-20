@@ -1,12 +1,12 @@
 pr: none
 resources:
   pipelines:
-  - pipeline: 'Sweetener.Reliability'
+  - pipeline: 'Sweetener_Reliability'
     source: 'CI/Sweetener.Reliability - CI'
     trigger: 
       branches:
         include: 
-        - users/wsugarman/*
+        - '*'
 trigger: none
 # TODO: Add back to resources
 #        - master
@@ -18,4 +18,4 @@ jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
-    sourcePipelineId: '2'
+    sourcePipelineId: '$(ManualSourceBranch)'

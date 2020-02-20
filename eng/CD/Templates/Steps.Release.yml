@@ -7,7 +7,7 @@ parameters:
 - name: sourcePipelineId
   type: number
   default: 0
-- name: sourceBranchOverride
+- name: manualSourceBranch
   type: string
   default: 'refs/heads/master'
 
@@ -17,10 +17,10 @@ steps:
   inputs:
     buildType: 'specific'
     project: '61e9611b-b79b-4562-8b8c-ff489f695f94'
-    pipeline: '$(SourcePipelineId)'
+    pipeline: '${{ parameters.SourcePipelineId }}'
     specificBuildWithTriggering: true
     buildVersionToDownload: 'latestFromBranch'
-    branchName: '$(SourceBranchOverride)'
+    branchName: '${{ parameters.ManualSourceBranch }}'
     downloadType: 'single'
     artifactName: 'pkg'
     downloadPath: '$(Build.ArtifactStagingDirectory)'
@@ -36,7 +36,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      Write-Output "Looking for $(Project)*.nupkg..."
+      Write-Output "Looking for ${{ parameters.Project }}*.nupkg..."
       $assemblies = @(Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/pkg/" -Recurse)
       foreach ($file in $files)
       {

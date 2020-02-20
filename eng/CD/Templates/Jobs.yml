@@ -5,7 +5,7 @@ parameters:
 - name: sourcePipelineId
   type: number
   default: ''
-- name: sourceBranchOverride
+- name: manualSourceBranch
   type: string
   default: 'refs/heads/master'
 
@@ -18,4 +18,4 @@ jobs:
     parameters:
       project: '${{ parameters.Project }}'
       sourcePipelineId: '${{ parameters.SourcePipelineId }}'
-      sourceBranchOverride: '${{ parameters.SourceBranchOverride }}'
+      manualSourceBranch: '${{ parameters.ManualSourceBranch }}'
