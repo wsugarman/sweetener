@@ -18,4 +18,5 @@ jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
-    sourcePipelineId: '$(ManualSourceBranch)'
+    sourcePipelineId: 2
+    manualSourceBranch: '$(ManualSourceBranch)'

@@ -37,7 +37,7 @@ steps:
     targetType: 'inline'
     script: |
       Write-Output "Looking for ${{ parameters.Project }}*.nupkg..."
-      $assemblies = @(Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/pkg/" -Recurse)
+      $assemblies = @(Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse)
       foreach ($file in $files)
       {
           Write-Output $file
