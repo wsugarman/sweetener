@@ -5,10 +5,11 @@ resources:
     trigger: 
       branches:
         include: 
-        - master
-      paths:
-        include:
-        - src/Sweetener.Reliability/Version.json
+        - users/wsugarman/*
+#        - master
+#      paths:
+#        include:
+#        - src/Sweetener.Reliability/Version.json
 
 jobs:
 - template: Templates/Jobs.yml
