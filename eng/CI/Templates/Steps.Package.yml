@@ -65,7 +65,7 @@ steps:
 - task: PowerShell@2
   displayName: 'Sign Assemblies'
   inputs:
-    filePath: 'eng/Scripts/SignAssemblies.ps1'
+    filePath: 'eng/CI/Scripts/SignAssemblies.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
                 -StrongNameKeyPath "$(SigningKey.SecureFilePath)"
@@ -92,7 +92,7 @@ steps:
 - task: PowerShell@2
   displayName: 'Sign NuGet Package'
   inputs:
-    filePath: 'eng/Scripts/SignPackage.ps1'
+    filePath: 'eng/CI/Scripts/SignPackage.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
                 -PackageVersion "$(Version.Package)"
