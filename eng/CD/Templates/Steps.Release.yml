@@ -32,16 +32,11 @@ steps:
     version: '3.x'
 
 - task: PowerShell@2
-  displayName: 'Print Artifact Contents'
+  name: Version
+  displayName: 'Parse Version.json'
   inputs:
-    targetType: 'inline'
-    script: |
-      Write-Output "Looking for ${{ parameters.Project }}*.nupkg..."
-      $assemblies = @(Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse)
-      foreach ($file in $files)
-      {
-          Write-Output $file
-      }
+    filePath: 'eng/CD/Scripts/ParseVersion.ps1'
+    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Build.ArtifactStagingDirectory)/pkg"'
     pwsh: true
 
 #- task: DotNetCoreCLI@2

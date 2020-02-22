@@ -67,7 +67,7 @@ if ([string]::IsNullOrWhiteSpace($Description))
 
 # Find all of the assemblies to sign
 $BuildDirectory = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration)
-$Assemblies = @(Get-ChildItem -Path $BuildDirectory -Recurse -Include ($ProjectName + ".dll"))
+$Assemblies = @(Get-ChildItem -Path $BuildDirectory -Include ($ProjectName + ".dll") -Recurse)
 if ($Assemblies.Length -eq 0)
 {
     throw [System.IO.FileNotFoundException]::new("Could not find any assemblies '$AssemblyName' in '$BuildDirectory'")
