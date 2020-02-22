@@ -22,7 +22,7 @@ steps:
     buildVersionToDownload: 'latestFromBranch'
     branchName: '${{ parameters.ManualSourceBranch }}'
     artifactName: 'pkg'
-    targetPath: $(Build.ArtifactStagingDirectory)'
+    targetPath: $(Build.ArtifactStagingDirectory)/pkg'
 
 - task: PowerShell@2
   name: Version
