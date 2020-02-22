@@ -2,10 +2,10 @@ pr: none
 resources:
   pipelines:
   - pipeline: 'Sweetener_Reliability'
-    source: 'CI/Sweetener.Reliability - CI'
-    trigger: 
+    source: 'Sweetener.Reliability - CI'
+    trigger:
       branches:
-        include: 
+        include:
         - '*'
 trigger: none
 # TODO: Add back to resources
@@ -19,4 +19,4 @@ jobs:
   parameters:
     project: 'Sweetener.Reliability'
     sourcePipelineId: 2
-    manualSourceBranch: '$(ManualSourceBranch)'
+    manualSourceBranch: '$(Build.SourceBranch)'

@@ -12,24 +12,17 @@ parameters:
   default: 'refs/heads/master'
 
 steps:
-- task: DownloadBuildArtifacts@0
+- task: DownloadPipelineArtifact@2
   displayName: 'Download NuGet Package Artifact'
   inputs:
     buildType: 'specific'
     project: '61e9611b-b79b-4562-8b8c-ff489f695f94'
-    pipeline: '${{ parameters.SourcePipelineId }}'
+    definition: '${{ parameters.SourcePipelineId }}'
     specificBuildWithTriggering: true
     buildVersionToDownload: 'latestFromBranch'
     branchName: '${{ parameters.ManualSourceBranch }}'
-    downloadType: 'single'
     artifactName: 'pkg'
-    downloadPath: '$(Build.ArtifactStagingDirectory)'
-
-- task: UseDotNet@2
-  displayName: 'Install .NET Core 3.x'
-  inputs:
-    packageType: 'sdk'
-    version: '3.x'
+    targetPath: $(Build.ArtifactStagingDirectory)'
 
 - task: PowerShell@2
   name: Version
@@ -38,6 +31,12 @@ steps:
     filePath: 'eng/CD/Scripts/ParseVersion.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Build.ArtifactStagingDirectory)/pkg"'
     pwsh: true
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
 
 #- task: DotNetCoreCLI@2
 #  displayName: 'Push to NuGet.org'
