@@ -12,7 +12,7 @@ parameters:
 jobs:
 - job: Release
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'windows-latest'
   steps:
   - template: Steps.Release.yml
     parameters:
