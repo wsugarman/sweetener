@@ -3,7 +3,7 @@ resources:
   pipelines:
   - pipeline: 'SweetenerReliability'
     project: 'Sweetener'
-    source: 'Sweetener.Reliability - CI'
+    source: 'sample-ci'
 trigger: none
 
 #    trigger:
