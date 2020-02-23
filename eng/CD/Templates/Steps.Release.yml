@@ -21,14 +21,14 @@ steps:
     specificBuildWithTriggering: true
     buildVersionToDownload: 'latestFromBranch'
     branchName: '${{ parameters.ManualSourceBranch }}'
-    targetPath: $(Build.ArtifactStagingDirectory)'
+    targetPath: '$(Pipeline.Workspace)'
 
 - task: PowerShell@2
   name: Version
   displayName: 'Parse Version.json'
   inputs:
     filePath: 'eng/CD/Scripts/ParseVersion.ps1'
-    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Build.ArtifactStagingDirectory)/pkg"'
+    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg"'
     pwsh: true
 
 - task: UseDotNet@2
