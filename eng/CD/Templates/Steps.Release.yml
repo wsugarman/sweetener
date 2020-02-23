@@ -21,8 +21,7 @@ steps:
     specificBuildWithTriggering: true
     buildVersionToDownload: 'latestFromBranch'
     branchName: '${{ parameters.ManualSourceBranch }}'
-    artifactName: 'pkg'
-    targetPath: $(Build.ArtifactStagingDirectory)/pkg'
+    targetPath: $(Build.ArtifactStagingDirectory)'
 
 - task: PowerShell@2
   name: Version

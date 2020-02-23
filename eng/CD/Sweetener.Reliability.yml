@@ -1,13 +1,14 @@
 pr: none
 resources:
   pipelines:
-  - pipeline: 'Sweetener_Reliability'
+  - pipeline: 'SweetenerReliability'
+    project: 'Sweetener'
     source: 'CI/Sweetener.Reliability - CI'
-    trigger:
-      branches:
-        include:
-        - 'users/wsugarman/BeginReleasePipelines'
 trigger: none
+
+#    trigger:
+#      branches:
+#        include:
 # TODO: Add back to resources
 #        - master
 #      paths:
