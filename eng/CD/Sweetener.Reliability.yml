@@ -2,9 +2,11 @@ pr: none
 resources:
   pipelines:
   - pipeline: 'SweetenerReliability'
-    project: 'Sweetener'
     source: 'sample-ci'
-trigger: none
+    trigger: 
+      branches:
+      - users/wsugarman/*
+      - master
 
 #    trigger:
 #      branches:
