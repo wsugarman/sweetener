@@ -1,13 +1,10 @@
 pr: none
+trigger: none
 resources:
   pipelines:
   - pipeline: SweetenerReliability
     source: sample-ci
-    trigger:
-      branches:
-      - users/wsugarman/*
-      - master
-trigger: none
+    trigger: true
 
 #    trigger:
 #      branches:
