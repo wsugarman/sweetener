@@ -12,6 +12,8 @@ parameters:
   default: 'refs/heads/master'
 
 steps:
+- checkout: none
+
 - task: DownloadPipelineArtifact@2
   displayName: 'Download NuGet Package Artifact'
   inputs:
