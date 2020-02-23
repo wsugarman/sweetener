@@ -6,7 +6,7 @@ parameters:
 jobs:
 - job: Validate
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'windows-latest'
   variables:
     buildConfiguration: 'Debug'
   steps:
