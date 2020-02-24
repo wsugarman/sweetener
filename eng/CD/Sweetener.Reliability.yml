@@ -9,6 +9,9 @@ resources:
         include:
         - master
         - users/wsugarman/*
+      paths:
+        include:
+        - src/Sweetener.Reliability/Version.json
 
 #    trigger:
 #      branches:
