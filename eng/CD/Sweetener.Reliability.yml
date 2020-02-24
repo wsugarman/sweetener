@@ -8,7 +8,6 @@ resources:
       branches:
         include:
         - master
-        - users/wsugarman/*
 
 jobs:
 - template: Templates/Jobs.yml

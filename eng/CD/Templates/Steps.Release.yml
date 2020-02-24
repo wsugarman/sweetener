@@ -39,6 +39,7 @@ steps:
     packageType: 'sdk'
     version: '3.x'
 
+# TODO: Enable NuGet push once the real certificate is used
 #- task: DotNetCoreCLI@2
 #  displayName: 'Push to NuGet.org'
 #  inputs:
