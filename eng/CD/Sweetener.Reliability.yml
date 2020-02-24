@@ -6,9 +6,8 @@ resources:
     source: sample-ci
     trigger:
       branches:
-        include:
-        - master
-        - users/wsugarman/*
+      - master
+      - users/wsugarman/*
 
 #    trigger:
 #      branches:
