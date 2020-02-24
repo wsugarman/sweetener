@@ -7,6 +7,9 @@ parameters:
   default: 'Debug'
 
 steps:
+- checkout: self
+  clean: true
+
 - task: UseDotNet@2
   displayName: 'Install .NET Core 3.x'
   inputs:
@@ -17,18 +20,8 @@ steps:
   name: Version
   displayName: 'Parse Version.json'
   inputs:
-    targetType: 'inline'
-    script: |
-      # Ignore any specified suffix and instead use the suffix "build"
-      $VersionParts = Get-Content "src/${{ parameters.Project }}/Version.json" | Out-String | ConvertFrom-Json
-      $AssemblyVersion = [string]::Format("{0}.0.0.0"            , $VersionParts.major)
-      $FileVersion     = [string]::Format("{0}.{1}.{2}.{3}"      , $VersionParts.major, $VersionParts.minor, $VersionParts.patch, $(Build.BuildId))
-      $PackageVersion  = [string]::Format("{0}.{1}.{2}-build.{3}", $VersionParts.major, $VersionParts.minor, $VersionParts.patch, $(Build.BuildId))
-
-      # Output variables to be used in the build
-      Write-Host "##vso[task.setvariable variable=Assembly;isOutput=true]$AssemblyVersion"
-      Write-Host "##vso[task.setvariable variable=File;isOutput=true]$FileVersion"
-      Write-Host "##vso[task.setvariable variable=Package;isOutput=true]$PackageVersion"
+    filePath: 'eng/Scripts/ParseVersion.ps1'
+    arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json" -BuildId "$(Build.BuildId)"'
     pwsh: true
 
 - task: DotNetCoreCLI@2

@@ -1,0 +1,49 @@
+# Note: Only CD pipelines have sufficient permissions to push to NuGet.org,
+#       and they may only be run on the "master" branch
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: sourcePipelineId
+  type: number
+  default: 0
+
+steps:
+- checkout: self
+  clean: true
+
+- task: DownloadPipelineArtifact@2
+  displayName: 'Download NuGet Package Artifact'
+  inputs:
+    buildType: 'specific'
+    project: '61e9611b-b79b-4562-8b8c-ff489f695f94'
+    definition: '${{ parameters.SourcePipelineId }}'
+    specificBuildWithTriggering: true
+    buildVersionToDownload: 'latestFromBranch'
+    branchName: '$(Build.SourceBranch)'
+    artifact: 'pkg'
+    targetPath: '$(Pipeline.Workspace)/pkg'
+
+- task: PowerShell@2
+  name: Version
+  displayName: 'Parse Version.json'
+  inputs:
+    filePath: 'eng/CD/Scripts/ParseVersion.ps1'
+    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
+    pwsh: true
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+# TODO: Enable NuGet push once the real certificate is used
+#- task: DotNetCoreCLI@2
+#  displayName: 'Push to NuGet.org'
+#  inputs:
+#    command: 'push'
+#    packagesToPush: '$(Pipeline.Workspace)/pkg/${{ parameters.Project }}*.nupkg'
+#    nuGetFeedType: 'external'
+#    publishFeedCredentials: 'NuGet.org Sweetener API Key'

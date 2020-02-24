@@ -1,0 +1,121 @@
+# Note: Only CI pipelines have sufficient permissions to access Azure Key Vault,
+#       and they may only be run on the "master" branch
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: buildConfiguration
+  type: string
+  default: 'Debug'
+- name: keyVaultUrl
+  type: string
+  default: 'https://sugarman-keyvault.vault.azure.net/'
+- name: certificateName
+  type: string
+  default: 'Test-Certificate-2' # TODO: Update with real certificate
+- name: netfxTools
+  type: string
+  default: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
+- name: dotNetTools
+  type: string
+  default: 'tools'
+
+steps:
+- checkout: self
+  clean: true
+
+- task: DownloadSecureFile@1
+  name: SigningKey
+  displayName: 'Download Signing Key'
+  inputs:
+    secureFile: 'Sweetener.snk'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 2.1.x'
+  inputs:
+    packageType: 'sdk'
+    version: '2.1.x'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+- task: PowerShell@2
+  name: Version
+  displayName: 'Parse Version.json'
+  inputs:
+    filePath: 'eng/Scripts/ParseVersion.ps1'
+    arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json"'
+    pwsh: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build Library'
+  inputs:
+    command: 'build'
+    projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File)'
+    nugetConfigPath: 'NuGet.config'
+
+- task: AzureKeyVault@1
+  displayName: 'Fetch Key Vault Secrets'
+  inputs:
+    azureSubscription: 'Sweetener-Pipelines-Test'
+    keyVaultName: 'Sugarman-KeyVault'
+    secretsFilter: 'Test-Client-Id,Test-Client-Secret'
+
+- task: PowerShell@2
+  displayName: 'Sign Assemblies'
+  inputs:
+    filePath: 'eng/CI/Scripts/SignAssemblies.ps1'
+    arguments: '-ProjectName "${{ parameters.Project }}"
+                -BuildConfiguration "${{ parameters.BuildConfiguration }}"
+                -StrongNameKeyPath "$(SigningKey.SecureFilePath)"
+                -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
+                -KeyVaultCertificateName "${{ parameters.CertificateName }}"
+                -KeyVaultClientId "$(Test-Client-Id)"
+                -KeyVaultClientSecret "$(Test-Client-Secret)"
+                -NetFXTools "${{ parameters.NetFXTools }}"
+                -DotNetTools "${{ parameters.DotNetTools }}"'
+    pwsh: true
+    
+- task: DotNetCoreCLI@2
+  displayName: 'Pack Library'
+  inputs:
+    command: 'pack'
+    packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    configurationToPack: '${{ parameters.BuildConfiguration }}'
+    buildProperties: 'ContinuousIntegrationBuild=true;PackageVersion=$(Version.Package)'
+    nobuild: true
+    nugetConfigPath: 'NuGet.config'
+    outputDir: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
+    verbosityPack: 'normal'
+
+- task: PowerShell@2
+  displayName: 'Sign NuGet Package'
+  inputs:
+    filePath: 'eng/CI/Scripts/SignPackage.ps1'
+    arguments: '-ProjectName "${{ parameters.Project }}"
+                -BuildConfiguration "${{ parameters.BuildConfiguration }}"
+                -PackageVersion "$(Version.Package)"
+                -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
+                -KeyVaultCertificateName "${{ parameters.CertificateName }}"
+                -KeyVaultClientId "$(Test-Client-Id)"
+                -KeyVaultClientSecret "$(Test-Client-Secret)"
+                -DotNetTools "${{ parameters.DotNetTools }}"'
+    pwsh: true
+
+- task: CopyFiles@2
+  displayName: 'Copy NuGet Package to Staging Directory'
+  inputs:
+    SourceFolder: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
+    Contents: '*nupkg'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish NuGet Package Artifact'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'pkg'
+    publishLocation: 'pipeline'
