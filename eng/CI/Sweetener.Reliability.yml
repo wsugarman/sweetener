@@ -3,6 +3,7 @@ trigger:
   branches:
     include:
     - master
+    - users/wsugarman/*
   paths:
     include:
     - eng/CI/Sweetener.Reliability.yml
