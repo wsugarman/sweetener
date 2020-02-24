@@ -12,6 +12,9 @@ parameters:
   default: 'refs/heads/master'
 
 steps:
+- checkout: self
+  clean: true
+
 - task: DownloadPipelineArtifact@2
   displayName: 'Download NuGet Package Artifact'
   inputs:
@@ -29,7 +32,7 @@ steps:
   displayName: 'Parse Version.json'
   inputs:
     filePath: 'eng/CD/Scripts/ParseVersion.ps1'
-    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg"'
+    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
     pwsh: true
 
 - task: UseDotNet@2
@@ -37,11 +40,12 @@ steps:
   inputs:
     packageType: 'sdk'
     version: '3.x'
+  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
 
 #- task: DotNetCoreCLI@2
 #  displayName: 'Push to NuGet.org'
 #  inputs:
 #    command: 'push'
-#    packagesToPush: '$(Build.ArtifactStagingDirectory)/pkg/${{ parameters.Project }}*.nupkg'
+#    packagesToPush: '$(Pipeline.Workspace)/pkg/${{ parameters.Project }}*.nupkg'
 #    nuGetFeedType: 'external'
 #    publishFeedCredentials: 'NuGet.org Sweetener API Key'

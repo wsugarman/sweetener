@@ -2,16 +2,13 @@ pr: none
 trigger: none
 resources:
   pipelines:
-  - pipeline: Sweetener-Reliability
+  - pipeline: Sweetener_Reliability
     source: 'CI/Sweetener.Reliability - CI'
     trigger:
       branches:
         include:
         - master
         - users/wsugarman/*
-      paths:
-        include:
-        - src/Sweetener.Reliability/Version.json
 
 #    trigger:
 #      branches:

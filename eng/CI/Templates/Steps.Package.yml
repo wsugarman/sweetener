@@ -21,6 +21,9 @@ parameters:
   default: 'tools'
 
 steps:
+- checkout: self
+  clean: true
+
 - task: DownloadSecureFile@1
   name: SigningKey
   displayName: 'Download Signing Key'
