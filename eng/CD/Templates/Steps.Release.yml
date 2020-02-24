@@ -34,10 +34,10 @@ steps:
 
 - task: UseDotNet@2
   displayName: 'Install .NET Core 3.x'
+  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
   inputs:
     packageType: 'sdk'
     version: '3.x'
-  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
 
 #- task: DotNetCoreCLI@2
 #  displayName: 'Push to NuGet.org'
