@@ -4,7 +4,11 @@ resources:
   pipelines:
   - pipeline: SweetenerReliability
     source: sample-ci
-    trigger: true
+    trigger:
+      branches:
+        include:
+        - master
+        - users/wsugarman/*
 
 #    trigger:
 #      branches:
