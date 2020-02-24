@@ -2,8 +2,8 @@ pr: none
 trigger: none
 resources:
   pipelines:
-  - pipeline: sample-ci
-    source: sample-ci
+  - pipeline: Sweetener-Reliability
+    source: 'CI/Sweetener.Reliability - CI'
     trigger:
       branches:
         include:
