@@ -10,7 +10,7 @@ jobs:
   variables:
     buildConfiguration: 'Debug'
   steps:
-  - template: ../Steps.Validate.yml
+  - template: ../../Templates/Steps.Validate.yml
     parameters:
       project: '${{ parameters.Project }}'
       buildConfiguration: '$(BuildConfiguration)'

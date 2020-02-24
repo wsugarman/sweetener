@@ -1,0 +1,17 @@
+parameters:
+- name: project
+  type: string
+  default: ''
+- name: sourcePipelineId
+  type: number
+  default: ''
+
+jobs:
+- job: Release
+  pool:
+    vmImage: 'windows-latest'
+  steps:
+  - template: Steps.Release.yml
+    parameters:
+      project: '${{ parameters.Project }}'
+      sourcePipelineId: '${{ parameters.SourcePipelineId }}'
