@@ -10,18 +10,8 @@ resources:
         - master
         - users/wsugarman/*
 
-#    trigger:
-#      branches:
-#        include:
-# TODO: Add back to resources
-#        - master
-#      paths:
-#        include:
-#        - src/Sweetener.Reliability/Version.json
-
 jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
     sourcePipelineId: 2
-    manualSourceBranch: '$(Build.SourceBranch)'

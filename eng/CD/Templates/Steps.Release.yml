@@ -7,9 +7,6 @@ parameters:
 - name: sourcePipelineId
   type: number
   default: 0
-- name: manualSourceBranch
-  type: string
-  default: 'refs/heads/master'
 
 steps:
 - checkout: self
@@ -23,7 +20,7 @@ steps:
     definition: '${{ parameters.SourcePipelineId }}'
     specificBuildWithTriggering: true
     buildVersionToDownload: 'latestFromBranch'
-    branchName: '${{ parameters.ManualSourceBranch }}'
+    branchName: '$(Build.SourceBranch)'
     artifact: 'pkg'
     targetPath: '$(Pipeline.Workspace)/pkg'
 
