@@ -1,4 +1,5 @@
 pr: none
+trigger: none
 resources:
   pipelines:
   - pipeline: Sweetener_Reliability
@@ -8,7 +9,6 @@ resources:
         include:
         - master
         - users/wsugarman/*
-trigger: none
 
 jobs:
 - template: Templates/Jobs.yml
