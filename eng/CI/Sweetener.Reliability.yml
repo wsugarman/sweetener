@@ -4,17 +4,17 @@ trigger:
     include:
     - master
     - users/wsugarman/*
-  paths:
-    include:
-    - eng/CI/Sweetener.Reliability.yml
-    - eng/CI/Scripts/*
-    - eng/CI/Templates/*
-    - eng/Scripts/*
-    - eng/Templates/*
-    - src/AssemblyInfo.Common.cs
-    - src/Directory.Build.props
-    - src/Sweetener.sln
-    - src/Sweetener.Reliability/*
+#  paths:
+#    include:
+#    - eng/CI/Sweetener.Reliability.yml
+#    - eng/CI/Scripts/*
+#    - eng/CI/Templates/*
+#    - eng/Scripts/*
+#    - eng/Templates/*
+#    - src/AssemblyInfo.Common.cs
+#    - src/Directory.Build.props
+#    - src/Sweetener.sln
+#    - src/Sweetener.Reliability/*
 
 jobs:
 - template: Templates/Jobs.yml
