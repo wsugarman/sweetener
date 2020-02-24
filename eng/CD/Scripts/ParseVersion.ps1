@@ -40,7 +40,7 @@ if (!$Valid)
 $PackageVersion = $Matches.Version
 
 # Check to see if Version file has changed
-$VersionChanged = @(Invoke-Expression "git diff-tree --no-commit-id --name-only -r $SourceVersion") -contains "src/${{ parameters.Project }}/Version.json"
+$VersionChanged = @(& git diff-tree --no-commit-id --name-only -r $SourceVersion) -contains "src/$ProjectName/Version.json"
 if ($VersionChanged)
 {
     Write-Host "##vso[build.updatebuildnumber]$PackageVersion"
