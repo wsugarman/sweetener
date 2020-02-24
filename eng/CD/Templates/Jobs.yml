@@ -5,9 +5,6 @@ parameters:
 - name: sourcePipelineId
   type: number
   default: ''
-- name: manualSourceBranch
-  type: string
-  default: 'refs/heads/master'
 
 jobs:
 - job: Release
@@ -18,4 +15,3 @@ jobs:
     parameters:
       project: '${{ parameters.Project }}'
       sourcePipelineId: '${{ parameters.SourcePipelineId }}'
-      manualSourceBranch: '${{ parameters.ManualSourceBranch }}'
