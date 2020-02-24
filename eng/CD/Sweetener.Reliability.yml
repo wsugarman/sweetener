@@ -1,5 +1,4 @@
 pr: none
-trigger: none
 resources:
   pipelines:
   - pipeline: Sweetener_Reliability
@@ -9,19 +8,10 @@ resources:
         include:
         - master
         - users/wsugarman/*
-
-#    trigger:
-#      branches:
-#        include:
-# TODO: Add back to resources
-#        - master
-#      paths:
-#        include:
-#        - src/Sweetener.Reliability/Version.json
+trigger: none
 
 jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Reliability'
     sourcePipelineId: 2
-    manualSourceBranch: '$(Build.SourceBranch)'

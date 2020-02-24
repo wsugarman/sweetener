@@ -7,9 +7,6 @@ parameters:
 - name: sourcePipelineId
   type: number
   default: 0
-- name: manualSourceBranch
-  type: string
-  default: 'refs/heads/master'
 
 steps:
 - checkout: self
@@ -23,7 +20,7 @@ steps:
     definition: '${{ parameters.SourcePipelineId }}'
     specificBuildWithTriggering: true
     buildVersionToDownload: 'latestFromBranch'
-    branchName: '${{ parameters.ManualSourceBranch }}'
+    branchName: '$(Build.SourceBranch)'
     artifact: 'pkg'
     targetPath: '$(Pipeline.Workspace)/pkg'
 
@@ -37,10 +34,10 @@ steps:
 
 - task: UseDotNet@2
   displayName: 'Install .NET Core 3.x'
+  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
   inputs:
     packageType: 'sdk'
     version: '3.x'
-  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
 
 #- task: DotNetCoreCLI@2
 #  displayName: 'Push to NuGet.org'
