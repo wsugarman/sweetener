@@ -18,7 +18,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Constant_int()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(-1));
+            Assert.ThrowsException<ArgumentNegativeException>(() => DelayPolicy.Constant(-1));
 
             Constant(DelayPolicy.Constant(100), 100);
         }
