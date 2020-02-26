@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>Common APIs that sweeten the .NET foundational class libraries</Description>
     <PackageTags>common</PackageTags>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

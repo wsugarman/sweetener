@@ -206,7 +206,7 @@ namespace Sweetener.Reliability
         if (async)
         {
 #>
-            Task t;
+            Task? t;
 <#
         }
 #>
@@ -391,7 +391,7 @@ namespace Sweetener.Reliability
         if (async)
         {
 #>
-            Task t;
+            Task? t;
 <#
         }
 #>

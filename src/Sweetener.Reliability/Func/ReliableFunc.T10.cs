@@ -318,6 +318,8 @@ namespace Sweetener.Reliability
             goto Attempt;
         }
 
+#nullable disable
+
         /// <summary>
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
@@ -405,8 +407,12 @@ namespace Sweetener.Reliability
             return false;
         }
 
+#nullable enable
 
-         /// <summary>
+
+#nullable disable
+
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
@@ -487,4 +493,6 @@ namespace Sweetener.Reliability
             return (Success: false, Result: default);
         }
     }
+
+#nullable enable
 }

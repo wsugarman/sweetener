@@ -207,7 +207,7 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(CancellationToken cancellationToken)
         {
-            Task<TResult> t;
+            Task<TResult>? t;
             int attempt = 0;
 
         Attempt:
@@ -241,7 +241,9 @@ namespace Sweetener.Reliability
             throw new InvalidOperationException(SR.InvalidTaskResult);
         }
 
-         /// <summary>
+#nullable disable
+
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>
@@ -319,4 +321,6 @@ namespace Sweetener.Reliability
             throw new InvalidOperationException(SR.InvalidTaskResult);
         }
     }
+
+#nullable enable
 }

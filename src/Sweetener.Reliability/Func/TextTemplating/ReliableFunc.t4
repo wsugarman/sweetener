@@ -264,7 +264,7 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
-            <#= async ? "Task<TResult> t" : "TResult result" #>;
+            <#= async ? "Task<TResult>? t" : "TResult result" #>;
             int attempt = 0;
 
         Attempt:
@@ -343,6 +343,8 @@ namespace Sweetener.Reliability
         {
 #>
 
+#nullable disable
+
         /// <summary>
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
@@ -418,11 +420,15 @@ namespace Sweetener.Reliability
             return false;
         }
 
+#nullable enable
+
 <#
         }
 #>
 
-         /// <summary>
+#nullable disable
+
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
 <#
@@ -567,6 +573,8 @@ namespace Sweetener.Reliability
 #>
         }
     }
+
+#nullable enable
 }
 <#
         SaveOutput($"Reliable{optionalAsync}Func.T{parameterCount + 1}.cs");

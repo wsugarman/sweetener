@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace Sweetener.Reliability
     /// <param name="exception">
     /// The exception that caused the operation to fail, if thrown; otherwise <see langword="null" />.
     /// </param>
-    public delegate void FailureHandler<T>(T result, Exception exception);
+    public delegate void FailureHandler<T>([AllowNull] T result, Exception? exception);
 
     /// <summary>
     /// Represents the method that will handle an exhausted retries event.
@@ -24,7 +25,7 @@ namespace Sweetener.Reliability
     /// <param name="exception">
     /// The exception that caused the operation to retry, if thrown; otherwise <see langword="null" />.
     /// </param>
-    public delegate void ExhaustedRetriesHandler<T>(T result, Exception exception);
+    public delegate void ExhaustedRetriesHandler<T>([AllowNull] T result, Exception? exception);
 
     /// <summary>
     /// Represents the method that will handle an operation retry event.
@@ -36,7 +37,7 @@ namespace Sweetener.Reliability
     /// <param name="exception">
     /// The exception that caused the operation to retry, if thrown; otherwise <see langword="null" />.
     /// </param>
-    public delegate void RetryHandler<T>(int attempt, T result, Exception exception);
+    public delegate void RetryHandler<T>(int attempt, [AllowNull] T result, Exception? exception);
 
     /// <summary>
     /// A base class that has a number of events to monitor the execution of an operation.
@@ -46,18 +47,18 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the operation has failed due to a fatal result or exception.
         /// </summary>
-        public event FailureHandler<T> Failed;
+        public event FailureHandler<T>? Failed;
 
         /// <summary>
         /// Occurs when the operation cannot be retried because
         /// the maxiumum number of attempts has been made.
         /// </summary>
-        public event ExhaustedRetriesHandler<T> RetriesExhausted;
+        public event ExhaustedRetriesHandler<T>? RetriesExhausted;
 
         /// <summary>
         /// Occurs when the operation must be retried due to an invalid result or transient exception.
         /// </summary>
-        public event RetryHandler<T> Retrying;
+        public event RetryHandler<T>? Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -179,13 +180,13 @@ namespace Sweetener.Reliability
             }
         }
 
-        internal virtual void OnFailure(T result, Exception exception)
+        internal virtual void OnFailure([AllowNull] T result, Exception? exception)
             => Failed?.Invoke(result, exception);
 
-        internal virtual void OnRetriesExhausted(T result, Exception exception)
+        internal virtual void OnRetriesExhausted([AllowNull] T result, Exception? exception)
             => RetriesExhausted?.Invoke(result, exception);
 
-        internal virtual void OnRetry(int attempt, T result, Exception exception)
+        internal virtual void OnRetry(int attempt, [AllowNull] T result, Exception? exception)
             => Retrying?.Invoke(attempt, result, exception);
 
         internal enum FunctionState

@@ -52,6 +52,7 @@
         <!-- CA1707: We want to use _ occasionally for prefixes _ and s_ -->
         <!-- NU5105: We're purposefully using SemVar 2.0 -->
         <NoWarn>CA1707;NU5105</NoWarn>
+        <Nullable>enable</Nullable>
         <Product>Sweetener</Product>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
@@ -66,11 +67,14 @@
         <MinClientVersion>4.3.0</MinClientVersion>
       </PropertyGroup>
 
-      <!-- Common Assembly Info -->
+      <!-- Common Assembly and Source Files -->
       <ItemGroup>
-        <Compile Include="$(SrcDirectory)AssemblyInfo.cs">
+        <Compile Include="$(SrcDirectory)Shared\AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
+      </ItemGroup>
+      <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <Compile Include="$(SrcDirectory)Shared\NullableAttribute.cs" Visible="false" />
       </ItemGroup>
 
       <!-- Dynamic Assembly Attributes -->

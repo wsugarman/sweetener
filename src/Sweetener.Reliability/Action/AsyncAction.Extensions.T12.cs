@@ -93,7 +93,7 @@ namespace Sweetener.Reliability
                 int attempt = 0;
 
             Attempt:
-                Task t = null;
+                Task? t = null;
                 attempt++;
 
                 try
@@ -207,7 +207,7 @@ namespace Sweetener.Reliability
                 int attempt = 0;
 
             Attempt:
-                Task t = null;
+                Task? t = null;
                 attempt++;
 
                 try

@@ -118,7 +118,7 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(CancellationToken cancellationToken)
         {
-            Task t;
+            Task? t;
             int attempt = 0;
 
         Attempt:
@@ -181,7 +181,7 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<bool> TryInvokeAsync(CancellationToken cancellationToken)
         {
-            Task t;
+            Task? t;
             int attempt = 0;
 
         Attempt:

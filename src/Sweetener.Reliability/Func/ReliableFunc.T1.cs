@@ -273,6 +273,8 @@ namespace Sweetener.Reliability
             goto Attempt;
         }
 
+#nullable disable
+
         /// <summary>
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
@@ -342,8 +344,12 @@ namespace Sweetener.Reliability
             return false;
         }
 
+#nullable enable
 
-         /// <summary>
+
+#nullable disable
+
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>
@@ -406,4 +412,6 @@ namespace Sweetener.Reliability
             return (Success: false, Result: default);
         }
     }
+
+#nullable enable
 }

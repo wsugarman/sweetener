@@ -31,18 +31,18 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Occurs when the operation has failed due to a fatal exception.
         /// </summary>
-        public event FailureHandler Failed;
+        public event FailureHandler? Failed;
 
         /// <summary>
         /// Occurs when the operation cannot be retried because
         /// the maxiumum number of attempts has been made.
         /// </summary>
-        public event ExhaustedRetriesHandler RetriesExhausted;
+        public event ExhaustedRetriesHandler? RetriesExhausted;
 
         /// <summary>
         /// Occurs when the operation must be retried due to a transient exception.
         /// </summary>
-        public event RetryHandler Retrying;
+        public event RetryHandler? Retrying;
 
         /// <summary>
         /// Gets the maximum number of retry attempts.
@@ -66,8 +66,8 @@ namespace Sweetener.Reliability
                 throw new ArgumentOutOfRangeException(nameof(maxRetries));
 
             MaxRetries = maxRetries;
-            _canRetry = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
-            _getDelay = delayHandler ?? throw new ArgumentNullException(nameof(delayHandler));
+            _canRetry  = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+            _getDelay  = delayHandler     ?? throw new ArgumentNullException(nameof(delayHandler    ));
         }
 
         internal bool CanRetry(int attempt, Exception exception, CancellationToken cancellationToken)

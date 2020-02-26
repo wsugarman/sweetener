@@ -105,7 +105,7 @@ namespace Sweetener.Reliability
             if (async)
             {
 #>
-                Task t = null;
+                Task? t = null;
 <#
             }
 #>

@@ -219,7 +219,7 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, CancellationToken cancellationToken)
         {
-            Task<TResult> t;
+            Task<TResult>? t;
             int attempt = 0;
 
         Attempt:
@@ -253,7 +253,9 @@ namespace Sweetener.Reliability
             throw new InvalidOperationException(SR.InvalidTaskResult);
         }
 
-         /// <summary>
+#nullable disable
+
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
@@ -339,4 +341,6 @@ namespace Sweetener.Reliability
             throw new InvalidOperationException(SR.InvalidTaskResult);
         }
     }
+
+#nullable enable
 }

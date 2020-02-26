@@ -81,7 +81,7 @@ namespace Sweetener
         /// </list>
         /// </remarks>
         /// <param name="paramName">The name of the parameter that causes this exception.</param>
-        public ArgumentNegativeException(string paramName)
+        public ArgumentNegativeException(string? paramName)
             : base(paramName, SR.ArgumentNegativeMessage)
         { }
 
@@ -94,7 +94,7 @@ namespace Sweetener
         /// The exception that is the cause of the current exception, or <see langword="null"/>
         /// if no inner exception is specified.
         /// </param>
-        public ArgumentNegativeException(string message, Exception innerException)
+        public ArgumentNegativeException(string? message, Exception? innerException)
             : base(message, innerException)
         { }
 
@@ -140,7 +140,7 @@ namespace Sweetener
         /// </remarks>
         /// <param name="paramName">The name of the parameter that caused the exception.</param>
         /// <param name="message">The message that describes the error.</param>
-        public ArgumentNegativeException(string paramName, string message)
+        public ArgumentNegativeException(string? paramName, string? message)
             : base(paramName, message)
         { }
 
@@ -198,7 +198,7 @@ namespace Sweetener
         /// <param name="paramName">The name of the parameter that caused the exception.</param>
         /// <param name="actualValue">The value of the argument that causes this exception.</param>
         /// <param name="message">The message that describes the error.</param>
-        public ArgumentNegativeException(string paramName, object actualValue, string message)
+        public ArgumentNegativeException(string? paramName, object? actualValue, string? message)
             : base(paramName, actualValue, message)
         { }
 
