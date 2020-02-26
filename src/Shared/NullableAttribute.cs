@@ -3,6 +3,8 @@
 // where these attributes are not defined.
 // See https://github.com/dotnet/runtime/blob/864b84f6af5e6efa180fe0540c47356801efdd7b/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
 
+#if NETSTANDARD2_0
+
 namespace System.Diagnostics.CodeAnalysis
 {
     [ExcludeFromCodeCoverage]
@@ -70,3 +72,5 @@ namespace System.Diagnostics.CodeAnalysis
             => ParameterValue = parameterValue;
     }
 }
+
+#endif

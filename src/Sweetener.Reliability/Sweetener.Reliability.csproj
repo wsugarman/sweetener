@@ -3,7 +3,6 @@
   <PropertyGroup>
     <Description>API for executing user-defined delegates despite transient failures</Description>
     <PackageTags>action delegate failure func reliable retry</PackageTags>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

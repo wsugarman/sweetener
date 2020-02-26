@@ -29,6 +29,7 @@
         <IsPackable>false</IsPackable>
         <NoWarn>CS1591</NoWarn> <!-- XML comments are not required for tests -->
         <PublicSign>true</PublicSign>
+        <TargetFrameworks>netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
@@ -57,6 +58,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
       </PropertyGroup>
 
       <!-- NuGet metadata -->
@@ -72,8 +74,6 @@
         <Compile Include="$(SrcDirectory)Shared\AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
-      </ItemGroup>
-      <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <Compile Include="$(SrcDirectory)Shared\NullableAttribute.cs" Visible="false" />
       </ItemGroup>
 
