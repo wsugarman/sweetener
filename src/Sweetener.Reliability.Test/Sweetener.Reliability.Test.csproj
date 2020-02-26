@@ -8,11 +8,9 @@
     <ProjectReference Include="..\Sweetener.Reliability\Sweetener.Reliability.csproj" />
   </ItemGroup>
 
-  <!-- TODO: Remove these inclusions after Sweetener.Core has been published -->
+  <!-- TODO: Use PackageReference for Sweetener -->
   <ItemGroup>
-    <Compile Include="..\Sweetener.Core\Func\TryFunc.cs">
-      <Link>Core\TryFunc.cs</Link>
-    </Compile>
+    <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
   </ItemGroup>
 
   <!-- Generated Files -->

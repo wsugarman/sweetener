@@ -117,10 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="InvalidTaskResult" xml:space="preserve">
-    <value>Method resulted in an invalid Task.</value>
-  </data>
-  <data name="MaximumDelayOverflow" xml:space="preserve">
-    <value>Maximum delay exceeded 2,147,483,647 milliseconds.</value>
+  <data name="ArgumentNegativeMessage" xml:space="preserve">
+    <value>Specified argument was negative.</value>
   </data>
 </root>

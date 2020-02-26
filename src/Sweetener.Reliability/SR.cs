@@ -6,8 +6,10 @@ namespace Sweetener.Reliability
 {
     internal static class SR
     {
-        public static string InvalidTaskResult => exceptionResourceManager.GetString("InvalidTaskResult", CultureInfo.CurrentCulture);
+        public static string InvalidTaskResult => _exceptionResourceManager.GetString(nameof(InvalidTaskResult), CultureInfo.CurrentCulture);
 
-        private static readonly ResourceManager exceptionResourceManager = new ResourceManager("Sweetener.Reliability.Resources.Exceptions", Assembly.GetExecutingAssembly());
+        public static string MaximumDelayOverflow => _exceptionResourceManager.GetString(nameof(MaximumDelayOverflow), CultureInfo.CurrentCulture);
+
+        private static readonly ResourceManager _exceptionResourceManager = new ResourceManager("Sweetener.Reliability.Resources.Exceptions", Assembly.GetExecutingAssembly());
     }
 }

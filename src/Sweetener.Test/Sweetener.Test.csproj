@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Sweetener.Test</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sweetener.Core\Sweetener.Core.csproj" />
+    <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
   </ItemGroup>
 
 </Project>

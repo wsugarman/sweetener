@@ -10,20 +10,23 @@ namespace Sweetener.Reliability
         /// <summary>
         /// An <see cref="ExceptionHandler" /> that treats any <see cref="Exception" /> as fatal.
         /// </summary>
-        public static readonly ExceptionHandler Fatal = CreateUniformPolicy(isTransient: false);
+        public static readonly ExceptionHandler Fatal = exception =>
+        {
+            if (exception == null)
+                throw new ArgumentNullException(nameof(exception));
+
+            return false;
+        };
 
         /// <summary>
         /// An <see cref="ExceptionHandler" /> that treats any <see cref="Exception" /> as transient.
         /// </summary>
-        public static readonly ExceptionHandler Transient = CreateUniformPolicy(isTransient: true);
+        public static readonly ExceptionHandler Transient = exception =>
+        {
+            if (exception == null)
+                throw new ArgumentNullException(nameof(exception));
 
-        private static ExceptionHandler CreateUniformPolicy(bool isTransient)
-            => (exception) =>
-            {
-                if (exception == null)
-                    throw new ArgumentNullException(nameof(exception));
-
-                return isTransient;
-            };
+            return true;
+        };
     }
 }
