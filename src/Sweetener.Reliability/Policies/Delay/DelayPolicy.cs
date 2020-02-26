@@ -20,10 +20,9 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="delay">The <see cref="TimeSpan"/> that represents the delay in milliseconds.</param>
         /// <returns>A <see cref="DelayHandler"/> that waits a specific amount of time.</returns>
+        /// <exception cref="ArgumentNegativeException"><paramref name="delay"/> is negative.</exception>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <para><paramref name="delay"/> is negative.</para>
-        /// <para>-or-</para>
-        /// <para><paramref name="delay"/> is greater than <see cref="int.MaxValue"/> milliseconds.</para>
+        /// <paramref name="delay"/> is greater than <see cref="int.MaxValue"/> milliseconds.
         /// </exception>
         public static DelayHandler Constant(TimeSpan delay)
         {
@@ -39,20 +38,16 @@ namespace Sweetener.Reliability
         /// </summary>
         /// <param name="delayMilliseconds">The delay in milliseconds.</param>
         /// <returns>A <see cref="DelayHandler"/> that waits a specific amount of time.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <para><paramref name="delayMilliseconds"/> is negative.</para>
-        /// <para>-or-</para>
-        /// <para><paramref name="delayMilliseconds"/> is greater than <see cref="int.MaxValue"/> milliseconds.</para>
-        /// </exception>
+        /// <exception cref="ArgumentNegativeException"><paramref name="delayMilliseconds"/> is negative.</exception>
         public static DelayHandler Constant(int delayMilliseconds)
         {
             if (delayMilliseconds < 0)
-                throw new ArgumentOutOfRangeException(nameof(delayMilliseconds));
+                throw new ArgumentNegativeException(nameof(delayMilliseconds));
 
             return (int attempt) =>
             {
                 if (attempt < 1)
-                    throw new ArgumentOutOfRangeException(nameof(attempt), $"{nameof(attempt)} must be greater than 0.");
+                    throw new ArgumentOutOfRangeException(nameof(attempt));
 
                 return TimeSpan.FromMilliseconds(delayMilliseconds);
             };
@@ -113,9 +108,7 @@ namespace Sweetener.Reliability
         /// <param name="unitMilliseconds">The coefficient in milliseconds.</param>
         /// <returns>A <see cref="DelayHandler"/> that employs an exponential backoff.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <para><paramref name="unitMilliseconds"/> is less than or equal to <c>1</c>.</para>
-        /// <para>-or-</para>
-        /// <para><paramref name="unitMilliseconds"/> is greater than <see cref="int.MaxValue"/>.</para>
+        /// <paramref name="unitMilliseconds"/> is less than or equal to <c>1</c>.
         /// </exception>
         public static DelayHandler Exponential(int unitMilliseconds)
             => Exponential(unitMilliseconds, new Random());
@@ -133,13 +126,11 @@ namespace Sweetener.Reliability
         /// <returns>A <see cref="DelayHandler"/> that employs an exponential backoff.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="random"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// <para><paramref name="unitMilliseconds"/> is less than or equal to <c>1</c>.</para>
-        /// <para>-or-</para>
-        /// <para><paramref name="unitMilliseconds"/> is greater than <see cref="int.MaxValue"/>.</para>
+        /// <paramref name="unitMilliseconds"/> is less than or equal to <c>1</c>.
         /// </exception>
         public static DelayHandler Exponential(int unitMilliseconds, Random random)
         {
-            if (unitMilliseconds <= 1 || unitMilliseconds > int.MaxValue)
+            if (unitMilliseconds <= 1)
                 throw new ArgumentOutOfRangeException(nameof(unitMilliseconds));
 
             if (random == null)
@@ -148,10 +139,10 @@ namespace Sweetener.Reliability
             return (int attempt) =>
             {
                 if (attempt < 1)
-                    throw new ArgumentOutOfRangeException(nameof(attempt), $"{nameof(attempt)} must be greater than 0.");
+                    throw new ArgumentOutOfRangeException(nameof(attempt));
 
                 if (attempt > 31)
-                    throw new OverflowException($"Maximum delay exceeded '{int.MaxValue}' milliseconds.");
+                    throw new OverflowException(SR.MaximumDelayOverflow);
 
                 // Since we cannot pass 2^31 as the exclusive upper bound of Random.Next(int, int),
                 // we'll just offset the operation by 1 and add the 1 back afterwards
@@ -204,7 +195,7 @@ namespace Sweetener.Reliability
             return (int attempt) =>
             {
                 if (attempt < 1)
-                    throw new ArgumentOutOfRangeException(nameof(attempt), $"{nameof(attempt)} must be greater than 0.");
+                    throw new ArgumentOutOfRangeException(nameof(attempt));
 
                 return TimeSpan.FromMilliseconds(checked(slopeMilliseconds * attempt));
             };

@@ -49,8 +49,9 @@
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
-        <!-- TODO: Remove CA1303 after including localized resources -->
-        <NoWarn>NU5105;CA1303</NoWarn> <!-- Ignore warnings about requiring SemVar 2.0. We want to use it! -->
+        <!-- CA1707: We want to use _ occasionally for prefixes _ and s_ -->
+        <!-- NU5105: We're purposefully using SemVar 2.0 -->
+        <NoWarn>CA1707;NU5105</NoWarn>
         <Product>Sweetener</Product>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
@@ -67,7 +68,7 @@
 
       <!-- Common Assembly Info -->
       <ItemGroup>
-        <Compile Include="$(SrcDirectory)AssemblyInfo.Common.cs">
+        <Compile Include="$(SrcDirectory)AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
       </ItemGroup>

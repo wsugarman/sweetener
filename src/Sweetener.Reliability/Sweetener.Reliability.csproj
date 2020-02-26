@@ -12,14 +12,9 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <!-- TODO: Remove these inclusions after Sweetener.Core has been published -->
+  <!-- TODO: Use PackageReference for Sweetener -->
   <ItemGroup>
-    <Compile Include="..\Sweetener.Core\Action\Action.cs">
-      <Link>Core\Action.cs</Link>
-    </Compile>
-    <Compile Include="..\Sweetener.Core\Func\Func.cs">
-      <Link>Core\Func.cs</Link>
-    </Compile>
+    <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
   </ItemGroup>
 
   <!-- Generated Files -->

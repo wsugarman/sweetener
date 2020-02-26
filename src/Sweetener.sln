@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Core", "Sweetener.Core\Sweetener.Core.csproj", "{3BFD876F-BFF2-421B-8A6A-026056EB5B10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener", "Sweetener\Sweetener.csproj", "{3BFD876F-BFF2-421B-8A6A-026056EB5B10}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Core.Test", "Sweetener.Core.Test\Sweetener.Core.Test.csproj", "{842608C5-6455-4F30-9689-F537A84E8FFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Test", "Sweetener.Test\Sweetener.Test.csproj", "{842608C5-6455-4F30-9689-F537A84E8FFA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Reliability", "Sweetener.Reliability\Sweetener.Reliability.csproj", "{2CC0F13B-B8DA-4871-A1DE-6D7144C2F29D}"
 EndProject

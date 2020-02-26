@@ -9,7 +9,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Constant_TimeSpan()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(TimeSpan.FromMilliseconds(-1)));
+            Assert.ThrowsException<ArgumentNegativeException  >(() => DelayPolicy.Constant(TimeSpan.FromMilliseconds(-1)));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
 
             Constant(DelayPolicy.Constant(TimeSpan.FromMilliseconds(100)), 100);
@@ -18,7 +18,7 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Constant_int()
         {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Constant(-1));
+            Assert.ThrowsException<ArgumentNegativeException>(() => DelayPolicy.Constant(-1));
 
             Constant(DelayPolicy.Constant(100), 100);
         }
