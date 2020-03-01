@@ -15,6 +15,14 @@
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
+<#
+        if (!async)
+        {
+#>
+using System.Diagnostics.CodeAnalysis;
+<#
+        }
+#>
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -343,8 +351,6 @@ namespace Sweetener.Reliability
         {
 #>
 
-#nullable disable
-
         /// <summary>
         /// Attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
@@ -360,7 +366,7 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public bool TryInvoke(<#= parameters #><#= optionalComma #>out TResult result)
+        public bool TryInvoke(<#= parameters #><#= optionalComma #>[MaybeNullWhen(false)] out TResult result)
             => TryInvoke(<#= arguments #><#= optionalComma #>CancellationToken.None, out result);
 
         /// <summary>
@@ -383,7 +389,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public bool TryInvoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken, out TResult result)
+        public bool TryInvoke(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken, [MaybeNullWhen(false)] out TResult result)
         {
             int attempt = 0;
 
@@ -416,17 +422,12 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            result = default;
+            result = default!;
             return false;
         }
-
-#nullable enable
-
 <#
         }
 #>
-
-#nullable disable
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
@@ -436,9 +437,8 @@ namespace Sweetener.Reliability
 #>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
 <#
         if (async)
@@ -450,7 +450,7 @@ namespace Sweetener.Reliability
 <#
         }
 #>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(<#= parameters #>)
+        public async Task<Optional<TResult>> TryInvokeAsync(<#= parameters #>)
             => await TryInvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None).ConfigureAwait(false);
 
         /// <summary>
@@ -462,9 +462,8 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
 <#
         if (async)
@@ -480,13 +479,13 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
+        public async Task<Optional<TResult>> TryInvokeAsync(<#= parameters #><#= optionalComma #>CancellationToken cancellationToken)
         {
 <#
         if (async)
         {
 #>
-            Task<TResult> t;
+            Task<TResult>? t;
 <#
         }
 #>
@@ -552,7 +551,7 @@ namespace Sweetener.Reliability
             switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
             {
                 case FunctionState.ReturnSuccess:
-                    return (Success: true, Result: result);
+                    return new Optional<TResult>(result);
                 case FunctionState.ReturnFailure:
                     goto Fail;
                 default:
@@ -560,7 +559,7 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            return (Success: false, Result: default);
+            return default;
 <#
         if (async)
         {
@@ -573,8 +572,6 @@ namespace Sweetener.Reliability
 #>
         }
     }
-
-#nullable enable
 }
 <#
         SaveOutput($"Reliable{optionalAsync}Func.T{parameterCount + 1}.cs");

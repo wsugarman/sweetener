@@ -120,4 +120,7 @@
   <data name="ArgumentNegativeMessage" xml:space="preserve">
     <value>Specified argument was negative.</value>
   </data>
+  <data name="UndefinedOptionalValueMessage" xml:space="preserve">
+    <value>Optional object must have a value.</value>
+  </data>
 </root>

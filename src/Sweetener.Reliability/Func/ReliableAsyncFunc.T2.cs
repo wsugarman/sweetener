@@ -244,22 +244,19 @@ namespace Sweetener.Reliability
             throw new InvalidOperationException(SR.InvalidTaskResult);
         }
 
-#nullable disable
-
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(T arg)
+        public async Task<Optional<TResult>> TryInvokeAsync(T arg)
             => await TryInvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
 
         /// <summary>
@@ -269,9 +266,8 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
@@ -280,9 +276,9 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(T arg, CancellationToken cancellationToken)
+        public async Task<Optional<TResult>> TryInvokeAsync(T arg, CancellationToken cancellationToken)
         {
-            Task<TResult> t;
+            Task<TResult>? t;
             int attempt = 0;
 
         Attempt:
@@ -312,7 +308,7 @@ namespace Sweetener.Reliability
             switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
             {
                 case FunctionState.ReturnSuccess:
-                    return (Success: true, Result: result);
+                    return new Optional<TResult>(result);
                 case FunctionState.ReturnFailure:
                     goto Fail;
                 default:
@@ -320,12 +316,10 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            return (Success: false, Result: default);
+            return default;
 
         Invalid:
             throw new InvalidOperationException(SR.InvalidTaskResult);
         }
     }
-
-#nullable enable
 }

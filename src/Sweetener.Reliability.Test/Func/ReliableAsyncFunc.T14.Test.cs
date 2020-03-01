@@ -310,7 +310,7 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvokeAsync(bool passToken)
         {
-            Func<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken, (bool Success, string Result)> tryInvokeAsync;
+            Func<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken, Optional<string>> tryInvokeAsync;
             if (passToken)
                 tryInvokeAsync = (r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t).Result;
             else
@@ -323,27 +323,25 @@ namespace Sweetener.Reliability.Test
             Action<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken, string> assertSuccess =
                 (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t, r) =>
                 {
-                    (bool success, string result) = tryInvokeAsync(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t);
-                    Assert.IsTrue(success);
-                    Assert.AreEqual(r, result);
+                    Optional<string> result = tryInvokeAsync(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t);
+                    Assert.IsTrue(result.HasValue);
+                    Assert.AreEqual(r, result.Value);
                 };
 
             Action<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken, string> assertResultFailure =
                 (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t, r) =>
                 {
-                    // TryInvokeAsync returns the default value instead of the failed value 'r'
-                    (bool success, string result) = tryInvokeAsync(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t);
-                    Assert.IsFalse(success);
-                    Assert.AreEqual(default, result);
+                    // TryInvokeAsync returns an undefined value upon failure
+                    Optional<string> result = tryInvokeAsync(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t);
+                    Assert.IsFalse(result.HasValue);
                 };
 
             Action<ReliableAsyncFunc<int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, string>, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, CancellationToken, Type> assertExceptionFailure =
                 (f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t, e) =>
                 {
-                    // TryInvokeAsync returns false instead of throwing the provided exception 'e'
-                    (bool success, string result) = tryInvokeAsync(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t);
-                    Assert.IsFalse(success);
-                    Assert.AreEqual(default, result);
+                    // TryInvokeAsync returns an undefined value upon instead of throwing an exception
+                    Optional<string> result = tryInvokeAsync(f, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, t);
+                    Assert.IsFalse(result.HasValue);
                 };
 
             foreach (bool addEventHandlers in new bool[] { false, true })
