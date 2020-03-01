@@ -4,4 +4,8 @@
     <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <nullable>enable</nullable>
+  </PropertyGroup>
+
 </Project>

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener
@@ -97,7 +96,6 @@ namespace Sweetener
         /// The value of the <see cref="Value"/> property if the <see cref="HasValue"/> property
         /// is <see langword="true"/>; otherwise, the <paramref name="defaultValue"/> parameter.
         /// </returns>
-        [return: MaybeNull] // TODO: The current attributes are insufficient to describe this scenario
         public T GetValueOrDefault(T defaultValue)
             => HasValue ? _value : defaultValue;
 
@@ -120,26 +118,72 @@ namespace Sweetener
             return HasValue;
         }
 
-        /// <inheritdoc />
-        public bool Equals(Optional<T> other)
+        /// <summary>
+        /// Indicates whether the current <see cref="Optional{T}"/> object is equal to a specified object.
+        /// </summary>
+        /// <param name="other">An object.</param>
+        /// <returns>
+        /// <see langword="true"/> if the <see cref="HasValue"/> property for the current
+        /// <see cref="Optional{T}"/> object is <see langword="true"/> and either of the
+        /// following is true; otherwise, <see langword="false"/>.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// The <paramref name="other"/> parameter is an <see cref="Optional{T}"/> object
+        /// whose <see cref="HasValue"/> property is also <see langword="true"/> and whose
+        /// value of the <see cref="Value"/> property is equal to the value of the
+        /// <see cref="Value"/> property for the current <see cref="Optional{T}"/> object.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// The <paramref name="other"/> parameter is equal to the value of the
+        /// <see cref="Value"/> property for the current <see cref="Optional{T}"/> object.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        public override bool Equals(object? other)
         {
-            if (HasValue)
-                return other.HasValue ? EqualityComparer<T>.Default.Equals(_value, other._value) : false;
-            else
-                return !other.HasValue;
+            if (other is Optional<T> optionalOther)
+            {
+                return HasValue && optionalOther.HasValue
+                    ? _value?.Equals(optionalOther._value) ?? optionalOther._value == null
+                    : HasValue == optionalOther.HasValue;
+            }
+
+            return HasValue ? _value?.Equals(other) ?? other == null : false;
         }
 
-        /// <inheritdoc />
-        public override bool Equals(object? other)
-            => _value?.Equals(other) ?? other == null;
-
-        /// <inheritdoc />
+        /// <summary>
+        /// Retrieves the hash code of the object returned by the <see cref="Value"/> property.
+        /// </summary>
+        /// <returns>
+        /// The hash code of the object returned by the <see cref="Value"/> property if the
+        /// <see cref="HasValue"/> property is <see langword="true"/> and the value of
+        /// the <see cref="Value"/> property is not <see langword="null"/>; otherwise zero.
+        /// </returns>
         public override int GetHashCode()
-            => _value?.GetHashCode() ?? 0;
+            // Note that null/default will typically result in the same hash value
+            // as undefined Optional<T>, but this behavior is consistent with Nullable<T>
+            // and doesn't modify the result of the underlying GetHashCode()
+            => HasValue && _value != null ? _value.GetHashCode() : 0;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns the text representation of the value of the current <see cref="Optional{T}"/> object.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="ToString"/> method returns the string yielded by calling the
+        /// <c>ToString</c> method of the object returned by the <see cref="Value"/> property.
+        /// </remarks>
+        /// <returns>
+        /// The text representation of the object returned by the <see cref="Value"/> property
+        /// if the <see cref="HasValue"/> property is <see langword="true"/> and the value of
+        /// the <see cref="Value"/> property is not <see langword="null"/>; otherwise
+        /// an empty string (<c>""</c>).
+        /// </returns>
         public override string? ToString()
-            => _value?.ToString() ?? string.Empty;
+            => HasValue && _value != null ? _value.ToString() : "";
 
         /// <summary>
         /// Defines an explicit conversion of an <see cref="Optional{T}"/> instance to its underlying value.
@@ -153,7 +197,6 @@ namespace Sweetener
         [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Value property alternative is already defined")]
         public static explicit operator T(Optional<T> value)
             => value.Value;
-
 
         /// <summary>
         /// Creates a new <see cref="Optional{T}"/> object initialized to a specified value.

@@ -77,7 +77,7 @@ namespace Sweetener.Test
         [TestMethod]
         public void Ctor_SerializationInfo_StreamingContext()
         {
-            ArgumentNegativeException after;
+            ArgumentNegativeException? after;
             ArgumentNegativeException before = new ArgumentNegativeException("parameter1", -12345, "Hello World");
 
             using (MemoryStream buffer = new MemoryStream())
@@ -91,7 +91,8 @@ namespace Sweetener.Test
                 after = formatter.Deserialize(buffer) as ArgumentNegativeException;
             }
 
-            Assert.AreEqual(-12345      , after.ActualValue   );
+            Assert.IsNotNull(after);
+            Assert.AreEqual(-12345      , after!.ActualValue  );
             Assert.AreEqual(null        , after.InnerException);
             Assert.AreEqual("parameter1", after.ParamName     );
 
