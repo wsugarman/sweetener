@@ -368,7 +368,7 @@ namespace Sweetener.Reliability
             switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
             {
                 case FunctionState.ReturnSuccess:
-                    return new Optional<TResult>(result);
+                    return result;
                 case FunctionState.ReturnFailure:
                     goto Fail;
                 default:
@@ -376,7 +376,7 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            return default;
+            return Optional<TResult>.Undefined;
 
         Invalid:
             throw new InvalidOperationException(SR.InvalidTaskResult);

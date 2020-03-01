@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 
 namespace Sweetener
 {
@@ -48,15 +50,16 @@ namespace Sweetener
         /// </exception>
         public T Value => HasValue ? _value : throw new InvalidOperationException(SR.UndefinedOptionalValueMessage);
 
-        private readonly T _value;
+        /// <summary>
+        /// Returns an empty <see cref="Optional{T}"/> object where the <see cref="HasValue"/>
+        /// property is <see langword="false"/>.
+        /// </summary>
+        /// <remarks><see cref="Undefined"/> is equivalent to the default value.</remarks>
+        /// <value>An empty <see cref="Optional{T}"/> object.</value>
+        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Avoid creating non-generic Optional class that would conflict with VB keyword")]
+        public static Optional<T> Undefined { get; } = default;
 
-        ///// <summary>
-        ///// Returns an empty <see cref="Optional{T}"/> object where the <see cref="HasValue"/>
-        ///// property is <see langword="false"/>.
-        ///// </summary>
-        ///// <remarks><see cref="None"/> is equivalent to the default value.</remarks>
-        ///// <value>An empty <see cref="Optional{T}"/> object.</value>
-        //public static Optional<T> None { get; } = default;
+        private readonly T _value;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Optional{T}"/> structure to the specified value.

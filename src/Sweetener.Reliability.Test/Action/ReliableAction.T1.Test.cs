@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Reliability.Test
 {

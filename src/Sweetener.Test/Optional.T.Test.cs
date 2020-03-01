@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Test
 {
@@ -21,30 +22,44 @@ namespace Sweetener.Test
         }
 
         [TestMethod]
+        public void Undefined()
+        {
+            Optional<byte> optionalNumber = Optional<byte>.Undefined;
+            Assert.IsFalse(optionalNumber.HasValue);
+            Assert.AreEqual((byte)0, optionalNumber.GetValueOrDefault());
+
+            Optional<string> optionalString = Optional<string>.Undefined;
+            Assert.IsFalse(optionalString.HasValue);
+            Assert.AreEqual(null, optionalString.GetValueOrDefault());
+        }
+
+        [TestMethod]
         public void Ctor()
         {
             Optional<int> optionalNumber;
+            Func<Optional<int>, int> getValue = DynamicGetter.ForField<Optional<int>, int>("_value");
 
             // Default ctor
             optionalNumber = new Optional<int>();
 
             Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
+            Assert.AreEqual(default, getValue(optionalNumber));
 
             // Default value
             optionalNumber = default;
 
             Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
+            Assert.AreEqual(default, getValue(optionalNumber));
         }
 
         [TestMethod]
         public void Ctor_Value()
         {
             Optional<int> optionalNumber = new Optional<int>(42);
+            Func<Optional<int>, int> getValue = DynamicGetter.ForField<Optional<int>, int>("_value");
 
-            Assert.AreEqual(true, optionalNumber.HasValue);
-            Assert.AreEqual(42  , optionalNumber.Value   );
+            Assert.IsTrue(optionalNumber.HasValue);
+            Assert.AreEqual(42, getValue(optionalNumber));
         }
 
         [TestMethod]
