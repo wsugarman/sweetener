@@ -1,0 +1,16 @@
+pr: none
+trigger: none
+resources:
+  pipelines:
+  - pipeline: Sweetener
+    source: 'CI/Sweetener - CI'
+    trigger:
+      branches:
+        include:
+        - master
+
+jobs:
+- template: Templates/Jobs.yml
+  parameters:
+    project: 'Sweetener'
+    sourcePipelineId: 8

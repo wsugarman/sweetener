@@ -6,5 +6,5 @@ You can learn about each of these packages [here](https://wsugarman.github.io/Sw
 ## Packages
 | Package | Build | NuGet |
 | ------- |:-----:|:-----:|
-| Sweetener | N/A | N/A |
-| Sweetener.Reliability | [![Build Status](https://dev.azure.com/wsugarman/Sweetener/_apis/build/status/Sweetener.Reliability?branchName=master)](https://dev.azure.com/wsugarman/Sweetener/_build/latest?definitionId=2&branchName=master) | N/A |
+| Sweetener | [![Sweetener Build Status](https://dev.azure.com/wsugarman/Sweetener/_apis/build/status/CI/Sweetener%20-%20CI?branchName=master)](https://dev.azure.com/wsugarman/Sweetener/_build/latest?definitionId=8&branchName=master) | N/A |
+| Sweetener.Reliability | [![Sweetener.Reliability Build Status](https://dev.azure.com/wsugarman/Sweetener/_apis/build/status/CI/Sweetener.Reliability%20-%20CI?branchName=master)](https://dev.azure.com/wsugarman/Sweetener/_build/latest?definitionId=2&branchName=master) | N/A |
