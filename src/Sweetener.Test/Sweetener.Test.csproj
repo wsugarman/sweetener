@@ -6,8 +6,4 @@
     <ProjectReference Include="..\Sweetener.Reflection\Sweetener.Reflection.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <nullable>enable</nullable>
-  </PropertyGroup>
-
 </Project>

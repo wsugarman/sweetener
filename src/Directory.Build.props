@@ -8,6 +8,7 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(SrcDirectory)Public.snk</AssemblyOriginatorKeyFile>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <RunSettingsFilePath>$(SrcDirectory)CodeCoverage.runsettings</RunSettingsFilePath>
     <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -53,7 +54,6 @@
         <!-- CA1707: We want to use _ occasionally for prefixes _ and s_ -->
         <!-- NU5105: We're purposefully using SemVar 2.0 -->
         <NoWarn>CA1707;NU5105</NoWarn>
-        <Nullable>enable</Nullable>
         <Product>Sweetener</Product>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
