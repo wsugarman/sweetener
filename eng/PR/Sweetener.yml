@@ -1,0 +1,20 @@
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - eng/PR/Sweetener.yml
+    - eng/PR/Templates/*
+    - eng/Scripts/*
+    - eng/Templates/*
+    - src/AssemblyInfo.Common.cs
+    - src/Directory.Build.props
+    - src/Sweetener.sln
+    - src/Sweetener/*
+trigger: none
+
+jobs:
+- template: Templates/Jobs.yml
+  parameters:
+    project: 'Sweetener'
