@@ -522,8 +522,8 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool>                    exceptionHandler = FuncProxy<Exception, bool>.Unused;
-            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = FuncProxy<int, string?, Exception?, TimeSpan>.Unused;
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
             ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
             ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
@@ -578,8 +578,8 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Failure" ? ResultKind.Fatal : ResultKind.Successful);
-            FuncProxy<Exception, bool>                    exceptionHandler = FuncProxy<Exception, bool>.Unused;
-            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = FuncProxy<int, string?, Exception?, TimeSpan>.Unused;
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
             ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
             ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
@@ -637,9 +637,9 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int, string, double, string> func = new FuncProxy<int, string, double, string>((arg1, arg2, arg3) => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>                 resultHandler    = FuncProxy<string, ResultKind>.Unused;
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Successful);
             FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
-            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = FuncProxy<int, string?, Exception?, TimeSpan>.Unused;
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
             ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
             ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();

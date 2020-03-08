@@ -23,8 +23,6 @@ namespace Sweetener.Reliability.Test
 
         public override Func<<#= typeParameters #>> Proxy => Invoke;
 
-        public static FuncProxy<<#= typeParameters #>> Unused { get; } = new FuncProxy<<#= typeParameters #>>((<#= arguments #>) => throw new InvalidOperationException("Cannot invoke unused method"));
-
         public FuncProxy(Func<<#= typeParameters #>> func)
             : base(func)
         { }

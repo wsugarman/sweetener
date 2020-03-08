@@ -254,8 +254,8 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int, string, double, long, ushort, Task> action = new FuncProxy<int, string, double, long, ushort, Task>(async (arg1, arg2, arg3, arg4, arg5) => await Task.CompletedTask);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool>          exceptionHandler  = FuncProxy<Exception, bool>.Unused;
-            FuncProxy<int, Exception, TimeSpan> delayHandler      = FuncProxy<int, Exception, TimeSpan>.Unused;
+            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => TimeSpan.Zero);
 
             ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
             ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();

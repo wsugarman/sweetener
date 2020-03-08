@@ -29,7 +29,7 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(n => n == 200 ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionHandler = FuncProxy<Exception, bool>.Unused;
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable function
@@ -80,7 +80,7 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(n => n == 200 ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionHandler = FuncProxy<Exception, bool>.Unused;
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable function
@@ -129,7 +129,7 @@ namespace Sweetener.Reliability.Test
             TFuncProxy func = funcFactory(t => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<int, ResultKind> resultHandler    = FuncProxy<int, ResultKind>.Unused;
+            FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(r => ResultKind.Successful);
             FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 

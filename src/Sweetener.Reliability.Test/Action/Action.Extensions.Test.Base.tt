@@ -51,7 +51,7 @@ namespace Sweetener.Reliability.Test
             TActionProxy action = actionFactory(t => Operation.Null());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool> exceptionHandler = FuncProxy<Exception, bool>.Unused;
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable action
