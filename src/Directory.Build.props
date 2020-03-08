@@ -28,7 +28,6 @@
       <!-- Unit Test Properties -->
       <PropertyGroup>
         <IsPackable>false</IsPackable>
-        <NoWarn>CS1591</NoWarn> <!-- XML comments are not required for tests -->
         <PublicSign>true</PublicSign>
         <TargetFramework>netcoreapp3.1</TargetFramework>
       </PropertyGroup>
@@ -51,9 +50,8 @@
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
-        <!-- CA1707: We want to use _ occasionally for prefixes _ and s_ -->
         <!-- NU5105: We're purposefully using SemVar 2.0 -->
-        <NoWarn>CA1707;NU5105</NoWarn>
+        <NoWarn>NU5105</NoWarn>
         <Product>Sweetener</Product>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
@@ -74,6 +72,7 @@
         <Compile Include="$(SrcDirectory)Shared\AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
+        <Compile Include="$(SrcDirectory)Shared\GlobalSuppressions.cs" Visible="false" />
         <Compile Include="$(SrcDirectory)Shared\NullableAttribute.cs" Visible="false" />
       </ItemGroup>
 
