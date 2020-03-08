@@ -7,13 +7,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<TResult> : DelegateProxy<Func<TResult>>
     {
-        public new event Action<CallContext> Invoking;
+        public new event Action<CallContext>? Invoking;
 
         public override Func<TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this(() => default)
-        { }
+        public static FuncProxy<TResult> Unused { get; } = new FuncProxy<TResult>(() => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<TResult> func)
             : base(func)
@@ -40,13 +38,14 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T, TResult> : DelegateProxy<Func<T, TResult>>
     {
-        public new event Action<T, CallContext> Invoking;
+        public new event Action<T, CallContext>? Invoking;
 
         public override Func<T, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg) => default)
-        { }
+        public static FuncProxy<T, TResult> Unused { get; } = new FuncProxy<T, TResult>((arg) =>
+        {
+            throw new InvalidOperationException("Cannot invoke unused method");
+        });
 
         public FuncProxy(Func<T, TResult> func)
             : base(func)
@@ -73,13 +72,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, TResult> : DelegateProxy<Func<T1, T2, TResult>>
     {
-        public new event Action<T1, T2, CallContext> Invoking;
+        public new event Action<T1, T2, CallContext>? Invoking;
 
         public override Func<T1, T2, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2) => default)
-        { }
+        public static FuncProxy<T1, T2, TResult> Unused { get; } = new FuncProxy<T1, T2, TResult>((arg1, arg2) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, TResult> func)
             : base(func)
@@ -106,13 +103,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, TResult> : DelegateProxy<Func<T1, T2, T3, TResult>>
     {
-        public new event Action<T1, T2, T3, CallContext> Invoking;
+        public new event Action<T1, T2, T3, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, TResult>((arg1, arg2, arg3) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, TResult> func)
             : base(func)
@@ -139,13 +134,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, TResult> : DelegateProxy<Func<T1, T2, T3, T4, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, TResult>((arg1, arg2, arg3, arg4) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, TResult> func)
             : base(func)
@@ -172,13 +165,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, TResult>((arg1, arg2, arg3, arg4, arg5) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, TResult> func)
             : base(func)
@@ -205,13 +196,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, TResult>((arg1, arg2, arg3, arg4, arg5, arg6) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, TResult> func)
             : base(func)
@@ -238,13 +227,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, TResult> func)
             : base(func)
@@ -271,13 +258,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func)
             : base(func)
@@ -304,13 +289,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> func)
             : base(func)
@@ -337,13 +320,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> func)
             : base(func)
@@ -370,13 +351,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> func)
             : base(func)
@@ -403,13 +382,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> func)
             : base(func)
@@ -436,13 +413,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> func)
             : base(func)
@@ -469,13 +444,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> func)
             : base(func)
@@ -502,13 +475,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> func)
             : base(func)
@@ -535,13 +506,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> func)
             : base(func)
@@ -568,13 +537,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> : DelegateProxy<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, CallContext>? Invoking;
 
         public override Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17) => default)
-        { }
+        public static FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> Unused { get; } = new FuncProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult>((arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, TResult> func)
             : base(func)

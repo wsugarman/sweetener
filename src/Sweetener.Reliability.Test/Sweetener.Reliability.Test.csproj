@@ -11,6 +11,10 @@
     <ProjectReference Include="..\Sweetener.Reflection\Sweetener.Reflection.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <nullable>enable</nullable>
+  </PropertyGroup>
+
   <!-- Generated Files -->
   <ItemGroup>
     <Compile Update="Action\Action.Extensions.*Test.cs">

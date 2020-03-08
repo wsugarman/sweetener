@@ -17,9 +17,15 @@
 #>
 // Generated from <#= GetTemplateFileName() #>
 using System;
-using System.IO;
 using System.Threading;
+<#
+        if (async)
+        {
+#>
 using System.Threading.Tasks;
+<#
+        }
+#>
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -67,8 +73,11 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void With<#= optionalAsync #>Retry<#= testSuffix #>()
         {
-            <#= inputActionType #> nullAction = null;
-            <#= inputActionType #> action     = <#= GetNoOpDelegate(parameterCount, async, interruptable) #>;
+            <#= inputActionType #>? nullAction = null;
+            <#= inputActionType #>  action     = <#= GetNoOpDelegate(parameterCount, async, interruptable) #>;
+
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => nullAction.With<#= optionalAsync #>Retry( 4, ExceptionPolicy.Transient, <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => action    .With<#= optionalAsync #>Retry(-2, ExceptionPolicy.Transient, <#= noDelayHandler #>));
             Assert.ThrowsException<ArgumentNullException      >(() => action    .With<#= optionalAsync #>Retry( 4, null                     , <#= noDelayHandler #>));
@@ -86,14 +95,16 @@ namespace Sweetener.Reliability.Test
 <#
                 }
 #>
+#nullable enable
+
             // Create the delegates necessary to test the WithRetry overload
             Func<Action<CancellationToken>, <#= inputActionType #>Proxy> actionFactory = a => new <#= inputActionType #>Proxy(<#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalCommaToken #>) => <#= async ? $"{{ a({optionalToken}); await Task.CompletedTask; }}" : $"a({optionalToken})" #>);
             Func<TimeSpan, <#= delayHandlerTypeProxy #>> delayHandlerFactory = t => new <#= delayHandlerTypeProxy #>((i<#= useComplexHandler ? ", e" : string.Empty #>) => t);
             Func<<#= inputActionType #>, int, ExceptionHandler, <#= delayHandlerFunc #>, <#= inputActionType #>> with<#= optionalAsync #>Retry = (a, r, e, d) => a.With<#= optionalAsync #>Retry(r, e, d.Invoke);
             Action<<#= inputActionType #><#= optionalComma #><#= typeArguments #>, CancellationToken> invoke = (action<#= optionalComma #><#= arguments #>, token) => action(<#= arguments #><#= optionalCommaToken #>)<#= async ? ".Wait()" : string.Empty #>;
 
-            Action<<#= inputActionType #>Proxy>           observeAction      = <#= interruptable || parameterCount > 0 ? $"a          => a.Invoking += Expect.Arguments{inputTypeArguments}(Arguments.Validate)" : "null" #>;
-            Action<<#= inputActionType #>Proxy, TimeSpan> observeActionDelay = (a, delay) => a.Invoking += Expect.<#= interruptable || parameterCount > 0 ? $"ArgumentsAfterDelay{inputTypeArguments}(Arguments.Validate, delay)" : $"AfterDelay{inputTypeArguments}(delay)" #>;
+            Action<<#= inputActionType #>Proxy>?           observeAction      = <#= interruptable || parameterCount > 0 ? $"a          => a.Invoking += Expect.Arguments{inputTypeArguments}(Arguments.Validate)" : "null" #>;
+            Action<<#= inputActionType #>Proxy, TimeSpan>? observeActionDelay = (a, delay) => a.Invoking += Expect.<#= interruptable || parameterCount > 0 ? $"ArgumentsAfterDelay{inputTypeArguments}(Arguments.Validate, delay)" : $"AfterDelay{inputTypeArguments}(delay)" #>;
 
             // Test each scenario
             WithRetry<#= suffix #>_Success         (actionFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeAction     ,  d     => d.Invoking += Expect.Nothing<int<#= useComplexHandler ? ", Exception" : string.Empty #>>());

@@ -20,7 +20,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<#= typeParametersCode #> : DelegateProxy<Action<#= typeParametersCode #>>
     {
-        public new event Action<<#= typeParameters #><#= optionalComma #>CallContext> Invoking;
+        public new event Action<<#= typeParameters #><#= optionalComma #>CallContext>? Invoking;
 
         public override Action<#= typeParametersCode #> Proxy => Invoke;
 

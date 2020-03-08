@@ -7,7 +7,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy : DelegateProxy<Action>
     {
-        public new event Action<CallContext> Invoking;
+        public new event Action<CallContext>? Invoking;
 
         public override Action Proxy => Invoke;
 
@@ -40,7 +40,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T> : DelegateProxy<Action<T>>
     {
-        public new event Action<T, CallContext> Invoking;
+        public new event Action<T, CallContext>? Invoking;
 
         public override Action<T> Proxy => Invoke;
 
@@ -73,7 +73,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2> : DelegateProxy<Action<T1, T2>>
     {
-        public new event Action<T1, T2, CallContext> Invoking;
+        public new event Action<T1, T2, CallContext>? Invoking;
 
         public override Action<T1, T2> Proxy => Invoke;
 
@@ -106,7 +106,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3> : DelegateProxy<Action<T1, T2, T3>>
     {
-        public new event Action<T1, T2, T3, CallContext> Invoking;
+        public new event Action<T1, T2, T3, CallContext>? Invoking;
 
         public override Action<T1, T2, T3> Proxy => Invoke;
 
@@ -139,7 +139,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4> : DelegateProxy<Action<T1, T2, T3, T4>>
     {
-        public new event Action<T1, T2, T3, T4, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4> Proxy => Invoke;
 
@@ -172,7 +172,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5> : DelegateProxy<Action<T1, T2, T3, T4, T5>>
     {
-        public new event Action<T1, T2, T3, T4, T5, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5> Proxy => Invoke;
 
@@ -205,7 +205,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6> Proxy => Invoke;
 
@@ -238,7 +238,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7> Proxy => Invoke;
 
@@ -271,7 +271,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8> Proxy => Invoke;
 
@@ -304,7 +304,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> Proxy => Invoke;
 
@@ -337,7 +337,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Proxy => Invoke;
 
@@ -370,7 +370,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Proxy => Invoke;
 
@@ -403,7 +403,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> Proxy => Invoke;
 
@@ -436,7 +436,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> Proxy => Invoke;
 
@@ -469,7 +469,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> Proxy => Invoke;
 
@@ -502,7 +502,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> Proxy => Invoke;
 
@@ -535,7 +535,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Proxy => Invoke;
 
@@ -568,7 +568,7 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class ActionProxy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> : DelegateProxy<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>>
     {
-        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, CallContext> Invoking;
+        public new event Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, CallContext>? Invoking;
 
         public override Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> Proxy => Invoke;
 

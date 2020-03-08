@@ -12,7 +12,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsFalse(isTransient(new ArgumentException         ()));
@@ -30,7 +34,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));
@@ -48,7 +56,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException, InvalidOperationException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));
@@ -66,7 +78,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException, InvalidOperationException, IOException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));
@@ -84,7 +100,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));
@@ -102,7 +122,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));
@@ -120,7 +144,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException, OperationCanceledException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));
@@ -138,7 +166,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Retry<AggregateException, ArgumentException, InvalidOperationException, IOException, FileNotFoundException, FormatException, OperationCanceledException, OverflowException>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.IsTrue (isTransient(new AggregateException        ()));
             Assert.IsTrue (isTransient(new ArgumentException         ()));

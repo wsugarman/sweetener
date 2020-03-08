@@ -5,7 +5,7 @@ namespace Sweetener.Reliability.Test
     internal abstract class DelegateProxy<T>
         where T : Delegate
     {
-        public event Action<CallContext> Invoking;
+        public event Action<CallContext>? Invoking;
 
         public int Calls => _context.Calls;
 

@@ -27,7 +27,7 @@ namespace Sweetener.Reliability.Test
             }
             catch (Exception e)
             {
-                if (exceptionType != typeof(AggregateException) && e is AggregateException a)
+                if (exceptionType != typeof(AggregateException) && e is AggregateException a && a.InnerException != null)
                 {
                     e = a.InnerException;
                     if (e is AssertFailedException)
@@ -37,7 +37,7 @@ namespace Sweetener.Reliability.Test
                 if (allowedDerivedTypes)
                     Assert.IsInstanceOfType(e, exceptionType);
                 else
-                    Assert.AreEqual(exceptionType, e.GetType());
+                    Assert.AreEqual(exceptionType, e!.GetType());
             }
         }
     }

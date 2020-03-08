@@ -19,13 +19,11 @@ namespace Sweetener.Reliability.Test
 
     internal sealed class FuncProxy<<#= typeParameters #>> : DelegateProxy<Func<<#= typeParameters #>>>
     {
-        public new event Action<<#= GetActionTypeParameters(parameterCount) #><#= optionalComma #>CallContext> Invoking;
+        public new event Action<<#= GetActionTypeParameters(parameterCount) #><#= optionalComma #>CallContext>? Invoking;
 
         public override Func<<#= typeParameters #>> Proxy => Invoke;
 
-        public FuncProxy()
-            : this((<#= arguments #>) => default)
-        { }
+        public static FuncProxy<<#= typeParameters #>> Unused { get; } = new FuncProxy<<#= typeParameters #>>((<#= arguments #>) => throw new InvalidOperationException("Cannot invoke unused method"));
 
         public FuncProxy(Func<<#= typeParameters #>> func)
             : base(func)

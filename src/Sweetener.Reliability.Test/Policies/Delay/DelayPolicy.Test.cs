@@ -45,10 +45,14 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Exponential_TimeSpan_Random()
         {
+#nullable disable
+
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds(-1), new Random()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds( 1), new Random()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds((double)int.MaxValue + 1), new Random()));
             Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicy.Exponential(TimeSpan.FromMilliseconds( 2), null));
+
+#nullable enable
 
             NotSoRandom rand = new NotSoRandom();
             Exponential(DelayPolicy.Exponential(TimeSpan.FromMilliseconds(100), rand), 100, rand);
@@ -66,15 +70,19 @@ namespace Sweetener.Reliability.Test
         [TestMethod]
         public void Exponential_int_Random()
         {
+#nullable disable
+
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential(-1, new Random()));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => DelayPolicy.Exponential( 1, new Random()));
             Assert.ThrowsException<ArgumentNullException      >(() => DelayPolicy.Exponential( 2, null        ));
+
+#nullable enable
 
             NotSoRandom rand = new NotSoRandom();
             Exponential(DelayPolicy.Exponential(100, rand), 100, rand);
         }
 
-        private void Exponential(DelayHandler getDelay, int unitMilliseconds, NotSoRandom rand = null)
+        private void Exponential(DelayHandler getDelay, int unitMilliseconds, NotSoRandom? rand = null)
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => getDelay( 0));
             Assert.ThrowsException<OverflowException          >(() => getDelay(32)); // 2^32 > int.MaxValue (32 bits)

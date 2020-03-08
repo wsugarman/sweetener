@@ -20,7 +20,7 @@ namespace Sweetener.Reliability
     /// <returns>The <see cref="TimeSpan"/> that represents the delay in milliseconds.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="attempt"/> is less than <c>1</c>.</exception>
     /// <exception cref="OverflowException">Delay exceeded <see cref="int.MaxValue"/> milliseconds.</exception>
-    public delegate TimeSpan ComplexDelayHandler(int attempt, Exception? exception);
+    public delegate TimeSpan ComplexDelayHandler(int attempt, Exception exception);
 
     /// <summary>
     /// Gets the delay that an operation should wait before attempting to execute again.
