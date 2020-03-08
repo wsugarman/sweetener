@@ -6,6 +6,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener.Reliability
 {
@@ -26,8 +27,9 @@ namespace Sweetener.Reliability
         string inputTypeParameters  = Enclose(GetActionTypeParameters(parameterCount                     ), BracketType.AngleBrackets);
         string outputTypeParameters = Enclose(GetActionTypeParameters(parameterCount, interruptable: true), BracketType.AngleBrackets);
 #>
-        public static Action<#= outputTypeParameters #> IgnoreInterruption<#= inputTypeParameters #>(this Action<#= inputTypeParameters #> action)
-            => action == null ? (Action<#= outputTypeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => action(<#= arguments #>);
+        [return: NotNullIfNotNull("action")]
+        public static Action<#= outputTypeParameters #>? IgnoreInterruption<#= inputTypeParameters #>(this Action<#= inputTypeParameters #>? action)
+            => action == null ? (Action<#= outputTypeParameters #>?)null : (<#= arguments #><#= optionalComma #>token) => action!(<#= arguments #>);
 
 <#
     }
@@ -44,8 +46,9 @@ namespace Sweetener.Reliability
         string inputTypeParameters  = Enclose(GetFuncTypeParameters(parameterCount                     ), BracketType.AngleBrackets);
         string outputTypeParameters = Enclose(GetFuncTypeParameters(parameterCount, interruptable: true), BracketType.AngleBrackets);
 #>
-        public static Func<#= outputTypeParameters #> IgnoreInterruption<#= inputTypeParameters #>(this Func<#= inputTypeParameters #> func)
-            => func == null ? (Func<#= outputTypeParameters #>)null : (<#= arguments #><#= optionalComma #>token) => func(<#= arguments #>);
+        [return: NotNullIfNotNull("func")]
+        public static Func<#= outputTypeParameters #>? IgnoreInterruption<#= inputTypeParameters #>(this Func<#= inputTypeParameters #>? func)
+            => func == null ? (Func<#= outputTypeParameters #>?)null : (<#= arguments #><#= optionalComma #>token) => func!(<#= arguments #>);
 
 <#
     }

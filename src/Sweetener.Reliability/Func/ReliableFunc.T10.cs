@@ -1,5 +1,6 @@
 // Generated from ReliableFunc.tt
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -339,7 +340,7 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, out TResult result)
+        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, [MaybeNullWhen(false)] out TResult result)
             => TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, CancellationToken.None, out result);
 
         /// <summary>
@@ -368,7 +369,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, CancellationToken cancellationToken, out TResult result)
+        public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, CancellationToken cancellationToken, [MaybeNullWhen(false)] out TResult result)
         {
             int attempt = 0;
 
@@ -401,12 +402,11 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            result = default;
+            result = default!;
             return false;
         }
 
-
-         /// <summary>
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <param name="arg1">The first parameter of the method that this reliable delegate encapsulates.</param>
@@ -420,11 +420,10 @@ namespace Sweetener.Reliability
         /// <param name="arg9">The ninth parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9)
+        public async Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9)
             => await TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, CancellationToken.None).ConfigureAwait(false);
 
         /// <summary>
@@ -442,15 +441,14 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, CancellationToken cancellationToken)
+        public async Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, CancellationToken cancellationToken)
         {
             int attempt = 0;
 
@@ -476,7 +474,7 @@ namespace Sweetener.Reliability
             switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
             {
                 case FunctionState.ReturnSuccess:
-                    return (Success: true, Result: result);
+                    return result;
                 case FunctionState.ReturnFailure:
                     goto Fail;
                 default:
@@ -484,7 +482,7 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            return (Success: false, Result: default);
+            return Optional<TResult>.Undefined;
         }
     }
 }

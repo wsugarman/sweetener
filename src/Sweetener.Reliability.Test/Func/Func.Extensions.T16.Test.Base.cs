@@ -16,9 +16,9 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy> observeFunc,
-            Action<TDelayPolicyProxy> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy>? observeFunc = null,
+            Action<TDelayPolicyProxy>? observeDelayPolicy = null,
+            bool passResultHandler = true)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -29,7 +29,7 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(n => n == 200 ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>();
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable function
@@ -68,8 +68,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy> observeFunc,
-            Action<TDelayPolicyProxy> observeDelayPolicy)
+            Action<TFuncProxy>? observeFunc = null,
+            Action<TDelayPolicyProxy>? observeDelayPolicy = null)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -80,7 +80,7 @@ namespace Sweetener.Reliability.Test
 
             // Declare the various proxies for the input delegates and event handlers
             FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(n => n == 200 ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>();
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable function
@@ -118,9 +118,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy> observeFunc,
-            Action<TDelayPolicyProxy> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy>? observeFunc = null,
+            Action<TDelayPolicyProxy>? observeDelayPolicy = null)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -130,8 +129,8 @@ namespace Sweetener.Reliability.Test
             TFuncProxy func = funcFactory(t => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>();
-            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>();
+            FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(r => ResultKind.Successful);
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable function
@@ -169,9 +168,9 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null,
+            bool passResultHandler = true)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -233,8 +232,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -290,9 +289,9 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null,
+            bool passResultHandler = true)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -348,8 +347,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -399,9 +398,9 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null,
+            bool passResultHandler = true)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -455,9 +454,9 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null,
+            bool passResultHandler = true)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>
@@ -524,9 +523,9 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
             Func<TFunc, int, string, double, long, ushort, byte, TimeSpan, uint, Tuple<bool, ulong>, DateTime, ulong, sbyte, decimal, char, float, CancellationToken, int> invoke,
-            Action<TFuncProxy, TimeSpan> observeFunc,
-            Action<TDelayPolicyProxy, int, Type> observeDelayPolicy,
-            bool passResultHandler)
+            Action<TFuncProxy, TimeSpan>? observeFunc = null,
+            Action<TDelayPolicyProxy, int, Type>? observeDelayPolicy = null,
+            bool passResultHandler = true)
             where TFunc             : Delegate
             where TDelayPolicy      : Delegate
             where TFuncProxy        : DelegateProxy<TFunc>

@@ -6,7 +6,7 @@ namespace Sweetener.Reliability.Test
     {
         public static Func<TResult> Create<TResult, TException>(TResult transientResult)
             where TException : Exception, new()
-            => Create<TResult, TException>(transientResult, default, Retries.Infinite);
+            => Create<TResult, TException>(transientResult, default!, Retries.Infinite);
 
         public static Func<TResult> Create<TResult, TException>(TResult transientResult, TResult finalResult, int retries)
             where TException : Exception, new()

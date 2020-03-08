@@ -15,8 +15,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy> observeAction,
-            Action<TDelayPolicyProxy> observeDelayPolicy)
+            Action<TActionProxy>? observeAction = null,
+            Action<TDelayPolicyProxy>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>
@@ -26,7 +26,7 @@ namespace Sweetener.Reliability.Test
             TActionProxy action = actionFactory(t => Operation.Null());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>();
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
             TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
 
             // Create the reliable action
@@ -61,8 +61,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy> observeAction,
-            Action<TDelayPolicyProxy> observeDelayPolicy)
+            Action<TActionProxy>? observeAction = null,
+            Action<TDelayPolicyProxy>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>
@@ -107,8 +107,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy, TimeSpan> observeAction,
-            Action<TDelayPolicyProxy, Type> observeDelayPolicy)
+            Action<TActionProxy, TimeSpan>? observeAction = null,
+            Action<TDelayPolicyProxy, Type>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>
@@ -154,8 +154,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy, TimeSpan> observeAction,
-            Action<TDelayPolicyProxy, Type> observeDelayPolicy)
+            Action<TActionProxy, TimeSpan>? observeAction = null,
+            Action<TDelayPolicyProxy, Type>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>
@@ -201,8 +201,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy, TimeSpan> observeAction,
-            Action<TDelayPolicyProxy, Type> observeDelayPolicy)
+            Action<TActionProxy, TimeSpan>? observeAction = null,
+            Action<TDelayPolicyProxy, Type>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>
@@ -247,8 +247,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy, TimeSpan> observeAction,
-            Action<TDelayPolicyProxy, Type> observeDelayPolicy)
+            Action<TActionProxy, TimeSpan>? observeAction = null,
+            Action<TDelayPolicyProxy, Type>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>
@@ -305,8 +305,8 @@ namespace Sweetener.Reliability.Test
             Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
             Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
             Action<TAction, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke,
-            Action<TActionProxy, TimeSpan> observeAction,
-            Action<TDelayPolicyProxy, Type> observeDelayPolicy)
+            Action<TActionProxy, TimeSpan>? observeAction = null,
+            Action<TDelayPolicyProxy, Type>? observeDelayPolicy = null)
             where TAction           : Delegate
             where TDelayPolicy      : Delegate
             where TActionProxy      : DelegateProxy<TAction>

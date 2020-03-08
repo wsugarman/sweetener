@@ -23,7 +23,11 @@ namespace Sweetener.Reliability.Test
         {
             ExceptionHandler isTransient = ExceptionPolicy.Fail<#= PrintTypeArgs(parameterCount) #>();
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
 <#
         for (int i = 0; i < parameterCount; i++)

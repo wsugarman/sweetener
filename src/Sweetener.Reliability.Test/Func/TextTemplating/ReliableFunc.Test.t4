@@ -31,6 +31,7 @@ using System.Threading.Tasks;
         }
 #>
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Reliability.Test
 {
@@ -157,6 +158,7 @@ namespace Sweetener.Reliability.Test
             string ctorInputTypeArguments = interruptable  ? tokenInputFuncTypeArguments : inputFuncTypeArguments;
             string optionalFuncInvoke     = !interruptable ? ".Invoke"                   : string.Empty;
             string optionalProxy          = !interruptable ? "Proxy"                     : string.Empty;
+            string funcBody               = GetExpressionDelegate(parameterCount, "\"Hello World\"", async, interruptable);
 
             foreach (bool passResultHandler in new bool[] { false, true })
             {
@@ -167,11 +169,11 @@ namespace Sweetener.Reliability.Test
                 {
                     string delayHandlerType      = useComplexHandler  ? "ComplexDelayHandler<string>" : "DelayHandler";
                     string optionalHandlerInvoke = !useComplexHandler ? ".Invoke"            : string.Empty;
-                    string testName             = "Ctor" + (interruptable ? "_Interruptable" : string.Empty) + (passResultHandler ? "_ResultHandler" : string.Empty) + "_" + (useComplexHandler  ? "ComplexDelayHandler" : "DelayHandler");
+                    string testName              = "Ctor" + (interruptable ? "_Interruptable" : string.Empty) + (passResultHandler ? "_ResultHandler" : string.Empty) + "_" + (useComplexHandler  ? "ComplexDelayHandler" : "DelayHandler");
 #>
         private void <#= testName #>(Func<Func<#= ctorInputTypeArguments #>, int<#= optionalResultHandlerType #>, ExceptionHandler, <#= delayHandlerType #>, Reliable<#= optionalAsync #>Func<<#= typeArguments #>>> factory)
         {
-            Func<#= optionalProxy #><#= ctorInputTypeArguments #> func = <#= interruptable ? GetExpressionDelegate(parameterCount, "\"Hello World\"", async, interruptable: true) : $"new Func{optionalProxy}{ctorInputTypeArguments}()" #>;
+            Func<#= optionalProxy #><#= ctorInputTypeArguments #> func = <#= interruptable ? funcBody : $"new Func{optionalProxy}{ctorInputTypeArguments}({funcBody})" #>;
 <#
                     if (passResultHandler)
                     {
@@ -194,10 +196,14 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
 <#
                     }
+#>
+
+#nullable disable
+
+<#
                     if (passResultHandler)
                     {
 #>
-
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func<#= optionalFuncInvoke #>, -2              , resultHandler, exceptionHandler, delayHandler<#= optionalHandlerInvoke #>));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func<#= optionalFuncInvoke #>, Retries.Infinite, null         , exceptionHandler, delayHandler<#= optionalHandlerInvoke #>));
@@ -208,7 +214,6 @@ namespace Sweetener.Reliability.Test
                     else
                     {
 #>
-
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler<#= optionalHandlerInvoke #>));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func<#= optionalFuncInvoke #>, -2              , exceptionHandler, delayHandler<#= optionalHandlerInvoke #>));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func<#= optionalFuncInvoke #>, Retries.Infinite, null            , delayHandler<#= optionalHandlerInvoke #>));
@@ -216,6 +221,8 @@ namespace Sweetener.Reliability.Test
 <#
                     }
 #>
+
+#nullable enable
 
             // Create a Reliable<#= optionalAsync #>Func and validate
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> actual = factory(func<#= optionalFuncInvoke #>, 37<#= optionalResultHandler #>, exceptionHandler, delayHandler<#= optionalHandlerInvoke #>);
@@ -312,9 +319,13 @@ namespace Sweetener.Reliability.Test
         if (async)
         {
 #>
+#nullable disable
+
             // Test a function that returns a null Task
             ReliableAsyncFunc<<#= typeArguments #>> badFunc = new ReliableAsyncFunc<<#= typeArguments #>>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
             Assert.That.ThrowsException<InvalidOperationException>(() => invokeAsync(badFunc<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+
+#nullable enable
 
 <#
         }
@@ -368,7 +379,7 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvoke(bool passToken)
         {
-            TryFunc<ReliableFunc<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> tryInvoke;
+            TryFunc<ReliableFunc<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string?> tryInvoke;
             if (passToken)
                 tryInvoke = TryInvokeFuncWithToken;
             else
@@ -377,7 +388,7 @@ namespace Sweetener.Reliability.Test
             Action<ReliableFunc<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> assertSuccess =
                 (f<#= optionalComma #><#= arguments #>, t, r) =>
                 {
-                    Assert.IsTrue(tryInvoke(f<#=optionalComma #><#= arguments #>, t, out string actual));
+                    Assert.IsTrue(tryInvoke(f<#=optionalComma #><#= arguments #>, t, out string? actual));
                     Assert.AreEqual(r, actual);
                 };
 
@@ -385,7 +396,7 @@ namespace Sweetener.Reliability.Test
                 (f<#= optionalComma #><#= arguments #>, t, r) =>
                 {
                     // TryInvoke returns the default value instead of the failed value 'r'
-                    Assert.IsFalse(tryInvoke(f<#=optionalComma #><#= arguments #>, t, out string actual));
+                    Assert.IsFalse(tryInvoke(f<#=optionalComma #><#= arguments #>, t, out string? actual));
                     Assert.AreEqual(default, actual);
                 };
 
@@ -393,7 +404,7 @@ namespace Sweetener.Reliability.Test
                 (f<#= optionalComma #><#= arguments #>, t, e) =>
                 {
                     // TryInvoke returns false instead of throwing the provided exception 'e'
-                    Assert.IsFalse(tryInvoke(f<#=optionalComma #><#= arguments #>, t, out string actual));
+                    Assert.IsFalse(tryInvoke(f<#=optionalComma #><#= arguments #>, t, out string? actual));
                     Assert.AreEqual(default, actual);
                 };
 
@@ -420,10 +431,12 @@ namespace Sweetener.Reliability.Test
                 }
             }
 
-            bool TryInvokeFunc(ReliableFunc<<#= typeArguments #>> reliableFunc<#= optionalComma #><#= parameters #>, CancellationToken token, out string result)
+            // TODO: Would be preferrable to use [MaybeNullWhen(bool)], but there is a type collision
+            // due to our shim and the sharing of internals
+            bool TryInvokeFunc(ReliableFunc<<#= typeArguments #>> reliableFunc<#= optionalComma #><#= parameters #>, CancellationToken token, out string? result)
                 => reliableFunc.TryInvoke(<#= arguments #><#= optionalComma #>out result);
 
-            bool TryInvokeFuncWithToken(ReliableFunc<<#= typeArguments #>> reliableFunc<#= optionalComma #><#= parameters #>, CancellationToken token, out string result)
+            bool TryInvokeFuncWithToken(ReliableFunc<<#= typeArguments #>> reliableFunc<#= optionalComma #><#= parameters #>, CancellationToken token, out string? result)
                 => reliableFunc.TryInvoke(<#= arguments #><#= optionalComma #>token, out result);
         }
 
@@ -436,7 +449,7 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvokeAsync(bool passToken)
         {
-            Func<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, (bool Success, string Result)> tryInvokeAsync;
+            Func<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, Optional<string>> tryInvokeAsync;
             if (passToken)
                 tryInvokeAsync = (r<#= optionalComma #><#= arguments #>, t) => r.TryInvokeAsync(<#= arguments #><#= optionalComma #>t).Result;
             else
@@ -446,9 +459,13 @@ namespace Sweetener.Reliability.Test
         if (async)
         {
 #>
+#nullable disable
+
             // Test a function that returns a null Task
             ReliableAsyncFunc<<#= typeArguments #>> badFunc = new ReliableAsyncFunc<<#= typeArguments #>>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
             Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badFunc<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+
+#nullable enable
 
 <#
         }
@@ -456,27 +473,25 @@ namespace Sweetener.Reliability.Test
             Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> assertSuccess =
                 (f<#= optionalComma #><#= arguments #>, t, r) =>
                 {
-                    (bool success, string result) = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
-                    Assert.IsTrue(success);
-                    Assert.AreEqual(r, result);
+                    Optional<string> result = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
+                    Assert.IsTrue(result.HasValue);
+                    Assert.AreEqual(r, result.Value);
                 };
 
             Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, string> assertResultFailure =
                 (f<#= optionalComma #><#= arguments #>, t, r) =>
                 {
-                    // TryInvokeAsync returns the default value instead of the failed value 'r'
-                    (bool success, string result) = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
-                    Assert.IsFalse(success);
-                    Assert.AreEqual(default, result);
+                    // TryInvokeAsync returns an undefined value upon failure
+                    Optional<string> result = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
+                    Assert.IsFalse(result.HasValue);
                 };
 
             Action<Reliable<#= optionalAsync #>Func<<#= typeArguments #>><#= optionalComma #><#= inputTypeArguments #>, CancellationToken, Type> assertExceptionFailure =
                 (f<#= optionalComma #><#= arguments #>, t, e) =>
                 {
-                    // TryInvokeAsync returns false instead of throwing the provided exception 'e'
-                    (bool success, string result) = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
-                    Assert.IsFalse(success);
-                    Assert.AreEqual(default, result);
+                    // TryInvokeAsync returns an undefined value upon instead of throwing an exception
+                    Optional<string> result = tryInvokeAsync(f<#=optionalComma #><#= arguments #>, t);
+                    Assert.IsFalse(result.HasValue);
                 };
 
             foreach (bool addEventHandlers in new bool[] { false, true })
@@ -527,13 +542,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "\"Success\"", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>();
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -590,13 +605,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "\"Failure\"", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Failure" ? ResultKind.Fatal : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>();
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Failure" ? ResultKind.Fatal : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -657,13 +672,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetThrowDelegate<OutOfMemoryException>(parameterCount, async, outputType: "string") #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>();
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -725,19 +740,19 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r =>
+            FuncProxy<string, ResultKind> resultHandler = new FuncProxy<string, ResultKind>(r =>
                 r switch
                 {
                     "Retry"   => ResultKind.Transient,
                     "Success" => ResultKind.Successful,
                     _         => ResultKind.Fatal,
                 });
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -805,19 +820,19 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r =>
+            FuncProxy<string, ResultKind> resultHandler = new FuncProxy<string, ResultKind>(r =>
                 r switch
                 {
                     "Retry"   => ResultKind.Transient,
                     "Failure" => ResultKind.Fatal,
                     _         => ResultKind.Successful,
                 });
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -885,13 +900,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -959,13 +974,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -1033,13 +1048,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -1140,13 +1155,13 @@ namespace Sweetener.Reliability.Test
 #>
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(
@@ -1209,13 +1224,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<#= inputFuncTypeArguments #> func = new FuncProxy<#= inputFuncTypeArguments #>(<#= GetExpressionDelegate(parameterCount, "flakyFunc()", async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create Reliable<#= optionalAsync #>Func
             Reliable<#= optionalAsync #>Func<<#= typeArguments #>> reliableFunc = new Reliable<#= optionalAsync #>Func<<#= typeArguments #>>(

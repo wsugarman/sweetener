@@ -1,4 +1,6 @@
 ﻿// Generated from TryFunc.tt ran successfully
+using System.Diagnostics.CodeAnalysis;
+
 namespace Sweetener
 {
     /// <summary>
@@ -10,7 +12,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<TResult>(out TResult result);
+    public delegate bool TryFunc<TResult>([MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has one parameter and returns a value indicating whether or not it succeeded.
@@ -23,7 +25,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T, TResult>(T arg, out TResult result);
+    public delegate bool TryFunc<in T, TResult>(T arg, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has two parameters and returns a value indicating whether or not it succeeded.
@@ -38,7 +40,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, TResult>(T1 arg1, T2 arg2, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, TResult>(T1 arg1, T2 arg2, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has three parameters and returns a value indicating whether or not it succeeded.
@@ -55,7 +57,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, TResult>(T1 arg1, T2 arg2, T3 arg3, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, TResult>(T1 arg1, T2 arg2, T3 arg3, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has four parameters and returns a value indicating whether or not it succeeded.
@@ -74,7 +76,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has five parameters and returns a value indicating whether or not it succeeded.
@@ -95,7 +97,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has six parameters and returns a value indicating whether or not it succeeded.
@@ -118,7 +120,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has seven parameters and returns a value indicating whether or not it succeeded.
@@ -143,7 +145,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has eight parameters and returns a value indicating whether or not it succeeded.
@@ -170,7 +172,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has nine parameters and returns a value indicating whether or not it succeeded.
@@ -199,7 +201,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has ten parameters and returns a value indicating whether or not it succeeded.
@@ -230,7 +232,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has eleven parameters and returns a value indicating whether or not it succeeded.
@@ -263,7 +265,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has twelve parameters and returns a value indicating whether or not it succeeded.
@@ -298,7 +300,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has thirteen parameters and returns a value indicating whether or not it succeeded.
@@ -335,7 +337,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has fourteen parameters and returns a value indicating whether or not it succeeded.
@@ -374,7 +376,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has fifteen parameters and returns a value indicating whether or not it succeeded.
@@ -415,7 +417,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has sixteen parameters and returns a value indicating whether or not it succeeded.
@@ -458,7 +460,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has seventeen parameters and returns a value indicating whether or not it succeeded.
@@ -503,7 +505,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has eighteen parameters and returns a value indicating whether or not it succeeded.
@@ -550,7 +552,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, T18 arg18, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, T18 arg18, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has nineteen parameters and returns a value indicating whether or not it succeeded.
@@ -599,7 +601,7 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, in T19, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, T18 arg18, T19 arg19, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, in T19, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, T18 arg18, T19 arg19, [MaybeNullWhen(false)] out TResult result);
 
     /// <summary>
     /// Encapsulates a method that has twenty parameters and returns a value indicating whether or not it succeeded.
@@ -650,6 +652,6 @@ namespace Sweetener
     /// if the method succeeded, or default value if the method failed.
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
-    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, in T19, in T20, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, T18 arg18, T19 arg19, T20 arg20, out TResult result);
+    public delegate bool TryFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, in T9, in T10, in T11, in T12, in T13, in T14, in T15, in T16, in T17, in T18, in T19, in T20, TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15, T16 arg16, T17 arg17, T18 arg18, T19 arg19, T20 arg20, [MaybeNullWhen(false)] out TResult result);
 
 }

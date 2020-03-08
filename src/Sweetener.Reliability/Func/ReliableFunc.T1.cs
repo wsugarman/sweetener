@@ -1,5 +1,6 @@
 // Generated from ReliableFunc.tt
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -285,7 +286,7 @@ namespace Sweetener.Reliability
         /// <see langword="true"/> if the encapsulated method completed successfully
         /// within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public bool TryInvoke(out TResult result)
+        public bool TryInvoke([MaybeNullWhen(false)] out TResult result)
             => TryInvoke(CancellationToken.None, out result);
 
         /// <summary>
@@ -305,7 +306,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public bool TryInvoke(CancellationToken cancellationToken, out TResult result)
+        public bool TryInvoke(CancellationToken cancellationToken, [MaybeNullWhen(false)] out TResult result)
         {
             int attempt = 0;
 
@@ -338,21 +339,19 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            result = default;
+            result = default!;
             return false;
         }
 
-
-         /// <summary>
+        /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
         /// </summary>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync()
+        public async Task<Optional<TResult>> TryInvokeAsync()
             => await TryInvokeAsync(CancellationToken.None).ConfigureAwait(false);
 
         /// <summary>
@@ -361,15 +360,14 @@ namespace Sweetener.Reliability
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the operation to complete.</param>
         /// <returns>
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
-        /// parameter contains a named <see cref="ValueTuple{T1, T2}"/> that contains both a <see cref="bool"/>
-        /// flag, indicating the success of the encapsulated method, and its result, if it succeeded.
-        /// Otherwise the result is the default value if the encapsulated method failed.
+        /// parameter optionally contains the result of the encapsulated method if it succeeded.
+        /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        public async Task<(bool Success, TResult Result)> TryInvokeAsync(CancellationToken cancellationToken)
+        public async Task<Optional<TResult>> TryInvokeAsync(CancellationToken cancellationToken)
         {
             int attempt = 0;
 
@@ -395,7 +393,7 @@ namespace Sweetener.Reliability
             switch (await MoveNextAsync(attempt, result, cancellationToken).ConfigureAwait(false))
             {
                 case FunctionState.ReturnSuccess:
-                    return (Success: true, Result: result);
+                    return result;
                 case FunctionState.ReturnFailure:
                     goto Fail;
                 default:
@@ -403,7 +401,7 @@ namespace Sweetener.Reliability
             }
 
         Fail:
-            return (Success: false, Result: default);
+            return Optional<TResult>.Undefined;
         }
     }
 }

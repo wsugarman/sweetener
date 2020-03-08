@@ -1,16 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Sweetener.Reliability\Sweetener.Reliability.csproj" />
   </ItemGroup>
 
   <!-- TODO: Use PackageReference for Sweetener -->
+  <!-- TODO: Use PackageReference for Sweetener.Reflection -->
   <ItemGroup>
     <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
+    <ProjectReference Include="..\Sweetener.Reflection\Sweetener.Reflection.csproj" />
   </ItemGroup>
 
   <!-- Generated Files -->

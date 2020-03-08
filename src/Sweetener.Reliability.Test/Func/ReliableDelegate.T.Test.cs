@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Reliability.Test
 {

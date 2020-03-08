@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTempl
 		TextTemplating\Include.t4 = TextTemplating\Include.t4
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweetener.Reflection", "Sweetener.Reflection\Sweetener.Reflection.csproj", "{54558407-8468-46C6-86AF-5490C02D135D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{3DF3C424-F337-4E13-8123-6E1F6FD43461}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DF3C424-F337-4E13-8123-6E1F6FD43461}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DF3C424-F337-4E13-8123-6E1F6FD43461}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54558407-8468-46C6-86AF-5490C02D135D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54558407-8468-46C6-86AF-5490C02D135D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54558407-8468-46C6-86AF-5490C02D135D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54558407-8468-46C6-86AF-5490C02D135D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

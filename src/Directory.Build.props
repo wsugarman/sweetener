@@ -8,6 +8,7 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(SrcDirectory)Public.snk</AssemblyOriginatorKeyFile>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <RunSettingsFilePath>$(SrcDirectory)CodeCoverage.runsettings</RunSettingsFilePath>
     <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -29,6 +30,7 @@
         <IsPackable>false</IsPackable>
         <NoWarn>CS1591</NoWarn> <!-- XML comments are not required for tests -->
         <PublicSign>true</PublicSign>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
@@ -56,6 +58,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <TargetFramework>netstandard2.0</TargetFramework>
       </PropertyGroup>
 
       <!-- NuGet metadata -->
@@ -66,11 +69,12 @@
         <MinClientVersion>4.3.0</MinClientVersion>
       </PropertyGroup>
 
-      <!-- Common Assembly Info -->
+      <!-- Common Assembly and Source Files -->
       <ItemGroup>
-        <Compile Include="$(SrcDirectory)AssemblyInfo.cs">
+        <Compile Include="$(SrcDirectory)Shared\AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
+        <Compile Include="$(SrcDirectory)Shared\NullableAttribute.cs" Visible="false" />
       </ItemGroup>
 
       <!-- Dynamic Assembly Attributes -->

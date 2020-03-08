@@ -152,7 +152,7 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalToken #>) =>
             {
-                <#= async ? "Task<TResult> t" : "TResult result" #>;
+                <#= async ? "Task<TResult>? t" : "TResult result" #>;
                 int attempt = 0;
 
             Attempt:

@@ -16,7 +16,11 @@ namespace Sweetener.Reliability.Test
 
         private void UniformExceptionPolicy(ExceptionHandler isTransient, bool expected)
         {
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException>(() => isTransient(null));
+
+#nullable enable
 
             Assert.AreEqual(expected, isTransient(new ArgumentNullException     ()));
             Assert.AreEqual(expected, isTransient(new FormatException           ()));

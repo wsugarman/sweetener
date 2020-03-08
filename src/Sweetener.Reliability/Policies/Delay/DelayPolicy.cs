@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener.Reliability
 {
@@ -201,10 +202,12 @@ namespace Sweetener.Reliability
             };
         }
 
-        internal static ComplexDelayHandler ToComplex(this DelayHandler delayPolicy)
-            => delayPolicy == null ? (ComplexDelayHandler)null: (i, e) => delayPolicy(i);
+        [return: NotNullIfNotNull("delayPolicy")]
+        internal static ComplexDelayHandler? ToComplex(this DelayHandler? delayPolicy)
+            => delayPolicy == null ? (ComplexDelayHandler?)null: (i, e) => delayPolicy!(i);
 
-        internal static ComplexDelayHandler<T> ToComplex<T>(this DelayHandler delayPolicy)
-            => delayPolicy == null ? (ComplexDelayHandler<T>)null : (i, r, e) => delayPolicy(i);
+        [return: NotNullIfNotNull("delayPolicy")]
+        internal static ComplexDelayHandler<T>? ToComplex<T>(this DelayHandler? delayPolicy)
+            => delayPolicy == null ? (ComplexDelayHandler<T>?)null : (i, r, e) => delayPolicy!(i);
     }
 }

@@ -4,7 +4,7 @@ namespace Sweetener.Reliability.Test
 {
     internal sealed class NotSoRandom : Random
     {
-        public event Action<int, int> OnNext;
+        public event Action<int, int>? OnNext;
 
         public int NextValue { get; set; }
 

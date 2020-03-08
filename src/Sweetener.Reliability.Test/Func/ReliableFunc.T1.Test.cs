@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Reliability.Test
 {
@@ -111,14 +112,18 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_DelayHandler(Func<Func<string>, int, ExceptionHandler, DelayHandler, ReliableFunc<string>> factory)
         {
-            FuncProxy<string> func = new FuncProxy<string>();
+            FuncProxy<string> func = new FuncProxy<string>(() => "Hello World");
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+#nullable disable
 
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func.Invoke, -2              , exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, null            , delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func.Invoke, 37, exceptionHandler, delayHandler.Invoke);
@@ -129,14 +134,18 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_ComplexDelayHandler(Func<Func<string>, int, ExceptionHandler, ComplexDelayHandler<string>, ReliableFunc<string>> factory)
         {
-            FuncProxy<string> func = new FuncProxy<string>();
+            FuncProxy<string> func = new FuncProxy<string>(() => "Hello World");
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler<string> delayHandler = (i, r, e) => TimeSpan.FromHours(1);
+
+#nullable disable
 
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func.Invoke, -2              , exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, null            , delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func.Invoke, 37, exceptionHandler, delayHandler);
@@ -147,16 +156,20 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_ResultHandler_DelayHandler(Func<Func<string>, int, ResultHandler<string>, ExceptionHandler, DelayHandler, ReliableFunc<string>> factory)
         {
-            FuncProxy<string> func = new FuncProxy<string>();
+            FuncProxy<string> func = new FuncProxy<string>(() => "Hello World");
             ResultHandler<string> resultHandler = r => r == "Successful Value" ? ResultKind.Successful : ResultKind.Fatal;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+#nullable disable
 
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func.Invoke, -2              , resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, null         , exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, resultHandler, null            , delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, resultHandler, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func.Invoke, 37, resultHandler, exceptionHandler, delayHandler.Invoke);
@@ -167,16 +180,20 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_ResultHandler_ComplexDelayHandler(Func<Func<string>, int, ResultHandler<string>, ExceptionHandler, ComplexDelayHandler<string>, ReliableFunc<string>> factory)
         {
-            FuncProxy<string> func = new FuncProxy<string>();
+            FuncProxy<string> func = new FuncProxy<string>(() => "Hello World");
             ResultHandler<string> resultHandler = r => r == "Successful Value" ? ResultKind.Successful : ResultKind.Fatal;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler<string> delayHandler = (i, r, e) => TimeSpan.FromHours(1);
+
+#nullable disable
 
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func.Invoke, -2              , resultHandler, exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, null         , exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, resultHandler, null            , delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func.Invoke, Retries.Infinite, resultHandler, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func.Invoke, 37, resultHandler, exceptionHandler, delayHandler);
@@ -191,10 +208,14 @@ namespace Sweetener.Reliability.Test
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null            , delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func, 37, exceptionHandler, delayHandler.Invoke);
@@ -209,10 +230,14 @@ namespace Sweetener.Reliability.Test
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler<string> delayHandler = (i, r, e) => TimeSpan.FromHours(1);
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null            , delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func, 37, exceptionHandler, delayHandler);
@@ -228,11 +253,15 @@ namespace Sweetener.Reliability.Test
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null         , exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultHandler, null            , delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultHandler, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func, 37, resultHandler, exceptionHandler, delayHandler.Invoke);
@@ -248,11 +277,15 @@ namespace Sweetener.Reliability.Test
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler<string> delayHandler = (i, r, e) => TimeSpan.FromHours(1);
 
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, resultHandler, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(func, -2              , resultHandler, exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, null         , exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultHandler, null            , delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(func, Retries.Infinite, resultHandler, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableFunc and validate
             ReliableFunc<string> actual = factory(func, 37, resultHandler, exceptionHandler, delayHandler);
@@ -355,7 +388,7 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvoke(bool passToken)
         {
-            TryFunc<ReliableFunc<string>, CancellationToken, string> tryInvoke;
+            TryFunc<ReliableFunc<string>, CancellationToken, string?> tryInvoke;
             if (passToken)
                 tryInvoke = TryInvokeFuncWithToken;
             else
@@ -364,7 +397,7 @@ namespace Sweetener.Reliability.Test
             Action<ReliableFunc<string>, CancellationToken, string> assertSuccess =
                 (f, t, r) =>
                 {
-                    Assert.IsTrue(tryInvoke(f, t, out string actual));
+                    Assert.IsTrue(tryInvoke(f, t, out string? actual));
                     Assert.AreEqual(r, actual);
                 };
 
@@ -372,7 +405,7 @@ namespace Sweetener.Reliability.Test
                 (f, t, r) =>
                 {
                     // TryInvoke returns the default value instead of the failed value 'r'
-                    Assert.IsFalse(tryInvoke(f, t, out string actual));
+                    Assert.IsFalse(tryInvoke(f, t, out string? actual));
                     Assert.AreEqual(default, actual);
                 };
 
@@ -380,7 +413,7 @@ namespace Sweetener.Reliability.Test
                 (f, t, e) =>
                 {
                     // TryInvoke returns false instead of throwing the provided exception 'e'
-                    Assert.IsFalse(tryInvoke(f, t, out string actual));
+                    Assert.IsFalse(tryInvoke(f, t, out string? actual));
                     Assert.AreEqual(default, actual);
                 };
 
@@ -407,10 +440,12 @@ namespace Sweetener.Reliability.Test
                 }
             }
 
-            bool TryInvokeFunc(ReliableFunc<string> reliableFunc, CancellationToken token, out string result)
+            // TODO: Would be preferrable to use [MaybeNullWhen(bool)], but there is a type collision
+            // due to our shim and the sharing of internals
+            bool TryInvokeFunc(ReliableFunc<string> reliableFunc, CancellationToken token, out string? result)
                 => reliableFunc.TryInvoke(out result);
 
-            bool TryInvokeFuncWithToken(ReliableFunc<string> reliableFunc, CancellationToken token, out string result)
+            bool TryInvokeFuncWithToken(ReliableFunc<string> reliableFunc, CancellationToken token, out string? result)
                 => reliableFunc.TryInvoke(token, out result);
         }
 
@@ -420,7 +455,7 @@ namespace Sweetener.Reliability.Test
 
         private void TryInvokeAsync(bool passToken)
         {
-            Func<ReliableFunc<string>, CancellationToken, (bool Success, string Result)> tryInvokeAsync;
+            Func<ReliableFunc<string>, CancellationToken, Optional<string>> tryInvokeAsync;
             if (passToken)
                 tryInvokeAsync = (r, t) => r.TryInvokeAsync(t).Result;
             else
@@ -429,27 +464,25 @@ namespace Sweetener.Reliability.Test
             Action<ReliableFunc<string>, CancellationToken, string> assertSuccess =
                 (f, t, r) =>
                 {
-                    (bool success, string result) = tryInvokeAsync(f, t);
-                    Assert.IsTrue(success);
-                    Assert.AreEqual(r, result);
+                    Optional<string> result = tryInvokeAsync(f, t);
+                    Assert.IsTrue(result.HasValue);
+                    Assert.AreEqual(r, result.Value);
                 };
 
             Action<ReliableFunc<string>, CancellationToken, string> assertResultFailure =
                 (f, t, r) =>
                 {
-                    // TryInvokeAsync returns the default value instead of the failed value 'r'
-                    (bool success, string result) = tryInvokeAsync(f, t);
-                    Assert.IsFalse(success);
-                    Assert.AreEqual(default, result);
+                    // TryInvokeAsync returns an undefined value upon failure
+                    Optional<string> result = tryInvokeAsync(f, t);
+                    Assert.IsFalse(result.HasValue);
                 };
 
             Action<ReliableFunc<string>, CancellationToken, Type> assertExceptionFailure =
                 (f, t, e) =>
                 {
-                    // TryInvokeAsync returns false instead of throwing the provided exception 'e'
-                    (bool success, string result) = tryInvokeAsync(f, t);
-                    Assert.IsFalse(success);
-                    Assert.AreEqual(default, result);
+                    // TryInvokeAsync returns an undefined value upon instead of throwing an exception
+                    Optional<string> result = tryInvokeAsync(f, t);
+                    Assert.IsFalse(result.HasValue);
                 };
 
             foreach (bool addEventHandlers in new bool[] { false, true })
@@ -486,13 +519,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => "Success");
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>();
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Success" ? ResultKind.Successful : ResultKind.Fatal);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -541,13 +574,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => "Failure");
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Failure" ? ResultKind.Fatal : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>();
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Failure" ? ResultKind.Fatal : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -600,13 +633,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => throw new OutOfMemoryException());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>();
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>();
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Fail<OutOfMemoryException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -660,19 +693,19 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r =>
+            FuncProxy<string, ResultKind> resultHandler = new FuncProxy<string, ResultKind>(r =>
                 r switch
                 {
                     "Retry"   => ResultKind.Transient,
                     "Success" => ResultKind.Successful,
                     _         => ResultKind.Fatal,
                 });
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -727,19 +760,19 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r =>
+            FuncProxy<string, ResultKind> resultHandler = new FuncProxy<string, ResultKind>(r =>
                 r switch
                 {
                     "Retry"   => ResultKind.Transient,
                     "Failure" => ResultKind.Fatal,
                     _         => ResultKind.Successful,
                 });
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -794,13 +827,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -855,13 +888,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -916,13 +949,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => r == "Retry" ? ResultKind.Transient : ResultKind.Successful);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Retry<IOException>().Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -984,13 +1017,13 @@ namespace Sweetener.Reliability.Test
                 });
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(
@@ -1053,13 +1086,13 @@ namespace Sweetener.Reliability.Test
             FuncProxy<string> func = new FuncProxy<string>(() => flakyFunc());
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<string, ResultKind>               resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
-            FuncProxy<Exception, bool>                  exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
-            FuncProxy<int, string, Exception, TimeSpan> delayHandler     = new FuncProxy<int, string, Exception, TimeSpan>((i, r, e) => Constants.Delay);
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => Constants.Delay);
 
-            ActionProxy<int, string, Exception> retryHandler     = new ActionProxy<int, string, Exception>();
-            ActionProxy<string, Exception>      failedHandler    = new ActionProxy<string, Exception>();
-            ActionProxy<string, Exception>      exhaustedHandler = new ActionProxy<string, Exception>();
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
 
             // Create ReliableFunc
             ReliableFunc<string> reliableFunc = new ReliableFunc<string>(

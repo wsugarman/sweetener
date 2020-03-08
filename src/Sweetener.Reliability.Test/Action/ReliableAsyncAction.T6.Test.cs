@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Reliability.Test
 {
@@ -64,13 +65,18 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_DelayHandler(Func<Func<int, string, double, long, ushort, byte, Task>, int, ExceptionHandler, DelayHandler, ReliableAsyncAction<int, string, double, long, ushort, byte>> factory)
         {
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>();
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.CompletedTask);
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null            , delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableAsyncAction and validate
             ReliableAsyncAction<int, string, double, long, ushort, byte> actual = factory(action.Invoke, 37, exceptionHandler, delayHandler.Invoke);
@@ -81,13 +87,18 @@ namespace Sweetener.Reliability.Test
 
         private void Ctor_ComplexDelayHandler(Func<Func<int, string, double, long, ushort, byte, Task>, int, ExceptionHandler, ComplexDelayHandler, ReliableAsyncAction<int, string, double, long, ushort, byte>> factory)
         {
-            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>();
+            FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.CompletedTask);
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler delayHandler = (i, e) => TimeSpan.FromHours(1);
+
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action.Invoke, -2              , exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, null            , delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action.Invoke, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableAsyncAction and validate
             ReliableAsyncAction<int, string, double, long, ushort, byte> actual = factory(action.Invoke, 37, exceptionHandler, delayHandler);
@@ -101,10 +112,15 @@ namespace Sweetener.Reliability.Test
             Func<int, string, double, long, ushort, byte, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, arg5, arg6, token) => await Task.CompletedTask;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             FuncProxy<int, TimeSpan> delayHandler = new FuncProxy<int, TimeSpan>(i => Constants.Delay);
+
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionHandler, delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null            , delayHandler.Invoke));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableAsyncAction and validate
             ReliableAsyncAction<int, string, double, long, ushort, byte> actual = factory(action, 37, exceptionHandler, delayHandler.Invoke);
@@ -118,10 +134,15 @@ namespace Sweetener.Reliability.Test
             Func<int, string, double, long, ushort, byte, CancellationToken, Task> action = async (arg1, arg2, arg3, arg4, arg5, arg6, token) => await Task.CompletedTask;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
             ComplexDelayHandler delayHandler = (i, e) => TimeSpan.FromHours(1);
+
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action, -2              , exceptionHandler, delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, null            , delayHandler));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a ReliableAsyncAction and validate
             ReliableAsyncAction<int, string, double, long, ushort, byte> actual = factory(action, 37, exceptionHandler, delayHandler);
@@ -158,9 +179,13 @@ namespace Sweetener.Reliability.Test
             else
                 invokeAsync = (r, arg1, arg2, arg3, arg4, arg5, arg6, t) => r.InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6).Wait();
 
+#nullable disable
+
             // Test an action that returns a null Task
             ReliableAsyncAction<int, string, double, long, ushort, byte> badAction = new ReliableAsyncAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
             Assert.That.ThrowsException<InvalidOperationException>(() => invokeAsync(badAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, CancellationToken.None));
+
+#nullable enable
 
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
@@ -193,9 +218,13 @@ namespace Sweetener.Reliability.Test
             else
                 tryInvokeAsync = (r, arg1, arg2, arg3, arg4, arg5, arg6, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6).Result;
 
+#nullable disable
+
             // Test an action that returns a null Task
             ReliableAsyncAction<int, string, double, long, ushort, byte> badAction = new ReliableAsyncAction<int, string, double, long, ushort, byte>((arg1, arg2, arg3, arg4, arg5, arg6) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
             Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, CancellationToken.None));
+
+#nullable enable
 
             // Callers may optionally include event handlers
             foreach (bool addEventHandlers in new bool[] { false, true })
@@ -225,8 +254,8 @@ namespace Sweetener.Reliability.Test
             FuncProxy<int, string, double, long, ushort, byte, Task> action = new FuncProxy<int, string, double, long, ushort, byte, Task>(async (arg1, arg2, arg3, arg4, arg5, arg6) => await Task.CompletedTask);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>();
-            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>();
+            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => TimeSpan.Zero);
 
             ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
             ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();

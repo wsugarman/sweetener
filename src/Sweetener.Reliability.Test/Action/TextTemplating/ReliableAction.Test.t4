@@ -32,6 +32,7 @@ using System.Threading.Tasks;
         }
 #>
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Reflection;
 
 namespace Sweetener.Reliability.Test
 {
@@ -126,6 +127,7 @@ namespace Sweetener.Reliability.Test
             string ctorInputTypeArguments = interruptable  ? tokenInputActionTypeArguments : inputActionTypeArguments;
             string optionalActionInvoke   = !interruptable ? ".Invoke"                     : string.Empty;
             string optionalProxy          = !interruptable ? "Proxy"                       : string.Empty;
+            string actionBody             = interruptable || async ? GetNoOpDelegate(parameterCount, async, interruptable) : string.Empty;
 
             foreach (bool useComplexHandler in new bool[] { false, true })
             {
@@ -135,7 +137,7 @@ namespace Sweetener.Reliability.Test
 #>
         private void <#= testName #>(Func<<#= inputActionKind #><#= ctorInputTypeArguments #>, int, ExceptionHandler, <#= delayHandlerType #>, Reliable<#= optionalAsync #>Action<#= typeArguments #>> factory)
         {
-            <#= inputActionKind #><#= optionalProxy #><#= ctorInputTypeArguments #> action = <#= interruptable ? GetNoOpDelegate(parameterCount, async, interruptable: true) : $"new {inputActionKind}{optionalProxy}{ctorInputTypeArguments}()" #>;
+            <#= inputActionKind #><#= optionalProxy #><#= ctorInputTypeArguments #> action = <#= interruptable ? actionBody : $"new {inputActionKind}{optionalProxy}{ctorInputTypeArguments}({actionBody})" #>;
             ExceptionHandler exceptionHandler = ExceptionPolicy.Fatal;
 <#
                 if (useComplexHandler)
@@ -151,10 +153,15 @@ namespace Sweetener.Reliability.Test
 <#
                 }
 #>
+
+#nullable disable
+
             Assert.ThrowsException<ArgumentNullException      >(() => factory(null, Retries.Infinite, exceptionHandler, delayHandler<#= optionalHandlerInvoke #>));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => factory(action<#= optionalActionInvoke #>, -2              , exceptionHandler, delayHandler<#= optionalHandlerInvoke #>));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action<#= optionalActionInvoke #>, Retries.Infinite, null            , delayHandler<#= optionalHandlerInvoke #>));
             Assert.ThrowsException<ArgumentNullException      >(() => factory(action<#= optionalActionInvoke #>, Retries.Infinite, exceptionHandler, null));
+
+#nullable enable
 
             // Create a Reliable<#= optionalAsync #>Action and validate
             Reliable<#= optionalAsync #>Action<#= typeArguments #> actual = factory(action<#= optionalActionInvoke #>, 37, exceptionHandler, delayHandler<#= optionalHandlerInvoke #>);
@@ -243,9 +250,13 @@ namespace Sweetener.Reliability.Test
         if (async)
         {
 #>
+#nullable disable
+
             // Test an action that returns a null Task
             ReliableAsyncAction<#= typeArguments #> badAction = new ReliableAsyncAction<#= typeArguments #>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
             Assert.That.ThrowsException<InvalidOperationException>(() => invokeAsync(badAction<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+
+#nullable enable
 
 <#
         }
@@ -334,9 +345,13 @@ namespace Sweetener.Reliability.Test
         if (async)
         {
 #>
+#nullable disable
+
             // Test an action that returns a null Task
             ReliableAsyncAction<#= typeArguments #> badAction = new ReliableAsyncAction<#= typeArguments #>((<#= arguments #>) => null, Retries.Infinite, ExceptionPolicy.Transient, DelayPolicy.None);
             Assert.That.ThrowsException<InvalidOperationException>(() => tryInvokeAsync(badAction<#= optionalComma #><#= argumentValues #>, CancellationToken.None));
+
+#nullable enable
 
 <#
         }
@@ -382,8 +397,8 @@ namespace Sweetener.Reliability.Test
             <#= inputActionKind #>Proxy<#= inputActionTypeArguments #> action = new <#= inputActionKind #>Proxy<#= inputActionTypeArguments #>(<#= GetNoOpDelegate(parameterCount, async) #>);
 
             // Declare the various proxies for the input delegates and event handlers
-            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>();
-            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>();
+            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Fatal.Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => TimeSpan.Zero);
 
             ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
             ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();

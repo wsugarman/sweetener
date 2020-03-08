@@ -157,7 +157,7 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4, arg5, arg6, arg7) =>
             {
-                Task<TResult> t;
+                Task<TResult>? t;
                 int attempt = 0;
 
             Attempt:
@@ -346,7 +346,7 @@ namespace Sweetener.Reliability
 
             return async (arg1, arg2, arg3, arg4, arg5, arg6, arg7, cancellationToken) =>
             {
-                Task<TResult> t;
+                Task<TResult>? t;
                 int attempt = 0;
 
             Attempt:
