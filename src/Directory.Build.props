@@ -45,7 +45,7 @@
 
       <!-- Assembly and Build Properties -->
       <PropertyGroup>
-        <Copyright>Copyright © William Sugarman 2020</Copyright>
+        <Copyright>Copyright © William Sugarman 2019</Copyright>
         <DelaySign>true</DelaySign>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -63,7 +63,7 @@
       <PropertyGroup>
         <Authors>William Sugarman</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageReleaseNotes>https://wsugarman.github.io/Sweetener/ReleaseNotes/$(MSBuildProjectName)</PackageReleaseNotes>
+        <PackageReleaseNotes>https://wsugarman.github.io/Sweetener/Release-Notes/$(MSBuildProjectName)</PackageReleaseNotes>
         <MinClientVersion>4.3.0</MinClientVersion>
       </PropertyGroup>
 
