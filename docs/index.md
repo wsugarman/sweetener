@@ -4,7 +4,7 @@
 
 The Sweetener libraries provide additional APIs that extend the
 [base class libraries (BCL)](https://docs.microsoft.com/en-us/dotnet/standard/framework-libraries).
-Each library specializes in a domain hat may correlate to an existing namespace in the BCL,
+Each library specializes in a domain that may correlate to an existing namespace in the BCL,
 like "Reflection," or an entirely new namespace, like "Reliability." It is our hope that these
 APIs seamlessly augment the BCL as if they were always included. To that end, these libraries
 try to leverage existing .NET types and patterns as much as possible and only create new types
@@ -15,7 +15,7 @@ and targeting the [.NET Standard](https://docs.microsoft.com/en-us/dotnet/standa
 
 ## Libraries
 
-- [Sweetener](Getting-Started/Sweetener.md)
+- Sweetener
 - [Sweetener.Reliability](Getting-Started/Sweetener.Reliability.md)
 
 ## Questions

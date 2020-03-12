@@ -95,16 +95,16 @@ retry logic is defined by the provided arguments and handlers:
 2. `5` is the maximum number of attempts we'll allow before giving up
 3. `ExceptionPolicy.Retry<TransientException>()` defines an `ExceptionHandler`
    that will only retry `SendSometimes` if `TransientException` is thrown
-4. `DelayPolicy.Constant(TimeSpan.FromMilliseconds(50))` defines a `DelayPolicy`
+4. `DelayPolicy.Constant(TimeSpan.FromMilliseconds(50))` defines a `DelayHandler`
    that will consistently wait 50 milliseconds between each attempt
 
 ## Factory Methods
 
 Similar to how the [`Tuple`](https://docs.microsoft.com/en-us/dotnet/api/system.tuple?view=netstandard-2.0)
 class provides a [`Create`](https://docs.microsoft.com/en-us/dotnet/api/system.tuple.create?view=netstandard-2.0)
-method for creating tuples where the types can be inferred, so too do the various reliable delegate classes
-provide their own respective `Create` methods, as seen in the following example. Note that for
-every constructor overload, there is a corresponding `Create` overload.
+method for creating tuples where the types can be inferred, so too do the various reliable delegate
+classes provide their own respective `Create` methods, as seen in the following example. Note
+that for every constructor overload, there is a corresponding `Create` overload.
 
 ```csharp
 using Sweetener.Reliability;
@@ -134,7 +134,7 @@ Preferrably, methods would handle the aspects of their reliability themselves; u
 call the method and it would retry as needed without them knowing. Therefore, the typical
 caller is probably using the `Invoke` method to preserve the same method signature as their
 underlying delegate. To enable this scenario more expressively, and without the overhead
-of other features like the various [execution events](#Events), the `Sweetener.Reliability`
+of other features like the various [execution events](#Execution-Events), the `Sweetener.Reliability`
 package provides the extension methods `WithRetry` and `WithAsyncRetry` like in the following
 example:
 
@@ -177,6 +177,9 @@ ResultHandler<string> messageHandler = (string message) =>
     };
 ```
 
+A default `ResultHandler<T>` where every result is considered a success can be explicitly
+specified using `ResultPolicy.Default<T>()`.
+
 ### Exception
 
 Exception handlers indicate whether an
@@ -203,7 +206,7 @@ Delay handlers indicate the amount of time to wait after a given attempt to invo
 underlying delegate. Like an `ExceptionHandler`, a `DelayHandler` is always specified.
 However, there are two kinds of delay handlers
 
-1. **Simple** (ie. the default) delay handlers that optionally based the delay on the attempt number:
+1. **Simple** (ie. the default) - delay handlers that optionally based the delay on the attempt number:
 ```csharp
 DelayHandler constant = _ => TimeSpan.FromMilliseconds(100);
 
@@ -212,7 +215,7 @@ DelayHandler constant = _ => TimeSpan.FromMilliseconds(100);
 DelayHandler simple = (int attempt) => TimeSpan.FromMilliseconds(100 * attempt);
 ```
 
-2. **Complex** delay handlers that leverage the exception (or the result in the case of reliable
+2. **Complex** - delay handlers that leverage the exception (or the result in the case of reliable
   functions) that caused the retry:
 ```csharp
 // For reliable actions
@@ -234,14 +237,20 @@ ComplexDelayHandler<Response> complex2 = (int attempt, Response response, Except
 };
 ```
 
+Commonly used `DelayHandlers` may be found in the `DelayPolicy` class, including:
+- `DelayPolicy.None` - The underlying delegate is retried immediately
+- `DelayPolicy.Constant()` - The delay between attempts is a constant period of time
+- `DelayPolicy.Linear(int)` - The delay between attempts increases linearly
+- `DelayPolicy.Exponential(int, Random)` - The delay between attempts increases exponentially
+
 ## Advanced Scenarios
 
 ### Asynchronous Operations
 
 `Sweetener.Reliability` also supports asynchronous operations. All reliable delegates,
 synchronous or otherwise, support asynchronous invocation with methods like `InvokeAsync`
-that will asynchronously delay. However, if the underlying delegate is also asynchronous,
-`InvokeAsync` will also `await` the delegate itself.
+which will asynchronously wait between invocation attempts. However, if the underlying delegate
+is also asynchronous, `InvokeAsync` will `await` the delegate itself.
 
 In the following example, the asynchronous method `SendSometimes` is wrapped using an
 asynchronous reliable function:
@@ -277,7 +286,7 @@ All of the invocation methods support cancellation via a
 which will at the very least interrupt any delay specified by the `DelayHandler`. However,
 some underlying delegates may natively support cancellation and allow their execution to be
 interrupted. To leverage this native cancellation support, all reliable types, factory methods,
-and extension methods support the use of a `CancellationToken` via constructor and
+and extension methods support the use of a `CancellationToken` via the constructor and
 method overloads.
 
 In the following example, the interruptable method `SendSometimes` is wrapped using
@@ -314,8 +323,8 @@ namespace Sweetener.Example
 
 ### Execution Events
 
-For users that are interested in the various stages of executing a reliable delegate, there are
-a number of events that are raised during invocation.
+For users that are interested in the various stages of invoking a reliable delegate, there are
+a number of events that are raised during its lifetime.
 
 #### Retrying
 
@@ -351,7 +360,7 @@ namespace Sweetener.Example
 #### RetriesExhausted
 
 The `RetriesExhausted` event is raised after a transient result or exception when the
-number of retires has exceeded the configured maximum. The last transient result or exception
+number of retries has exceeded the configured maximum. The last transient result or exception
 is passed as an argument to the event handler.
 
 ```csharp
@@ -382,7 +391,7 @@ namespace Sweetener.Example
 #### Failed
 
 The `Failed` event is raised after encountering a fatal result or exception. The fatal result
-or exception is passed as an argument to the event handler.
+or exception is then passed as an argument to the event handler.
 
 ```csharp
 using Sweetener.Reliability;
