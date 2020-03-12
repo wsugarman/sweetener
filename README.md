@@ -1,5 +1,5 @@
 # Sweetener
-[![GitHub License](https://img.shields.io/github/license/wsugarman/Sweetener?style=plastic)](https://github.com/wsugarman/Sweetener/blob/master/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/wsugarman/Sweetener?label=License)](https://github.com/wsugarman/Sweetener/blob/master/LICENSE)
 
 You can learn about each of these packages [here](https://wsugarman.github.io/Sweetener).
 
