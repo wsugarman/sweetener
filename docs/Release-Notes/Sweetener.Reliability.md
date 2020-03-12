@@ -8,7 +8,7 @@
         - `ReliableAsyncAction`
         - `ReliableFunc<TResult>`
         - `ReliableAsyncFunc<TResult>`
-    - Different methods on reliable delegates for executing the underlying delegate:
+    - Different methods in reliable delegates for executing their underlying delegate:
         - `Invoke`
         - `InvokeAsync`
         - `TryInvoke`
@@ -18,10 +18,10 @@
         - `ReliableAsyncAction.Create`
         - `ReliableFunc.Create`
         - `ReliableAsyncFunc.Create`
-    - Extension methods  for the most common use-cases:
+    - Extension methods for the most common use-cases:
         - `WithRetry`
         - `WithAsyncRetry`
-    - Policies, and their corresponding handlers, that determine execution behavior
+    - Policies, and their corresponding handlers, that determine execution behavior:
         - `DelayPolicy`, `DelayHandler`, and `ComplexDelayHandler`
         - `ExceptionPolicy` and `ExceptionHandler`
         - `ResultPolicy` and `ResultHandler<T>`
