@@ -25,7 +25,7 @@ occassionally throws instances of `TransientExceptions`. So to compensate, there
 method called `Send` which will continue to retry `SendSometimes` if it encounters
 `TransientExceptions` at most 5 times. To prevent making too many requests too soon,
 `Send` will wait 50 milliseconds between attempts. In this way, we can write the retry logic
-for `SendSometimes` one time:
+for `SendSometimes` in one place:
 
 ```csharp
 namespace Sweetener.Example
@@ -134,7 +134,7 @@ Preferrably, methods would handle the aspects of their reliability themselves; u
 call the method and it would retry as needed without them knowing. Therefore, the typical
 caller is probably using the `Invoke` method to preserve the same method signature as their
 underlying delegate. To enable this scenario more expressively, and without the overhead
-of other features like the various [execution events](#Events), the Sweetener.Reliability
+of other features like the various [execution events](#Events), the `Sweetener.Reliability`
 package provides the extension methods `WithRetry` and `WithAsyncRetry` like in the following
 example:
 
@@ -156,15 +156,89 @@ namespace Sweetener.Example
 ```
 
 ## Policies
+
+The execution of delegates is configured using various *handlers* that enact *policies*
+in three different categories.
+
 ### Result
+
+Result handlers indicate how the reliable function should continue based on the output of a
+function. By default, functions are assumed to have executed successfully if they complete
+without throwing an exception, but sometimes the caller may want to inspect the output. For
+example, a method may return status codes that indicate the success of the operation.
+
+```csharp
+ResultHandler<string> messageHandler = (string message) =>
+    message switch
+    {
+        "What did you say?" => ResultKind.Transient,
+        "I can't hear you." => ResultKind.Fatal,
+        _                   => ResultKind.Successful,
+    };
+```
+
 ### Exception
+
+Exception handlers indicate whether an
+[`Exception`](https://docs.microsoft.com/en-us/dotnet/api/system.exception?view=netstandard-2.0)
+is transient such that the underlying delegate should be invoked again. Unlike a `ResultHandler<T>`,
+an `ExceptionHandler` is always specified.
+
+```csharp
+ExceptionPolicy shouldRetry = (Exception exception) =>
+    exception is TransientException;
+```
+
+For the most common use cases, `Sweetener.Reliability` provides the following implementations:
+- `ExceptionPolicy.Transient` - All exceptions are retried
+- `ExceptionPolicy.Fatal` - All exceptions immediately fail the delegate
+- `ExceptionPolicy.Retry<TException>()` - The one or more exception type parameters should
+  be retried; all other exceptions are assumed to be fatal
+- `ExceptionPolicy.Fail<TException>()` - The one or more exception type parameters should
+  immediately fail the delegate; all other exceptions are assumed to be transient
+
 ### Delay
+
+Delay handlers indicate the amount of time to wait after a given attempt to invoke the
+underlying delegate. Like an `ExceptionHandler`, a `DelayHandler` is always specified.
+However, there are two kinds of delay handlers
+
+1. **Simple** (ie. the default) delay handlers that optionally based the delay on the attempt number:
+```csharp
+DelayHandler constant = _ => TimeSpan.FromMilliseconds(100);
+
+// or
+
+DelayHandler simple = (int attempt) => TimeSpan.FromMilliseconds(100 * attempt);
+```
+
+2. **Complex** delay handlers that leverage the exception (or the result in the case of reliable
+  functions) that caused the retry:
+```csharp
+// For reliable actions
+ComplexDelayHandler complex1 = (int attempt, Exception exception) => exception is TransientException t
+    ? t.Backoff
+    : TimeSpan.FromMilliseconds(100 * attempt);
+
+// or
+
+// For reliable functions
+ComplexDelayHandler<Response> complex2 = (int attempt, Response response, Exception exception) =>
+{
+    if (exception == null)
+        return response.Backoff;
+    else if (exception is TransientException t)
+        return t.Backoff;
+    else
+        return TimeSpan.FromMilliseconds(100 * attempt);
+};
+```
 
 ## Advanced Scenarios
 
 ### Asynchronous Operations
 
-Sweetener.Reliability also supports asynchronous operations. All reliable delegates,
+`Sweetener.Reliability` also supports asynchronous operations. All reliable delegates,
 synchronous or otherwise, support asynchronous invocation with methods like `InvokeAsync`
 that will asynchronously delay. However, if the underlying delegate is also asynchronous,
 `InvokeAsync` will also `await` the delegate itself.
@@ -238,6 +312,99 @@ namespace Sweetener.Example
 }
 ```
 
-### Events
+### Execution Events
 
-...
+For users that are interested in the various stages of executing a reliable delegate, there are
+a number of events that are raised during invocation.
+
+#### Retrying
+
+The `Retrying` event is raised before the underlying delegate is invoked after a transient
+result or exception *and* after the specified delay. The attempt, as well as the transient result
+or exception, is passed as an argument to the event handler.
+
+```csharp
+using Sweetener.Reliability;
+
+namespace Sweetener.Example
+{
+    public static void Main(params string[] args)
+    {
+        ReliableFunc<string, string> send = /* ... */;
+        send.Retrying += (int attempt, string response, Exception exception) =>
+        {
+            if (exception == null)
+                Console.WriteLine($"Attempt #{i} after transient response '{response}'");
+            else
+                Console.WriteLine($"Attempt #{i} after transient exception '{exception.Message}'");
+        };
+
+        Console.WriteLine(send.Invoke("Hello World"));
+    }
+
+    private void SendSometimes(string message)
+    {
+        /* ... */
+    }
+```
+
+#### RetriesExhausted
+
+The `RetriesExhausted` event is raised after a transient result or exception when the
+number of retires has exceeded the configured maximum. The last transient result or exception
+is passed as an argument to the event handler.
+
+```csharp
+using Sweetener.Reliability;
+
+namespace Sweetener.Example
+{
+    public static void Main(params string[] args)
+    {
+        ReliableFunc<string, string> send = /* ... */;
+        send.RetriesExhausted += (string response, Exception exception) =>
+        {
+            if (exception == null)
+                Console.WriteLine($"Retries exhausted after transient response '{response}'");
+            else
+                Console.WriteLine($"Retries exhausted after transient exception '{exception.Message}'");
+        };
+
+        Console.WriteLine(send.Invoke("Hello World"));
+    }
+
+    private void SendSometimes(string message)
+    {
+        /* ... */
+    }
+```
+
+#### Failed
+
+The `Failed` event is raised after encountering a fatal result or exception. The fatal result
+or exception is passed as an argument to the event handler.
+
+```csharp
+using Sweetener.Reliability;
+
+namespace Sweetener.Example
+{
+    public static void Main(params string[] args)
+    {
+        ReliableFunc<string, string> send = /* ... */;
+        send.Failed += (string response, Exception exception) =>
+        {
+            if (exception == null)
+                Console.WriteLine($"Send failed after fatal response '{response}'");
+            else
+                Console.WriteLine($"Send failed after fatal exception '{exception.Message}'");
+        };
+
+        Console.WriteLine(send.Invoke("Hello World"));
+    }
+
+    private void SendSometimes(string message)
+    {
+        /* ... */
+    }
+```
