@@ -189,8 +189,8 @@ namespace Sweetener.Reliability
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
-        public async Task<TResult> InvokeAsync(T arg)
-            => await InvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+        public Task<TResult> InvokeAsync(T arg)
+            => InvokeAsync(arg, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
@@ -256,8 +256,8 @@ namespace Sweetener.Reliability
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
-        public async Task<Optional<TResult>> TryInvokeAsync(T arg)
-            => await TryInvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+        public Task<Optional<TResult>> TryInvokeAsync(T arg)
+            => TryInvokeAsync(arg, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.

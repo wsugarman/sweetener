@@ -201,8 +201,8 @@ namespace Sweetener.Reliability
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
-        public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
-            => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, CancellationToken.None).ConfigureAwait(false);
+        public Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
+            => InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
@@ -280,8 +280,8 @@ namespace Sweetener.Reliability
         /// <exception cref="InvalidOperationException">
         /// The encapsulated method returned <see langword="null"/> instead of a valid <see cref="Task{TResult}"/>.
         /// </exception>
-        public async Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
-            => await TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, CancellationToken.None).ConfigureAwait(false);
+        public Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
+            => TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.

@@ -139,8 +139,8 @@ namespace Sweetener.Reliability
         /// </remarks>
         /// <param name="arg">The parameter of the method that this reliable delegate encapsulates.</param>
         /// <returns>A task that represents the asynchronous invoke operation.</returns>
-        public async Task InvokeAsync(T arg)
-            => await InvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+        public Task InvokeAsync(T arg)
+            => InvokeAsync(arg, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
@@ -237,8 +237,8 @@ namespace Sweetener.Reliability
         /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
         /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public async Task<bool> TryInvokeAsync(T arg)
-            => await TryInvokeAsync(arg, CancellationToken.None).ConfigureAwait(false);
+        public Task<bool> TryInvokeAsync(T arg)
+            => TryInvokeAsync(arg, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
