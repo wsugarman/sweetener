@@ -254,8 +254,8 @@ namespace Sweetener.Reliability
         /// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
         /// parameter contains the return value of the method that this reliable delegate encapsulates.
         /// </returns>
-        public async Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
-            => await InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, CancellationToken.None).ConfigureAwait(false);
+        public Task<TResult> InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+            => InvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
@@ -399,8 +399,8 @@ namespace Sweetener.Reliability
         /// parameter optionally contains the result of the encapsulated method if it succeeded.
         /// Otherwise the value is left undefined if the encapsulated method failed.
         /// </returns>
-        public async Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
-            => await TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, CancellationToken.None).ConfigureAwait(false);
+        public Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+            => TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, CancellationToken.None);
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.

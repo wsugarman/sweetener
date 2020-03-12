@@ -135,8 +135,8 @@ namespace Sweetener.Reliability
         /// If the encapsulated method succeeds without retrying, the method executes synchronously.
         /// </remarks>
         /// <returns>A task that represents the asynchronous invoke operation.</returns>
-        public async Task InvokeAsync()
-            => await InvokeAsync(CancellationToken.None).ConfigureAwait(false);
+        public Task InvokeAsync()
+            => InvokeAsync(CancellationToken.None);
 
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
@@ -229,8 +229,8 @@ namespace Sweetener.Reliability
         /// parameter contains <see langword="true"/> if the encapsulated method completed without throwing
         /// an exception within the maximum number of retries; otherwise, <see langword="false"/>.
         /// </returns>
-        public async Task<bool> TryInvokeAsync()
-            => await TryInvokeAsync(CancellationToken.None).ConfigureAwait(false);
+        public Task<bool> TryInvokeAsync()
+            => TryInvokeAsync(CancellationToken.None);
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.

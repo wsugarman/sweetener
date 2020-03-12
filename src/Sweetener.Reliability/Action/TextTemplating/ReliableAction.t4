@@ -165,8 +165,8 @@ namespace Sweetener.Reliability
 <#
         }
 #>
-        public async Task InvokeAsync(<#= parameters #>)
-            => await InvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None).ConfigureAwait(false);
+        public Task InvokeAsync(<#= parameters #>)
+            => InvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
         /// <summary>
         /// Asynchronously invokes the encapsulated method despite transient errors.
@@ -354,8 +354,8 @@ namespace Sweetener.Reliability
 <#
         }
 #>
-        public async Task<bool> TryInvokeAsync(<#= parameters #>)
-            => await TryInvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None).ConfigureAwait(false);
+        public Task<bool> TryInvokeAsync(<#= parameters #>)
+            => TryInvokeAsync(<#= arguments #><#= optionalComma #>CancellationToken.None);
 
         /// <summary>
         /// Asynchronously attempts to successfully invoke the encapsulated method despite transient errors.
