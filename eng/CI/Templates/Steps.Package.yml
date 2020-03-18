@@ -12,7 +12,7 @@ parameters:
   default: 'https://sugarman-keyvault.vault.azure.net/'
 - name: certificateName
   type: string
-  default: 'Sugarman-Code-Signing-Certificate-Test' # TODO: Update with real certificate
+  default: 'Sugarman-Code-Signing'
 - name: netfxTools
   type: string
   default: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
@@ -60,7 +60,7 @@ steps:
   inputs:
     azureSubscription: 'Sweetener-Pipelines-Test'
     keyVaultName: 'Sugarman-KeyVault'
-    secretsFilter: 'Sweetener-Strong-Name-Key,Test-Client-Id,Test-Client-Secret'
+    secretsFilter: 'Sweetener-Strong-Name-Key,Sweetener-Pipelines-Client-Id,Sweetener-Pipelines-Client-Secret'
 
 - task: PowerShell@2
   displayName: 'Create .snk File'
@@ -78,8 +78,8 @@ steps:
                 -StrongNameKeyPath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"
                 -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
                 -KeyVaultCertificateName "${{ parameters.CertificateName }}"
-                -KeyVaultClientId "$(Test-Client-Id)"
-                -KeyVaultClientSecret "$(Test-Client-Secret)"
+                -KeyVaultClientId "$(Sweetener-Pipelines-Client-Id)"
+                -KeyVaultClientSecret "$(Sweetener-Pipelines-Client-Secret)"
                 -NetFXTools "${{ parameters.NetFXTools }}"
                 -DotNetTools "${{ parameters.DotNetTools }}"'
     pwsh: true
@@ -112,8 +112,8 @@ steps:
                 -PackageVersion "$(Version.Package)"
                 -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
                 -KeyVaultCertificateName "${{ parameters.CertificateName }}"
-                -KeyVaultClientId "$(Test-Client-Id)"
-                -KeyVaultClientSecret "$(Test-Client-Secret)"
+                -KeyVaultClientId "$(Sweetener-Pipelines-Client-Id)"
+                -KeyVaultClientSecret "$(Sweetener-Pipelines-Client-Secret)"
                 -DotNetTools "${{ parameters.DotNetTools }}"'
     pwsh: true
 
