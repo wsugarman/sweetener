@@ -3,12 +3,12 @@
 ## 1.0.0-alpha.1
 - Initial pre-release
 - Defines the following APIs:
-    - Reliable delegates overloads:
+    - Reliable delegate type overloads:
         - `ReliableAction`
         - `ReliableAsyncAction`
         - `ReliableFunc<TResult>`
         - `ReliableAsyncFunc<TResult>`
-    - Different methods in reliable delegates for executing their underlying delegate:
+    - A variety of methods for reliably invoking the underlying delegates:
         - `Invoke`
         - `InvokeAsync`
         - `TryInvoke`
