@@ -63,10 +63,10 @@ steps:
     secretsFilter: 'Sweetener-Strong-Name-Key,Test-Client-Id,Test-Client-Secret'
 
 - task: PowerShell@2
-  displayName: 'Create Key Locally'
+  displayName: 'Create .snk File'
   inputs:
-    filePath: 'eng/CI/Scripts/CreateStrongNameKey.ps1'
-    arguments: '-StrongNameKeyBase64String "$(Sweetener-Strong-Name-Key)" -StrongNameKeyOutputPath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
+    filePath: 'eng/CI/Scripts/CreateFile.ps1'
+    arguments: '-Base64StringContent "$(Sweetener-Strong-Name-Key)" -OutputFilePath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
     pwsh: true
 
 - task: PowerShell@2
@@ -84,11 +84,12 @@ steps:
                 -DotNetTools "${{ parameters.DotNetTools }}"'
     pwsh: true
 
-- task: DeleteFiles@1
-  displayName: 'Clean Up Key'
+- task: PowerShell@2
+  displayName: 'Delete .snk File'
   inputs:
-    sourceFolder: '$(Agent.TempDirectory)'
-    contents: 'Foo.bar'
+    filePath: 'eng/CI/Scripts/DeleteFile.ps1'
+    arguments: '-FilePath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
+    pwsh: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Pack Library'
