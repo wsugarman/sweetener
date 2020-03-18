@@ -88,7 +88,7 @@ steps:
   displayName: 'Clean Up Key'
   inputs:
     sourceFolder: '$(Agent.TempDirectory)'
-    contents: '${{ parameters.StrongNameKeyFile }}'
+    contents: 'Foo.bar'
 
 - task: DotNetCoreCLI@2
   displayName: 'Pack Library'
