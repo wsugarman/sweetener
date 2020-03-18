@@ -98,7 +98,7 @@ $Assemblies | % { $_.FullName } | Out-File -FilePath $Manifest
   -kvi $KeyVaultClientId `
   -kvs $KeyVaultClientSecret `
   -kvc $KeyVaultCertificateName `
-  -v `
+  -q `
   -ifl $Manifest
 
 if (!$?)

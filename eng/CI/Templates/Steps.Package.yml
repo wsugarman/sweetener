@@ -87,7 +87,8 @@ steps:
 - task: DeleteFiles@1
   displayName: 'Clean Up Key'
   inputs:
-    contents: '$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}'
+    sourceFolder: '$(Agent.TempDirectory)'
+    contents: '${{ parameters.StrongNameKeyFile }}'
 
 - task: DotNetCoreCLI@2
   displayName: 'Pack Library'
