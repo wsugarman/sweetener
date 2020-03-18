@@ -2,7 +2,7 @@ param
 (
     [Parameter(Mandatory=$True)]
     [string]
-    $StrongNameKeyOutputPath,
+    $StrongNameKeyOutputPath
 )
 
 # Turn off trace and stop on any error
