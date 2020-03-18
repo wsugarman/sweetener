@@ -12,7 +12,7 @@ parameters:
   default: 'https://sugarman-keyvault.vault.azure.net/'
 - name: certificateName
   type: string
-  default: 'Test-Certificate-2' # TODO: Update with real certificate
+  default: 'Sugarman-Code-Signing-Certificate-Test' # TODO: Update with real certificate
 - name: netfxTools
   type: string
   default: 'C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools'
