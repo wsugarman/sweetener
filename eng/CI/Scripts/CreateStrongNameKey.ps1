@@ -2,6 +2,10 @@ param
 (
     [Parameter(Mandatory=$True)]
     [string]
+    $StrongNameKeyBase64String,
+
+    [Parameter(Mandatory=$True)]
+    [string]
     $StrongNameKeyOutputPath
 )
 
@@ -9,12 +13,11 @@ param
 Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
-# Assume the bytes have already been stored in a variable called "Sweetener-Strong-Name-Key"
-if ([string]::IsNullOrWhiteSpace($(Sweetener-Strong-Name-Key)))
+if ([string]::IsNullOrWhiteSpace($StrongNameKeyBase64String))
 {
     throw [InvalidOperationException]::new("Cannot find the strong name key")
 }
 
 # Extract the bytes and write them to the file
-$StrongNameKeyBytes = [System.Convert]::FromBase64String($(Sweetener-Strong-Name-Key))
-[System.IO.File].WriteAllBytes($StrongNameKeyOutputPath, $StrongNameKeyBytes)
+$StrongNameKeyBytes = [System.Convert]::FromBase64String($StrongNameKeyBase64String)
+[System.IO.File]::WriteAllBytes($StrongNameKeyOutputPath, $StrongNameKeyBytes)

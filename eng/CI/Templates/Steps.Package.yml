@@ -63,10 +63,10 @@ steps:
     secretsFilter: 'Sweetener-Strong-Name-Key,Test-Client-Id,Test-Client-Secret'
 
 - task: PowerShell@2
-  displayName: 'Create SNK File'
+  displayName: 'Create Key Locally'
   inputs:
     filePath: 'eng/CI/Scripts/CreateStrongNameKey.ps1'
-    arguments: '-StrongNameKeyOutputPath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
+    arguments: '-StrongNameKeyBase64String "$(Sweetener-Strong-Name-Key)" -StrongNameKeyOutputPath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
     pwsh: true
 
 - task: PowerShell@2
@@ -85,7 +85,7 @@ steps:
     pwsh: true
 
 - task: DeleteFiles@1
-  displayName: 'Clean Up SNK File'
+  displayName: 'Clean Up Key'
   inputs:
     contents: '$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}'
 
