@@ -19,16 +19,13 @@ parameters:
 - name: dotNetTools
   type: string
   default: 'tools'
+- name: strongNameKeyFile
+  type: string
+  default: 'Sweetener.snk'
 
 steps:
 - checkout: self
   clean: true
-
-- task: DownloadSecureFile@1
-  name: SigningKey
-  displayName: 'Download Signing Key'
-  inputs:
-    secureFile: 'Sweetener.snk'
 
 - task: UseDotNet@2
   displayName: 'Install .NET Core 2.1.x'
@@ -63,7 +60,14 @@ steps:
   inputs:
     azureSubscription: 'Sweetener-Pipelines-Test'
     keyVaultName: 'Sugarman-KeyVault'
-    secretsFilter: 'Test-Client-Id,Test-Client-Secret'
+    secretsFilter: 'Sweetener-Strong-Name-Key,Test-Client-Id,Test-Client-Secret'
+
+- task: PowerShell@2
+  displayName: 'Create .snk File'
+  inputs:
+    filePath: 'eng/CI/Scripts/CreateFile.ps1'
+    arguments: '-Base64StringContent "$(Sweetener-Strong-Name-Key)" -OutputFilePath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
+    pwsh: true
 
 - task: PowerShell@2
   displayName: 'Sign Assemblies'
@@ -71,7 +75,7 @@ steps:
     filePath: 'eng/CI/Scripts/SignAssemblies.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
-                -StrongNameKeyPath "$(SigningKey.SecureFilePath)"
+                -StrongNameKeyPath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"
                 -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
                 -KeyVaultCertificateName "${{ parameters.CertificateName }}"
                 -KeyVaultClientId "$(Test-Client-Id)"
@@ -79,7 +83,14 @@ steps:
                 -NetFXTools "${{ parameters.NetFXTools }}"
                 -DotNetTools "${{ parameters.DotNetTools }}"'
     pwsh: true
-    
+
+- task: PowerShell@2
+  displayName: 'Delete .snk File'
+  inputs:
+    filePath: 'eng/CI/Scripts/DeleteFile.ps1'
+    arguments: '-FilePath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"'
+    pwsh: true
+
 - task: DotNetCoreCLI@2
   displayName: 'Pack Library'
   inputs:
@@ -112,7 +123,7 @@ steps:
     SourceFolder: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
     Contents: '*nupkg'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
-    
+
 - task: PublishPipelineArtifact@1
   displayName: 'Publish NuGet Package Artifact'
   inputs:
