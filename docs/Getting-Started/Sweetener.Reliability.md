@@ -3,20 +3,20 @@
 The release notes for this package can be found [here](../Release-Notes/Sweetener.Reliability.md)
 
 ## Table of Contents
-1. [The Basics](#The-Basics)
-2. [Factory Methods](#Factory-Methods)
-3. [Extension Methods](#Extension-Methods)
-4. [Policies](#Policies)
-    1. [Result](#Result)
-    2. [Exception](#Exception)
-    3. [Delay](#Delay)
-5. [Advanced Scenarios](#Advanced-Scenarios)
-    1. [Asynchronous Operations](#Asynchronous-Operations)
-    2. [Cancellation](#Cancellation)
-    3. [Execution Events](#Execution-Events)
-        1. [Retrying](#Retrying)
-        2. [RetriesExhausted](#RetriesExhausted)
-        3. [Failed](#Failed)
+1. [The Basics](#the-basics)
+2. [Factory Methods](#factory-methods)
+3. [Extension Methods](#extension-methods)
+4. [Policies](#policies)
+    1. [Result](#result)
+    2. [Exception](#exception)
+    3. [Delay](#delay)
+5. [Advanced Scenarios](#advanced-scenarios)
+    1. [Asynchronous Operations](#asynchronous-operations)
+    2. [Cancellation](#cancellation)
+    3. [Execution Events](#execution-events)
+        1. [Retrying](#retrying)
+        2. [RetriesExhausted](#retriesexhausted)
+        3. [Failed](#failed)
 
 ## The Basics
 
@@ -134,7 +134,7 @@ Preferrably, methods would handle the aspects of their reliability themselves; u
 call the method and it would retry as needed without them knowing. Therefore, the typical
 caller is probably using the `Invoke` method to preserve the same method signature as their
 underlying delegate. To enable this scenario more expressively, and without the overhead
-of other features like the various [execution events](#Execution-Events), the `Sweetener.Reliability`
+of other features like the various [execution events](#execution-events), the `Sweetener.Reliability`
 package provides the extension methods `WithRetry` and `WithAsyncRetry` like in the following
 example:
 
@@ -207,6 +207,7 @@ underlying delegate. Like an `ExceptionHandler`, a `DelayHandler` is always spec
 However, there are two kinds of delay handlers
 
 1. **Simple** (ie. the default) - delay handlers that optionally based the delay on the attempt number:
+
 ```csharp
 DelayHandler constant = _ => TimeSpan.FromMilliseconds(100);
 
@@ -217,6 +218,7 @@ DelayHandler simple = (int attempt) => TimeSpan.FromMilliseconds(100 * attempt);
 
 2. **Complex** - delay handlers that leverage the exception (or the result in the case of reliable
   functions) that caused the retry:
+
 ```csharp
 // For reliable actions
 ComplexDelayHandler complex1 = (int attempt, Exception exception) => exception is TransientException t
