@@ -11,9 +11,8 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <!-- TODO: Use PackageReference for Sweetener -->
   <ItemGroup>
-    <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
+    <PackageReference Include="Sweetener" Version="1.0.0-alpha.1" />
   </ItemGroup>
 
   <!-- Generated Files -->
