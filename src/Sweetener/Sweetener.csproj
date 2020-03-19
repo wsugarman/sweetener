@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Common APIs that sweeten the .NET foundational class libraries</Description>
+    <Description>Common APIs that sweeten the .NET base class libraries</Description>
     <PackageTags>common</PackageTags>
   </PropertyGroup>
 
