@@ -4,11 +4,13 @@
     <ProjectReference Include="..\Sweetener.Reliability\Sweetener.Reliability.csproj" />
   </ItemGroup>
 
-  <!-- TODO: Use PackageReference for Sweetener -->
   <!-- TODO: Use PackageReference for Sweetener.Reflection -->
   <ItemGroup>
-    <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
     <ProjectReference Include="..\Sweetener.Reflection\Sweetener.Reflection.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Sweetener" Version="1.0.0-alpha.1" />
   </ItemGroup>
 
   <!-- Generated Files -->
