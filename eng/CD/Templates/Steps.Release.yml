@@ -40,7 +40,7 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: 'Push to NuGet.org'
-  condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
+  condition: and(succeeded(), or(eq(variables['Version.Changed'], 'true'), eq(variables['Build.Reason'], 'Manual')))
   inputs:
     command: 'push'
     packagesToPush: '$(Pipeline.Workspace)/pkg/${{ parameters.Project }}.$(Version.Package).nupkg'
