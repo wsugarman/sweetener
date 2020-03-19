@@ -1,3 +1,5 @@
+<img src="src/Resources/Sweetener-Alt.png" width="128" height="128" style="float:left;">
+
 # Sweetener
 [![GitHub License](https://img.shields.io/github/license/wsugarman/Sweetener?label=License)](https://github.com/wsugarman/Sweetener/blob/master/LICENSE)
 

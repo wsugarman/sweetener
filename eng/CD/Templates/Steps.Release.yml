@@ -12,6 +12,12 @@ steps:
 - checkout: self
   clean: true
 
+- task: UseDotNet@2
+  displayName: 'Install .NET Core 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
 - task: DownloadPipelineArtifact@2
   displayName: 'Download NuGet Package Artifact'
   inputs:
@@ -32,18 +38,11 @@ steps:
     arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
     pwsh: true
 
-- task: UseDotNet@2
-  displayName: 'Install .NET Core 3.x'
+- task: DotNetCoreCLI@2
+  displayName: 'Push to NuGet.org'
   condition: and(succeeded(), eq(variables['Version.Changed'], 'true'))
   inputs:
-    packageType: 'sdk'
-    version: '3.x'
-
-# TODO: Enable NuGet push once the real certificate is used
-#- task: DotNetCoreCLI@2
-#  displayName: 'Push to NuGet.org'
-#  inputs:
-#    command: 'push'
-#    packagesToPush: '$(Pipeline.Workspace)/pkg/${{ parameters.Project }}*.nupkg'
-#    nuGetFeedType: 'external'
-#    publishFeedCredentials: 'NuGet.org Sweetener API Key'
+    command: 'push'
+    packagesToPush: '$(Pipeline.Workspace)/pkg/${{ parameters.Project }}.$(Version.Package).nupkg'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'NuGet.org Sweetener API Key'
