@@ -67,7 +67,7 @@
         <PackageIcon>Sweetener.png</PackageIcon>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReleaseNotes>https://wsugarman.github.io/Sweetener/Release-Notes/$(MSBuildProjectName)</PackageReleaseNotes>
-        <MinClientVersion>4.3.0</MinClientVersion>
+        <MinClientVersion>4.9.0</MinClientVersion>
       </PropertyGroup>
 
       <!-- Common Assembly and Source Files -->

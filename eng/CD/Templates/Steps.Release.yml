@@ -12,11 +12,11 @@ steps:
 - checkout: self
   clean: true
 
-- task: UseDotNet@2
-  displayName: 'Install .NET Core 3.x'
+- task: NuGetToolInstaller@1
+  displayName: 'Install NuGet Tool'
   inputs:
-    packageType: 'sdk'
-    version: '3.x'
+    versionSpec: '>=5.0.0-0'
+    checkLatest: true
 
 - task: DownloadPipelineArtifact@2
   displayName: 'Download NuGet Package Artifact'
@@ -38,7 +38,7 @@ steps:
     arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
     pwsh: true
 
-- task: DotNetCoreCLI@2
+- task: NuGetCommand@2
   displayName: 'Push to NuGet.org'
   condition: and(succeeded(), or(eq(variables['Version.Changed'], 'true'), eq(variables['Build.Reason'], 'Manual')))
   inputs:
@@ -46,3 +46,4 @@ steps:
     packagesToPush: '$(Pipeline.Workspace)/pkg/${{ parameters.Project }}.$(Version.Package).nupkg'
     nuGetFeedType: 'external'
     publishFeedCredentials: 'NuGet.org Sweetener API Key'
+    verbosityPush: 'Normal'
