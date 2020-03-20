@@ -1,5 +1,8 @@
 # Release Notes
 
+## 1.0.0-alpha.2
+- **Bug Fix**: Add missing timestamp to assembly signature
+
 ## 1.0.0-alpha.1
 - Initial pre-release
 - Defines the following APIs:
