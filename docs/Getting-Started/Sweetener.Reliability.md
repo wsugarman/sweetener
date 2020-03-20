@@ -113,7 +113,7 @@ namespace Sweetener.Example
 {
     public static void Main(params string[] args)
     {
-        ReliableFunc<sting, sting> send = ReliableFunc.Create(
+        ReliableFunc<string, string> send = ReliableFunc.Create(
             SendSometimes,
             5,
             ExceptionPolicy.Retry<TransientException>(),
@@ -344,13 +344,14 @@ namespace Sweetener.Example
         ReliableFunc<string, string> send = /* ... */;
         send.Retrying += (int i, string r, Exception e) =>
         {
-            string retryReason = e == null
+            string reason = e == null
                 ? $"response '{r}'"
                 : $"exception with message '{e.Message}'";
 
-            Console.WriteLine("Starting attempt #{0} after transient {1}",
+            Console.WriteLine(
+                "Starting attempt #{0} after transient {1}",
                 i,
-                retryReason);
+                reason);
         };
 
         Console.WriteLine(send.Invoke("Hello World"));
@@ -378,13 +379,13 @@ namespace Sweetener.Example
         ReliableFunc<string, string> send = /* ... */;
         send.RetriesExhausted += (string r, Exception e) =>
         {
-            string retryReason = e == null
+            string reason = e == null
                 ? $"response '{r}'"
                 : $"exception with message '{e.Message}'";
 
-            Console.WriteLine("Retries exhausted after transient {0}",
-                i,
-                retryReason);
+            Console.WriteLine(
+                "Retries exhausted after transient {0}",
+                reason);
         };
 
         Console.WriteLine(send.Invoke("Hello World"));
@@ -411,13 +412,13 @@ namespace Sweetener.Example
         ReliableFunc<string, string> send = /* ... */;
         send.Failed += (string response, Exception exception) =>
         {
-            string retryReason = e == null
+            string reason = e == null
                 ? $"response '{r}'"
                 : $"exception with message '{e.Message}'";
 
-            Console.WriteLine("Send failed after fatal {0}",
-                i,
-                retryReason);
+            Console.WriteLine(
+                "Send failed after fatal {0}",
+                reason);
         };
 
         Console.WriteLine(send.Invoke("Hello World"));
