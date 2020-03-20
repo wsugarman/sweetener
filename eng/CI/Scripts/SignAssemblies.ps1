@@ -98,6 +98,7 @@ $Assemblies | % { $_.FullName } | Out-File -FilePath $Manifest
   -kvi $KeyVaultClientId `
   -kvs $KeyVaultClientSecret `
   -kvc $KeyVaultCertificateName `
+  -tr $TimestampUrl `
   -q `
   -ifl $Manifest
 
