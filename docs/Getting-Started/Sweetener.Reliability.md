@@ -220,14 +220,18 @@ DelayHandler simple = (int i) => TimeSpan.FromMilliseconds(100 * i);
 
 ```csharp
 // For reliable actions
-ComplexDelayHandler complex1 = (int i, Exception e) => e is TransientException t
-    ? t.Backoff
-    : TimeSpan.FromMilliseconds(100 * i);
+ComplexDelayHandler getDelay1 = (int i, Exception e) =>
+{
+    if (e is TransientException t)
+        return t.Backoff;
+    else
+        return TimeSpan.FromMilliseconds(100 * i);
+};
 
 // or
 
 // For reliable functions
-ComplexDelayHandler<Response> complex2 = (int i, Response r, Exception e) =>
+ComplexDelayHandler<Response> getDelay2 = (int i, Response r, Exception e) =>
 {
     if (e == null)
         return r.Backoff;
