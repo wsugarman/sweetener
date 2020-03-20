@@ -35,17 +35,17 @@ namespace Sweetener.Example
         Console.WriteLine(Send("Hello World"));
     }
 
-    public string Send(string message)
+    public string Send(string msg)
     {
-        for (int attempts = 1; attempts <= 5; attempts++)
+        for (int i = 1; i <= 5; i++)
         {
             try
             {
-                return SendSometimes(message);
+                return SendSometimes(msg);
             }
             catch (TransientException e)
             {
-                if (attempt <= 5)
+                if (i <= 5)
                     Task.Delay(TimeSpan.FromMilliseconds(50)).Wait();
             }
             catch (Exception e)
@@ -57,7 +57,7 @@ namespace Sweetener.Example
         throw new TransientException("Out of retries");
     }
 
-    private string SendSometimes(string message)
+    private string SendSometimes(string msg)
     {
         /* ... */
     }
@@ -73,7 +73,7 @@ namespace Sweetener.Example
 {
     public static void Main(params string[] args)
     {
-        ReliableFunc<string, string> send = new ReliableFunc<string, string>(
+        var send = new ReliableFunc<string, string>(
             SendSometimes,
             5,
             ExceptionPolicy.Retry<TransientException>(),
@@ -82,7 +82,7 @@ namespace Sweetener.Example
         Console.WriteLine(send.Invoke("Hello World"));
     }
 
-    private void SendSometimes(string message)
+    private string SendSometimes(string msg)
     {
         /* ... */
     }
@@ -113,7 +113,7 @@ namespace Sweetener.Example
 {
     public static void Main(params string[] args)
     {
-        ReliableFunc<string, string> send = ReliableFunc.Create(
+        ReliableFunc<sting, sting> send = ReliableFunc.Create(
             SendSometimes,
             5,
             ExceptionPolicy.Retry<TransientException>(),
@@ -122,7 +122,7 @@ namespace Sweetener.Example
         Console.WriteLine(send.Invoke("Hello World"));
     }
 
-    private void SendSometimes(string message)
+    private string SendSometimes(string msg)
     {
         /* ... */
     }
@@ -168,8 +168,8 @@ without throwing an exception, but sometimes the caller may want to inspect the 
 example, a method may return status codes that indicate the success of the operation.
 
 ```csharp
-ResultHandler<string> messageHandler = (string message) =>
-    message switch
+ResultHandler<string> getResultKind = (string msg) =>
+    msg switch
     {
         "What did you say?" => ResultKind.Transient,
         "I can't hear you." => ResultKind.Fatal,
@@ -188,8 +188,7 @@ is transient such that the underlying delegate should be invoked again. Unlike a
 an `ExceptionHandler` is always specified.
 
 ```csharp
-ExceptionPolicy shouldRetry = (Exception exception) =>
-    exception is TransientException;
+ExceptionPolicy shouldRetry = (Exception e) => e is TransientException;
 ```
 
 For the most common use cases, `Sweetener.Reliability` provides the following implementations:
@@ -213,7 +212,7 @@ DelayHandler constant = _ => TimeSpan.FromMilliseconds(100);
 
 // or
 
-DelayHandler simple = (int attempt) => TimeSpan.FromMilliseconds(100 * attempt);
+DelayHandler simple = (int i) => TimeSpan.FromMilliseconds(100 * i);
 ```
 
 2. **Complex** - delay handlers that leverage the exception (or the result in the case of reliable
@@ -221,21 +220,21 @@ DelayHandler simple = (int attempt) => TimeSpan.FromMilliseconds(100 * attempt);
 
 ```csharp
 // For reliable actions
-ComplexDelayHandler complex1 = (int attempt, Exception exception) => exception is TransientException t
+ComplexDelayHandler complex1 = (int i, Exception e) => e is TransientException t
     ? t.Backoff
-    : TimeSpan.FromMilliseconds(100 * attempt);
+    : TimeSpan.FromMilliseconds(100 * i);
 
 // or
 
 // For reliable functions
-ComplexDelayHandler<Response> complex2 = (int attempt, Response response, Exception exception) =>
+ComplexDelayHandler<Response> complex2 = (int i, Response r, Exception e) =>
 {
-    if (exception == null)
-        return response.Backoff;
-    else if (exception is TransientException t)
+    if (e == null)
+        return r.Backoff;
+    else if (e is TransientException t)
         return t.Backoff;
     else
-        return TimeSpan.FromMilliseconds(100 * attempt);
+        return TimeSpan.FromMilliseconds(100 * i);
 };
 ```
 
@@ -265,7 +264,7 @@ namespace Sweetener.Example
     public static void Main(params string[] args)
     {
         // Create the reliable function
-        ReliableAsyncFunc<string, string> sendAsync = new ReliableAsyncFunc<string, string>(
+        var sendAsync = new ReliableAsyncFunc<string, string>(
             SendSometimesAsync,
             5,
             ExceptionPolicy.Retry<TransientException>(),
@@ -274,7 +273,7 @@ namespace Sweetener.Example
         Console.WriteLine(sendAsync.InvokeAsync("Hello World").Result);
     }
 
-    private Task<string> SendSometimesAsync(string message)
+    private Task<string> SendSometimesAsync(string msg)
     {
         /* ... */
     }
@@ -302,21 +301,22 @@ namespace Sweetener.Example
     public static void Main(params string[] args)
     {
         // Create the reliable function
-        ReliableFunc<string, string> send = new ReliableFunc<string, string>(
+        var send = new ReliableFunc<string, string>(
             SendSometimes,
             5,
             ExceptionPolicy.Retry<TransientException>(),
             DelayPolicy.Constant(TimeSpan.FromMilliseconds(50)));
 
-        // Create a CancellationTokenSource that cancels its token after 1 second
-        using CancellationTokenSource source = new CancellationTokenSource();
+        // Create a CancellationTokenSource that cancels
+        // its tokens after 1 second
+        using var source = new CancellationTokenSource();
         source.CancelAfter(TimeSpan.FromSeconds(1));
 
         // Run the function
         send.Invoke("Hello World", source.Token);
     }
 
-    private string SendSometimes(string message, CancellationToken token)
+    private string SendSometimes(string msg, CancellationToken token)
     {
         /* ... */
     }
@@ -342,18 +342,21 @@ namespace Sweetener.Example
     public static void Main(params string[] args)
     {
         ReliableFunc<string, string> send = /* ... */;
-        send.Retrying += (int attempt, string response, Exception exception) =>
+        send.Retrying += (int i, string r, Exception e) =>
         {
-            if (exception == null)
-                Console.WriteLine($"Attempt #{i} after transient response '{response}'");
-            else
-                Console.WriteLine($"Attempt #{i} after transient exception '{exception.Message}'");
+            string retryReason = e == null
+                ? $"response '{r}'"
+                : $"exception with message '{e.Message}'";
+
+            Console.WriteLine("Starting attempt #{0} after transient {1}",
+                i,
+                retryReason);
         };
 
         Console.WriteLine(send.Invoke("Hello World"));
     }
 
-    private void SendSometimes(string message)
+    private string SendSometimes(string msg)
     {
         /* ... */
     }
@@ -373,18 +376,21 @@ namespace Sweetener.Example
     public static void Main(params string[] args)
     {
         ReliableFunc<string, string> send = /* ... */;
-        send.RetriesExhausted += (string response, Exception exception) =>
+        send.RetriesExhausted += (string r, Exception e) =>
         {
-            if (exception == null)
-                Console.WriteLine($"Retries exhausted after transient response '{response}'");
-            else
-                Console.WriteLine($"Retries exhausted after transient exception '{exception.Message}'");
+            string retryReason = e == null
+                ? $"response '{r}'"
+                : $"exception with message '{e.Message}'";
+
+            Console.WriteLine("Retries exhausted after transient {0}",
+                i,
+                retryReason);
         };
 
         Console.WriteLine(send.Invoke("Hello World"));
     }
 
-    private void SendSometimes(string message)
+    private string SendSometimes(string msg)
     {
         /* ... */
     }
@@ -405,16 +411,19 @@ namespace Sweetener.Example
         ReliableFunc<string, string> send = /* ... */;
         send.Failed += (string response, Exception exception) =>
         {
-            if (exception == null)
-                Console.WriteLine($"Send failed after fatal response '{response}'");
-            else
-                Console.WriteLine($"Send failed after fatal exception '{exception.Message}'");
+            string retryReason = e == null
+                ? $"response '{r}'"
+                : $"exception with message '{e.Message}'";
+
+            Console.WriteLine("Send failed after fatal {0}",
+                i,
+                retryReason);
         };
 
         Console.WriteLine(send.Invoke("Hello World"));
     }
 
-    private void SendSometimes(string message)
+    private string SendSometimes(string msg)
     {
         /* ... */
     }

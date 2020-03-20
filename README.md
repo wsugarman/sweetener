@@ -9,7 +9,7 @@ You can learn about each of these packages [here](https://wsugarman.github.io/Sw
 | Package | Build | NuGet |
 | ------- |:-----:|:-----:|
 | Sweetener | [![Sweetener Build Status](https://dev.azure.com/wsugarman/Sweetener/_apis/build/status/CI/Sweetener%20-%20CI?branchName=master)](https://dev.azure.com/wsugarman/Sweetener/_build/latest?definitionId=8&branchName=master) | [![Sweetener NuGet Package](https://img.shields.io/nuget/vpre/Sweetener?label=NuGet)](https://www.nuget.org/packages/Sweetener/) |
-| Sweetener.Reliability | [![Sweetener.Reliability Build Status](https://dev.azure.com/wsugarman/Sweetener/_apis/build/status/CI/Sweetener.Reliability%20-%20CI?branchName=master)](https://dev.azure.com/wsugarman/Sweetener/_build/latest?definitionId=2&branchName=master) | N/A |
+| Sweetener.Reliability | [![Sweetener.Reliability Build Status](https://dev.azure.com/wsugarman/Sweetener/_apis/build/status/CI/Sweetener.Reliability%20-%20CI?branchName=master)](https://dev.azure.com/wsugarman/Sweetener/_build/latest?definitionId=2&branchName=master) | [![Sweetener.Reliability NuGet Package](https://img.shields.io/nuget/vpre/Sweetener.Reliability?label=NuGet)](https://www.nuget.org/packages/Sweetener.Reliability/) |
 
 ## Licenses
 The Sweetener libraries are licensed under the [MIT](https://github.com/wsugarman/Sweetener/blob/master/LICENSE)
