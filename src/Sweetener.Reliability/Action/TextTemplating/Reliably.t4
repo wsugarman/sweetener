@@ -1,0 +1,419 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Sweetener.Reliability
+{
+    static partial class Reliably
+    {
+<#
+    string cancellationCheck = async ? "isCanceled" : "e.IsCancellation(cancellationToken)";
+
+    if (!async)
+    {
+#>
+        #region Invoke
+<#
+        foreach (bool stateful in new bool[2] { false, true })
+        {
+            string inputActionType    = stateful ? "Action<T>" : "Action";
+            string optionalStateParam = stateful ? "T state, " : string.Empty;
+            string optionalStateArg   = stateful ? "state, "   : string.Empty;
+            string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+#>
+
+<#
+            PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: false);
+#>
+        public static void Invoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => Invoke(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+            PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: false);
+#>
+        public static void Invoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            => Invoke(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
+
+<#
+            PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static void Invoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => Invoke(action, <#= optionalStateArg #>cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+            PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static void Invoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
+
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
+
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+
+            try
+            {
+                action(<#= stateful ? "state" : string.Empty #>);
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    throw;
+
+                Task.Delay(delayHandler(attempt, e), cancellationToken).Wait();
+                goto Attempt;
+            }
+        }
+<#
+        }
+#>
+
+        #endregion
+
+<#
+    }
+#>
+        #region InvokeAsync
+
+<#
+    foreach (bool stateful in new bool[2] { false, true })
+    {
+        string inputActionType    = async ? (stateful ? "Func<T, Task>" : "Func<Task>") : (stateful ? "Action<T>" : "Action");
+
+        string optionalStateParam = stateful ? "T state, " : string.Empty;
+        string optionalStateArg   = stateful ? "state, "   : string.Empty;
+        string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+
+        PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: true, hasToken: false);
+#>
+        public static Task InvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => InvokeAsync(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+        PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: true, hasToken: false);
+#>
+        public static Task InvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            => InvokeAsync(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
+
+<#
+        PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: true, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static Task InvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => InvokeAsync(action, <#= optionalStateArg #>cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+        PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: true, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static async Task InvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
+
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
+
+            int attempt = 0;
+
+        Attempt:
+<#
+        if (async)
+        {
+#>
+            Task? t = null;
+<#
+        }
+#>
+            attempt++;
+
+            try
+            {
+<#
+        if (async)
+        {
+#>
+                t = action(<#= stateful ? "state" : string.Empty #>);
+                if (t == null)
+                    goto Invalid;
+
+                await t.ConfigureAwait(false);
+                return;
+<#
+        }
+        else
+        {
+#>
+                action(<#= stateful ? "state" : string.Empty #>);
+<#
+        }
+#>
+            }
+            catch (Exception e)
+            {
+<#
+        if (async)
+        {
+#>
+                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+<#
+        }
+#>
+                if (<#= cancellationCheck #> || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    throw;
+
+                await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
+                goto Attempt;
+            }
+<#
+        if (async)
+        {
+#>
+
+        Invalid:
+            throw new InvalidOperationException(SR.InvalidTaskResult);
+<#
+        }
+#>
+        }
+
+<#
+    }
+#>
+        #endregion
+
+<#
+    if (!async)
+    {
+#>
+        #region TryInvoke
+<#
+        foreach (bool stateful in new bool[2] { false, true })
+        {
+            string inputActionType    = stateful ? "Action<T>" : "Action";
+            string optionalStateParam = stateful ? "T state, " : string.Empty;
+            string optionalStateArg   = stateful ? "state, "   : string.Empty;
+            string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+#>
+
+<#
+            PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: false);
+#>
+        public static bool TryInvoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => TryInvoke(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+            PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: false);
+#>
+        public static bool TryInvoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            => TryInvoke(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
+
+<#
+            PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static bool TryInvoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => TryInvoke(action, <#= optionalStateArg #>cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+            PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static bool TryInvoke<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
+
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
+
+            int attempt = 0;
+
+        Attempt:
+            attempt++;
+
+            try
+            {
+                action(<#= stateful ? "state" : string.Empty #>);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (e.IsCancellation(cancellationToken))
+                    throw;
+
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    return false;
+
+                Task.Delay(delayHandler(attempt, e), cancellationToken).Wait();
+                goto Attempt;
+            }
+        }
+<#
+        }
+#>
+
+        #endregion
+
+<#
+    }
+#>
+        #region TryInvokeAsync
+<#
+    foreach (bool stateful in new bool[2] { false, true })
+    {
+        string inputActionType    = async ? (stateful ? "Func<T, Task>" : "Func<Task>") : (stateful ? "Action<T>" : "Action");
+
+        string optionalStateParam = stateful ? "T state, " : string.Empty;
+        string optionalStateArg   = stateful ? "state, "   : string.Empty;
+        string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+#>
+
+<#
+        PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: false);
+#>
+        public static Task<bool> TryInvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => TryInvokeAsync(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+        PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: false);
+#>
+        public static Task<bool> TryInvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+            => TryInvokeAsync(action, <#= optionalStateArg #>CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
+
+<#
+        PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static Task<bool> TryInvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+            => TryInvokeAsync(action, <#= optionalStateArg #>cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
+
+<#
+        PrintReliablyTryInvokeActionXmlDoc(indent: 2, stateful, isAsync: false, hasToken: true);
+#>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
+        public static async Task<bool> TryInvokeAsync<#= optionalTypeParam #>(<#= inputActionType #> action, <#= optionalStateParam #>CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (maxRetries < Retries.Infinite)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries));
+
+            if (exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
+
+            if (delayHandler == null)
+                throw new ArgumentNullException(nameof(delayHandler));
+
+<#
+        if (async)
+        {
+#>
+            Task? t;
+<#
+        }
+#>
+            int attempt = 0;
+
+        Attempt:
+<#
+        if (async)
+        {
+#>
+            t = null;
+<#
+        }
+#>
+            attempt++;
+
+            try
+            {
+<#
+        if (async)
+        {
+#>
+                t = action(<#= stateful ? "state" : string.Empty #>);
+                if (t == null)
+                    goto Invalid;
+
+                await t.ConfigureAwait(false);
+<#
+        }
+        else
+        {
+#>
+                action(<#= stateful ? "state" : string.Empty #>);
+<#
+        }
+#>
+                return true;
+            }
+            catch (Exception e)
+            {
+<#
+        if (async)
+        {
+#>
+                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+<#
+        }
+#>
+                if (<#= cancellationCheck #>)
+                    throw;
+
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    return false;
+
+                await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
+                goto Attempt;
+            }
+<#
+        if (async)
+        {
+#>
+
+        Invalid:
+            throw new InvalidOperationException(SR.InvalidTaskResult);
+<#
+        }
+#>
+        }
+<#
+    }
+#>
+
+        #endregion
+    }
+}

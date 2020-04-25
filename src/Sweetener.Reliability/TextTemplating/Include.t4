@@ -90,4 +90,164 @@
 <#= spaces #>/// </exception>
 <#+
     }
+
+        public void PrintReliablyInvokeActionXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
+        => PrintReliablyXmlDoc(indent, isTry: false, isFunc: false, isStateful, isAsync, hasToken);
+
+    public void PrintReliablyInvokeFuncXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
+        => PrintReliablyXmlDoc(indent, isTry: false, isFunc: true, isStateful, isAsync, hasToken);
+
+    public void PrintReliablyTryInvokeActionXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
+        => PrintReliablyXmlDoc(indent, isTry: true, isFunc: false, isStateful, isAsync, hasToken);
+
+    public void PrintReliablyTryInvokeFuncXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
+        => PrintReliablyXmlDoc(indent, isTry: true, isFunc: true, isStateful, isAsync, hasToken);
+
+    private void PrintReliablyXmlDoc(int indent, bool isTry, bool isFunc, bool isStateful, bool isAsync, bool hasToken)
+    {
+        string spaces = new string(' ', indent * SpacesPerTab);
+        string delegateName = isFunc ? "func" : "action";
+
+        if (isTry)
+        {
+#>
+<#= spaces #>/// <summary>
+<#= spaces #>/// <#= isAsync ? "Asynchronously a" : "A" #>ttempts to successfully invoke the <paramref name="<#= delegateName #>" /> despite transient problems.
+<#= spaces #>/// </summary>
+<#+
+        }
+        else
+        {
+#>
+<#= spaces #>/// <summary>
+<#= spaces #>/// <#= isAsync ? "Asynchronously i" : "I" #>nvokes the given <paramref name="<#= delegateName #>" /> despite transient problems
+<#= spaces #>/// using the provided execution policies.
+<#= spaces #>/// </summary>
+<#+
+        }
+
+#>
+<#= spaces #>/// <param name="<#= delegateName #>">The <#= delegateName #> to reliably invoke.</param>
+<#+
+
+        if (isStateful)
+        {
+#>
+<#= spaces #>/// <param name="state">An object containing data to be used by the <paramref name="<#= delegateName #>" /> delegate.</param>
+<#+
+        }
+
+        if (hasToken)
+        {
+#>
+<#= spaces #>/// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="<#= delegateName #>" /> was canceled.</param>
+<#+
+        }
+
+#>
+<#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
+<#+
+
+        if (isFunc)
+        {
+#>
+<#= spaces #>/// <param name="resultHandler">A function that determines which results are valid.</param>
+<#+
+        }
+
+#>
+<#= spaces #>/// <param name="exceptionHandler">A function that determines which exceptions are transient.</param>
+<#= spaces #>/// <param name="delayHandler">A function that determines how long wait to wait between attempts.</param>
+<#+
+
+        if (isTry && isFunc && !isAsync)
+        {
+#>
+<#= spaces #>/// <param name="result">
+<#= spaces #>/// When this method returns, contains the result of the <paramref name="<#= delegateName #>" />,
+<#= spaces #>/// if it completed successfully, or the default value if it failed. The parameter
+<#= spaces #>/// is passed unitialized; any value originally supplied in <paramref name="result" /> will be overwritten.
+<#= spaces #>/// </param>
+<#+
+        }
+
+        if (isTry && !isAsync)
+        {
+#>
+<#= spaces #>/// <returns>
+<#= spaces #>/// <see langword="true" /> if <paramref name="<#= delegateName #>" /> was invoked sucessfully;
+<#= spaces #>/// otherwise, <see langword="false" />.
+<#= spaces #>/// </returns>
+<#+
+        }
+        else if (isFunc)
+        {
+            if (isAsync)
+            {
+#>
+<#= spaces #>/// <returns>
+<#= spaces #>/// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+<#= spaces #>/// parameter <#= isTry ? "optionally " : string.Empty #>contains the return value of the <paramref name="<#= delegateName #>" /><#= isTry ? "." : string.Empty #>
+<#+
+                if (isTry)
+                {
+#>
+<#= spaces #>/// if the delegate was invoked successfully.
+<#+
+                }
+#>
+<#= spaces #>/// </returns>
+<#+
+            }
+            else
+            {
+#>
+<#= spaces #>/// <returns>The return value of the <paramref name="<#= delegateName #>.</returns>
+<#+
+            }
+        }
+        else if (isAsync)
+        {
+            if (isTry)
+            {
+#>
+<#= spaces #>/// <returns>
+<#= spaces #>/// A task that represents the asynchronous invoke operation. The value of the <c>TResult</c>
+<#= spaces #>/// parameter contains <see langword="true" /> if <paramref name="<#= delegateName #>" />
+<#= spaces #>/// was invoked sucessfully; otherwise, <see langword="false" />.
+<#= spaces #>/// </returns>
+<#+
+            }
+            else
+            {
+#>
+<#= spaces #>/// <returns>A task that represents the asynchronous invoke operation.</returns>
+<#+
+            }
+        }
+
+#>
+<#= spaces #>/// <exception cref="ArgumentNullException">
+<#= spaces #>/// <paramref name="<#= delegateName #>" />, <#= isFunc ? "<paramref name=\"resultHandler\" /> " : "" #><paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
+<#= spaces #>/// </exception>
+<#= spaces #>/// <exception cref="ArgumentOutOfRangeException">
+<#= spaces #>/// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
+<#= spaces #>/// </exception>
+<#+
+        if (hasToken)
+        {
+#>
+<#= spaces #>/// <exception cref="ObjectDisposedException">
+<#= spaces #>/// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
+<#= spaces #>/// </exception>
+<#+
+        }
+
+        if (hasToken && !isAsync)
+        {
+#>
+<#= spaces #>/// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+<#+
+        }
+    }
 #>
