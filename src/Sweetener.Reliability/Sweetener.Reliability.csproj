@@ -102,6 +102,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Create.tt</DependentUpon>
     </Compile>
+    <Compile Update="Func\Reliably.Async.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.Async.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\Reliably.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.tt</DependentUpon>
+    </Compile>
     <Compile Update="Policies\Exception\ExceptionPolicy.Fail.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -175,6 +185,14 @@
     <None Update="Func\ReliableFunc.Create.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.Create.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\Reliably.Async.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.Async.cs</LastGenOutput>
+    </None>
+    <None Update="Func\Reliably.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.cs</LastGenOutput>
     </None>
     <None Update="Policies\Exception\ExceptionPolicy.Fail.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

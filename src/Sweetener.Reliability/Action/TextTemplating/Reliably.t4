@@ -22,10 +22,10 @@ namespace Sweetener.Reliability
 <#
         foreach (bool stateful in new bool[2] { false, true })
         {
-            string inputActionType    = stateful ? "Action<T>" : "Action";
-            string optionalStateParam = stateful ? "T state, " : string.Empty;
-            string optionalStateArg   = stateful ? "state, "   : string.Empty;
-            string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+            string inputActionType    = stateful ? "Action<TState>" : "Action";
+            string optionalStateParam = stateful ? "TState state, " : string.Empty;
+            string optionalStateArg   = stateful ? "state, "        : string.Empty;
+            string optionalTypeParam  = stateful ? "<TState>"       : string.Empty;
 #>
 
 <#
@@ -97,11 +97,11 @@ namespace Sweetener.Reliability
 <#
     foreach (bool stateful in new bool[2] { false, true })
     {
-        string inputActionType    = async ? (stateful ? "Func<T, Task>" : "Func<Task>") : (stateful ? "Action<T>" : "Action");
+        string inputActionType    = async ? (stateful ? "Func<TState, Task>" : "Func<Task>") : (stateful ? "Action<TState>" : "Action");
 
-        string optionalStateParam = stateful ? "T state, " : string.Empty;
-        string optionalStateArg   = stateful ? "state, "   : string.Empty;
-        string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+        string optionalStateParam = stateful ? "TState state, " : string.Empty;
+        string optionalStateArg   = stateful ? "state, "        : string.Empty;
+        string optionalTypeParam  = stateful ? "<TState>"       : string.Empty;
 
         PrintReliablyInvokeActionXmlDoc(indent: 2, stateful, isAsync: true, hasToken: false);
 #>
@@ -215,10 +215,10 @@ namespace Sweetener.Reliability
 <#
         foreach (bool stateful in new bool[2] { false, true })
         {
-            string inputActionType    = stateful ? "Action<T>" : "Action";
-            string optionalStateParam = stateful ? "T state, " : string.Empty;
-            string optionalStateArg   = stateful ? "state, "   : string.Empty;
-            string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+            string inputActionType    = stateful ? "Action<TState>" : "Action";
+            string optionalStateParam = stateful ? "TState state, " : string.Empty;
+            string optionalStateArg   = stateful ? "state, "        : string.Empty;
+            string optionalTypeParam  = stateful ? "<TState>"       : string.Empty;
 #>
 
 <#
@@ -293,11 +293,11 @@ namespace Sweetener.Reliability
 <#
     foreach (bool stateful in new bool[2] { false, true })
     {
-        string inputActionType    = async ? (stateful ? "Func<T, Task>" : "Func<Task>") : (stateful ? "Action<T>" : "Action");
+        string inputActionType    = async ? (stateful ? "Func<TState, Task>" : "Func<Task>") : (stateful ? "Action<TState>" : "Action");
 
-        string optionalStateParam = stateful ? "T state, " : string.Empty;
-        string optionalStateArg   = stateful ? "state, "   : string.Empty;
-        string optionalTypeParam  = stateful ? "<T>"       : string.Empty;
+        string optionalStateParam = stateful ? "TState state, " : string.Empty;
+        string optionalStateArg   = stateful ? "state, "        : string.Empty;
+        string optionalTypeParam  = stateful ? "<TState>"       : string.Empty;
 #>
 
 <#

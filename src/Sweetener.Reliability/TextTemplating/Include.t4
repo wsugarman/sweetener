@@ -91,19 +91,19 @@
 <#+
     }
 
-        public void PrintReliablyInvokeActionXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
-        => PrintReliablyXmlDoc(indent, isTry: false, isFunc: false, isStateful, isAsync, hasToken);
+    public void PrintReliablyInvokeActionXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
+        => PrintReliablyXmlDoc(indent, isTry: false, isFunc: false, isStateful, isAsync, hasToken, false);
 
-    public void PrintReliablyInvokeFuncXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
-        => PrintReliablyXmlDoc(indent, isTry: false, isFunc: true, isStateful, isAsync, hasToken);
+    public void PrintReliablyInvokeFuncXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken, bool hasResultHandler)
+        => PrintReliablyXmlDoc(indent, isTry: false, isFunc: true, isStateful, isAsync, hasToken, hasResultHandler);
 
     public void PrintReliablyTryInvokeActionXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
-        => PrintReliablyXmlDoc(indent, isTry: true, isFunc: false, isStateful, isAsync, hasToken);
+        => PrintReliablyXmlDoc(indent, isTry: true, isFunc: false, isStateful, isAsync, hasToken, false);
 
-    public void PrintReliablyTryInvokeFuncXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken)
-        => PrintReliablyXmlDoc(indent, isTry: true, isFunc: true, isStateful, isAsync, hasToken);
+    public void PrintReliablyTryInvokeFuncXmlDoc(int indent, bool isStateful, bool isAsync, bool hasToken, bool hasResultHandler)
+        => PrintReliablyXmlDoc(indent, isTry: true, isFunc: true, isStateful, isAsync, hasToken, hasResultHandler);
 
-    private void PrintReliablyXmlDoc(int indent, bool isTry, bool isFunc, bool isStateful, bool isAsync, bool hasToken)
+    private void PrintReliablyXmlDoc(int indent, bool isTry, bool isFunc, bool isStateful, bool isAsync, bool hasToken, bool hasResultHandler)
     {
         string spaces = new string(' ', indent * SpacesPerTab);
         string delegateName = isFunc ? "func" : "action";
@@ -123,6 +123,20 @@
 <#= spaces #>/// <#= isAsync ? "Asynchronously i" : "I" #>nvokes the given <paramref name="<#= delegateName #>" /> despite transient problems
 <#= spaces #>/// using the provided execution policies.
 <#= spaces #>/// </summary>
+<#+
+        }
+
+        if (isStateful)
+        {
+#>
+<#= spaces #>/// <typeparam name="TState">The type of the state object passed to the <paramref name="<#= delegateName #>"/>.</typeparam>
+<#+
+        }
+
+        if (isFunc)
+        {
+#>
+<#= spaces #>/// <typeparam name="TResult">The type of the result produced by the <paramref name="<#= delegateName #>"/>.</typeparam>
 <#+
         }
 
@@ -148,7 +162,7 @@
 <#= spaces #>/// <param name="maxRetries">The maximum number of retry attempts.</param>
 <#+
 
-        if (isFunc)
+        if (isFunc && hasResultHandler)
         {
 #>
 <#= spaces #>/// <param name="resultHandler">A function that determines which results are valid.</param>
@@ -202,7 +216,7 @@
             else
             {
 #>
-<#= spaces #>/// <returns>The return value of the <paramref name="<#= delegateName #>.</returns>
+<#= spaces #>/// <returns>The return value of the <paramref name="<#= delegateName #>" />.</returns>
 <#+
             }
         }
@@ -228,7 +242,7 @@
 
 #>
 <#= spaces #>/// <exception cref="ArgumentNullException">
-<#= spaces #>/// <paramref name="<#= delegateName #>" />, <#= isFunc ? "<paramref name=\"resultHandler\" /> " : "" #><paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
+<#= spaces #>/// <paramref name="<#= delegateName #>" />, <#= isFunc && hasResultHandler ? "<paramref name=\"resultHandler\" /> " : "" #><paramref name="exceptionHandler" />, or <paramref name="delayHandler" /> is <see langword="null" />.
 <#= spaces #>/// </exception>
 <#= spaces #>/// <exception cref="ArgumentOutOfRangeException">
 <#= spaces #>/// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.

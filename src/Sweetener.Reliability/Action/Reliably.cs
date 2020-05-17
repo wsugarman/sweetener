@@ -124,6 +124,7 @@ namespace Sweetener.Reliability
         /// Invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -135,13 +136,14 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static void Invoke<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static void Invoke<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => Invoke(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -153,13 +155,14 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static void Invoke<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static void Invoke<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
             => Invoke(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -177,13 +180,14 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static void Invoke<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static void Invoke<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => Invoke(action, state, cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -201,7 +205,7 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static void Invoke<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static void Invoke<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -354,6 +358,7 @@ namespace Sweetener.Reliability
         /// Asynchronously invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -366,13 +371,14 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Task InvokeAsync<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static Task InvokeAsync<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => InvokeAsync(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Asynchronously invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -385,13 +391,14 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Task InvokeAsync<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static Task InvokeAsync<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
             => InvokeAsync(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Asynchronously invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -409,13 +416,14 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static Task InvokeAsync<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static Task InvokeAsync<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => InvokeAsync(action, state, cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Asynchronously invokes the given <paramref name="action" /> despite transient problems
         /// using the provided execution policies.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -433,7 +441,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static async Task InvokeAsync<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static async Task InvokeAsync<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -599,6 +607,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -614,12 +623,13 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static bool TryInvoke<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static bool TryInvoke<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => TryInvoke(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -635,12 +645,13 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static bool TryInvoke<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static bool TryInvoke<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
             => TryInvoke(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -662,12 +673,13 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static bool TryInvoke<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static bool TryInvoke<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => TryInvoke(action, state, cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -689,7 +701,7 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static bool TryInvoke<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static bool TryInvoke<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -859,6 +871,7 @@ namespace Sweetener.Reliability
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -874,12 +887,13 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Task<bool> TryInvokeAsync<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static Task<bool> TryInvokeAsync<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => TryInvokeAsync(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="maxRetries">The maximum number of retry attempts.</param>
@@ -895,12 +909,13 @@ namespace Sweetener.Reliability
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="maxRetries" /> is a negative number other than <c>-1</c>, which represents an infinite number of retries.
         /// </exception>
-        public static Task<bool> TryInvokeAsync<T>(Action<T> action, T state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static Task<bool> TryInvokeAsync<TState>(Action<TState> action, TState state, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
             => TryInvokeAsync(action, state, CancellationToken.None, maxRetries, exceptionHandler, delayHandler);
 
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -922,12 +937,13 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static Task<bool> TryInvokeAsync<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
+        public static Task<bool> TryInvokeAsync<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, DelayHandler delayHandler)
             => TryInvokeAsync(action, state, cancellationToken, maxRetries, exceptionHandler, delayHandler.ToComplex());
 
         /// <summary>
         /// Attempts to successfully invoke the <paramref name="action" /> despite transient problems.
         /// </summary>
+        /// <typeparam name="TState">The type of the state object passed to the <paramref name="action"/>.</typeparam>
         /// <param name="action">The action to reliably invoke.</param>
         /// <param name="state">An object containing data to be used by the <paramref name="action" /> delegate.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken" /> used to determine whether the <paramref name="action" /> was canceled.</param>
@@ -949,7 +965,7 @@ namespace Sweetener.Reliability
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
-        public static async Task<bool> TryInvokeAsync<T>(Action<T> action, T state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
+        public static async Task<bool> TryInvokeAsync<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
