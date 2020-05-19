@@ -75,6 +75,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\Reliably.Async.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.Async.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Action\Reliably.Test.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -133,6 +138,10 @@
     <None Update="Action\ReliableAsyncAction.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAsyncAction.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Action\Reliably.Async.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.Async.Test.cs</LastGenOutput>
     </None>
     <None Update="Action\Reliably.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

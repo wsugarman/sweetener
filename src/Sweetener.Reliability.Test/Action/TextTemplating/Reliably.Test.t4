@@ -13,6 +13,12 @@ namespace Sweetener.Reliability.Test
     partial class ReliablyTest
     {
 <#
+    string optionalAsyncPrefix = async ? "Async"                    : string.Empty;
+    string basicActionType     = async ? "Func<Task>"               : "Action";
+    string statefulActionType  = async ? "Func<object, Task>"       : "Action<object>";
+    string basicTestAction     = async ? "() => Task.CompletedTask" : "Operation.Null";
+    string statefulTestAction  = async ? "s => Task.CompletedTask"  : "s => Operation.Null()";
+
     if (!async)
     {
 #>
@@ -21,15 +27,16 @@ namespace Sweetener.Reliability.Test
 <#
         foreach (bool stateful in new bool[2] { false, true })
         {
-            string inputActionType        = stateful ? "Action<object>"          : "Action";
-            string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
-            string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
-            string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+            string inputActionType        = stateful ? statefulActionType : basicActionType;
+            string testAction             = stateful ? statefulTestAction : basicTestAction;
+            string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+            string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
             foreach (bool interruptable in new bool[2] { false, true })
             {
-                string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
-                string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+                string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+                string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+                string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
 
                 foreach (bool useComplexDelayHandler in new bool[2] { false, true })
                 {
@@ -40,7 +47,7 @@ namespace Sweetener.Reliability.Test
                     string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
                     string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
 
-                    string testName = "Invoke_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+                    string testName = "Invoke_" + optionalAsyncPrefix + "Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
 #>
         [TestMethod]
         public void <#= testName #>()
@@ -49,10 +56,10 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
 
 #nullable enable
 
@@ -75,6 +82,7 @@ namespace Sweetener.Reliability.Test
                     }
 #>
             Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertError = (a, t, n, e, d, x) => Assert.That.ThrowsException(() => invoke(a, t, n, e, d), x);
+
             Invoke_Action_Success         (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Action_Failure         (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Action_EventualSuccess (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
@@ -103,18 +111,21 @@ namespace Sweetener.Reliability.Test
     }
 #>
         #region InvokeAsync
+
 <#
     foreach (bool stateful in new bool[2] { false, true })
     {
-        string inputActionType        = stateful ? "Action<object>"          : "Action";
-        string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
-        string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
-        string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+        string inputActionType        = stateful ? statefulActionType : basicActionType;
+        string testAction             = stateful ? statefulTestAction : basicTestAction;
+        string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+        string optionalStateArg       = stateful ? ", state"          : string.Empty;
+        string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
         foreach (bool interruptable in new bool[2] { false, true })
         {
-            string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
-            string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+            string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+            string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+            string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
 
             foreach (bool useComplexDelayHandler in new bool[2] { false, true })
             {
@@ -125,9 +136,8 @@ namespace Sweetener.Reliability.Test
                 string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
                 string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
 
-                string testName = "InvokeAsync_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+                string testName = "InvokeAsync_" + optionalAsyncPrefix + "Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
 #>
-
         [TestMethod]
         public async Task <#= testName #>()
         {
@@ -135,37 +145,67 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
 
 #nullable enable
 
 <#
-                if (stateful)
+                if (async || stateful)
                 {
 #>
-            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>> invoke = (a, t, n, e, d) =>
+            Func<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task> invoke = (a, t, n, e, d) =>
             {
+<#
+                    if (stateful)
+                    {
+#>
                 object state = new object();
-                Reliably.InvokeAsync(obj => { Assert.AreSame(obj, state); a(); }, state<#= optionalTokenArg #>, n, e, d.Invoke).Wait();
+<#
+                    }
+#>
+                <#= inputActionType #> inputAction = (<#= stateful ? "obj" : string.Empty #>) =>
+                {
+<#
+                    if (stateful)
+                    {
+#>
+                    Assert.AreSame(obj, state);
+<#
+                    }
+#>
+                    a();
+<#
+                    if (async)
+                    {
+#>
+                    return Task.CompletedTask;
+<#
+                    }
+#>
+                };
+
+                return Reliably.InvokeAsync(inputAction<#= optionalStateArg #><#= optionalTokenArg #>, n, e, d.Invoke);
             };
 <#
                 }
                 else
                 {
 #>
-            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>>       invoke      = (a, t, n, e, d)    => Reliably.InvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke).Wait();
+            Func  <Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task> invoke        = (a, t, n, e, d)    => Reliably.InvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke);
 <#
                 }
 #>
-            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertError = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => Reliably.InvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke), x).Wait();
-            Invoke_Action_Success         (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
-            Invoke_Action_Failure         (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
-            Invoke_Action_EventualSuccess (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
-            Invoke_Action_EventualFailure (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
-            Invoke_Action_RetriesExhausted(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
+
+            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_Failure         (assertError  , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
 <#
                 if (interruptable)
                 {
@@ -194,15 +234,16 @@ namespace Sweetener.Reliability.Test
 <#
         foreach (bool stateful in new bool[2] { false, true })
         {
-            string inputActionType        = stateful ? "Action<object>"          : "Action";
-            string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
-            string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
-            string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+            string inputActionType        = stateful ? statefulActionType : basicActionType;
+            string testAction             = stateful ? statefulTestAction : basicTestAction;
+            string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+            string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
             foreach (bool interruptable in new bool[2] { false, true })
             {
-                string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
-                string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+                string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+                string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+                string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
 
                 foreach (bool useComplexDelayHandler in new bool[2] { false, true })
                 {
@@ -213,7 +254,7 @@ namespace Sweetener.Reliability.Test
                     string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
                     string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
 
-                    string testName = "TryInvoke_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+                    string testName = "TryInvoke_" + optionalAsyncPrefix + "Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
 #>
         [TestMethod]
         public void <#= testName #>()
@@ -222,10 +263,10 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
 
 #nullable enable
 
@@ -257,6 +298,7 @@ namespace Sweetener.Reliability.Test
 <#
                     }
 #>
+
             Invoke_Action_Success         (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Action_Failure         (assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
@@ -280,23 +322,26 @@ namespace Sweetener.Reliability.Test
         }
 #>
         #endregion
+
 <#
     }
 #>
-
         #region TryInvokeAsync
+
 <#
     foreach (bool stateful in new bool[2] { false, true })
     {
-        string inputActionType        = stateful ? "Action<object>"          : "Action";
-        string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
-        string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
-        string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+        string inputActionType        = stateful ? statefulActionType : basicActionType;
+        string testAction             = stateful ? statefulTestAction : basicTestAction;
+        string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+        string optionalStateArg       = stateful ? ", state"          : string.Empty;
+        string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
         foreach (bool interruptable in new bool[2] { false, true })
         {
-            string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
-            string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+            string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+            string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+            string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
 
             foreach (bool useComplexDelayHandler in new bool[2] { false, true })
             {
@@ -307,9 +352,8 @@ namespace Sweetener.Reliability.Test
                 string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
                 string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
 
-                string testName = "TryInvokeAsync_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+                string testName = "TryInvokeAsync_" + optionalAsyncPrefix + "Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
 #>
-
         [TestMethod]
         public async Task <#= testName #>()
         {
@@ -317,28 +361,56 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
 
 #nullable enable
 
 <#
-                if (stateful)
+                if (async || stateful)
                 {
 #>
             Func<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<bool>> tryInvoke = (a, t, n, e, d) =>
             {
+<#
+                    if (stateful)
+                    {
+#>
                 object state = new object();
-                return Reliably.TryInvokeAsync(obj => { Assert.AreSame(obj, state); a(); }, state<#= optionalTokenArg #>, n, e, d.Invoke);
+<#
+                    }
+#>
+                <#= inputActionType #> inputAction = (<#= stateful ? "obj" : string.Empty #>) =>
+                {
+<#
+                    if (stateful)
+                    {
+#>
+                    Assert.AreSame(obj, state);
+<#
+                    }
+#>
+                    a();
+<#
+                    if (async)
+                    {
+#>
+                    return Task.CompletedTask;
+<#
+                    }
+#>
+                };
+
+                return Reliably.TryInvokeAsync(inputAction<#= optionalStateArg #><#= optionalTokenArg #>, n, e, d.Invoke);
             };
 <#
                 }
                 else
                 {
 #>
-            Func<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<bool>> tryInvoke = (a, t, n, e, d)    => Reliably.TryInvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke);
+            Func  <Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<bool>> tryInvoke = (a, t, n, e, d)    => Reliably.TryInvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke);
 <#
                 }
 #>
@@ -352,6 +424,7 @@ namespace Sweetener.Reliability.Test
 <#
                 }
 #>
+
             Invoke_Action_Success         (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Action_Failure         (assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
