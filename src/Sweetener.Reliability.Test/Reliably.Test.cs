@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Reliability.Test
@@ -174,7 +175,7 @@ namespace Sweetener.Reliability.Test
         #region Invoke_Action_Canceled_Delegate
 
         private void Invoke_Action_Canceled_Delegate<TDelayHandler, TDelayHandlerProxy>(
-            Action<Action, CancellationToken, int, ExceptionHandler, TDelayHandler> invoke,
+            Action<Action, CancellationToken, int, ExceptionHandler, TDelayHandler, Type> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, Type> addDelayObservation)
             where TDelayHandler      : Delegate
@@ -207,7 +208,7 @@ namespace Sweetener.Reliability.Test
             };
 
             // Invoke, retry, and cancel
-            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(action.Invoke, tokenSource.Token, Retries.Infinite, exceptionHandler.Invoke, delayHandler.Proxy), allowedDerivedTypes: true);
+            assertInvoke(action.Invoke, tokenSource.Token, Retries.Infinite, exceptionHandler.Invoke, delayHandler.Proxy, typeof(OperationCanceledException));
 
             // Validate the number of calls
             Assert.AreEqual(2, action          .Calls);
@@ -220,7 +221,7 @@ namespace Sweetener.Reliability.Test
         #region Invoke_Action_Canceled_Delay
 
         private void Invoke_Action_Canceled_Delay<TDelayHandler, TDelayHandlerProxy>(
-            Action<Action, CancellationToken, int, ExceptionHandler, TDelayHandler> invoke,
+            Action<Action, CancellationToken, int, ExceptionHandler, TDelayHandler, Type> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, Type> addDelayObservation)
             where TDelayHandler      : Delegate
@@ -248,7 +249,7 @@ namespace Sweetener.Reliability.Test
             };
 
             // Invoke, retry, and cancel
-            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(action.Invoke, tokenSource.Token, Retries.Infinite, exceptionHandler.Invoke, delayHandler.Proxy), allowedDerivedTypes: true);
+            assertInvoke(action.Invoke, tokenSource.Token, Retries.Infinite, exceptionHandler.Invoke, delayHandler.Proxy, typeof(TaskCanceledException));
 
             // Validate the number of calls
             Assert.AreEqual(2, action          .Calls);

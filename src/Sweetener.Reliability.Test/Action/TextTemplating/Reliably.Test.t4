@@ -85,8 +85,8 @@ namespace Sweetener.Reliability.Test
                     {
 #>
 
-            Invoke_Action_Canceled_Delegate(invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
-            Invoke_Action_Canceled_Delay   (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
 <#
                     }
 #>
@@ -102,5 +102,278 @@ namespace Sweetener.Reliability.Test
 <#
     }
 #>
+        #region InvokeAsync
+<#
+    foreach (bool stateful in new bool[2] { false, true })
+    {
+        string inputActionType        = stateful ? "Action<object>"          : "Action";
+        string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
+        string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
+        string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+
+        foreach (bool interruptable in new bool[2] { false, true })
+        {
+            string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
+            string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+
+            foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+            {
+                string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler"     : "DelayHandler";
+                string delayInputTypeParam  = useComplexDelayHandler ? "int, Exception"          : "int";
+                string delayInputArgs       = useComplexDelayHandler ? "(i, e)"                  : "i";
+                string noDelay              = useComplexDelayHandler ? "(i, e) => TimeSpan.Zero" : "DelayPolicy.None";
+                string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
+                string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
+
+                string testName = "InvokeAsync_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+#>
+
+        [TestMethod]
+        public async Task <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputActionType #> nullAction = null;
+            <#= inputActionType #> testAction = <#= testAction #>;
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
+
+#nullable enable
+
+<#
+                if (stateful)
+                {
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>> invoke = (a, t, n, e, d) =>
+            {
+                object state = new object();
+                Reliably.InvokeAsync(obj => { Assert.AreSame(obj, state); a(); }, state<#= optionalTokenArg #>, n, e, d.Invoke).Wait();
+            };
+<#
+                }
+                else
+                {
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>>       invoke      = (a, t, n, e, d)    => Reliably.InvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke).Wait();
+<#
+                }
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertError = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => Reliably.InvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke), x).Wait();
+            Invoke_Action_Success         (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_Failure         (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_EventualSuccess (invoke     , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_EventualFailure (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_RetriesExhausted(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                if (interruptable)
+                {
+#>
+
+            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                }
+#>
+        }
+
+<#
+                }
+            }
+        }
+#>
+        #endregion
+
+<#
+    if (!async)
+    {
+#>
+        #region TryInvoke
+
+<#
+        foreach (bool stateful in new bool[2] { false, true })
+        {
+            string inputActionType        = stateful ? "Action<object>"          : "Action";
+            string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
+            string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
+            string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+
+            foreach (bool interruptable in new bool[2] { false, true })
+            {
+                string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
+                string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+
+                foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+                {
+                    string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler"     : "DelayHandler";
+                    string delayInputTypeParam  = useComplexDelayHandler ? "int, Exception"          : "int";
+                    string delayInputArgs       = useComplexDelayHandler ? "(i, e)"                  : "i";
+                    string noDelay              = useComplexDelayHandler ? "(i, e) => TimeSpan.Zero" : "DelayPolicy.None";
+                    string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
+                    string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
+
+                    string testName = "TryInvoke_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+#>
+        [TestMethod]
+        public void <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputActionType #> nullAction = null;
+            <#= inputActionType #> testAction = <#= testAction #>;
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
+
+#nullable enable
+
+<#
+                    if (stateful)
+                    {
+#>
+            Func<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, bool> tryInvoke = (a, t, n, e, d) =>
+            {
+                object state = new object();
+                return Reliably.TryInvoke(obj => { Assert.AreSame(obj, state); a(); }, state<#= optionalTokenArg #>, n, e, d.Invoke);
+            };
+<#
+                    }
+                    else
+                    {
+#>
+            Func  <Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, bool> tryInvoke = (a, t, n, e, d) => Reliably.TryInvoke(a<#= optionalTokenArg #>, n, e, d.Invoke);
+<#
+                    }
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => Assert.IsTrue (tryInvoke(a, t, n, e, d));
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d));
+<#
+                    if (interruptable)
+                    {
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsException(() => tryInvoke(a, t, n, e, d), x);
+<#
+                    }
+#>
+            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                    if (interruptable)
+                    {
+#>
+
+            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                    }
+#>
+        }
+
+<#
+                }
+            }
+        }
+#>
+        #endregion
+<#
+    }
+#>
+
+        #region TryInvokeAsync
+<#
+    foreach (bool stateful in new bool[2] { false, true })
+    {
+        string inputActionType        = stateful ? "Action<object>"          : "Action";
+        string testAction             = stateful ? "(s) => Operation.Null()" : "Operation.Null";
+        string optionalStateArg       = stateful ? ", new object()"          : string.Empty;
+        string optionalStatefulSuffix = stateful ? "_Stateful"               : string.Empty;
+
+        foreach (bool interruptable in new bool[2] { false, true })
+        {
+            string optionalTokenArg    = interruptable ? ", t"            : string.Empty;
+            string optionalTokenSuffix = interruptable ? "_Interruptable" : string.Empty;
+
+            foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+            {
+                string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler"     : "DelayHandler";
+                string delayInputTypeParam  = useComplexDelayHandler ? "int, Exception"          : "int";
+                string delayInputArgs       = useComplexDelayHandler ? "(i, e)"                  : "i";
+                string noDelay              = useComplexDelayHandler ? "(i, e) => TimeSpan.Zero" : "DelayPolicy.None";
+                string delayCallExpectation = useComplexDelayHandler ? "ExceptionAsc(t)"         : "Asc()";
+                string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"    : "_DelayHandler";
+
+                string testName = "TryInvokeAsync_Action" + optionalStatefulSuffix + optionalTokenSuffix + delaySuffix;
+#>
+
+        [TestMethod]
+        public async Task <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputActionType #> nullAction = null;
+            <#= inputActionType #> testAction = <#= testAction #>;
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction<#= optionalStateArg #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateArg #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateArg #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
+
+#nullable enable
+
+<#
+                if (stateful)
+                {
+#>
+            Func<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<bool>> tryInvoke = (a, t, n, e, d) =>
+            {
+                object state = new object();
+                return Reliably.TryInvokeAsync(obj => { Assert.AreSame(obj, state); a(); }, state<#= optionalTokenArg #>, n, e, d.Invoke);
+            };
+<#
+                }
+                else
+                {
+#>
+            Func<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<bool>> tryInvoke = (a, t, n, e, d)    => Reliably.TryInvokeAsync(a<#= optionalTokenArg #>, n, e, d.Invoke);
+<#
+                }
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => Assert.IsTrue (tryInvoke(a, t, n, e, d).Result);
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
+<#
+                if (interruptable)
+                {
+#>
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
+<#
+                }
+#>
+            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d     => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                if (interruptable)
+                {
+#>
+
+            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                }
+#>
+        }
+
+<#
+                }
+            }
+        }
+#>
+        #endregion
     }
 }
