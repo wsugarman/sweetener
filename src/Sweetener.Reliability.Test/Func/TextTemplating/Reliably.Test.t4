@@ -1,0 +1,613 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Globalization" #>
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #>
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Sweetener.Reliability.Test
+{
+    partial class ReliablyTest
+    {
+<#
+    string optionalAsyncPrefix = async ? "Async"                                  : string.Empty;
+    string basicFuncType       = async ? "Func<Task<string>>"                     : "Func<string>";
+    string statefulFuncType    = async ? "Func<object, Task<string>>"             : "Func<object, string>";
+    string basicTestFunc       = async ? "() => Task.FromResult(\"Hello World\")" : "() => \"Hello World\"";
+    string statefulTestFunc    = async ? "s => Task.FromResult(\"Hello World\")"  : "s => \"Hello World\"";
+
+    if (!async)
+    {
+#>
+        #region Invoke
+
+<#
+        foreach (bool stateful in new bool[2] { false, true })
+        {
+            string inputFuncType          = stateful ? statefulFuncType : basicFuncType;
+            string testFunc               = stateful ? statefulTestFunc : basicTestFunc;
+            string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+            string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
+
+            foreach (bool interruptable in new bool[2] { false, true })
+            {
+                string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+                string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+                string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+
+                foreach (bool includeResultPolicy in new bool[2] { false, true })
+                {
+                    string passResultPolicy            = includeResultPolicy.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
+                    string complexDelayCallExpectation = includeResultPolicy ? "AlternatingAsc(r, t)"             : "OnlyExceptionAsc<string>(t)";
+                    string optionalResultPolicyObj     = includeResultPolicy ? ", ResultPolicy.Default<string>()" : string.Empty;
+                    string optionalResultPolicyArg     = includeResultPolicy ? ", r"                              : string.Empty;
+                    string optionalResultPolicySuffix  = includeResultPolicy ? "_ResultPolicy"                    : string.Empty;
+
+                    foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+                    {
+                        string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler<string>" : "DelayHandler";
+                        string delayInputTypeParam  = useComplexDelayHandler ? "int, string, Exception?"     : "int";
+                        string delayInputArgs       = useComplexDelayHandler ? "(i, r, e)"                   : "i";
+                        string noDelay              = useComplexDelayHandler ? "(i, r, e) => TimeSpan.Zero"  : "DelayPolicy.None";
+                        string delayCallExpectation = useComplexDelayHandler ? complexDelayCallExpectation   : "Asc()";
+                        string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"        : "_DelayHandler";
+
+                        string testName = "Invoke_" + optionalAsyncPrefix + "Func" + optionalStatefulSuffix + optionalTokenSuffix + optionalResultPolicySuffix + delaySuffix;
+#>
+        [TestMethod]
+        public void <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputFuncType #> nullFunc = null;
+            <#= inputFuncType #> testFunc = <#= testFunc #>;
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>));
+<#
+                        if (includeResultPolicy)
+                        {
+#>
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                          , ExceptionPolicy.Transient, <#= noDelay #>));
+<#
+                        }
+#>
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null));
+
+#nullable enable
+
+<#
+                        if (stateful)
+                        {
+#>
+            Func<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> invoke = (f, t, n, r, e, d) =>
+            {
+                object state = new object();
+                return Reliably.Invoke(obj => { Assert.AreSame(obj, state); return f(); }, state<#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke);
+            };
+<#
+                        }
+                        else
+                        {
+#>
+            Func  <Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> invoke       = (f, t, n, r, e, d)    => Reliably.Invoke(f<#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke);
+<#
+                        }
+#>
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertResult = (f, t, n, r, e, d, x) => Assert.AreEqual(x, invoke(f, t, n, r, e, d));
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertError  = (f, t, n, r, e, d, x) => Assert.That.ThrowsException(() => invoke(f, t, n, r, e, d), x);
+
+            // Success
+            Invoke_Func_Success                   (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
+            Invoke_Func_EventualSuccess           (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                        if (includeResultPolicy)
+                        {
+#>
+
+            // Failure (Result)
+            Invoke_Func_Failure_Result            (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Result    (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_RetriesExhausted_Result   (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                        }
+#>
+
+            // Failure (Exception)
+            Invoke_Func_Failure_Exception         (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Exception (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_RetriesExhausted_Exception(assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                        if (interruptable)
+                        {
+#>
+
+            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                        }
+#>
+        }
+
+<#
+                    }
+                }
+            }
+        }
+#>
+        #endregion
+
+<#
+    }
+#>
+        #region InvokeAsync
+
+<#
+    foreach (bool stateful in new bool[2] { false, true })
+    {
+        string inputFuncType          = stateful ? statefulFuncType   : basicFuncType;
+        string testFunc               = stateful ? statefulTestFunc   : basicTestFunc;
+        string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+        string optionalStateArg       = stateful ? ", state"          : string.Empty;
+        string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
+
+        foreach (bool interruptable in new bool[2] { false, true })
+        {
+            string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+            string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+            string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+
+            foreach (bool includeResultPolicy in new bool[2] { false, true })
+            {
+                string passResultPolicy            = includeResultPolicy.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
+                string complexDelayCallExpectation = includeResultPolicy ? "AlternatingAsc(r, t)"             : "OnlyExceptionAsc<string>(t)";
+                string optionalResultPolicyObj     = includeResultPolicy ? ", ResultPolicy.Default<string>()" : string.Empty;
+                string optionalResultPolicyArg     = includeResultPolicy ? ", r"                              : string.Empty;
+                string optionalResultPolicySuffix  = includeResultPolicy ? "_ResultPolicy"                    : string.Empty;
+
+                foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+                {
+                    string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler<string>" : "DelayHandler";
+                    string delayInputTypeParam  = useComplexDelayHandler ? "int, string, Exception?"     : "int";
+                    string delayInputArgs       = useComplexDelayHandler ? "(i, r, e)"                   : "i";
+                    string noDelay              = useComplexDelayHandler ? "(i, r, e) => TimeSpan.Zero"  : "DelayPolicy.None";
+                    string delayCallExpectation = useComplexDelayHandler ? complexDelayCallExpectation   : "Asc()";
+                    string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"        : "_DelayHandler";
+                
+                    string testName = "InvokeAsync_" + optionalAsyncPrefix + "Func" + optionalStatefulSuffix + optionalTokenSuffix + optionalResultPolicySuffix + delaySuffix;
+#>
+        [TestMethod]
+        public async Task <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputFuncType #> nullFunc = null;
+            <#= inputFuncType #> testFunc = <#= testFunc #>;
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+<#
+                    if (includeResultPolicy)
+                    {
+#>
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                          , ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+<#
+                    }
+#>
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
+
+<#
+                    if (async)
+                    {
+#>
+            <#= inputFuncType #> nullTaskFunc = <#= stateful ? "s" : "()" #> => null;
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+
+<#
+                    }
+#>
+#nullable enable
+
+<#
+                    if (async || stateful)
+                    {
+#>
+            Func<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<string>> invoke = (f, t, n, r, e, d) =>
+            {
+<#
+                        if (stateful)
+                        {
+#>
+                object state = new object();
+<#
+                        }
+#>
+                <#= inputFuncType #> inputFunc = (<#= stateful ? "obj" : string.Empty #>) =>
+                {
+<#
+                        if (stateful)
+                        {
+#>
+                    Assert.AreSame(obj, state);
+<#
+                        }
+                        
+                        if (async)
+                        {
+#>
+                    return Task.FromResult(f());
+<#
+                        }
+                        else
+                        {
+#>
+                    return f();
+<#
+                        }
+#>
+                };
+
+                return Reliably.InvokeAsync(inputFunc<#= optionalStateArg #><#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke);
+            };
+<#
+                    }
+                    else
+                    {
+#>
+            Func  <Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<string>> invoke = (f, t, n, r, e, d)    => Reliably.InvokeAsync(f<#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke);
+<#
+                    }
+#>
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertResult = (f, t, n, r, e, d, x) => Assert.AreEqual(x, invoke(f, t, n, r, e, d).Result);
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertError  = (f, t, n, r, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(f, t, n, r, e, d), x).Wait();
+
+            // Success
+            Invoke_Func_Success                   (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
+            Invoke_Func_EventualSuccess           (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                    if (includeResultPolicy)
+                    {
+#>
+
+            // Failure (Result)
+            Invoke_Func_Failure_Result            (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Result    (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_RetriesExhausted_Result   (assertResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                    }
+#>
+
+            // Failure (Exception)
+            Invoke_Func_Failure_Exception         (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Exception (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_RetriesExhausted_Exception(assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                    if (interruptable)
+                    {
+#>
+
+            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                    }
+#>
+        }
+
+<#
+                }
+            }
+        }
+    }
+#>
+        #endregion
+
+<#
+    if (!async)
+    {
+#>
+        #region TryInvoke
+
+<#
+        foreach (bool stateful in new bool[2] { false, true })
+        {
+            string inputFuncType          = stateful ? statefulFuncType : basicFuncType;
+            string testFunc               = stateful ? statefulTestFunc : basicTestFunc;
+            string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+            string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
+
+            foreach (bool interruptable in new bool[2] { false, true })
+            {
+                string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+                string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+                string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+
+                foreach (bool includeResultPolicy in new bool[2] { false, true })
+                {
+                    string passResultPolicy            = includeResultPolicy.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
+                    string complexDelayCallExpectation = includeResultPolicy ? "AlternatingAsc(r, t)"             : "OnlyExceptionAsc<string>(t)";
+                    string optionalResultPolicyObj     = includeResultPolicy ? ", ResultPolicy.Default<string>()" : string.Empty;
+                    string optionalResultPolicyArg     = includeResultPolicy ? ", r"                              : string.Empty;
+                    string optionalResultPolicySuffix  = includeResultPolicy ? "_ResultPolicy"                    : string.Empty;
+
+                    foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+                    {
+                        string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler<string>" : "DelayHandler";
+                        string delayInputTypeParam  = useComplexDelayHandler ? "int, string, Exception?"     : "int";
+                        string delayInputArgs       = useComplexDelayHandler ? "(i, r, e)"                   : "i";
+                        string noDelay              = useComplexDelayHandler ? "(i, r, e) => TimeSpan.Zero"  : "DelayPolicy.None";
+                        string delayCallExpectation = useComplexDelayHandler ? complexDelayCallExpectation   : "Asc()";
+                        string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"        : "_DelayHandler";
+
+                        string testName = "TryInvoke_" + optionalAsyncPrefix + "Func" + optionalStatefulSuffix + optionalTokenSuffix + optionalResultPolicySuffix + delaySuffix;
+#>
+        [TestMethod]
+        public void <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputFuncType #> nullFunc = null;
+            <#= inputFuncType #> testFunc = <#= testFunc #>;
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>, out string _));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>, out string _));
+<#
+                        if (includeResultPolicy)
+                        {
+#>
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                          , ExceptionPolicy.Transient, <#= noDelay #>, out string _));
+<#
+                        }
+#>
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>, out string _));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null, out string _));
+
+#nullable enable
+
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertSuccess          = (f, t, n, r, e, d, x) => { Assert.IsTrue (TryInvoke(f, t, n, r, e, d, out string a)); Assert.AreEqual(x      , a); };
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertFailureResult    = (f, t, n, r, e, d, x) => { Assert.IsFalse(TryInvoke(f, t, n, r, e, d, out string a)); Assert.AreEqual(default, a); };
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertFailureException = (f, t, n, r, e, d, x) => { Assert.IsFalse(TryInvoke(f, t, n, r, e, d, out string a)); Assert.AreEqual(default, a); };
+<#
+                        if (interruptable)
+                        {
+#>
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertError            = (f, t, n, r, e, d, x) => Assert.That.ThrowsException(() => TryInvoke(f, t, n, r, e, d, out string _), x);
+<#
+                        }
+#>
+
+            // Success
+            Invoke_Func_Success                   (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
+            Invoke_Func_EventualSuccess           (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                        if (includeResultPolicy)
+                        {
+#>
+
+            // Failure (Result)
+            Invoke_Func_Failure_Result            (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Result    (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_RetriesExhausted_Result   (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                        }
+#>
+
+            // Failure (Exception)
+            Invoke_Func_Failure_Exception         (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Exception (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_RetriesExhausted_Exception(assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                        if (interruptable)
+                        {
+#>
+
+            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                        }
+#>
+
+            static bool TryInvoke(Func<string> f, CancellationToken t, int n, ResultHandler<string> r, ExceptionHandler e, Func<<#= delayInputTypeParam #>, TimeSpan> d, out string x)
+            {
+<#
+                        if (stateful)
+                        {
+#>
+                object state = new object();
+                return Reliably.TryInvoke(obj => { Assert.AreSame(obj, state); return f(); }, state<#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke, out x);
+<#
+                        }
+                        else
+                        {
+#>
+                return Reliably.TryInvoke(f<#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke, out x);
+<#
+                        }
+#>
+            }
+        }
+
+<#
+                    }
+                }
+            }
+        }
+#>
+        #endregion
+
+<#
+    }
+#>
+        #region TryInvokeAsync
+
+<#
+    foreach (bool stateful in new bool[2] { false, true })
+    {
+        string inputFuncType          = stateful ? statefulFuncType : basicFuncType;
+        string testFunc               = stateful ? statefulTestFunc : basicTestFunc;
+        string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
+        string optionalStateArg       = stateful ? ", state"          : string.Empty;
+        string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
+
+        foreach (bool interruptable in new bool[2] { false, true })
+        {
+            string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
+            string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
+            string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+
+            foreach (bool includeResultPolicy in new bool[2] { false, true })
+            {
+                string passResultPolicy            = includeResultPolicy.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
+                string complexDelayCallExpectation = includeResultPolicy ? "AlternatingAsc(r, t)"             : "OnlyExceptionAsc<string>(t)";
+                string optionalResultPolicyObj     = includeResultPolicy ? ", ResultPolicy.Default<string>()" : string.Empty;
+                string optionalResultPolicyArg     = includeResultPolicy ? ", r"                              : string.Empty;
+                string optionalResultPolicySuffix  = includeResultPolicy ? "_ResultPolicy"                    : string.Empty;
+
+                foreach (bool useComplexDelayHandler in new bool[2] { false, true })
+                {
+                    string handlerType          = useComplexDelayHandler ? "ComplexDelayHandler<string>" : "DelayHandler";
+                    string delayInputTypeParam  = useComplexDelayHandler ? "int, string, Exception?"     : "int";
+                    string delayInputArgs       = useComplexDelayHandler ? "(i, r, e)"                   : "i";
+                    string noDelay              = useComplexDelayHandler ? "(i, r, e) => TimeSpan.Zero"  : "DelayPolicy.None";
+                    string delayCallExpectation = useComplexDelayHandler ? complexDelayCallExpectation   : "Asc()";
+                    string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"        : "_DelayHandler";
+
+                    string testName = "TryInvokeAsync_" + optionalAsyncPrefix + "Func" + optionalStatefulSuffix + optionalTokenSuffix + optionalResultPolicySuffix + delaySuffix;
+#>
+        [TestMethod]
+        public async Task <#= testName #>()
+        {
+#nullable disable
+
+            <#= inputFuncType #> nullFunc = null;
+            <#= inputFuncType #> testFunc = <#= testFunc #>;
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+<#
+                    if (includeResultPolicy)
+                    {
+#>
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                          , ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+<#
+                    }
+#>
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
+
+<#
+                    if (async)
+                    {
+#>
+            <#= inputFuncType #> nullTaskFunc = <#= stateful ? "s" : "()" #> => null;
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+
+<#
+                    }
+#>
+#nullable enable
+
+<#
+                    if (async || stateful)
+                    {
+#>
+            Func<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<Optional<string>>> tryInvoke = (f, t, n, r, e, d) =>
+            {
+<#
+                        if (stateful)
+                        {
+#>
+                object state = new object();
+<#
+                        }
+#>
+                <#= inputFuncType #> inputFunc = (<#= stateful ? "obj" : string.Empty #>) =>
+                {
+<#
+                        if (stateful)
+                        {
+#>
+                    Assert.AreSame(obj, state);
+<#
+                        }
+                    
+                        if (async)
+                        {
+#>
+                    return Task.FromResult(f());
+<#
+                        }
+                        else
+                        {
+#>
+                    return f();
+<#
+                        }
+#>
+                };
+
+                return Reliably.TryInvokeAsync(inputFunc<#= optionalStateArg #><#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke);
+            };
+<#
+                    }
+                    else
+                    {
+#>
+            Func  <Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Task<Optional<string>>> tryInvoke = (f, t, n, r, e, d)    => Reliably.TryInvokeAsync(f<#= optionalTokenArg #>, n<#= optionalResultPolicyArg #>, e, d.Invoke);
+<#
+                    }
+#>
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertSuccess          = (f, t, n, r, e, d, x) => { Assert.IsTrue(tryInvoke(f, t, n, r, e, d).Result.TryGetValue(out string? actual)); Assert.AreEqual(x, actual); };
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertFailureResult    = (f, t, n, r, e, d, x) => Assert.IsFalse(tryInvoke(f, t, n, r, e, d).Result.HasValue);
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertFailureException = (f, t, n, r, e, d, x) => Assert.IsFalse(tryInvoke(f, t, n, r, e, d).Result.HasValue);
+<#
+                    if (interruptable)
+                    {
+#>
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertError            = (f, t, n, r, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(f, t, n, r, e, d), x).Wait();
+<#
+                    }
+#>
+
+            // Success
+            Invoke_Func_Success                   (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
+            Invoke_Func_EventualSuccess           (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                    if (includeResultPolicy)
+                    {
+#>
+
+            // Failure (Result)
+            Invoke_Func_Failure_Result            (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Result    (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_RetriesExhausted_Result   (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+<#
+                    }
+#>
+
+            // Failure (Exception)
+            Invoke_Func_Failure_Exception         (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Exception (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_RetriesExhausted_Exception(assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                    if (interruptable)
+                    {
+#>
+
+            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+<#
+                    }
+#>
+        }
+
+<#
+                }
+            }
+        }
+    }
+#>
+        #endregion
+    }
+}

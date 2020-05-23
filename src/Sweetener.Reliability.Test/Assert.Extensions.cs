@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,6 +10,10 @@ namespace Sweetener.Reliability.Test
         public static void ThrowsException<T>(this Assert assert, Action action, bool allowedDerivedTypes = false)
             where T : Exception
             => ThrowsException(assert, action, typeof(T), allowedDerivedTypes);
+
+        public static void ThrowsException<T>(this Assert assert, Func<object> func, bool allowedDerivedTypes = false)
+            where T : Exception
+            => ThrowsException<T>(assert, () => { func(); }, allowedDerivedTypes);
 
         public static void ThrowsException(this Assert assert, Action action, Type exceptionType, bool allowedDerivedTypes = false)
         {
@@ -41,6 +44,9 @@ namespace Sweetener.Reliability.Test
                     Assert.AreEqual(exceptionType, e!.GetType());
             }
         }
+
+        public static void ThrowsException(this Assert assert, Func<object> func, Type exceptionType, bool allowedDerivedTypes = false)
+            => ThrowsException(assert, () => { func(); }, exceptionType, allowedDerivedTypes);
 
         public static Task ThrowsExceptionAsync<T>(this Assert assert, Func<Task> action, bool allowedDerivedTypes = false)
             where T : Exception

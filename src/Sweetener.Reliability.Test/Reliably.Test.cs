@@ -264,7 +264,8 @@ namespace Sweetener.Reliability.Test
         private void Invoke_Func_Success<TDelayHandler, TDelayHandlerProxy>(
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, string> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
-            Action<TDelayHandlerProxy> addDelayObservation)
+            Action<TDelayHandlerProxy> addDelayObservation,
+            bool passResultHandler)
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
@@ -286,8 +287,9 @@ namespace Sweetener.Reliability.Test
                 assertInvoke(func.Invoke, tokenSource.Token, 42, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, "Success");
 
             // Validate the number of calls
+            int x = passResultHandler ? 1 : 0;
             Assert.AreEqual(1, func            .Calls);
-            Assert.AreEqual(1, resultHandler   .Calls);
+            Assert.AreEqual(x, resultHandler   .Calls);
             Assert.AreEqual(0, exceptionHandler.Calls);
             Assert.AreEqual(0, delayHandler    .Calls);
         }
@@ -367,10 +369,10 @@ namespace Sweetener.Reliability.Test
         #region Invoke_Func_EventualSuccess
 
         private void Invoke_Func_EventualSuccess<TDelayHandler, TDelayHandlerProxy>(
-            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler> assertInvoke,
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, string> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, string, Type> addDelayObservation,
-            bool passResultHandler = true)
+            bool passResultHandler)
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
@@ -401,7 +403,7 @@ namespace Sweetener.Reliability.Test
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(func.Invoke, tokenSource.Token, 42, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy);
+                assertInvoke(func.Invoke, tokenSource.Token, 42, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, "Success");
 
             // Validate the number of calls
             int x = passResultHandler ? 2 : 0;
@@ -463,7 +465,7 @@ namespace Sweetener.Reliability.Test
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, Type> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, string, Type> addDelayObservation,
-            bool passResultHandler = true)
+            bool passResultHandler)
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
@@ -527,7 +529,7 @@ namespace Sweetener.Reliability.Test
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(func.Invoke, tokenSource.Token, 42, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, "Try Again");
+                assertInvoke(func.Invoke, tokenSource.Token, 3, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, "Try Again");
 
             // Validate the number of calls
             Assert.AreEqual(4, func            .Calls);
@@ -544,7 +546,7 @@ namespace Sweetener.Reliability.Test
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, Type> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, string, Type> addDelayObservation,
-            bool passResultHandler = true)
+            bool passResultHandler)
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
@@ -567,7 +569,7 @@ namespace Sweetener.Reliability.Test
 
             // Invoke
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-                assertInvoke(func.Invoke, tokenSource.Token, 42, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, typeof(IOException));
+                assertInvoke(func.Invoke, tokenSource.Token, 2, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, typeof(IOException));
 
             // Validate the number of calls
             int x = passResultHandler ? 1 : 0;
@@ -586,7 +588,7 @@ namespace Sweetener.Reliability.Test
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, Type> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, string, Type> addDelayObservation,
-            bool passResultHandler = true)
+            bool passResultHandler)
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
@@ -641,7 +643,7 @@ namespace Sweetener.Reliability.Test
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, Type> assertInvoke,
             Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
             Action<TDelayHandlerProxy, string, Type> addDelayObservation,
-            bool passResultHandler = true)
+            bool passResultHandler)
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {

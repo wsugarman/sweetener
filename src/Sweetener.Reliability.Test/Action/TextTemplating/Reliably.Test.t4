@@ -105,7 +105,7 @@ namespace Sweetener.Reliability.Test
             }
         }
 #>
-    #endregion
+        #endregion
 
 <#
     }
@@ -229,9 +229,9 @@ namespace Sweetener.Reliability.Test
         }
 
 <#
-                }
             }
         }
+    }
 #>
         #endregion
 
@@ -463,9 +463,9 @@ namespace Sweetener.Reliability.Test
         }
 
 <#
-                }
             }
         }
+    }
 #>
         #endregion
     }

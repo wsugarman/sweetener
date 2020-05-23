@@ -17,10 +17,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -41,10 +41,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -65,10 +65,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -92,10 +92,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -119,10 +119,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -147,10 +147,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -175,10 +175,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -206,10 +206,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -230,7 +230,7 @@ namespace Sweetener.Reliability.Test
             Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
         }
 
-    #endregion
+        #endregion
 
         #region InvokeAsync
 
@@ -241,10 +241,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -266,10 +266,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -291,10 +291,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -319,10 +319,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -347,10 +347,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -382,10 +382,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -417,10 +417,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -455,10 +455,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -497,10 +497,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -522,10 +522,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -547,10 +547,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -576,10 +576,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -605,10 +605,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -634,10 +634,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -663,10 +663,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, null                                        , DelayPolicy.None));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, null                     , DelayPolicy.None));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null));
 
 #nullable enable
 
@@ -696,10 +696,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null));
 
 #nullable enable
 
@@ -733,10 +733,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -758,10 +758,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -783,10 +783,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -812,10 +812,10 @@ namespace Sweetener.Reliability.Test
 
             Action nullAction = null;
             Action testAction = Operation.Null;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -841,10 +841,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -876,10 +876,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -911,10 +911,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, null                                        , DelayPolicy.None)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (DelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, null                     , DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -950,10 +950,10 @@ namespace Sweetener.Reliability.Test
 
             Action<object> nullAction = null;
             Action<object> testAction = s => Operation.Null();
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, null                                        , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (ComplexDelayHandler)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, -3, ExceptionPolicy.Transient, (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, null                     , (i, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler)null)).ConfigureAwait(false);
 
 #nullable enable
 
