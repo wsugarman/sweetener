@@ -56,10 +56,10 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, <#= noDelay #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Transient, <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                     , <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.Invoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, (<#= handlerType #>)null));
 
 #nullable enable
 
@@ -145,11 +145,21 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                     , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
 
+<#
+                if (async)
+                {
+#>
+            <#= inputActionType #> nullTaskAction = <#= stateful ? "s" : "()" #> => null;
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+
+<#
+                }
+#>
 #nullable enable
 
 <#
@@ -263,10 +273,10 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>));
-            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, <#= noDelay #>));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Transient, <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                     , <#= noDelay #>));
+            Assert.ThrowsException<ArgumentNullException      >(() => Reliably.TryInvoke(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, (<#= handlerType #>)null));
 
 #nullable enable
 
@@ -361,11 +371,21 @@ namespace Sweetener.Reliability.Test
 
             <#= inputActionType #> nullAction = null;
             <#= inputActionType #> testAction = <#= testAction #>;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Fail<OutOfMemoryException>(), <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                                        , <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Fail<OutOfMemoryException>(), (<#= handlerType #>)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, -3, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                     , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
 
+<#
+                if (async)
+                {
+#>
+            <#= inputActionType #> nullTaskAction = <#= stateful ? "s" : "()" #> => null;
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskAction<#= optionalStateObj #><#= optionalTokenObj #>, 10, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+
+<#
+                }
+#>
 #nullable enable
 
 <#
