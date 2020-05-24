@@ -75,6 +75,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ReliableFunc.Test.tt</DependentUpon>
     </Compile>
+    <Compile Update="Action\Reliably.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Action\Reliably.Async.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.Async.Test.tt</DependentUpon>
+    </Compile>
     <Compile Update="Expectations\Arguments.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -84,6 +94,16 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Expect.Arguments.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\Reliably.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.Test.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Func\Reliably.Async.Test.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Reliably.Async.Test.tt</DependentUpon>
     </Compile>
     <Compile Update="Policies\Exception\ExceptionPolicy.Fail.Test.cs">
       <DesignTime>True</DesignTime>
@@ -129,6 +149,14 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableAsyncAction.Test.tt.out</LastGenOutput>
     </None>
+    <None Update="Action\Reliably.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.Test.cs</LastGenOutput>
+    </None>
+    <None Update="Action\Reliably.Async.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.Async.Test.cs</LastGenOutput>
+    </None>
     <None Update="Expectations\Arguments.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Arguments.cs</LastGenOutput>
@@ -156,6 +184,14 @@
     <None Update="Func\ReliableFunc.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReliableFunc.Test.tt.out</LastGenOutput>
+    </None>
+    <None Update="Func\Reliably.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.Test.cs</LastGenOutput>
+    </None>
+    <None Update="Func\Reliably.Async.Test.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Reliably.Async.Test.cs</LastGenOutput>
     </None>
     <None Update="Policies\Exception\ExceptionPolicy.Fail.Test.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
