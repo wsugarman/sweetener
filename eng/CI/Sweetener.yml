@@ -12,6 +12,7 @@ trigger:
     - eng/Templates/*
     - src/AssemblyInfo.Common.cs
     - src/Directory.Build.props
+    - src/Directory.Build.targets
     - src/Sweetener.sln
     - src/Sweetener/*
 
