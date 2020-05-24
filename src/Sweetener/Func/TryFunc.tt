@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Sweetener
 {
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 4; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
         string arguments      = GetArguments     (parameterCount);

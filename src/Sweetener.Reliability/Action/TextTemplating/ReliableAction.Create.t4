@@ -6,7 +6,7 @@
     // Assume a boolean variable called "async" has been previously defined!
     string optionalAsync = async ? "Async" : string.Empty;
 
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxReliabilityTypeArguments; parameterCount++)
     {
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
         string arguments      = GetArguments (parameterCount);

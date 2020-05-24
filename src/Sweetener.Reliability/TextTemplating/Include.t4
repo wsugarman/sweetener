@@ -2,6 +2,7 @@
 <#@ import namespace="System" #>
 <#@ include file="$(SrcDirectory)TextTemplating\Include.t4" #><#+
 
+    const int MaxReliabilityTypeArguments = 8;
     const int MaxExceptionParameters = 8;
 
     public void PrintParamsXmlDoc(int parameterCount, int indent)

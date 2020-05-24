@@ -51,38 +51,6 @@ namespace Sweetener.Reliability
         public static Action<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8>(this Action<T1, T2, T3, T4, T5, T6, T7, T8>? action)
             => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-
-        [return: NotNullIfNotNull("action")]
-        public static Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>? action)
-            => action == null ? (Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, token) => action!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
-
         #endregion
 
         #region Func
@@ -122,38 +90,6 @@ namespace Sweetener.Reliability
         [return: NotNullIfNotNull("func")]
         public static Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>? func)
             => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-
-        [return: NotNullIfNotNull("func")]
-        public static Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken, TResult>? IgnoreInterruption<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>(this Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>? func)
-            => func == null ? (Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, CancellationToken, TResult>?)null : (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, token) => func!(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16);
 
         #endregion
     }

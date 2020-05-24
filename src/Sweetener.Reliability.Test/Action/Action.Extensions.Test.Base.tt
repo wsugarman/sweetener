@@ -3,7 +3,7 @@
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
 <#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxReliabilityTypeArguments; parameterCount++)
     {
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
         string argumentValues = GetArgumentValues(parameterCount);
