@@ -151,6 +151,7 @@ namespace Sweetener.Reliability.Test
     {
         string inputFuncType          = stateful ? statefulFuncType   : basicFuncType;
         string testFunc               = stateful ? statefulTestFunc   : basicTestFunc;
+        string ctorTypeArgs           = stateful ? "<object, string>" : "<string>";
         string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
         string optionalStateArg       = stateful ? ", state"          : string.Empty;
         string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
@@ -177,6 +178,10 @@ namespace Sweetener.Reliability.Test
                     string noDelay              = useComplexDelayHandler ? "(i, r, e) => TimeSpan.Zero"  : "DelayPolicy.None";
                     string delayCallExpectation = useComplexDelayHandler ? complexDelayCallExpectation   : "Asc()";
                     string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"        : "_DelayHandler";
+
+                    // Our ctor can be ambiguous between Func<Task<T>> and Func<T> under specific circumstances
+                    string optionalCtorTypeArgs = async && useComplexDelayHandler && !includeResultPolicy ? ctorTypeArgs : string.Empty;
+                    string optionalCtorSpacing  = new string(' ', optionalCtorTypeArgs.Length);
                 
                     string testName = "InvokeAsync_" + optionalAsyncPrefix + "Func" + optionalStatefulSuffix + optionalTokenSuffix + optionalResultPolicySuffix + delaySuffix;
 #>
@@ -187,25 +192,25 @@ namespace Sweetener.Reliability.Test
 
             <#= inputFuncType #> nullFunc = null;
             <#= inputFuncType #> testFunc = <#= testFunc #>;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 <#
                     if (includeResultPolicy)
                     {
 #>
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                          , ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, <#= async ? "(ResultHandler<string>)null   " : "null                          " #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 <#
                     }
 #>
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.InvokeAsync<#= optionalCtorSpacing #>(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
 
 <#
                     if (async)
                     {
 #>
             <#= inputFuncType #> nullTaskFunc = <#= stateful ? "s" : "()" #> => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 
 <#
                     }
@@ -447,6 +452,7 @@ namespace Sweetener.Reliability.Test
     {
         string inputFuncType          = stateful ? statefulFuncType : basicFuncType;
         string testFunc               = stateful ? statefulTestFunc : basicTestFunc;
+        string ctorTypeArgs           = stateful ? "<object, string>" : "<string>";
         string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
         string optionalStateArg       = stateful ? ", state"          : string.Empty;
         string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
@@ -474,6 +480,10 @@ namespace Sweetener.Reliability.Test
                     string delayCallExpectation = useComplexDelayHandler ? complexDelayCallExpectation   : "Asc()";
                     string delaySuffix          = useComplexDelayHandler ? "_ComplexDelayHandler"        : "_DelayHandler";
 
+                    // Our ctor can be ambiguous between Func<Task<T>> and Func<T> under specific circumstances
+                    string optionalCtorTypeArgs = async && useComplexDelayHandler && !includeResultPolicy ? ctorTypeArgs : string.Empty;
+                    string optionalCtorSpacing  = new string(' ', optionalCtorTypeArgs.Length);
+
                     string testName = "TryInvokeAsync_" + optionalAsyncPrefix + "Func" + optionalStatefulSuffix + optionalTokenSuffix + optionalResultPolicySuffix + delaySuffix;
 #>
         [TestMethod]
@@ -483,25 +493,25 @@ namespace Sweetener.Reliability.Test
 
             <#= inputFuncType #> nullFunc = null;
             <#= inputFuncType #> testFunc = <#= testFunc #>;
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync<#= optionalCtorTypeArgs #>(nullFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => Reliably.TryInvokeAsync<#= optionalCtorTypeArgs #>(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, -3<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 <#
                     if (includeResultPolicy)
                     {
 #>
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, null                          , ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10, <#= async ? "(ResultHandler<string>)null   " : "null                          " #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 <#
                     }
 #>
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>)).ConfigureAwait(false);
-            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync<#= optionalCtorTypeArgs #>(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, null                     , <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync<#= optionalCtorSpacing #>(testFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, (<#= handlerType #>)null)).ConfigureAwait(false);
 
 <#
                     if (async)
                     {
 #>
             <#= inputFuncType #> nullTaskFunc = <#= stateful ? "s" : "()" #> => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 
 <#
                     }
