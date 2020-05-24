@@ -204,6 +204,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             TResult result;
             int attempt = 0;
 
@@ -216,7 +219,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 Task.Delay(delayHandler(attempt, default, e), cancellationToken).Wait();
@@ -441,6 +444,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             TResult result;
             int attempt = 0;
 
@@ -453,7 +459,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 Task.Delay(delayHandler(attempt, default, e), cancellationToken).Wait();
@@ -686,6 +692,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             TResult result;
             int attempt = 0;
 
@@ -698,7 +707,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, default, e), cancellationToken).ConfigureAwait(false);
@@ -943,6 +952,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             TResult result;
             int attempt = 0;
 
@@ -955,7 +967,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, default, e), cancellationToken).ConfigureAwait(false);
@@ -1224,6 +1236,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -1235,7 +1250,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
+                if (e is OperationCanceledException)
                     throw;
 
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
@@ -1530,6 +1545,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -1541,7 +1559,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
+                if (e is OperationCanceledException)
                     throw;
 
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
@@ -1788,6 +1806,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -1800,7 +1821,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
+                if (e is OperationCanceledException)
                     throw;
 
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
@@ -2058,6 +2079,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -2070,7 +2094,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
+                if (e is OperationCanceledException)
                     throw;
 
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))

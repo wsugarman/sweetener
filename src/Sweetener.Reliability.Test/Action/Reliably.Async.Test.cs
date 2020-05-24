@@ -40,11 +40,13 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -77,11 +79,13 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         [TestMethod]
@@ -114,14 +118,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -154,14 +159,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         [TestMethod]
@@ -196,11 +202,13 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -235,11 +243,13 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         [TestMethod]
@@ -274,14 +284,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -316,14 +327,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => invoke(a, t, n, e, d).Wait();
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => invoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         #endregion
@@ -359,12 +371,15 @@ namespace Sweetener.Reliability.Test
             };
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => Assert.IsTrue (tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -396,12 +411,15 @@ namespace Sweetener.Reliability.Test
             };
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => Assert.IsTrue (tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         [TestMethod]
@@ -435,14 +453,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -476,14 +495,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         [TestMethod]
@@ -517,12 +537,15 @@ namespace Sweetener.Reliability.Test
             };
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => Assert.IsTrue (tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -556,12 +579,15 @@ namespace Sweetener.Reliability.Test
             };
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>>       assertSuccess = (a, t, n, e, d)    => Assert.IsTrue (tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
+            Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         [TestMethod]
@@ -597,14 +623,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, TimeSpan>(i => t), (d, t) => d.Invoking += Expect.Asc());
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, TimeSpan>(i => t),  d     => d.Invoking += Expect.Nothing<int>());
         }
 
         [TestMethod]
@@ -640,14 +667,15 @@ namespace Sweetener.Reliability.Test
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertFailure = (a, t, n, e, d, x) => Assert.IsFalse(tryInvoke(a, t, n, e, d).Result);
             Action<Action, CancellationToken, int, ExceptionHandler, Func<int, Exception, TimeSpan>, Type> assertError   = (a, t, n, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(a, t, n, e, d), x).Wait();
 
-            Invoke_Action_Success         (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_Failure         (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
-            Invoke_Action_EventualSuccess (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_EventualFailure (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_RetriesExhausted(assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-
-            Invoke_Action_Canceled_Delegate(assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
-            Invoke_Action_Canceled_Delay   (assertError, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Success          (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Failure          (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_EventualSuccess  (assertSuccess, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_EventualFailure  (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_RetriesExhausted (assertFailure, t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delegate(assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled_Delay   (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t), (d, t) => d.Invoking += Expect.ExceptionAsc(t));
+            Invoke_Action_Canceled         (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
+            Invoke_Action_Canceled_NoTask  (assertError  , t => new FuncProxy<int, Exception, TimeSpan>((i, e) => t),  d     => d.Invoking += Expect.Nothing<int, Exception>());
         }
 
         #endregion

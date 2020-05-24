@@ -103,6 +103,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -120,7 +123,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                bool isCanceled = t != null ? t.IsCanceled : e is OperationCanceledException;
                 if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
@@ -233,6 +236,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -250,7 +256,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                bool isCanceled = t != null ? t.IsCanceled : e is OperationCanceledException;
                 if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
@@ -369,6 +375,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             Task? t;
             int attempt = 0;
 
@@ -387,7 +396,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                bool isCanceled = t != null ? t.IsCanceled : e is OperationCanceledException;
                 if (isCanceled)
                     throw;
 
@@ -513,6 +522,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             Task? t;
             int attempt = 0;
 
@@ -531,7 +543,7 @@ namespace Sweetener.Reliability
             }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                bool isCanceled = t != null ? t.IsCanceled : e is OperationCanceledException;
                 if (isCanceled)
                     throw;
 
