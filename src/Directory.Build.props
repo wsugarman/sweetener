@@ -50,6 +50,7 @@
       <PropertyGroup>
         <Copyright>Copyright © William Sugarman 2019</Copyright>
         <DelaySign>true</DelaySign>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
