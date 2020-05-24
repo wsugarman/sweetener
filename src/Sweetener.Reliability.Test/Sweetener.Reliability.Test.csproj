@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Sweetener" Version="1.0.0-alpha.1" />
+    <PackageReference Include="Sweetener" Version="1.0.0-alpha.2" />
   </ItemGroup>
 
   <!-- Generated Files -->

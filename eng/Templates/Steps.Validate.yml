@@ -16,7 +16,7 @@ steps:
     packageType: 'sdk'
     version: '3.x'
 
-# Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#363 is fixed
+# Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#854 is fixed
 - task: DotNetCoreCLI@2
   displayName: 'Run Tests and Collect Code Coverage'
   inputs:

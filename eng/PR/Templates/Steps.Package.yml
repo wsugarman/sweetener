@@ -30,7 +30,7 @@ steps:
     command: 'pack'
     packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     configurationToPack: '${{ parameters.BuildConfiguration }}'
-    buildProperties: 'Deterministic=true;ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package)'
+    buildProperties: 'ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package)'
     nugetConfigPath: 'NuGet.config'
     verbosityPack: 'normal'
 

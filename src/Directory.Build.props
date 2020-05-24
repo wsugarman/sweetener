@@ -9,6 +9,7 @@
 
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(ResourcesDirectory)Public.snk</AssemblyOriginatorKeyFile>
+    <Deterministic>true</Deterministic>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <RunSettingsFilePath>$(SrcDirectory)CodeCoverage.runsettings</RunSettingsFilePath>
@@ -36,10 +37,10 @@
 
       <!-- Test Framework Packages -->
       <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="1.2.0" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
+        <PackageReference Include="coverlet.collector" Version="1.2.1" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestAdapter" Version="2.1.1" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.1.1" />
       </ItemGroup>
 
     </When>
@@ -98,7 +99,7 @@
 
       <!-- Library Tools -->
       <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0" PrivateAssets="All" />
       </ItemGroup>
 
     </Otherwise>
