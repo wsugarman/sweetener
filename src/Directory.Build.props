@@ -9,6 +9,7 @@
 
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(ResourcesDirectory)Public.snk</AssemblyOriginatorKeyFile>
+    <Deterministic>true</Deterministic>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <RunSettingsFilePath>$(SrcDirectory)CodeCoverage.runsettings</RunSettingsFilePath>
