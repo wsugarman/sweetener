@@ -13,14 +13,6 @@
         "byte",
         "TimeSpan",
         "uint",
-        "Tuple<bool, ulong>",
-        "DateTime",
-        "ulong",
-        "sbyte",
-        "decimal",
-        "char",
-        "float",
-        "Guid",
     };
 
     static string[] args = new string[]
@@ -33,14 +25,6 @@
         "(byte)255",
         "TimeSpan.FromDays(30)",
         "112U",
-        "Tuple.Create(true, 64UL)",
-        "new DateTime(2019, 10, 06)",
-        "321UL",
-        "(sbyte)-7",
-        "-24.68M",
-        "'!'",
-        "0.1F",
-        "Guid.Parse(\"53710ff0-eaa3-4fac-a068-e5be641d446b\")",
     };
 
     public string GetArgumentValues(int count)

@@ -13,16 +13,6 @@
 
   <!-- Generated Files -->
   <ItemGroup>
-    <Compile Update="Action\Action.cs">
-      <DependentUpon>Action.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
-    <Compile Update="Func\Func.cs">
-      <DependentUpon>Func.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
     <Compile Update="Func\TryFunc.cs">
       <DependentUpon>TryFunc.tt</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -32,14 +22,6 @@
 
   <!-- Text Templating Files -->
   <ItemGroup>
-    <None Update="Action\Action.tt">
-      <LastGenOutput>Action.cs</LastGenOutput>
-      <Generator>TextTemplatingFileGenerator</Generator>
-    </None>
-    <None Update="Func\Func.tt">
-      <LastGenOutput>Func.cs</LastGenOutput>
-      <Generator>TextTemplatingFileGenerator</Generator>
-    </None>
     <None Update="Func\TryFunc.tt">
       <LastGenOutput>TryFunc.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>

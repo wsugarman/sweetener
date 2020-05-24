@@ -13,7 +13,7 @@ namespace Sweetener.Reliability.Test
     static partial class Expect
     {
 <#
-    for (int parameterCount = 1; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
+    for (int parameterCount = 1; parameterCount <= MaxReliabilityTypeArguments + 1; parameterCount++)
     {
         string arguments      = GetArguments     (parameterCount);
         string typeParameters = GetTypeParameters(parameterCount);

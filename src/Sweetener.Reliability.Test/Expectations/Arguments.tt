@@ -19,7 +19,7 @@ namespace Sweetener.Reliability.Test
         }
 
 <#
-    for (int parameterCount = 1; parameterCount <= MaxDelegateParameters; parameterCount++)
+    for (int parameterCount = 1; parameterCount <= MaxReliabilityTypeArguments; parameterCount++)
     {
         string arguments  = GetArguments (          parameterCount);
         string parameters = GetParameters(typeArgs, parameterCount);

@@ -8,7 +8,7 @@ using System;
 namespace Sweetener.Reliability.Test
 {
 <#
-    for (int parameterCount = 0; parameterCount <= MaxDelegateParameters + 1; parameterCount++)
+    for (int parameterCount = 0; parameterCount <= MaxReliabilityTypeArguments + 1; parameterCount++)
     {
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
         string arguments      = GetArguments         (parameterCount);
