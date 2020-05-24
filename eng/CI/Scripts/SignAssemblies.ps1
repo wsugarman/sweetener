@@ -81,7 +81,7 @@ foreach ($AssemblyPath in $Assemblies)
 }
 
 # Sign Assemblies using AzureSignTool
-& dotnet tool install "AzureSignTool" --tool-path $DotNetTools --configfile $NuGetConfig
+& dotnet tool install "AzureSignTool" --version "2.0.17" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $AzureSignTool = [System.IO.Path]::Combine($DotNetTools, "AzureSignTool.exe")
 $Manifest      = [System.IO.Path]::Combine($BuildDirectory, $SignManifestName + ".txt")
@@ -94,11 +94,12 @@ $Assemblies | % { $_.FullName } | Out-File -FilePath $Manifest
   -du $ProjectUrl `
   -d $Description `
   -fd sha256 `
+  -tr $TimestampUrl `
+  -td sha256 `
   -kvu $KeyVaultUrl `
   -kvi $KeyVaultClientId `
   -kvs $KeyVaultClientSecret `
   -kvc $KeyVaultCertificateName `
-  -tr $TimestampUrl `
   -q `
   -ifl $Manifest
 

@@ -22,6 +22,10 @@ param
 
     [Parameter(Mandatory=$True)]
     [string]
+    $KeyVaultTenantId,
+
+    [Parameter(Mandatory=$True)]
+    [string]
     $KeyVaultClientId,
 
     [Parameter(Mandatory=$True)]
@@ -46,7 +50,7 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # Sign Package using NuGetKeyVaultSignTool
-& dotnet tool install "NuGetKeyVaultSignTool" --tool-path $DotNetTools --configfile $NuGetConfig
+& dotnet tool install "NuGetKeyVaultSignTool" --version "3.0.3" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $NuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
 $Package               = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
@@ -58,11 +62,13 @@ if (![System.IO.File]::Exists($Package))
 
 & $NuGetKeyVaultSignTool sign $Package `
   -fd sha256 `
+  -tr $TimestampUrl `
+  -td sha256 `
   -kvu $KeyVaultUrl `
+  -kvt $KeyVaultTenantId `
   -kvi $KeyVaultClientId `
   -kvs $KeyVaultClientSecret `
-  -kvc $KeyVaultCertificateName `
-  -tr $TimestampUrl
+  -kvc $KeyVaultCertificateName
 
 if (!$?)
 {
