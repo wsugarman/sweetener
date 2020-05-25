@@ -131,6 +131,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -189,6 +192,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -248,6 +254,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -312,6 +321,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<bool> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:

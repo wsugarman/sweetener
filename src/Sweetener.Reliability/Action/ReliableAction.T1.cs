@@ -113,6 +113,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public void Invoke(T arg, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -159,6 +162,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T arg, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -206,6 +212,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public bool TryInvoke(T arg, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -258,6 +267,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task<bool> TryInvokeAsync(T arg, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:

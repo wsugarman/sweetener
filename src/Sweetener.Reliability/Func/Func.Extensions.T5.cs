@@ -281,6 +281,9 @@ namespace Sweetener.Reliability
 
             return (arg1, arg2, arg3, arg4, cancellationToken) =>
             {
+                // Check for cancellation before invoking
+                cancellationToken.ThrowIfCancellationRequested();
+
                 TResult result;
                 int attempt = 0;
 

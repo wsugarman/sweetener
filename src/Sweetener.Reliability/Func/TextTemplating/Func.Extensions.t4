@@ -152,6 +152,16 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalToken #>) =>
             {
+<#
+            if (interruptable)
+            {
+#>
+                // Check for cancellation before invoking
+                cancellationToken.ThrowIfCancellationRequested();
+
+<#
+            }
+#>
                 <#= async ? "Task<TResult>? t" : "TResult result" #>;
                 int attempt = 0;
 
