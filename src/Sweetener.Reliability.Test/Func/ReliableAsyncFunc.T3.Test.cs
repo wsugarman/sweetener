@@ -334,6 +334,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled      ((f, arg1, arg2, t) => f.InvokeAsync(arg1, arg2, t).Wait(), addEventHandlers);
                     Invoke_Canceled_Func ((f, arg1, arg2, t) => f.InvokeAsync(arg1, arg2, t).Wait(), addEventHandlers, useSynchronousFunc: false);
                     Invoke_Canceled_Func ((f, arg1, arg2, t) => f.InvokeAsync(arg1, arg2, t).Wait(), addEventHandlers, useSynchronousFunc: true );
                     Invoke_Canceled_Delay((f, arg1, arg2, t) => f.InvokeAsync(arg1, arg2, t).Wait(), addEventHandlers);
@@ -403,6 +404,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled      ((f, arg1, arg2, t) => f.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers);
                     Invoke_Canceled_Func ((f, arg1, arg2, t) => f.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers, useSynchronousFunc: false);
                     Invoke_Canceled_Func ((f, arg1, arg2, t) => f.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers, useSynchronousFunc: true );
                     Invoke_Canceled_Delay((f, arg1, arg2, t) => f.TryInvokeAsync(arg1, arg2, t).Wait(), addEventHandlers);
@@ -905,13 +907,67 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
+        #region Invoke_Canceled
+
+        private void Invoke_Canceled(Action<ReliableAsyncFunc<int, string, string>, int, string, CancellationToken> invoke, bool addEventHandlers)
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create an unused user-defined function
+            FuncProxy<int, string, CancellationToken, Task<string>> func = new FuncProxy<int, string, CancellationToken, Task<string>>(
+                (arg1, arg2, token) => throw new InvalidOperationException());
+
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<string, ResultKind>                 resultHandler    = new FuncProxy<string, ResultKind>(ResultPolicy.Default<string>().Invoke);
+            FuncProxy<Exception, bool>                    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, string?, Exception?, TimeSpan> delayHandler     = new FuncProxy<int, string?, Exception?, TimeSpan>((i, r, e) => TimeSpan.Zero);
+
+            ActionProxy<int, string?, Exception?> retryHandler     = new ActionProxy<int, string?, Exception?>();
+            ActionProxy<string?, Exception?>      failedHandler    = new ActionProxy<string?, Exception?>();
+            ActionProxy<string?, Exception?>      exhaustedHandler = new ActionProxy<string?, Exception?>();
+
+            // Create ReliableAsyncFunc
+            ReliableAsyncFunc<int, string, string> reliableFunc = new ReliableAsyncFunc<int, string, string>(
+                func.Invoke,
+                Retries.Infinite, // Exception, Result, Exception, ...
+                resultHandler   .Invoke,
+                exceptionHandler.Invoke,
+                delayHandler    .Invoke);
+
+            if (addEventHandlers)
+            {
+                reliableFunc.Retrying         += retryHandler    .Invoke;
+                reliableFunc.Failed           += failedHandler   .Invoke;
+                reliableFunc.RetriesExhausted += exhaustedHandler.Invoke;
+            }
+
+            // Invoke, retry, and cancel
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, 42, "foo", tokenSource.Token), allowedDerivedTypes: true);
+
+            // Validate the number of calls
+            Assert.AreEqual(0, func            .Calls);
+            Assert.AreEqual(0, resultHandler   .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(0, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
+            }
+        }
+
+        #endregion
+
         #region Invoke_Canceled_Func
 
         private void Invoke_Canceled_Func(Action<ReliableAsyncFunc<int, string, string>, int, string, CancellationToken> invoke, bool addEventHandlers, bool useSynchronousFunc)
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create a user-defined action that will throw an exception depending on whether its canceled
+            // Create a user-defined function that will throw an exception depending on whether its canceled
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
             // Note: We need to separately check the use of asynchronous and synchronous methods when checking cancellation
             FuncProxy<int, string, CancellationToken, Task<string>> func = useSynchronousFunc
@@ -972,10 +1028,10 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, 42, "foo", tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(3, func             .Calls);
-            Assert.AreEqual(1, resultHandler    .Calls);
-            Assert.AreEqual(1, exceptionHandler .Calls);
-            Assert.AreEqual(2, delayHandler     .Calls);
+            Assert.AreEqual(3, func            .Calls);
+            Assert.AreEqual(1, resultHandler   .Calls);
+            Assert.AreEqual(1, exceptionHandler.Calls);
+            Assert.AreEqual(2, delayHandler    .Calls);
 
             if (addEventHandlers)
             {
@@ -993,7 +1049,7 @@ namespace Sweetener.Reliability.Test
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create a user-defined action that will throw an exception depending on whether its canceled
+            // Create a user-defined function that will throw an exception depending on whether its canceled
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Retry");
             FuncProxy<int, string, Task<string>> func = new FuncProxy<int, string, Task<string>>(async (arg1, arg2) => await Task.FromResult(flakyFunc()));
 
@@ -1041,10 +1097,10 @@ namespace Sweetener.Reliability.Test
             Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, 42, "foo", tokenSource.Token), allowedDerivedTypes: true);
 
             // Validate the number of calls
-            Assert.AreEqual(3, func             .Calls);
-            Assert.AreEqual(1, resultHandler    .Calls);
-            Assert.AreEqual(2, exceptionHandler .Calls);
-            Assert.AreEqual(3, delayHandler     .Calls);
+            Assert.AreEqual(3, func            .Calls);
+            Assert.AreEqual(1, resultHandler   .Calls);
+            Assert.AreEqual(2, exceptionHandler.Calls);
+            Assert.AreEqual(3, delayHandler    .Calls);
 
             if (addEventHandlers)
             {

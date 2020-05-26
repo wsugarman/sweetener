@@ -204,6 +204,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       (invoke, addEventHandlers);
                     Invoke_Canceled_Action(invoke, addEventHandlers);
                     Invoke_Canceled_Delay (invoke, addEventHandlers);
                 }
@@ -234,6 +235,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       (invokeAsync, addEventHandlers);
                     Invoke_Canceled_Action(invokeAsync, addEventHandlers);
                     Invoke_Canceled_Delay (invokeAsync, addEventHandlers);
                 }
@@ -263,6 +265,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       ((r, t) => r.TryInvoke(t), addEventHandlers);
                     Invoke_Canceled_Action((r, t) => r.TryInvoke(t), addEventHandlers);
                     Invoke_Canceled_Delay ((r, t) => r.TryInvoke(t), addEventHandlers);
                 }
@@ -292,6 +295,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       ((r, t) => r.TryInvokeAsync(t).Wait(), addEventHandlers);
                     Invoke_Canceled_Action((r, t) => r.TryInvokeAsync(t).Wait(), addEventHandlers);
                     Invoke_Canceled_Delay ((r, t) => r.TryInvokeAsync(t).Wait(), addEventHandlers);
                 }
@@ -571,6 +575,57 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(2, retryHandler    .Calls);
                 Assert.AreEqual(0, failedHandler   .Calls);
                 Assert.AreEqual(1, exhaustedHandler.Calls);
+            }
+        }
+
+        #endregion
+
+        #region Invoke_Canceled
+
+        private void Invoke_Canceled(Action<ReliableAction, CancellationToken> invoke, bool addEventHandlers)
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create an unused no-op user-defined action
+            ActionProxy<CancellationToken> action = new ActionProxy<CancellationToken>(
+                (token) => throw new InvalidOperationException());
+
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => TimeSpan.Zero);
+
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
+            ReliableAction reliableAction = new ReliableAction(
+                action.Invoke,
+                Retries.Infinite,
+                exceptionHandler.Invoke,
+                delayHandler    .Invoke);
+
+            if (addEventHandlers)
+            {
+                reliableAction.Retrying         += retryHandler    .Invoke;
+                reliableAction.Failed           += failedHandler   .Invoke;
+                reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
+            }
+
+            // Invoke, retry, and cancel
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableAction, tokenSource.Token), allowedDerivedTypes: true);
+
+            // Validate the number of calls
+            Assert.AreEqual(0, action          .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(0, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
             }
         }
 
