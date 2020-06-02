@@ -517,7 +517,7 @@ namespace Sweetener.Reliability.Test
                     {
 #>
             <#= inputFuncType #> nullTaskFunc = <#= stateful ? "s" : "()" #> => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync<#= optionalCtorTypeArgs #>(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 
 <#
                     }

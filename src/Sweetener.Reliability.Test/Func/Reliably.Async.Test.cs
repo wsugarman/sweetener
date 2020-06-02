@@ -795,7 +795,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -840,7 +840,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync        (testFunc, 10, ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<string>(nullTaskFunc, 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync<string>(nullTaskFunc, 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -886,7 +886,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -937,7 +937,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -987,7 +987,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1034,7 +1034,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync        (testFunc, CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<string>(nullTaskFunc, CancellationToken.None, 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync<string>(nullTaskFunc, CancellationToken.None, 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1082,7 +1082,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1135,7 +1135,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<Task<string>> nullTaskFunc = () => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1187,7 +1187,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, new object(), 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, new object(), 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, new object(), 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1234,7 +1234,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync                (testFunc, new object(), 10, ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<object, string>(nullTaskFunc, new object(), 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync<object, string>(nullTaskFunc, new object(), 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1282,7 +1282,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, new object(), 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, new object(), 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, new object(), 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1335,7 +1335,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, new object(), 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, new object(), 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, new object(), 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1387,7 +1387,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1436,7 +1436,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync                (testFunc, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<object, string>(nullTaskFunc, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync<object, string>(nullTaskFunc, new object(), CancellationToken.None, 10, ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1486,7 +1486,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, new object(), CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (DelayHandler)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, new object(), CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, new object(), CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, DelayPolicy.None)).ConfigureAwait(false);
 
 #nullable enable
 
@@ -1541,7 +1541,7 @@ namespace Sweetener.Reliability.Test
             await Assert.ThrowsExceptionAsync<ArgumentNullException      >(() => Reliably.TryInvokeAsync(testFunc, new object(), CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (ComplexDelayHandler<string>)null)).ConfigureAwait(false);
 
             Func<object, Task<string>> nullTaskFunc = s => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync(nullTaskFunc, new object(), CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync(nullTaskFunc, new object(), CancellationToken.None, 10, ResultPolicy.Default<string>(), ExceptionPolicy.Transient, (i, r, e) => TimeSpan.Zero)).ConfigureAwait(false);
 
 #nullable enable
 
