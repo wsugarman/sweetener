@@ -207,19 +207,23 @@ namespace Sweetener.Reliability
             // Check for cancellation before invoking
             cancellationToken.ThrowIfCancellationRequested();
 
-            TResult result;
             int attempt = 0;
 
         Attempt:
+            TResult result;
             attempt++;
 
             try
             {
                 result = func();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 Task.Delay(delayHandler(attempt, default, e), cancellationToken).Wait();
@@ -447,19 +451,23 @@ namespace Sweetener.Reliability
             // Check for cancellation before invoking
             cancellationToken.ThrowIfCancellationRequested();
 
-            TResult result;
             int attempt = 0;
 
         Attempt:
+            TResult result;
             attempt++;
 
             try
             {
                 result = func(state);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 Task.Delay(delayHandler(attempt, default, e), cancellationToken).Wait();
@@ -695,19 +703,24 @@ namespace Sweetener.Reliability
             // Check for cancellation before invoking
             cancellationToken.ThrowIfCancellationRequested();
 
-            TResult result;
+            
             int attempt = 0;
 
         Attempt:
+            TResult result;
             attempt++;
 
             try
             {
                 result = func();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, default, e), cancellationToken).ConfigureAwait(false);
@@ -955,19 +968,24 @@ namespace Sweetener.Reliability
             // Check for cancellation before invoking
             cancellationToken.ThrowIfCancellationRequested();
 
-            TResult result;
+            
             int attempt = 0;
 
         Attempt:
+            TResult result;
             attempt++;
 
             try
             {
                 result = func(state);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, default, e), cancellationToken).ConfigureAwait(false);
@@ -1218,6 +1236,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static bool TryInvoke<TResult>(Func<TResult> func, CancellationToken cancellationToken, int maxRetries, ResultHandler<TResult> resultHandler, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler, out TResult result)
         {
@@ -1248,11 +1267,12 @@ namespace Sweetener.Reliability
             {
                 result = func();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException)
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     goto Fail;
 
@@ -1527,6 +1547,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static bool TryInvoke<TState, TResult>(Func<TState, TResult> func, TState state, CancellationToken cancellationToken, int maxRetries, ResultHandler<TResult> resultHandler, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler, out TResult result)
         {
@@ -1557,11 +1578,12 @@ namespace Sweetener.Reliability
             {
                 result = func(state);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException)
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     goto Fail;
 
@@ -1788,6 +1810,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static async Task<Optional<TResult>> TryInvokeAsync<TResult>(Func<TResult> func, CancellationToken cancellationToken, int maxRetries, ResultHandler<TResult> resultHandler, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
         {
@@ -1819,11 +1842,12 @@ namespace Sweetener.Reliability
             {
                 result = func();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException)
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     goto Fail;
 
@@ -2061,6 +2085,7 @@ namespace Sweetener.Reliability
         /// <exception cref="ObjectDisposedException">
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static async Task<Optional<TResult>> TryInvokeAsync<TState, TResult>(Func<TState, TResult> func, TState state, CancellationToken cancellationToken, int maxRetries, ResultHandler<TResult> resultHandler, ExceptionHandler exceptionHandler, ComplexDelayHandler<TResult> delayHandler)
         {
@@ -2092,11 +2117,12 @@ namespace Sweetener.Reliability
             {
                 result = func(state);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e is OperationCanceledException)
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     goto Fail;
 

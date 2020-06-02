@@ -1,5 +1,6 @@
 // Generated from ReliableAsyncFunc.tt
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -301,7 +302,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "All exceptions must be caught so they can be tested by the exception handler.")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "All exceptions must be caught so they can be tested by the exception handler")]
         public async Task<Optional<TResult>> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, CancellationToken cancellationToken)
         {
             // Check for cancellation before invoking
