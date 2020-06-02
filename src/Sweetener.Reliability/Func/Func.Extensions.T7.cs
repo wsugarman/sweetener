@@ -137,10 +137,10 @@ namespace Sweetener.Reliability
 
             return (arg1, arg2, arg3, arg4, arg5, arg6) =>
             {
-                TResult result;
                 int attempt = 0;
 
             Attempt:
+                TResult result;
                 attempt++;
 
                 try
@@ -297,19 +297,26 @@ namespace Sweetener.Reliability
 
             return (arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken) =>
             {
-                TResult result;
+                // Check for cancellation before invoking
+                cancellationToken.ThrowIfCancellationRequested();
+
                 int attempt = 0;
 
             Attempt:
+                TResult result;
                 attempt++;
 
                 try
                 {
                     result = func(arg1, arg2, arg3, arg4, arg5, arg6, cancellationToken);
                 }
+                catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
-                    if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     Task.Delay(delayHandler(attempt, default, e), cancellationToken).Wait(cancellationToken);

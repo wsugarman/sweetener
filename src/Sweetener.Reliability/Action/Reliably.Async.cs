@@ -103,25 +103,30 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
-            Task? t = null;
             attempt++;
 
             try
             {
-                t = action();
+                Task t = action();
                 if (t == null)
                     goto Invalid;
 
                 await t.ConfigureAwait(false);
                 return;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
@@ -233,25 +238,30 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
-            Task? t = null;
             attempt++;
 
             try
             {
-                t = action(state);
+                Task t = action(state);
                 if (t == null)
                     goto Invalid;
 
                 await t.ConfigureAwait(false);
                 return;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
@@ -354,6 +364,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static async Task<bool> TryInvokeAsync(Func<Task> action, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -369,28 +380,29 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
-            Task? t;
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
-            t = null;
             attempt++;
 
             try
             {
-                t = action();
+                Task t = action();
                 if (t == null)
                     goto Invalid;
 
                 await t.ConfigureAwait(false);
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                if (isCanceled)
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return false;
 
@@ -498,6 +510,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static async Task<bool> TryInvokeAsync<TState>(Func<TState, Task> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -513,28 +526,29 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
-            Task? t;
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
-            t = null;
             attempt++;
 
             try
             {
-                t = action(state);
+                Task t = action(state);
                 if (t == null)
                     goto Invalid;
 
                 await t.ConfigureAwait(false);
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                if (isCanceled)
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return false;
 

@@ -101,6 +101,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -110,9 +113,13 @@ namespace Sweetener.Reliability
             {
                 action();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 Task.Delay(delayHandler(attempt, e), cancellationToken).Wait();
@@ -219,6 +226,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -228,9 +238,13 @@ namespace Sweetener.Reliability
             {
                 action(state);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 Task.Delay(delayHandler(attempt, e), cancellationToken).Wait();
@@ -335,6 +349,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -344,9 +361,13 @@ namespace Sweetener.Reliability
             {
                 action();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
@@ -455,6 +476,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -464,9 +488,13 @@ namespace Sweetener.Reliability
             {
                 action(state);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     throw;
 
                 await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
@@ -566,6 +594,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static bool TryInvoke(Action action, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -581,6 +610,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -591,11 +623,12 @@ namespace Sweetener.Reliability
                 action();
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return false;
 
@@ -700,6 +733,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static bool TryInvoke<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -715,6 +749,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -725,11 +762,12 @@ namespace Sweetener.Reliability
                 action(state);
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return false;
 
@@ -830,6 +868,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static async Task<bool> TryInvokeAsync(Action action, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -845,6 +884,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -855,11 +897,12 @@ namespace Sweetener.Reliability
                 action();
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return false;
 
@@ -964,6 +1007,7 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types"       , Justification = "All exceptions must be caught so they can be tested by the exception handler"   )]
         [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Token is not used for canceling operation, and API mirrors TaskFactory.StartNew")]
         public static async Task<bool> TryInvokeAsync<TState>(Action<TState> action, TState state, CancellationToken cancellationToken, int maxRetries, ExceptionHandler exceptionHandler, ComplexDelayHandler delayHandler)
         {
@@ -979,6 +1023,9 @@ namespace Sweetener.Reliability
             if (delayHandler == null)
                 throw new ArgumentNullException(nameof(delayHandler));
 
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -989,11 +1036,12 @@ namespace Sweetener.Reliability
                 action(state);
                 return true;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                     return false;
 

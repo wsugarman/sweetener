@@ -447,6 +447,49 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
+        #region WithRetryT3_Canceled
+
+        internal void WithRetryT3_Canceled<TFunc, TDelayPolicy, TFuncProxy, TDelayPolicyProxy>(
+            Func<Func<CancellationToken, int>, TFuncProxy> funcFactory,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TFunc, int, ResultHandler<int>, ExceptionHandler, TDelayPolicy, TFunc> withRetry,
+            Func<TFunc, int, string, CancellationToken, int> invoke)
+            where TFunc             : Delegate
+            where TDelayPolicy      : Delegate
+            where TFuncProxy        : DelegateProxy<TFunc>
+            where TDelayPolicyProxy : DelegateProxy<TDelayPolicy>
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create an unused user-defined function
+            TFuncProxy func = funcFactory(t => throw new InvalidOperationException());
+
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<int, ResultKind> resultHandler    = new FuncProxy<int, ResultKind>(ResultPolicy.Default<int>().Invoke);
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
+
+            // Create the reliable function
+            TFunc reliableFunc = withRetry(
+                func.Proxy,
+                Retries.Infinite,
+                resultHandler   .Invoke,
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
+
+            // Begin the invocation
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableFunc, 42, "foo", tokenSource.Token), allowedDerivedTypes: true);
+
+            // Validate the number of calls
+            Assert.AreEqual(0, func            .Calls);
+            Assert.AreEqual(0, resultHandler   .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+        }
+
+        #endregion
+
         #region WithRetryT3_Canceled_Func
 
         internal void WithRetryT3_Canceled_Func<TFunc, TDelayPolicy, TFuncProxy, TDelayPolicyProxy>(
@@ -464,7 +507,7 @@ namespace Sweetener.Reliability.Test
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create a user-defined action that will throw an exception depending on whether it's canceled
+            // Create a user-defined function that will throw an exception depending on whether it's canceled
             Func<int> flakyFunc = passResultHandler ? FlakyFunc.Create<int, IOException>(418) : () => throw new IOException();
             TFuncProxy func = funcFactory(t =>
             {
@@ -533,7 +576,7 @@ namespace Sweetener.Reliability.Test
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create an "unsuccessful" user-defined func that continues to fail with transient exceptions until it's canceled
+            // Create an "unsuccessful" user-defined function that continues to fail with transient exceptions until it's canceled
             Func<int> flakyFunc = passResultHandler ? FlakyFunc.Create<int, IOException>(418) : () => throw new IOException();
             TFuncProxy func = funcFactory(t => flakyFunc());
 

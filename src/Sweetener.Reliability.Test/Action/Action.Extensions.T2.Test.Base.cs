@@ -240,6 +240,46 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
+        #region WithRetryT3_Canceled
+
+        internal void WithRetryT3_Canceled<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(
+            Func<Action<CancellationToken>, TActionProxy> actionFactory,
+            Func<TimeSpan, TDelayPolicyProxy> delayHandlerFactory,
+            Func<TAction, int, ExceptionHandler, TDelayPolicy, TAction> withRetry,
+            Action<TAction, int, string, CancellationToken> invoke)
+            where TAction           : Delegate
+            where TDelayPolicy      : Delegate
+            where TActionProxy      : DelegateProxy<TAction>
+            where TDelayPolicyProxy : DelegateProxy<TDelayPolicy>
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create an unused user-defined action
+            TActionProxy action = actionFactory(t => throw new InvalidOperationException());
+
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayPolicyProxy delayHandler = delayHandlerFactory(TimeSpan.Zero);
+
+            // Create the reliable action
+            TAction reliableAction = withRetry(
+                action.Proxy,
+                Retries.Infinite,
+                exceptionHandler.Invoke,
+                delayHandler.Proxy);
+
+            // Invoke
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableAction, 42, "foo", tokenSource.Token), allowedDerivedTypes: true);
+
+            // Validate the number of calls
+            Assert.AreEqual(0, action          .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+        }
+
+        #endregion
+
         #region WithRetryT3_Canceled_Action
 
         internal void WithRetryT3_Canceled_Action<TAction, TDelayPolicy, TActionProxy, TDelayPolicyProxy>(

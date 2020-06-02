@@ -140,6 +140,9 @@ namespace Sweetener.Reliability.Test
 
         #region Nothing
 
+        public static Action<CallContext> Nothing()
+            => context => Assert.Fail();
+
         public static Action<T1, CallContext> Nothing<T1>()
             => (arg, context) => Assert.Fail();
 

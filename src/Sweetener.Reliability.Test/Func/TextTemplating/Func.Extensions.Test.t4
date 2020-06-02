@@ -149,6 +149,7 @@ namespace Sweetener.Reliability.Test
 #>
 
             // Cancel
+            WithRetry<#= suffix #>_Canceled      (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke);
             WithRetry<#= suffix #>_Canceled_Func (funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
             WithRetry<#= suffix #>_Canceled_Delay(funcFactory, delayHandlerFactory, with<#= optionalAsync #>Retry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.<#= delayHandlerExpectation #>, passResultHandler: <#= passResultHandler.ToString().ToLowerInvariant() #>);
 <#

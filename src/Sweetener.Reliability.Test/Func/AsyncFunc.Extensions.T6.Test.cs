@@ -224,6 +224,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT6_RetriesExhausted_Exception(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
 
             // Cancel
+            WithRetryT6_Canceled      (funcFactory, delayHandlerFactory, withAsyncRetry, invoke);
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: false);
 
@@ -271,6 +272,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT6_RetriesExhausted_Exception(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
 
             // Cancel
+            WithRetryT6_Canceled      (funcFactory, delayHandlerFactory, withAsyncRetry, invoke);
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.OnlyExceptionAsc<int>(e), passResultHandler: false);
 
@@ -324,6 +326,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT6_RetriesExhausted_Exception(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
 
             // Cancel
+            WithRetryT6_Canceled      (funcFactory, delayHandlerFactory, withAsyncRetry, invoke);
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.Asc(), passResultHandler: true);
 
@@ -377,6 +380,7 @@ namespace Sweetener.Reliability.Test
             WithRetryT6_RetriesExhausted_Exception(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultHandler: true);
 
             // Cancel
+            WithRetryT6_Canceled      (funcFactory, delayHandlerFactory, withAsyncRetry, invoke);
             WithRetryT6_Canceled_Func (funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultHandler: true);
             WithRetryT6_Canceled_Delay(funcFactory, delayHandlerFactory, withAsyncRetry, invoke, observeFuncDelay, (d, r, e) => d.Invoking += Expect.AlternatingAsc(r, e), passResultHandler: true);
 

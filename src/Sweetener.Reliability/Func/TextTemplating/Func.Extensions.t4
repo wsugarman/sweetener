@@ -41,10 +41,9 @@ namespace Sweetener.Reliability
 <#
         foreach (bool interruptable in new bool[] { false, true })
         {
-            string inputTypeParameters       = GetFuncTypeParameters(parameterCount, async, interruptable);
-            string optionalToken             = interruptable ? optionalComma + "cancellationToken" : string.Empty;
-            string optionalCancellationCheck = interruptable ? (async ? "isCanceled" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
-            string asyncOperationSuffx       = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
+            string inputTypeParameters = GetFuncTypeParameters(parameterCount, async, interruptable);
+            string optionalToken       = interruptable ? optionalComma + "cancellationToken" : string.Empty;
+            string asyncOperationSuffx = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
 #>
         #region Func<<#= inputTypeParameters #>>
 
@@ -152,18 +151,20 @@ namespace Sweetener.Reliability
 
             return <#= async ? "async " : string.Empty #>(<#= arguments #><#= optionalToken #>) =>
             {
-                <#= async ? "Task<TResult>? t" : "TResult result" #>;
-                int attempt = 0;
-
-            Attempt:
 <#
-            if (async)
+            if (interruptable)
             {
 #>
-                t = null;
+                // Check for cancellation before invoking
+                cancellationToken.ThrowIfCancellationRequested();
+
 <#
             }
 #>
+                int attempt = 0;
+
+            Attempt:
+                <#= async ? "Task<TResult> t" : "TResult result" #>;
                 attempt++;
 
                 try
@@ -187,17 +188,20 @@ namespace Sweetener.Reliability
             }
 #>
                 }
-                catch (Exception e)
-                {
 <#
-            if (async && interruptable)
+            if (interruptable)
             {
 #>
-                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
+                catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
 <#
             }
 #>
-                    if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                catch (Exception e)
+                {
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, default, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;

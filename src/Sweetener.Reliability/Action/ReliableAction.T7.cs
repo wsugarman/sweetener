@@ -1,5 +1,6 @@
 // Generated from ReliableAction.tt
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -131,6 +132,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -140,9 +144,13 @@ namespace Sweetener.Reliability
             {
                 _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, cancellationToken);
             }
+            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !CanRetry(attempt, e, cancellationToken))
+                if (!CanRetry(attempt, e, cancellationToken))
                     throw;
 
                 goto Attempt;
@@ -189,6 +197,9 @@ namespace Sweetener.Reliability
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
         public async Task InvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -199,9 +210,13 @@ namespace Sweetener.Reliability
                 _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, cancellationToken);
                 return;
             }
+            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken) || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     throw;
 
                 goto Attempt;
@@ -246,8 +261,12 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "All exceptions must be caught so they can be tested by the exception handler")]
         public bool TryInvoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -258,11 +277,12 @@ namespace Sweetener.Reliability
                 _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, cancellationToken);
                 return true;
             }
+            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!CanRetry(attempt, e, cancellationToken))
                     return false;
 
@@ -310,8 +330,12 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "All exceptions must be caught so they can be tested by the exception handler")]
         public async Task<bool> TryInvokeAsync(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, CancellationToken cancellationToken)
         {
+            // Check for cancellation before invoking
+            cancellationToken.ThrowIfCancellationRequested();
+
             int attempt = 0;
 
         Attempt:
@@ -322,11 +346,12 @@ namespace Sweetener.Reliability
                 _action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, cancellationToken);
                 return true;
             }
+            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     return false;
 

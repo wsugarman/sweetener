@@ -206,6 +206,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       (invoke, addEventHandlers);
                     Invoke_Canceled_Action(invoke, addEventHandlers);
                     Invoke_Canceled_Delay (invoke, addEventHandlers);
                 }
@@ -236,6 +237,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       (invokeAsync, addEventHandlers);
                     Invoke_Canceled_Action(invokeAsync, addEventHandlers);
                     Invoke_Canceled_Delay (invokeAsync, addEventHandlers);
                 }
@@ -265,6 +267,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t), addEventHandlers);
                     Invoke_Canceled_Action((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t), addEventHandlers);
                     Invoke_Canceled_Delay ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t), addEventHandlers);
                 }
@@ -294,6 +297,7 @@ namespace Sweetener.Reliability.Test
 
                 if (passToken)
                 {
+                    Invoke_Canceled       ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers);
                     Invoke_Canceled_Action((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers);
                     Invoke_Canceled_Delay ((r, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t) => r.TryInvokeAsync(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, t).Wait(), addEventHandlers);
                 }
@@ -575,6 +579,57 @@ namespace Sweetener.Reliability.Test
                 Assert.AreEqual(2, retryHandler    .Calls);
                 Assert.AreEqual(0, failedHandler   .Calls);
                 Assert.AreEqual(1, exhaustedHandler.Calls);
+            }
+        }
+
+        #endregion
+
+        #region Invoke_Canceled
+
+        private void Invoke_Canceled(Action<ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>, int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> invoke, bool addEventHandlers)
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create an unused no-op user-defined action
+            ActionProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken> action = new ActionProxy<int, string, double, long, ushort, byte, TimeSpan, uint, CancellationToken>(
+                (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, token) => throw new InvalidOperationException());
+
+            // Declare the various proxies for the input delegates and event handlers
+            FuncProxy<Exception, bool>          exceptionHandler  = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            FuncProxy<int, Exception, TimeSpan> delayHandler      = new FuncProxy<int, Exception, TimeSpan>((i, e) => TimeSpan.Zero);
+
+            ActionProxy<int, Exception>         retryHandler     = new ActionProxy<int, Exception>();
+            ActionProxy<Exception>              failedHandler    = new ActionProxy<Exception>();
+            ActionProxy<Exception>              exhaustedHandler = new ActionProxy<Exception>();
+
+            // Create ReliableAction
+            ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint> reliableAction = new ReliableAction<int, string, double, long, ushort, byte, TimeSpan, uint>(
+                action.Invoke,
+                Retries.Infinite,
+                exceptionHandler.Invoke,
+                delayHandler    .Invoke);
+
+            if (addEventHandlers)
+            {
+                reliableAction.Retrying         += retryHandler    .Invoke;
+                reliableAction.Failed           += failedHandler   .Invoke;
+                reliableAction.RetriesExhausted += exhaustedHandler.Invoke;
+            }
+
+            // Invoke, retry, and cancel
+            Assert.That.ThrowsException<OperationCanceledException>(() => invoke(reliableAction, 42, "foo", 3.14D, 1000L, (ushort)1, (byte)255, TimeSpan.FromDays(30), 112U, tokenSource.Token), allowedDerivedTypes: true);
+
+            // Validate the number of calls
+            Assert.AreEqual(0, action          .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+
+            if (addEventHandlers)
+            {
+                Assert.AreEqual(0, retryHandler    .Calls);
+                Assert.AreEqual(0, failedHandler   .Calls);
+                Assert.AreEqual(0, exhaustedHandler.Calls);
             }
         }
 

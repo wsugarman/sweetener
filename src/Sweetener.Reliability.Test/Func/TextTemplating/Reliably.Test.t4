@@ -33,11 +33,11 @@ namespace Sweetener.Reliability.Test
             string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
             string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
-            foreach (bool interruptable in new bool[2] { false, true })
+            foreach (bool passToken in new bool[2] { false, true })
             {
-                string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
-                string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
-                string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+                string optionalTokenObj    = passToken ? ", CancellationToken.None" : string.Empty;
+                string optionalTokenArg    = passToken ? ", t"                      : string.Empty;
+                string optionalTokenSuffix = passToken ? "_Interruptable"           : string.Empty;
 
                 foreach (bool includeResultPolicy in new bool[2] { false, true })
                 {
@@ -121,13 +121,15 @@ namespace Sweetener.Reliability.Test
             Invoke_Func_Failure_Exception         (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Func_EventualFailure_Exception (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
             Invoke_Func_RetriesExhausted_Exception(assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+
+            // Cancellation
+            Invoke_Func_Canceled_Delegate         (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
 <#
-                        if (interruptable)
+                        if (passToken)
                         {
 #>
-
-            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
-            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled_Delay            (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled                  (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
 <#
                         }
 #>
@@ -156,11 +158,11 @@ namespace Sweetener.Reliability.Test
         string optionalStateArg       = stateful ? ", state"          : string.Empty;
         string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
-        foreach (bool interruptable in new bool[2] { false, true })
+        foreach (bool passToken in new bool[2] { false, true })
         {
-            string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
-            string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
-            string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+            string optionalTokenObj    = passToken ? ", CancellationToken.None" : string.Empty;
+            string optionalTokenArg    = passToken ? ", t"                      : string.Empty;
+            string optionalTokenSuffix = passToken ? "_Interruptable"           : string.Empty;
 
             foreach (bool includeResultPolicy in new bool[2] { false, true })
             {
@@ -290,13 +292,22 @@ namespace Sweetener.Reliability.Test
             Invoke_Func_Failure_Exception         (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Func_EventualFailure_Exception (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
             Invoke_Func_RetriesExhausted_Exception(assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+
+            // Cancellation
+            Invoke_Func_Canceled_Delegate         (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
 <#
-                    if (interruptable)
+                    if (passToken)
                     {
 #>
+            Invoke_Func_Canceled_Delay            (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled                  (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+<#
+                    }
 
-            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
-            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+                    if (async)
+                    {
+#>
+            Invoke_Func_Canceled_NoTask           (assertError , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
 <#
                     }
 #>
@@ -324,11 +335,11 @@ namespace Sweetener.Reliability.Test
             string optionalStateObj       = stateful ? ", new object()"   : string.Empty;
             string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
-            foreach (bool interruptable in new bool[2] { false, true })
+            foreach (bool passToken in new bool[2] { false, true })
             {
-                string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
-                string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
-                string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+                string optionalTokenObj    = passToken ? ", CancellationToken.None" : string.Empty;
+                string optionalTokenArg    = passToken ? ", t"                      : string.Empty;
+                string optionalTokenSuffix = passToken ? "_Interruptable"           : string.Empty;
 
                 foreach (bool includeResultPolicy in new bool[2] { false, true })
                 {
@@ -374,27 +385,20 @@ namespace Sweetener.Reliability.Test
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertSuccess          = (f, t, n, r, e, d, x) => { Assert.IsTrue (TryInvoke(f, t, n, r, e, d, out string a)); Assert.AreEqual(x      , a); };
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertFailureResult    = (f, t, n, r, e, d, x) => { Assert.IsFalse(TryInvoke(f, t, n, r, e, d, out string a)); Assert.AreEqual(default, a); };
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertFailureException = (f, t, n, r, e, d, x) => { Assert.IsFalse(TryInvoke(f, t, n, r, e, d, out string a)); Assert.AreEqual(default, a); };
-<#
-                        if (interruptable)
-                        {
-#>
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertError            = (f, t, n, r, e, d, x) => Assert.That.ThrowsException(() => TryInvoke(f, t, n, r, e, d, out string _), x);
-<#
-                        }
-#>
 
             // Success
-            Invoke_Func_Success                   (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
-            Invoke_Func_EventualSuccess           (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Success                   (assertSuccess         , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
+            Invoke_Func_EventualSuccess           (assertSuccess         , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
 <#
                         if (includeResultPolicy)
                         {
 #>
 
             // Failure (Result)
-            Invoke_Func_Failure_Result            (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
-            Invoke_Func_EventualFailure_Result    (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
-            Invoke_Func_RetriesExhausted_Result   (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_Failure_Result            (assertFailureResult   , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Result    (assertFailureResult   , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_RetriesExhausted_Result   (assertFailureResult   , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
 <#
                         }
 #>
@@ -403,13 +407,15 @@ namespace Sweetener.Reliability.Test
             Invoke_Func_Failure_Exception         (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Func_EventualFailure_Exception (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
             Invoke_Func_RetriesExhausted_Exception(assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+
+            // Cancellation
+            Invoke_Func_Canceled_Delegate         (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
 <#
-                        if (interruptable)
+                        if (passToken)
                         {
 #>
-
-            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
-            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled_Delay            (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled                  (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
 <#
                         }
 #>
@@ -457,11 +463,11 @@ namespace Sweetener.Reliability.Test
         string optionalStateArg       = stateful ? ", state"          : string.Empty;
         string optionalStatefulSuffix = stateful ? "_Stateful"        : string.Empty;
 
-        foreach (bool interruptable in new bool[2] { false, true })
+        foreach (bool passToken in new bool[2] { false, true })
         {
-            string optionalTokenObj    = interruptable ? ", CancellationToken.None" : string.Empty;
-            string optionalTokenArg    = interruptable ? ", t"                      : string.Empty;
-            string optionalTokenSuffix = interruptable ? "_Interruptable"           : string.Empty;
+            string optionalTokenObj    = passToken ? ", CancellationToken.None" : string.Empty;
+            string optionalTokenArg    = passToken ? ", t"                      : string.Empty;
+            string optionalTokenSuffix = passToken ? "_Interruptable"           : string.Empty;
 
             foreach (bool includeResultPolicy in new bool[2] { false, true })
             {
@@ -511,7 +517,7 @@ namespace Sweetener.Reliability.Test
                     {
 #>
             <#= inputFuncType #> nullTaskFunc = <#= stateful ? "s" : "()" #> => null;
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.InvokeAsync<#= optionalCtorTypeArgs #>(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => Reliably.TryInvokeAsync<#= optionalCtorTypeArgs #>(nullTaskFunc<#= optionalStateObj #><#= optionalTokenObj #>, 10<#= optionalResultPolicyObj #>, ExceptionPolicy.Transient, <#= noDelay #>)).ConfigureAwait(false);
 
 <#
                     }
@@ -571,27 +577,20 @@ namespace Sweetener.Reliability.Test
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertSuccess          = (f, t, n, r, e, d, x) => { Assert.IsTrue(tryInvoke(f, t, n, r, e, d).Result.TryGetValue(out string? actual)); Assert.AreEqual(x, actual); };
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, string> assertFailureResult    = (f, t, n, r, e, d, x) => Assert.IsFalse(tryInvoke(f, t, n, r, e, d).Result.HasValue);
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertFailureException = (f, t, n, r, e, d, x) => Assert.IsFalse(tryInvoke(f, t, n, r, e, d).Result.HasValue);
-<#
-                    if (interruptable)
-                    {
-#>
             Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, Func<<#= delayInputTypeParam #>, TimeSpan>, Type>   assertError            = (f, t, n, r, e, d, x) => Assert.That.ThrowsExceptionAsync(() => tryInvoke(f, t, n, r, e, d), x).Wait();
-<#
-                    }
-#>
 
             // Success
-            Invoke_Func_Success                   (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
-            Invoke_Func_EventualSuccess           (assertSuccess, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Success                   (assertSuccess         , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>(), <#= passResultPolicy #>);
+            Invoke_Func_EventualSuccess           (assertSuccess         , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
 <#
                     if (includeResultPolicy)
                     {
 #>
 
             // Failure (Result)
-            Invoke_Func_Failure_Result            (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
-            Invoke_Func_EventualFailure_Result    (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
-            Invoke_Func_RetriesExhausted_Result   (assertFailureResult, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_Failure_Result            (assertFailureResult   , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+            Invoke_Func_EventualFailure_Result    (assertFailureResult   , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
+            Invoke_Func_RetriesExhausted_Result   (assertFailureResult   , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>);
 <#
                     }
 #>
@@ -600,13 +599,22 @@ namespace Sweetener.Reliability.Test
             Invoke_Func_Failure_Exception         (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
             Invoke_Func_EventualFailure_Exception (assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
             Invoke_Func_RetriesExhausted_Exception(assertFailureException, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+
+            // Cancellation
+            Invoke_Func_Canceled_Delegate         (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
 <#
-                    if (interruptable)
+                    if (passToken)
                     {
 #>
+            Invoke_Func_Canceled_Delay            (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+            Invoke_Func_Canceled                  (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
+<#
+                    }
 
-            Invoke_Func_Canceled_Delegate(assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
-            Invoke_Func_Canceled_Delay   (assertError, t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t), (d, r, t) => d.Invoking += Expect.<#= delayCallExpectation #>, <#= passResultPolicy #>);
+                    if (async)
+                    {
+#>
+            Invoke_Func_Canceled_NoTask           (assertError           , t => new FuncProxy<<#= delayInputTypeParam #>, TimeSpan>(<#= delayInputArgs #> => t),  d        => d.Invoking += Expect.Nothing<<#= delayInputTypeParam #>>());
 <#
                     }
 #>

@@ -172,6 +172,72 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
+        #region Invoke_Action_Canceled
+
+        private void Invoke_Action_Canceled<TDelayHandler, TDelayHandlerProxy>(
+            Action<Action, CancellationToken, int, ExceptionHandler, TDelayHandler, Type> assertInvoke,
+            Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
+            Action<TDelayHandlerProxy> addDelayObservation)
+            where TDelayHandler      : Delegate
+            where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create a user-defined action that will throw an OperationCanceledException
+            ActionProxy action = new ActionProxy(() => tokenSource.Token.ThrowIfCancellationRequested());
+
+            // Declare the various proxies for the input delegates
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayHandlerProxy delayHandler = delayHandlerFactory(Constants.Delay);
+
+            // Define expectations
+            action          .Invoking += Expect.Nothing();
+            exceptionHandler.Invoking += Expect.Nothing<Exception>();
+            addDelayObservation(delayHandler);
+
+            // Invoke, retry, and cancel
+            assertInvoke(action.Invoke, tokenSource.Token, Retries.Infinite, exceptionHandler.Invoke, delayHandler.Proxy, typeof(OperationCanceledException));
+
+            // Validate the number of calls
+            Assert.AreEqual(0, action          .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+        }
+
+        #endregion
+
+        #region Invoke_Action_Canceled_NoTask
+
+        private void Invoke_Action_Canceled_NoTask<TDelayHandler, TDelayHandlerProxy>(
+            Action<Action, CancellationToken, int, ExceptionHandler, TDelayHandler, Type> assertInvoke,
+            Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
+            Action<TDelayHandlerProxy> addDelayObservation)
+            where TDelayHandler      : Delegate
+            where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
+        {
+            // Create a user-defined action that will immediately throw an OperationCanceledException
+            ActionProxy action = new ActionProxy(() => throw new OperationCanceledException());
+
+            // Declare the various proxies for the input delegates
+            FuncProxy<Exception, bool> exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayHandlerProxy delayHandler = delayHandlerFactory(Constants.Delay);
+
+            // Define expectations
+            exceptionHandler.Invoking += Expect.Nothing<Exception>();
+            addDelayObservation(delayHandler);
+
+            // Invoke, retry, and cancel
+            assertInvoke(action.Invoke, CancellationToken.None, Retries.Infinite, exceptionHandler.Invoke, delayHandler.Proxy, typeof(OperationCanceledException));
+
+            // Validate the number of calls
+            Assert.AreEqual(1, action          .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+        }
+
+        #endregion
+
         #region Invoke_Action_Canceled_Delegate
 
         private void Invoke_Action_Canceled_Delegate<TDelayHandler, TDelayHandlerProxy>(
@@ -376,7 +442,7 @@ namespace Sweetener.Reliability.Test
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
-            // Create a "successful" user-defined action that completes after either
+            // Create a "successful" user-defined function that completes after either
             // (1) 2 IOExceptions OR
             // (2) an IOException and a transient result
             Func<string> flakyFunc = passResultHandler
@@ -425,7 +491,7 @@ namespace Sweetener.Reliability.Test
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
-            // Create an "unsuccessful" user-defined action that completes after a transient result and exception
+            // Create an "unsuccessful" user-defined function that completes after a transient result and exception
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Try Again", "Failure", 2);
             FuncProxy<string> func = new FuncProxy<string>(flakyFunc);
 
@@ -469,7 +535,7 @@ namespace Sweetener.Reliability.Test
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
-            // Create an "unsuccessful" user-defined action that completes after either
+            // Create an "unsuccessful" user-defined function that completes after either
             // (1) 2 IOExceptions OR
             // (2) an IOException and a transient result
             Func<string> flakyFunc = passResultHandler
@@ -512,7 +578,7 @@ namespace Sweetener.Reliability.Test
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
-            // Create an "unsuccessful" user-defined action that eventually exhausts all of its retries
+            // Create an "unsuccessful" user-defined function that eventually exhausts all of its retries
             Func<string> flakyFunc = FlakyFunc.Create<string, IOException>("Try Again");
             FuncProxy<string> func = new FuncProxy<string>(flakyFunc);
 
@@ -550,7 +616,7 @@ namespace Sweetener.Reliability.Test
             where TDelayHandler      : Delegate
             where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
         {
-            // Create an "unsuccessful" user-defined action that eventually exhausts all of its retries
+            // Create an "unsuccessful" user-defined function that eventually exhausts all of its retries
             Func<string> flakyFunc = passResultHandler
                 ? FlakyFunc.Create<string, IOException>("Try Again")
                 : () => throw new IOException();
@@ -582,6 +648,78 @@ namespace Sweetener.Reliability.Test
 
         #endregion
 
+        #region Invoke_Func_Canceled
+
+        private void Invoke_Func_Canceled<TDelayHandler, TDelayHandlerProxy>(
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, Type> assertInvoke,
+            Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
+            Action<TDelayHandlerProxy> addDelayObservation)
+            where TDelayHandler      : Delegate
+            where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.Cancel();
+
+            // Create a user-defined function that will throw an OperationCanceledException
+            FuncProxy<string> func = new FuncProxy<string>(() => { tokenSource.Token.ThrowIfCancellationRequested(); return "Failure"; });
+
+            // Declare the various proxies for the input delegates
+            FuncProxy<string, ResultKind> resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
+            FuncProxy<Exception, bool>    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayHandlerProxy delayHandler = delayHandlerFactory(Constants.Delay);
+
+            // Define expectations
+            func            .Invoking += Expect.Nothing();
+            resultHandler   .Invoking += Expect.Nothing<string>();
+            exceptionHandler.Invoking += Expect.Nothing<Exception>();
+            addDelayObservation(delayHandler);
+
+            // Invoke, retry, and cancel
+            assertInvoke(func.Invoke, tokenSource.Token, Retries.Infinite, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, typeof(OperationCanceledException));
+
+            // Validate the number of calls
+            Assert.AreEqual(0, func            .Calls);
+            Assert.AreEqual(0, resultHandler   .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+        }
+
+        #endregion
+
+        #region Invoke_Func_Canceled_NoTask
+
+        private void Invoke_Func_Canceled_NoTask<TDelayHandler, TDelayHandlerProxy>(
+            Action<Func<string>, CancellationToken, int, ResultHandler<string>, ExceptionHandler, TDelayHandler, Type> assertInvoke,
+            Func<TimeSpan, TDelayHandlerProxy> delayHandlerFactory,
+            Action<TDelayHandlerProxy> addDelayObservation)
+            where TDelayHandler      : Delegate
+            where TDelayHandlerProxy : DelegateProxy<TDelayHandler>
+        {
+            // Create a user-defined function that will immediately throw an OperationCanceledException
+            FuncProxy<string> func = new FuncProxy<string>(() => throw new OperationCanceledException());
+
+            // Declare the various proxies for the input delegates
+            FuncProxy<string, ResultKind> resultHandler    = new FuncProxy<string, ResultKind>(r => ResultKind.Transient);
+            FuncProxy<Exception, bool>    exceptionHandler = new FuncProxy<Exception, bool>(ExceptionPolicy.Transient.Invoke);
+            TDelayHandlerProxy delayHandler = delayHandlerFactory(Constants.Delay);
+
+            // Define expectations
+            resultHandler   .Invoking += Expect.Nothing<string>();
+            exceptionHandler.Invoking += Expect.Nothing<Exception>();
+            addDelayObservation(delayHandler);
+
+            // Invoke, retry, and cancel
+            assertInvoke(func.Invoke, CancellationToken.None, Retries.Infinite, resultHandler.Invoke, exceptionHandler.Invoke, delayHandler.Proxy, typeof(OperationCanceledException));
+
+            // Validate the number of calls
+            Assert.AreEqual(1, func            .Calls);
+            Assert.AreEqual(0, resultHandler   .Calls);
+            Assert.AreEqual(0, exceptionHandler.Calls);
+            Assert.AreEqual(0, delayHandler    .Calls);
+        }
+
+        #endregion
+
         #region Invoke_Func_Canceled_Delegate
 
         internal void Invoke_Func_Canceled_Delegate<TDelayHandler, TDelayHandlerProxy>(
@@ -594,7 +732,7 @@ namespace Sweetener.Reliability.Test
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create a user-defined action that will throw an exception depending on whether it's canceled
+            // Create a user-defined function that will throw an exception depending on whether it's canceled
             Func<string> flakyFunc = passResultHandler ? FlakyFunc.Create<string, IOException>("Try Again") : () => throw new IOException();
             FuncProxy<string> func = new FuncProxy<string>(() =>
             {
@@ -649,7 +787,7 @@ namespace Sweetener.Reliability.Test
         {
             using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            // Create an "unsuccessful" user-defined func that continues to fail with transient exceptions until it's canceled
+            // Create an "unsuccessful" user-defined function that continues to fail with transient exceptions until it's canceled
             Func<string> flakyFunc = passResultHandler ? FlakyFunc.Create<string, IOException>("Try Again") : () => throw new IOException();
             FuncProxy<string> func = new FuncProxy<string>(flakyFunc);
 
