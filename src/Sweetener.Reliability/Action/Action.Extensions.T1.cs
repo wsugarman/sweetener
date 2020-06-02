@@ -149,9 +149,13 @@ namespace Sweetener.Reliability
                     action(arg, cancellationToken);
                     return;
                 }
+                catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
-                    if (e.IsCancellation(cancellationToken) || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     Task.Delay(delayHandler(attempt, e), cancellationToken).Wait(cancellationToken);

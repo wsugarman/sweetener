@@ -213,11 +213,10 @@ namespace Sweetener.Reliability
             // Check for cancellation before invoking
             cancellationToken.ThrowIfCancellationRequested();
 
-            Task<TResult>? t;
             int attempt = 0;
 
         Attempt:
-            t = null;
+            Task<TResult> t;
             attempt++;
 
             try
@@ -228,10 +227,13 @@ namespace Sweetener.Reliability
 
                 await t.ConfigureAwait(false);
             }
+            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                if (isCanceled || !await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
+                if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     throw;
 
                 goto Attempt;
@@ -279,16 +281,16 @@ namespace Sweetener.Reliability
         /// The underlying <see cref="CancellationTokenSource" /> has already been disposed.
         /// </exception>
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "All exceptions must be caught so they can be tested by the exception handler.")]
         public async Task<Optional<TResult>> TryInvokeAsync(T arg, CancellationToken cancellationToken)
         {
             // Check for cancellation before invoking
             cancellationToken.ThrowIfCancellationRequested();
 
-            Task<TResult>? t;
             int attempt = 0;
 
         Attempt:
-            t = null;
+            Task<TResult> t;
             attempt++;
 
             try
@@ -299,11 +301,12 @@ namespace Sweetener.Reliability
 
                 await t.ConfigureAwait(false);
             }
+            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                if (e.IsCancellation(cancellationToken))
-                    throw;
-
                 if (!await CanRetryAsync(attempt, e, cancellationToken).ConfigureAwait(false))
                     goto Fail;
 

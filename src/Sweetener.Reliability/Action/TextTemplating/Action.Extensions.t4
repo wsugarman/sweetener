@@ -40,9 +40,8 @@ namespace Sweetener.Reliability
 <#
         foreach (bool interruptable in new bool[] { false, true })
         {
-            string inputActionType           = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable), BracketType.AngleBrackets);
-            string optionalCancellationCheck = interruptable ? (async ? "isCanceled" : "e.IsCancellation(cancellationToken)") + " || " : string.Empty;
-            string asyncOperationSuffx       = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
+            string inputActionType     = (async ? "Func" : "Action") + Enclose(GetActionTypeParameters(parameterCount, async, interruptable), BracketType.AngleBrackets);
+            string asyncOperationSuffx = async ? ".ConfigureAwait(false)" : ".Wait(" + (interruptable ? "cancellationToken" : string.Empty) + ")";
 #>
         #region <#= inputActionType #>
 
@@ -111,14 +110,6 @@ namespace Sweetener.Reliability
                 int attempt = 0;
 
             Attempt:
-<#
-            if (async)
-            {
-#>
-                Task? t = null;
-<#
-            }
-#>
                 attempt++;
 
                 try
@@ -127,7 +118,7 @@ namespace Sweetener.Reliability
             if (async)
             {
 #>
-                    t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
+                    Task t = action(<#= arguments #><#= interruptable ? optionalComma + "cancellationToken" : string.Empty #>);
                     if (t == null)
                         goto Invalid;
 
@@ -143,17 +134,20 @@ namespace Sweetener.Reliability
 #>
                     return;
                 }
+<#
+            if (interruptable)
+            {
+#>
+                catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
+<#
+            }
+#>
                 catch (Exception e)
                 {
-<#
-        if (async && interruptable)
-        {
-#>
-                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-<#
-        }
-#>
-                    if (<#= optionalCancellationCheck #>!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     <#= async ? "await " : string.Empty #>Task.Delay(delayHandler(attempt, e)<#= interruptable ? ", cancellationToken" : string.Empty #>)<#= asyncOperationSuffx #>;

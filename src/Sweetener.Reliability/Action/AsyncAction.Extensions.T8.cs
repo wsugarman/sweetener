@@ -85,12 +85,11 @@ namespace Sweetener.Reliability
                 int attempt = 0;
 
             Attempt:
-                Task? t = null;
                 attempt++;
 
                 try
                 {
-                    t = action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    Task t = action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                     if (t == null)
                         goto Invalid;
 
@@ -194,22 +193,24 @@ namespace Sweetener.Reliability
                 int attempt = 0;
 
             Attempt:
-                Task? t = null;
                 attempt++;
 
                 try
                 {
-                    t = action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, cancellationToken);
+                    Task t = action(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, cancellationToken);
                     if (t == null)
                         goto Invalid;
 
                     await t.ConfigureAwait(false);
                     return;
                 }
+                catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested && oce.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
-                    bool isCanceled = t != null ? t.IsCanceled : e.IsCancellation(cancellationToken);
-                    if (isCanceled || !exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
+                    if (!exceptionHandler(e) || (maxRetries != Retries.Infinite && attempt > maxRetries))
                         throw;
 
                     await Task.Delay(delayHandler(attempt, e), cancellationToken).ConfigureAwait(false);
