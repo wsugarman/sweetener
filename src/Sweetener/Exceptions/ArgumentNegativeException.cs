@@ -13,30 +13,10 @@ namespace Sweetener
         /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class.
         /// </summary>
         /// <remarks>
-        /// <para>
         /// This constructor initializes the <see cref="Exception.Message"/> property of
         /// the new instance to a system-supplied message that describes the error,
         /// such as "Nonnegative number required." This message takes into account the current
         /// system culture.
-        /// </para>
-        /// <para>
-        /// The following table shows the initial property values for an instance of
-        /// <see cref="ArgumentNegativeException"/>.
-        /// </para>
-        /// <list type="table">
-        /// <listheader>
-        /// <term>Property</term>
-        /// <term>Value</term>
-        /// </listheader>
-        /// <item>
-        /// <term><see cref="Exception.InnerException"/></term>
-        /// <term><see langword="null" /></term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="Exception.Message"/></term>
-        /// <term>The localized error message string.</term>
-        /// </item>
-        /// </list>
         /// </remarks>
         public ArgumentNegativeException()
             : this(paramName: null)
@@ -57,28 +37,6 @@ namespace Sweetener
         /// of the new instance using the <paramref name="paramName"/> parameter. The content of
         /// <paramref name="paramName"/> is intended to be understood by humans.
         /// </para>
-        /// <para>
-        /// The following table shows the initial property values for an instance of
-        /// <see cref="ArgumentNegativeException"/>.
-        /// </para>
-        /// <list type="table">
-        /// <listheader>
-        /// <term>Property</term>
-        /// <term>Value</term>
-        /// </listheader>
-        /// <item>
-        /// <term><see cref="Exception.InnerException"/></term>
-        /// <term><see langword="null" /></term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="Exception.Message"/></term>
-        /// <term>The empty string ("").</term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="ArgumentException.ParamName"/></term>
-        /// <term>The parameter name string.</term>
-        /// </item>
-        /// </list>
         /// </remarks>
         /// <param name="paramName">The name of the parameter that causes this exception.</param>
         public ArgumentNegativeException(string? paramName)
@@ -115,28 +73,6 @@ namespace Sweetener
         /// of the new instance using the <paramref name="paramName"/> parameter. The content of
         /// <paramref name="paramName"/> is intended to be understood by humans.
         /// </para>
-        /// <para>
-        /// The following table shows the initial property values for an instance of
-        /// <see cref="ArgumentNegativeException"/>.
-        /// </para>
-        /// <list type="table">
-        /// <listheader>
-        /// <term>Property</term>
-        /// <term>Value</term>
-        /// </listheader>
-        /// <item>
-        /// <term><see cref="Exception.InnerException"/></term>
-        /// <term><see langword="null" /></term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="Exception.Message"/></term>
-        /// <term>The error message string.</term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="ArgumentException.ParamName"/></term>
-        /// <term>The parameter name string.</term>
-        /// </item>
-        /// </list>
         /// </remarks>
         /// <param name="paramName">The name of the parameter that caused the exception.</param>
         /// <param name="message">The message that describes the error.</param>
@@ -168,32 +104,6 @@ namespace Sweetener
         /// representation is appended to the message string held in the
         /// <see cref="Exception.Message"/> property.
         /// </para>
-        /// <para>
-        /// The following table shows the initial property values for an instance of
-        /// <see cref="ArgumentNegativeException"/>.
-        /// </para>
-        /// <list type="table">
-        /// <listheader>
-        /// <term>Property</term>
-        /// <term>Value</term>
-        /// </listheader>
-        /// <item>
-        /// <term><see cref="ArgumentOutOfRangeException.ActualValue"/></term>
-        /// <term>The argument value.</term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="Exception.InnerException"/></term>
-        /// <term><see langword="null" /></term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="Exception.Message"/></term>
-        /// <term>The error message string.</term>
-        /// </item>
-        /// <item>
-        /// <term><see cref="ArgumentException.ParamName"/></term>
-        /// <term>The parameter name string.</term>
-        /// </item>
-        /// </list>
         /// </remarks>
         /// <param name="paramName">The name of the parameter that caused the exception.</param>
         /// <param name="actualValue">The value of the argument that causes this exception.</param>
