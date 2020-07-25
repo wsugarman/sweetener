@@ -36,7 +36,11 @@ if ($LineCoverageThreshold)
     $LineCoverage = Select-Xml -Xml $CodeCoverageXML -XPath "/coverage/@line-rate" | % {[double]::Parse($_.Node.Value)}
     if ($LineCoverage -lt $LineCoverageThreshold)
     {
-        throw "Line coverage {0:P} failed to meet threshold {1:P}" -f $LineCoverage, $LineCoverageThreshold
+        throw "{0:P} line coverage failed to meet threshold {1:P}" -f $LineCoverage, $LineCoverageThreshold
+    }
+    else
+    {
+        Write-Host "Passed with {0:P} line coverage!" -f $LineCoverage
     }
 }
 
@@ -51,6 +55,10 @@ if ($BranchCoverageThreshold)
     $BranchCoverage = Select-Xml -Xml $CodeCoverageXML -XPath "/coverage/@branch-rate" | % {[double]::Parse($_.Node.Value)}
     if ($BranchCoverage -lt $BranchCoverageThreshold)
     {
-        throw "Branch coverage {0:P} failed to meet threshold {1:P}" -f $BranchCoverage, $BranchCoverageThreshold
+        throw "{0:P} branch coverage failed to meet threshold {1:P}" -f $BranchCoverage, $BranchCoverageThreshold
+    }
+    else
+    {
+        Write-Host "Passed with {0:P} branch coverage!" -f $BranchCoverage
     }
 }
