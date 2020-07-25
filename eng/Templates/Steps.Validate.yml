@@ -22,12 +22,13 @@ steps:
     packageType: 'sdk'
     version: '3.x'
 
+# Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#900 is fixed
 - task: DotNetCoreCLI@2
   displayName: 'Run Tests and Collect Code Coverage'
   inputs:
     command: 'test'
     projects: 'src/${{ parameters.Project }}.Test/${{ parameters.Project }}.Test.csproj'
-    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true --collect "XPlat Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ parameters.Project }}]*'
+    arguments: '-c ${{ parameters.BuildConfiguration }} --collect "XPlat Code Coverage" -s "$(Build.Repository.LocalPath)/src/CodeCoverage.runsettings" -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ parameters.Project }}]*'
 
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish Code Coverage Report'
