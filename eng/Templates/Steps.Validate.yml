@@ -21,6 +21,7 @@ steps:
   inputs:
     packageType: 'sdk'
     version: '3.x'
+    includePreviewVersions: true
 
 # Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#900 is fixed
 - task: DotNetCoreCLI@2
