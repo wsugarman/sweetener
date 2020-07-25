@@ -42,5 +42,5 @@ steps:
   displayName: 'Check Code Coverage'
   inputs:
     filePath: 'eng/Scripts/CheckCodeCoverage.ps1'
-    arguments: '-TestResultsFolder "$(Agent.TempDirectory)/*/" -LineCoverageThreshold ${{ parameters.LineCoverageThreshold }} -BranchCoverageThreshold ${{ parameters.BranchCoverageThreshold }}'
+    arguments: '-CodeCoverageFile "$(Agent.TempDirectory)/*/coverage.cobertura.xml" -LineCoverageThreshold ${{ parameters.LineCoverageThreshold }} -BranchCoverageThreshold ${{ parameters.BranchCoverageThreshold }}'
     pwsh: true

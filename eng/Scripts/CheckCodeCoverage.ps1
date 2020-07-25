@@ -2,7 +2,7 @@ param
 (
     [Parameter(Mandatory=$True)]
     [string]
-    $TestResultsFolder,
+    $CodeCoverageFile,
 
     [Parameter(Mandatory=$False)]
     [Nullable[double]]
@@ -10,11 +10,7 @@ param
 
     [Parameter(Mandatory=$False)]
     [Nullable[double]]
-    $BranchCoverageThreshold = $null,
-
-    [Parameter(Mandatory=$False)]
-    [string]
-    $CoberturaCoverageFileName = "coverage.cobertura.xml"
+    $BranchCoverageThreshold = $null
 )
 
 # Turn off trace and stop on any error
@@ -22,8 +18,7 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # TODO: Pass thresholds to coverlet collector when supported
-$CodeCoveragePath = [System.IO.Path]::Combine($TestResultsFolder, $CoberturaCoverageFileName)
-[xml]$CodeCoverageXML = Get-Content $CodeCoveragePath
+[xml]$CodeCoverageXML = Get-Content $CodeCoverageFile
 
 # Line Coverage
 if ($LineCoverageThreshold)
