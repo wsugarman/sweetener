@@ -40,7 +40,7 @@ if ($LineCoverageThreshold)
     }
     else
     {
-        Write-Host "Passed with {0:P} line coverage!" -f $LineCoverage
+        Write-Host ("Passed with {0:P} line coverage!" -f $LineCoverage)
     }
 }
 
@@ -59,6 +59,6 @@ if ($BranchCoverageThreshold)
     }
     else
     {
-        Write-Host "Passed with {0:P} branch coverage!" -f $BranchCoverage
+        Write-Host ("Passed with {0:P} branch coverage!" -f $BranchCoverage)
     }
 }
