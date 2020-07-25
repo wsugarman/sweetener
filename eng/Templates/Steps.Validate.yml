@@ -5,6 +5,12 @@ parameters:
 - name: buildConfiguration
   type: string
   default: 'Debug'
+- name: lineCoverageThreshold
+  type: number
+  default: 1
+- name: branchCoverageThreshold
+  type: number
+  default: 1
 
 steps:
 - checkout: self
@@ -16,7 +22,7 @@ steps:
     packageType: 'sdk'
     version: '3.x'
 
-# Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#854 is fixed
+# Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#900 is fixed
 - task: DotNetCoreCLI@2
   displayName: 'Run Tests and Collect Code Coverage'
   inputs:
@@ -31,3 +37,10 @@ steps:
     summaryFileLocation: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
     failIfCoverageEmpty: true
     condition: succeededOrFailed()
+
+- task: PowerShell@2
+  displayName: 'Check Code Coverage'
+  inputs:
+    filePath: 'eng/Scripts/CheckCodeCoverage.ps1'
+    arguments: '-CodeCoverageFile "$(Agent.TempDirectory)/*/coverage.cobertura.xml" -LineCoverageThreshold ${{ parameters.LineCoverageThreshold }} -BranchCoverageThreshold ${{ parameters.BranchCoverageThreshold }}'
+    pwsh: true
