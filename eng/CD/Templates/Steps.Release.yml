@@ -1,5 +1,5 @@
 # Note: Only CD pipelines have sufficient permissions to push to NuGet.org,
-#       and they may only be run on the "master" branch
+#       and they may only be run on the "main" branch
 parameters:
 - name: project
   type: string
