@@ -2,7 +2,7 @@ pr: none
 trigger:
   branches:
     include:
-    - master
+    - main
   paths:
     include:
     - eng/CI/Sweetener.yml

@@ -1,7 +1,7 @@
 pr:
   branches:
     include:
-    - master
+    - main
   paths:
     include:
     - eng/PR/Sweetener.Reliability.yml
