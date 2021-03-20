@@ -61,6 +61,9 @@ csharp_style_var_for_built_in_types    = false:suggestion
 csharp_style_var_when_type_is_apparent = false:none
 csharp_style_var_elsewhere             = false:suggestion
 
+# 'new(...)' ctor
+csharp_style_implicit_object_creation_when_type_is_apparent = false
+
 # Expression-bodied members
 csharp_style_expression_bodied_methods      = true:silent
 csharp_style_expression_bodied_constructors = false:silent
@@ -137,6 +140,15 @@ dotnet_naming_rule.constant_fields_should_be_pascal_case.style    = pascal_case_
 
 dotnet_naming_symbols.constant_fields.applicable_kinds   = field
 dotnet_naming_symbols.constant_fields.required_modifiers = const
+
+# name all static readonly fields using PascalCase
+dotnet_naming_rule.static_readonly_fields_pascal_case.severity = suggestion
+dotnet_naming_rule.static_readonly_fields_pascal_case.symbols  = static_readonly_fields
+dotnet_naming_rule.static_readonly_fields_pascal_case.style    = pascal_case_style
+
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds           = field
+dotnet_naming_symbols.static_readonly_fields.applicable_accessibilities = private
+dotnet_naming_symbols.static_readonly_fields.required_modifiers         = readonly,static
 
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
