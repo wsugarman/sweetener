@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Sweetener.Reflection;
 
 namespace Sweetener.Test
 {
@@ -37,29 +36,27 @@ namespace Sweetener.Test
         public void Ctor()
         {
             Optional<int> optionalNumber;
-            Func<Optional<int>, int> getValue = DynamicGetter.ForField<Optional<int>, int>("_value");
 
             // Default ctor
             optionalNumber = new Optional<int>();
 
             Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual(default, getValue(optionalNumber));
+            Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
 
             // Default value
             optionalNumber = default;
 
             Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual(default, getValue(optionalNumber));
+            Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
         }
 
         [TestMethod]
         public void Ctor_Value()
         {
             Optional<int> optionalNumber = new Optional<int>(42);
-            Func<Optional<int>, int> getValue = DynamicGetter.ForField<Optional<int>, int>("_value");
 
             Assert.IsTrue(optionalNumber.HasValue);
-            Assert.AreEqual(42, getValue(optionalNumber));
+            Assert.AreEqual(42, optionalNumber.GetValueOrDefault());
         }
 
         [TestMethod]
@@ -93,12 +90,11 @@ namespace Sweetener.Test
         [TestMethod]
         public void TryGetValue()
         {
-            DateTime value;
             Optional<DateTime> optionalDate;
 
             // Has Value
             optionalDate = new Optional<DateTime>(new DateTime(1234, 5, 6, 7, 8, 9));
-            Assert.IsTrue(optionalDate.TryGetValue(out value));
+            Assert.IsTrue(optionalDate.TryGetValue(out DateTime value));
             Assert.AreEqual(new DateTime(1234, 5, 6, 7, 8, 9), value);
 
             // Undefined

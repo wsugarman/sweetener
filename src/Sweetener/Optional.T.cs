@@ -124,7 +124,7 @@ namespace Sweetener
         /// <summary>
         /// Indicates whether the current <see cref="Optional{T}"/> object is equal to a specified object.
         /// </summary>
-        /// <param name="other">An object.</param>
+        /// <param name="obj">An object.</param>
         /// <returns>
         /// <see langword="true"/> if the <see cref="HasValue"/> property for the current
         /// <see cref="Optional{T}"/> object is <see langword="true"/> and either of the
@@ -132,7 +132,7 @@ namespace Sweetener
         /// <list type="bullet">
         /// <item>
         /// <description>
-        /// The <paramref name="other"/> parameter is an <see cref="Optional{T}"/> object
+        /// The <paramref name="obj"/> parameter is an <see cref="Optional{T}"/> object
         /// whose <see cref="HasValue"/> property is also <see langword="true"/> and whose
         /// value of the <see cref="Value"/> property is equal to the value of the
         /// <see cref="Value"/> property for the current <see cref="Optional{T}"/> object.
@@ -140,22 +140,22 @@ namespace Sweetener
         /// </item>
         /// <item>
         /// <description>
-        /// The <paramref name="other"/> parameter is equal to the value of the
+        /// The <paramref name="obj"/> parameter is equal to the value of the
         /// <see cref="Value"/> property for the current <see cref="Optional{T}"/> object.
         /// </description>
         /// </item>
         /// </list>
         /// </returns>
-        public override bool Equals(object? other)
+        public override bool Equals(object? obj)
         {
-            if (other is Optional<T> optionalOther)
+            if (obj is Optional<T> optionalOther)
             {
                 return HasValue && optionalOther.HasValue
-                    ? _value?.Equals(optionalOther._value) ?? optionalOther._value == null
+                    ? EqualityComparer<T>.Default.Equals(_value, optionalOther._value)
                     : HasValue == optionalOther.HasValue;
             }
 
-            return HasValue ? _value?.Equals(other) ?? other == null : false;
+            return HasValue && (_value != null ? _value.Equals(obj) : obj == null);
         }
 
         /// <summary>

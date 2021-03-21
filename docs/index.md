@@ -16,7 +16,6 @@ and targeting the [.NET Standard](https://docs.microsoft.com/en-us/dotnet/standa
 ## Libraries
 
 - Sweetener
-- [Sweetener.Reliability](Getting-Started/Sweetener.Reliability.md)
 
 ## Questions
 

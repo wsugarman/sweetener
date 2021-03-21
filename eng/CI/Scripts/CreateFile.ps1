@@ -19,5 +19,5 @@ if ([string]::IsNullOrWhiteSpace($Base64StringContent))
 }
 
 # Extract the bytes and write them to the file
-$FileBytes = [System.Convert]::FromBase64String($Base64StringContent)
-[System.IO.File]::WriteAllBytes($OutputFilePath, $FileBytes)
+$fileBytes = [System.Convert]::FromBase64String($Base64StringContent)
+[System.IO.File]::WriteAllBytes($OutputFilePath, $fileBytes)

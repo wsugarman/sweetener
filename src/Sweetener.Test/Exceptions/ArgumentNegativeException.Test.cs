@@ -82,6 +82,7 @@ namespace Sweetener.Test
 
             using (MemoryStream buffer = new MemoryStream())
             {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete
                 BinaryFormatter formatter = new BinaryFormatter();
                 formatter.Serialize(buffer, before);
 
@@ -89,6 +90,7 @@ namespace Sweetener.Test
 
                 buffer.Seek(0, SeekOrigin.Begin);
                 after = formatter.Deserialize(buffer) as ArgumentNegativeException;
+#pragma warning restore SYSLIB0011
             }
 
             Assert.IsNotNull(after);

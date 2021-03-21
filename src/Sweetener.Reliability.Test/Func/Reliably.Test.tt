@@ -1,4 +1,0 @@
-﻿<#
-    bool async = false;
-#>
-<#@ include file="TextTemplating\Reliably.Test.t4" #>

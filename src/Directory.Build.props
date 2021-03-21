@@ -32,15 +32,15 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
       <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="1.2.1" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
+        <PackageReference Include="coverlet.collector" Version="3.0.3" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestAdapter" Version="2.2.3" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.2.3" />
       </ItemGroup>
 
     </When>
@@ -86,11 +86,6 @@
         <None Include="$(ResourcesDirectory)Sweetener.png" Pack="true" PackagePath="\" Visible="false" />
       </ItemGroup>
 
-      <!-- FxCop -->
-      <ItemGroup>
-        <AdditionalFiles Include="$(SrcDirectory).editorconfig" Visible="false" />
-      </ItemGroup>
-
       <!-- Dynamic Assembly Attributes -->
       <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
@@ -98,10 +93,12 @@
         </AssemblyAttribute>
       </ItemGroup>
 
-      <!-- Library Tools -->
-      <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0" PrivateAssets="All" />
-      </ItemGroup>
+      <!-- Code Analyzers -->
+      <PropertyGroup>
+        <AnalysisLevel>5.0</AnalysisLevel>
+        <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+      </PropertyGroup>
 
     </Otherwise>
   </Choose>
