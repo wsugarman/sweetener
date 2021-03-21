@@ -6,21 +6,21 @@ using System;
 namespace Sweetener.Extensions
 {
     /// <summary>
-    /// Provides a set of additional methods for <see cref="DateTime" /> structures.
+    /// Provides a set of additional methods for <see cref="DateTime"/> structures.
     /// </summary>
     public static class DateTimeExtensions
     {
         /// <summary>
-        /// Returns a new <see cref="DateTime" /> whose value has been truncated to the specified <paramref name="granularity" />.
+        /// Returns a new <see cref="DateTime"/> whose value has been truncated to the specified <paramref name="granularity"/>.
         /// </summary>
-        /// <param name="value">A <see cref="DateTime" /> instance to truncate.</param>
+        /// <param name="value">A <see cref="DateTime"/> instance to truncate.</param>
         /// <param name="granularity">
-        /// A <see cref="TimeSpan" /> that represents the desired granularity for the <paramref name="value" />.
+        /// A <see cref="TimeSpan"/> that represents the desired granularity for the <paramref name="value"/>.
         /// </param>
         /// <returns>
-        /// An object whose value has been truncated to the <paramref name="granularity" />.
+        /// An object whose value has been truncated to the <paramref name="granularity"/>.
         /// </returns>
-        /// <exception cref="ArgumentNegativeException"><paramref name="value" /> cannot be negative.</exception>
+        /// <exception cref="ArgumentNegativeException"><paramref name="value"/> cannot be negative.</exception>
         public static DateTime Truncate(this DateTime value, TimeSpan granularity)
         {
             if (granularity < TimeSpan.Zero)

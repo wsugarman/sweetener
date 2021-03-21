@@ -19,8 +19,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has <#= GetWord(parameterCount) #> parameter<#= parameterCount == 1 ? string.Empty : "s" #> and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
 <#
         PrintDelegateTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: false);

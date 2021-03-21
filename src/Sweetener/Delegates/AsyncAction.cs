@@ -11,8 +11,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has zero parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public delegate Task AsyncAction();
@@ -21,8 +21,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has one parameter and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T">The type of the parameter of the method that this delegate encapsulates.</typeparam>
     /// <param name="arg">The parameter of the method that this delegate encapsulates.</param>
@@ -33,8 +33,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has two parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -47,8 +47,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has three parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -63,8 +63,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has four parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -81,8 +81,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has five parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -101,8 +101,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has six parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -123,8 +123,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has seven parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -147,8 +147,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has eight parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -173,8 +173,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has nine parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -201,8 +201,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has ten parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -231,8 +231,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has eleven parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -263,8 +263,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has twelve parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -297,8 +297,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has thirteen parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -333,8 +333,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has fourteen parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -371,8 +371,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has fifteen parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
@@ -411,8 +411,8 @@ namespace Sweetener
     /// Encapsulates an asynchronous method that has sixteen parameters and does not return a value.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// The <see cref="Task"/> returned by the encapsulated method is expected to have been started.
+    /// Otherwise, callers will not be able to properly <see langword="await"/> the results of the operation.
     /// </remarks>
     /// <typeparam name="T1">The type of the first parameter of the method that this delegate encapsulates.</typeparam>
     /// <typeparam name="T2">The type of the second parameter of the method that this delegate encapsulates.</typeparam>
