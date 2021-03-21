@@ -189,7 +189,9 @@ namespace Sweetener.Test
             Assert.AreEqual(new TimeSpan(10, 11, 12).GetHashCode(), optionalTime.GetHashCode());
 
             optionalString = new Optional<string?>("Hello World");
+#pragma warning disable CA1307 // Use GetHashCode() to match implementation
             Assert.AreEqual("Hello World".GetHashCode(), optionalString.GetHashCode());
+#pragma warning restore CA1307
 
             #endregion
 

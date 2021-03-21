@@ -57,8 +57,8 @@ namespace Sweetener.Test
             Assert.AreEqual("parameter1", exception.ParamName     );
 
             // Message will contain both the value from the ctor and a statement about the parameter
-            Assert.IsTrue(exception.Message.Contains("Hello World"));
-            Assert.IsTrue(exception.Message.Contains("parameter1" ));
+            Assert.IsTrue(exception.Message.Contains("Hello World", StringComparison.InvariantCulture));
+            Assert.IsTrue(exception.Message.Contains("parameter1" , StringComparison.InvariantCulture));
         }
 
         [TestMethod]
@@ -72,9 +72,9 @@ namespace Sweetener.Test
             Assert.AreEqual("parameter1", exception.ParamName     );
 
             // Message will contain the value from the ctor, a statement about the parameter, and the actual value
-            Assert.IsTrue(exception.Message.Contains("Hello World"));
-            Assert.IsTrue(exception.Message.Contains("parameter1" ));
-            Assert.IsTrue(exception.Message.Contains("-12345"     ));
+            Assert.IsTrue(exception.Message.Contains("Hello World", StringComparison.InvariantCulture));
+            Assert.IsTrue(exception.Message.Contains("parameter1" , StringComparison.InvariantCulture));
+            Assert.IsTrue(exception.Message.Contains("-12345"     , StringComparison.InvariantCulture));
         }
 
         [TestMethod]
@@ -85,15 +85,16 @@ namespace Sweetener.Test
 
             using (MemoryStream buffer = new MemoryStream())
             {
-#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete
-                BinaryFormatter formatter = new BinaryFormatter();
+#pragma warning disable CA2300, CA2301, SYSLIB0011 // BinaryFormatter is obsolete and insecure
+                BinaryFormatter formatter = new BinaryFormatter { Binder = null };
                 formatter.Serialize(buffer, before);
 
                 Assert.IsTrue(buffer.Position > 0L);
 
                 buffer.Seek(0, SeekOrigin.Begin);
+
                 after = formatter.Deserialize(buffer) as ArgumentNegativeException;
-#pragma warning restore SYSLIB0011
+#pragma warning restore CA2300, CA2301, SYSLIB0011
             }
 
             Assert.IsNotNull(after);
@@ -102,9 +103,9 @@ namespace Sweetener.Test
             Assert.AreEqual("parameter1", after.ParamName     );
 
             // Message will contain the value from the ctor, a statement about the parameter, and the actual value
-            Assert.IsTrue(after.Message.Contains("Hello World"));
-            Assert.IsTrue(after.Message.Contains("parameter1" ));
-            Assert.IsTrue(after.Message.Contains("-12345"     ));
+            Assert.IsTrue(after.Message.Contains("Hello World", StringComparison.InvariantCulture));
+            Assert.IsTrue(after.Message.Contains("parameter1" , StringComparison.InvariantCulture));
+            Assert.IsTrue(after.Message.Contains("-12345"     , StringComparison.InvariantCulture));
         }
     }
 }
