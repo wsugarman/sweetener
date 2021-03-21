@@ -77,7 +77,7 @@
         <Compile Include="$(SharedDirectory)AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
-        <Compile Include="$(SharedDirectory)NullableAttribute.cs" Visible="false" />
+        <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
       </ItemGroup>
 
       <!-- Other Miscellaneous Files -->
