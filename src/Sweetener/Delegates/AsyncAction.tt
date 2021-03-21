@@ -20,7 +20,7 @@ namespace Sweetener
     /// </summary>
     /// <remarks>
     /// The <see cref="Task" /> returned by the encapsulated method is expected to have been started.
-    /// Otherwise callers will not be able to properly <see langword="await" /> the results of the operation.
+    /// Otherwise, callers will not be able to properly <see langword="await" /> the results of the operation.
     /// </remarks>
 <#
         PrintDelegateTypeParamsXmlDoc(parameterCount, indent: 1, includeResult: false);
