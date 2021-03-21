@@ -17,10 +17,10 @@ steps:
   clean: true
 
 - task: UseDotNet@2
-  displayName: 'Install .NET Core 3.x'
+  displayName: 'Install .NET 5.x SDK'
   inputs:
     packageType: 'sdk'
-    version: '3.x'
+    version: '5.x'
 
 # Enable "-p:ContinuousIntegrationBuild=true" after tonerdo/coverlet#900 is fixed
 - task: DotNetCoreCLI@2

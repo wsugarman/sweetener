@@ -18,7 +18,7 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # TODO: Pass thresholds to coverlet collector when supported
-[xml]$CodeCoverageXML = Get-Content $CodeCoverageFile
+[xml]$codeCoverageXML = Get-Content $CodeCoverageFile
 
 # Line Coverage
 if ($LineCoverageThreshold)
@@ -28,14 +28,14 @@ if ($LineCoverageThreshold)
         throw [ArgumentOutOfRangeException]::new("LineCoverageThreshold", $LineCoverageThreshold, "Line coverage threshold must be between 0 and 1")
     }
 
-    $LineCoverage = Select-Xml -Xml $CodeCoverageXML -XPath "/coverage/@line-rate" | % {[double]::Parse($_.Node.Value)}
-    if ($LineCoverage -lt $LineCoverageThreshold)
+    $lineCoverage = Select-Xml -Xml $codeCoverageXML -XPath "/coverage/@line-rate" | % {[double]::Parse($_.Node.Value)}
+    if ($lineCoverage -lt $LineCoverageThreshold)
     {
-        throw "{0:P} line coverage failed to meet threshold {1:P}" -f $LineCoverage, $LineCoverageThreshold
+        throw "{0:P} line coverage failed to meet threshold {1:P}" -f $lineCoverage, $LineCoverageThreshold
     }
     else
     {
-        Write-Host ("Passed with {0:P} line coverage!" -f $LineCoverage)
+        Write-Host ("Passed with {0:P} line coverage!" -f $lineCoverage)
     }
 }
 
@@ -47,13 +47,13 @@ if ($BranchCoverageThreshold)
         throw [ArgumentOutOfRangeException]::new("BranchCoverageThreshold", $BranchCoverageThreshold, "Branch coverage threshold must be between 0 and 1")
     }
 
-    $BranchCoverage = Select-Xml -Xml $CodeCoverageXML -XPath "/coverage/@branch-rate" | % {[double]::Parse($_.Node.Value)}
-    if ($BranchCoverage -lt $BranchCoverageThreshold)
+    $branchCoverage = Select-Xml -Xml $codeCoverageXML -XPath "/coverage/@branch-rate" | % {[double]::Parse($_.Node.Value)}
+    if ($branchCoverage -lt $BranchCoverageThreshold)
     {
-        throw "{0:P} branch coverage failed to meet threshold {1:P}" -f $BranchCoverage, $BranchCoverageThreshold
+        throw "{0:P} branch coverage failed to meet threshold {1:P}" -f $branchCoverage, $BranchCoverageThreshold
     }
     else
     {
-        Write-Host ("Passed with {0:P} branch coverage!" -f $BranchCoverage)
+        Write-Host ("Passed with {0:P} branch coverage!" -f $branchCoverage)
     }
 }

@@ -17,38 +17,38 @@ param
 Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
-# Validate the package 
-$Packages = @(Get-ChildItem -Path $PackageDirectory -Include "$ProjectName.*.nupkg" -Recurse)
-if ($Packages.Length -eq 0)
+# Validate the package
+$packages = @(Get-ChildItem -Path $PackageDirectory -Include "$ProjectName.*.nupkg" -Recurse)
+if ($packages.Length -eq 0)
 {
     throw [InvalidOperationException]::new("Cannot find NuGet package for '$ProjectName'")
 }
 
-if ($Packages.Length -gt 1)
+if ($packages.Length -gt 1)
 {
     throw [InvalidOperationException]::new("Found multiple possible '$ProjectName' NuGet packages")
 }
 
 # Use Regex to parse out version based on our own naming conventions
-$PackageName = $Packages[0].Name
-$Valid = $PackageName -match $ProjectName.Replace(".", "\.") + "\.(?<Version>\d+\.\d+\.\d+(?:-[a-zA-Z]+\.\d+)?)\.nupkg"
-if (!$Valid)
+$packageName = $packages[0].Name
+$valid = $packageName -match $ProjectName.Replace(".", "\.") + "\.(?<Version>\d+\.\d+\.\d+(?:-[a-zA-Z]+\.\d+)?)\.nupkg"
+if (!$valid)
 {
-    throw [InvalidOperationException]::new("Unexpected package name '$PackageName'")
+    throw [InvalidOperationException]::new("Unexpected package name '$packageName'")
 }
 
-$PackageVersion = $Matches.Version
+$packageVersion = $Matches.Version
 
 # Check to see if Version file has changed
-$VersionChanged = @(& git diff-tree --no-commit-id --name-only -r $SourceVersion) -contains "src/$ProjectName/Version.json"
-if ($VersionChanged)
+$versionChanged = @(& git diff-tree --no-commit-id --name-only -r $SourceVersion) -contains "src/$ProjectName/Version.json"
+if ($versionChanged)
 {
-    Write-Host "##vso[build.updatebuildnumber]$PackageVersion"
+    Write-Host "##vso[build.updatebuildnumber]$packageVersion"
 }
 else
 {
-    Write-Host "##vso[build.updatebuildnumber]$PackageVersion (Skipped)"
+    Write-Host "##vso[build.updatebuildnumber]$packageVersion (Skipped)"
 }
 
-Write-Host "##vso[task.setvariable variable=Package;isOutput=true]$PackageVersion"
-Write-Host "##vso[task.setvariable variable=Changed;isOutput=true]$VersionChanged"
+Write-Host "##vso[task.setvariable variable=Package;isOutput=true]$packageVersion"
+Write-Host "##vso[task.setvariable variable=Changed;isOutput=true]$versionChanged"

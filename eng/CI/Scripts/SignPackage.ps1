@@ -50,17 +50,17 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # Sign Package using NuGetKeyVaultSignTool
-& dotnet tool install "NuGetKeyVaultSignTool" --version "3.0.3" --tool-path $DotNetTools --configfile $NuGetConfig
+& dotnet tool install "NuGetKeyVaultSignTool" --version "3.1.6" --tool-path $DotNetTools --configfile $NuGetConfig
 
-$NuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
-$Package               = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
+$nuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
+$package               = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
 
-if (![System.IO.File]::Exists($Package))
+if (![System.IO.File]::Exists($package))
 {
-    throw [System.IO.FileNotFoundException]::new("Cannot find '$Package'")
+    throw [System.IO.FileNotFoundException]::new("Cannot find '$package'")
 }
 
-& $NuGetKeyVaultSignTool sign $Package `
+& $nuGetKeyVaultSignTool sign $package `
   -fd sha256 `
   -tr $TimestampUrl `
   -td sha256 `

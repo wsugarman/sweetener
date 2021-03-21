@@ -58,41 +58,41 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # Extract the description from the project file
-$ProjectFile = [System.IO.Path]::Combine("src", $ProjectName, $ProjectName + ".csproj")
-$Description = (Select-Xml -Path $ProjectFile -Xpath "/Project/PropertyGroup/Description").Node.InnerText
-if ([string]::IsNullOrWhiteSpace($Description))
+$projectFile = [System.IO.Path]::Combine("src", $ProjectName, $ProjectName + ".csproj")
+$description = (Select-Xml -Path $projectFile -Xpath "/Project/PropertyGroup/Description").Node.InnerText
+if ([string]::IsNullOrWhiteSpace($description))
 {
-    throw [InvalidOperationException]::new("Cannot find 'Description' in $ProjectFile")
+    throw [InvalidOperationException]::new("Cannot find 'Description' in $projectFile")
 }
 
 # Find all of the assemblies to sign
-$BuildDirectory = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration)
-$Assemblies = @(Get-ChildItem -Path $BuildDirectory -Include ($ProjectName + ".dll") -Recurse)
-if ($Assemblies.Length -eq 0)
+$buildDirectory = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration)
+$assemblies = @(Get-ChildItem -Path $buildDirectory -Include ($ProjectName + ".dll") -Recurse)
+if ($assemblies.Length -eq 0)
 {
-    throw [System.IO.FileNotFoundException]::new("Could not find any assemblies '$AssemblyName' in '$BuildDirectory'")
+    throw [System.IO.FileNotFoundException]::new("Could not find any assemblies '$AssemblyName' in '$buildDirectory'")
 }
 
 # Sign with Enhanced Strong Name
-$StrongNameTool = [System.IO.Path]::Combine($NetFXTools, "sn.exe")
-foreach ($AssemblyPath in $Assemblies)
+$strongNameTool = [System.IO.Path]::Combine($NetFXTools, "sn.exe")
+foreach ($AssemblyPath in $assemblies)
 {
-    & $StrongNameTool -Ra $AssemblyPath $StrongNameKeyPath
+    & $strongNameTool -Ra $AssemblyPath $StrongNameKeyPath
 }
 
 # Sign Assemblies using AzureSignTool
 & dotnet tool install "AzureSignTool" --version "2.0.17" --tool-path $DotNetTools --configfile $NuGetConfig
 
-$AzureSignTool = [System.IO.Path]::Combine($DotNetTools, "AzureSignTool.exe")
-$Manifest      = [System.IO.Path]::Combine($BuildDirectory, $SignManifestName + ".txt")
+$azureSignTool = [System.IO.Path]::Combine($DotNetTools, "AzureSignTool.exe")
+$manifest      = [System.IO.Path]::Combine($buildDirectory, $SignManifestName + ".txt")
 
 # Write file manifest
-$Assemblies | % { $_.FullName } | Out-File -FilePath $Manifest
+$assemblies | ForEach-Object { $_.FullName } | Out-File -FilePath $manifest
 
 # Sign assemblies
-& $AzureSignTool sign `
+& $azureSignTool sign `
   -du $ProjectUrl `
-  -d $Description `
+  -d $description `
   -fd sha256 `
   -tr $TimestampUrl `
   -td sha256 `
@@ -101,7 +101,7 @@ $Assemblies | % { $_.FullName } | Out-File -FilePath $Manifest
   -kvs $KeyVaultClientSecret `
   -kvc $KeyVaultCertificateName `
   -q `
-  -ifl $Manifest
+  -ifl $manifest
 
 if (!$?)
 {
