@@ -176,8 +176,11 @@ namespace Sweetener.Extensions
         /// </returns>
         /// <exception cref="ArgumentNegativeException"><paramref name="value"/> cannot be negative.</exception>
         public static TimeSpan Truncate(this TimeSpan value, TimeSpan granularity)
-            => granularity < TimeSpan.Zero
-            ? throw new ArgumentNegativeException(nameof(granularity))
-            : new TimeSpan(value.Ticks - (value.Ticks % granularity.Ticks));
+        {
+            if (granularity < TimeSpan.Zero)
+                throw new ArgumentNegativeException(nameof(granularity));
+
+            return granularity == TimeSpan.Zero ? value : new TimeSpan(value.Ticks - (value.Ticks % granularity.Ticks));
+        }
     }
 }

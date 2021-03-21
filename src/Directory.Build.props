@@ -32,7 +32,7 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
@@ -86,11 +86,6 @@
         <None Include="$(ResourcesDirectory)Sweetener.png" Pack="true" PackagePath="\" Visible="false" />
       </ItemGroup>
 
-      <!-- FxCop -->
-      <ItemGroup>
-        <AdditionalFiles Include="$(SrcDirectory).editorconfig" Visible="false" />
-      </ItemGroup>
-
       <!-- Dynamic Assembly Attributes -->
       <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
@@ -98,10 +93,12 @@
         </AssemblyAttribute>
       </ItemGroup>
 
-      <!-- Library Tools -->
-      <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0" PrivateAssets="All" />
-      </ItemGroup>
+      <!-- Code Analyzers -->
+      <PropertyGroup>
+        <AnalysisLevel>5.0</AnalysisLevel>
+        <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+      </PropertyGroup>
 
     </Otherwise>
   </Choose>
