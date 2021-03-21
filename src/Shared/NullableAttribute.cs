@@ -1,7 +1,5 @@
-// This file is a modified copy of NullableAttribute.cs from dotnet/runtime. It serves as a convenient
-// "shim" when incorporating Non-Nullable Reference Types into a project that multi-targets a framework
-// where these attributes are not defined.
-// See https://github.com/dotnet/runtime/blob/864b84f6af5e6efa180fe0540c47356801efdd7b/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
+// Copyright © 2021 William Sugarman. All Rights Reserved.
+// Licensed under the MIT License.
 
 #if NETSTANDARD2_0
 

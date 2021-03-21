@@ -1,4 +1,8 @@
-﻿// Generated from TryFunc.tt ran successfully
+﻿// Copyright © 2021 William Sugarman. All Rights Reserved.
+// Licensed under the MIT License.
+
+// Do not modify this file. It was automatically generated from TryFunc.tt
+
 using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener

@@ -1,4 +1,7 @@
-﻿using System.Globalization;
+﻿// Copyright © 2021 William Sugarman. All Rights Reserved.
+// Licensed under the MIT License.
+
+using System.Globalization;
 using System.Reflection;
 using System.Resources;
 
@@ -6,10 +9,10 @@ namespace Sweetener
 {
     internal static class SR
     {
-        public static string ArgumentNegativeMessage => s_exceptionResourceManager.GetString(nameof(ArgumentNegativeMessage), CultureInfo.CurrentCulture);
+        public static string ArgumentNegativeMessage => ExceptionResourceManager.GetString(nameof(ArgumentNegativeMessage), CultureInfo.CurrentCulture);
 
-        public static string UndefinedOptionalValueMessage => s_exceptionResourceManager.GetString(nameof(UndefinedOptionalValueMessage), CultureInfo.CurrentCulture);
+        public static string UndefinedOptionalValueMessage => ExceptionResourceManager.GetString(nameof(UndefinedOptionalValueMessage), CultureInfo.CurrentCulture);
 
-        private static readonly ResourceManager s_exceptionResourceManager = new ResourceManager("Sweetener.Resources.Exceptions", Assembly.GetExecutingAssembly());
+        private static readonly ResourceManager ExceptionResourceManager = new ResourceManager("Sweetener.Resources.Exceptions", Assembly.GetExecutingAssembly());
     }
 }

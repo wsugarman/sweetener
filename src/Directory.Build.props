@@ -48,7 +48,7 @@
 
       <!-- Assembly and Build Properties -->
       <PropertyGroup>
-        <Copyright>Copyright © 2021 William Sugarman</Copyright>
+        <Copyright>Copyright © 2021 William Sugarman. All Rights Reserved.</Copyright>
         <DelaySign>true</DelaySign>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -77,7 +77,6 @@
         <Compile Include="$(SharedDirectory)AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
-        <Compile Include="$(SharedDirectory)GlobalSuppressions.cs" Visible="false" />
         <Compile Include="$(SharedDirectory)NullableAttribute.cs" Visible="false" />
       </ItemGroup>
 

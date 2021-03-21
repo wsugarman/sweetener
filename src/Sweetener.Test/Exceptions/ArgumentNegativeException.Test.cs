@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright © 2021 William Sugarman. All Rights Reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
