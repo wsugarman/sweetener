@@ -78,6 +78,7 @@ namespace System.Diagnostics.CodeAnalysis
             => ParameterValue = parameterValue;
     }
 
+    [ExcludeFromCodeCoverage]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
     internal sealed class MemberNotNullAttribute : Attribute
     {
@@ -92,6 +93,7 @@ namespace System.Diagnostics.CodeAnalysis
             => Members = members;
     }
 
+    [ExcludeFromCodeCoverage]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
     internal sealed class MemberNotNullWhenAttribute : Attribute
     {
