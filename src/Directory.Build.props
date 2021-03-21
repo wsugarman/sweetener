@@ -48,7 +48,7 @@
 
       <!-- Assembly and Build Properties -->
       <PropertyGroup>
-        <Copyright>Copyright © William Sugarman 2019</Copyright>
+        <Copyright>Copyright © 2021 William Sugarman</Copyright>
         <DelaySign>true</DelaySign>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>

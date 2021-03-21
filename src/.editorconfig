@@ -15,6 +15,9 @@ indent_size          = 4
 # See https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
 [*.cs]
 
+# Copyright Header
+file_header_template = Copyright © 2021 William Sugarman. All Rights Reserved.\nLicensed under the MIT License.
+
 # Language code styles
 # Most use "options_name = false|true : none|silent|suggestion|warning|error"
 
