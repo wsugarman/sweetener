@@ -12,8 +12,8 @@ namespace Sweetener
     for (int parameterCount = 0; parameterCount <= MaxDelegateParameters; parameterCount++)
     {
         string optionalComma  = parameterCount > 0 ? ", " : string.Empty;
-        string arguments      = GetArguments     (parameterCount);
-        string parameters     = GetParameters    (parameterCount);
+        string arguments      = GetArguments (parameterCount);
+        string parameters     = GetParameters(parameterCount);
         string typeParameters = Enclose(GetInputTypeParameters(parameterCount, contravariant: true) + optionalComma + "TResult", BracketType.AngleBrackets);
 #>
     /// <summary>
@@ -27,10 +27,10 @@ namespace Sweetener
         PrintDelegateParamsXmlDoc(parameterCount, indent: 1);
 #>
     /// <param name="result">
-    /// When the method returns, contains the value of type <typeparamref name="TResult"/>,
+    /// When the method returns, contains the value of type <typeparamref name="TResult" />,
     /// if the method succeeded, or default value if the method failed.
     /// </param>
-    /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
+    /// <returns><see langword="true" /> if the function completed successfully; otherwise, <see langword="false" />.</returns>
     public delegate bool TryFunc<#= typeParameters #>(<#= parameters #><#= optionalComma #>[MaybeNullWhen(false)] out TResult result);
 
 <#
