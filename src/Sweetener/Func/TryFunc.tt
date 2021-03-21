@@ -2,7 +2,8 @@
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
-<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #>// Generated from <#= GetTemplateFileName() #> ran successfully
+<#@ include file="$(MSBuildProjectDirectory)\TextTemplating\Include.t4" #><# PrintHeader(); #>
+
 using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener

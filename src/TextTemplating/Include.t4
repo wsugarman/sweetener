@@ -9,9 +9,20 @@
 
     const int MaxDelegateParameters = 16;
     const int SpacesPerTab          = 4;
-    
+
     public string GetTemplateFileName()
         => Path.GetFileName(Host.TemplateFile);
+
+    public void PrintHeader()
+    {
+#>
+// Copyright © William Sugarman.
+// Licensed under the MIT License.
+
+// Do not modify this file. It was automatically generated from <#= GetTemplateFileName() #>
+<#+
+
+    }
 
     public void SaveOutput(string outputFileName)
     {
@@ -25,20 +36,8 @@
         GenerationEnvironment.Length = 0; // Remove everything written thus far
     }
 
-    public string GetTypeParameters(int count)
-        => GetInputTypeParameters(count);
-
-    public string GetActionTypeParameters(int count, bool async = false, bool interruptable = false, bool contravariant = false)
-        => GetInputTypeParameters(count, interruptable, contravariant) + (async ? (count > 0 || interruptable ? ", Task" : "Task") : string.Empty);
-
-    public string GetFuncTypeParameters(int count, bool async = false, bool interruptable = false, bool variance = false)
-        => GetInputTypeParameters(count, interruptable, variance)
-        + (count > 0 || interruptable ? ", " : string.Empty)
-        + (async ? "Task<TResult>" : (variance ? "out " : string.Empty) + "TResult");
-
-    private string GetInputTypeParameters(int count, bool interruptable = false, bool contravariant = false)
-        => GenerateIncrementingList(count, contravariant ? "in T" : "T") // T1, T2, T3
-        + (interruptable ? (count > 0 ? ", " : string.Empty) + "CancellationToken" : string.Empty);
+    private string GetInputTypeParameters(int count, bool contravariant = false)
+        => GenerateIncrementingList(count, contravariant ? "in T" : "T"); // T1, T2, T3
 
     public string GetParameters(int count)
         => GenerateIncrementingList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3

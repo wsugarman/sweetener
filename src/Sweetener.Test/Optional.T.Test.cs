@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright © William Sugarman.
+// Licensed under the MIT License.
+
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Test

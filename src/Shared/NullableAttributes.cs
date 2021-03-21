@@ -1,7 +1,13 @@
-// This file is a modified copy of NullableAttribute.cs from dotnet/runtime. It serves as a convenient
-// "shim" when incorporating Non-Nullable Reference Types into a project that multi-targets a framework
-// where these attributes are not defined.
-// See https://github.com/dotnet/runtime/blob/864b84f6af5e6efa180fe0540c47356801efdd7b/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
+// Copyright © William Sugarman.
+// Licensed under the MIT License.
+
+// This file defines the attributes used to describe an API within a nullable context. While these types are defined
+// for more recent target frameworks, they are not available for .NET Standard 2.0 libraries by default. The attributes
+// defined in this file are both described in Microsoft's documentation and can be found in the runtime/dotnet
+// repository on GitHub.
+//
+// Documentation: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/attributes/nullable-analysis
+// Source: https://github.com/dotnet/runtime/blob/v5.0.0/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
 
 #if NETSTANDARD2_0
 
@@ -70,6 +76,41 @@ namespace System.Diagnostics.CodeAnalysis
 
         public DoesNotReturnIfAttribute(bool parameterValue)
             => ParameterValue = parameterValue;
+    }
+
+    [ExcludeFromCodeCoverage]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
+    internal sealed class MemberNotNullAttribute : Attribute
+    {
+        public string[] Members { get; }
+
+        [SuppressMessage("Design", "CA1019:Define accessors for attribute arguments", Justification = "This API is pre-defined.")]
+        public MemberNotNullAttribute(string member)
+            : this(new string[] { member })
+        { }
+
+        public MemberNotNullAttribute(params string[] members)
+            => Members = members;
+    }
+
+    [ExcludeFromCodeCoverage]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
+    internal sealed class MemberNotNullWhenAttribute : Attribute
+    {
+        public bool ReturnValue { get; }
+
+        public string[] Members { get; }
+
+        [SuppressMessage("Design", "CA1019:Define accessors for attribute arguments", Justification = "This API is pre-defined.")]
+        public MemberNotNullWhenAttribute(bool returnValue, string member)
+            : this(returnValue, new string[] { member })
+        { }
+
+        public MemberNotNullWhenAttribute(bool returnValue, params string[] members)
+        {
+            ReturnValue = returnValue;
+            Members = members;
+        }
     }
 }
 
