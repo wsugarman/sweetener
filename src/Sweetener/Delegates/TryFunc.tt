@@ -32,8 +32,14 @@ namespace Sweetener
     /// </param>
     /// <returns><see langword="true"/> if the function completed successfully; otherwise, <see langword="false"/>.</returns>
     public delegate bool TryFunc<#= typeParameters #>(<#= parameters #><#= optionalComma #>[MaybeNullWhen(false)] out TResult result);
+<#
+        // Avoid extra newlines
+        if (parameterCount < MaxDelegateParameters)
+        {
+#>
 
 <#
-}
+        }
+    }
 #>
 }

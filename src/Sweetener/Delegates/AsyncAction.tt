@@ -28,8 +28,14 @@ namespace Sweetener
 #>
     /// <returns>A task that represents the asynchronous operation.</returns>
     public delegate Task AsyncAction<#= typeParameters #>(<#= parameters #>);
+<#
+        // Avoid extra newlines
+        if (parameterCount < MaxDelegateParameters)
+        {
+#>
 
 <#
-}
+        }
+    }
 #>
 }
