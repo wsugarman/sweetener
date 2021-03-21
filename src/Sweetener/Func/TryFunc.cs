@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 William Sugarman. All Rights Reserved.
+﻿// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 // Do not modify this file. It was automatically generated from TryFunc.tt

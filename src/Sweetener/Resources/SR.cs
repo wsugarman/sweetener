@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 William Sugarman. All Rights Reserved.
+﻿// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System.Globalization;
