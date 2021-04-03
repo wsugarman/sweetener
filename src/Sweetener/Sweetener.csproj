@@ -3,12 +3,17 @@
   <PropertyGroup>
     <Description>Common APIs that sweeten the .NET base class libraries</Description>
     <PackageTags>common</PackageTags>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
       <_Parameter1>3238523c-5921-4100-9eb9-17cfa9a03121</_Parameter1>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
   <!-- Generated Files -->

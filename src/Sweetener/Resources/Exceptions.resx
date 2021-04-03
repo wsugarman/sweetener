@@ -117,8 +117,42 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentMustBeTypeFormatString" xml:space="preserve">
+    <value>Object must be of type {0}.</value>
+    <comment>Lack of quotes matches BCL message</comment>
+  </data>
   <data name="ArgumentNegativeMessage" xml:space="preserve">
     <value>Specified argument was negative.</value>
+  </data>
+  <data name="InvalidCastFormatString" xml:space="preserve">
+    <value>Invalid cast from '{0}' to '{1}'.</value>
+  </data>
+  <data name="OverflowByteMessage" xml:space="preserve">
+    <value>Value was either too large or too small for an unsigned byte.</value>
+  </data>
+  <data name="OverflowCharMessage" xml:space="preserve">
+    <value>Value was either too large or too small for a character.</value>
+  </data>
+  <data name="OverflowInt16Message" xml:space="preserve">
+    <value>Value was either too large or too small for an Int16.</value>
+  </data>
+  <data name="OverflowInt32Message" xml:space="preserve">
+    <value>Value was either too large or too small for an Int32.</value>
+  </data>
+  <data name="OverflowInt64Message" xml:space="preserve">
+    <value>Value was either too large or too small for an Int64.</value>
+  </data>
+  <data name="OverflowSByteMessage" xml:space="preserve">
+    <value>Value was either too large or too small for a signed byte.</value>
+  </data>
+  <data name="OverflowUInt16Message" xml:space="preserve">
+    <value>Value was either too large or too small for a UInt16.</value>
+  </data>
+  <data name="OverflowUInt32Message" xml:space="preserve">
+    <value>Value was either too large or too small for a UInt32.</value>
+  </data>
+  <data name="OverflowUInt64Message" xml:space="preserve">
+    <value>Value was either too large or too small for an UInt64.</value>
   </data>
   <data name="UndefinedOptionalValueMessage" xml:space="preserve">
     <value>Optional object must have a value.</value>
