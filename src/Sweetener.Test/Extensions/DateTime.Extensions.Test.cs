@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
-using Sweetener.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Test
+namespace Sweetener.Extensions.Test
 {
     [TestClass]
     public class DateTimeExtensionsTest

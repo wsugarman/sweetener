@@ -120,6 +120,21 @@
   <data name="ArgumentNegativeMessage" xml:space="preserve">
     <value>Specified argument was negative.</value>
   </data>
+  <data name="CollectionFixedSizeMessage" xml:space="preserve">
+    <value>Collection was of a fixed size.</value>
+  </data>
+  <data name="CollectionReadOnlyMessage" xml:space="preserve">
+    <value>Collection is read-only.</value>
+  </data>
+  <data name="EmptyEnumeratorMessage" xml:space="preserve">
+    <value>Enumerator does not iterate over any elements.</value>
+  </data>
+  <data name="MutateKeyCollectionMessage" xml:space="preserve">
+    <value>Mutating a key collection derived from a dictionary is not allowed.</value>
+  </data>
+  <data name="MutateValueCollectionMessage" xml:space="preserve">
+    <value>Mutating a value collection derived from a dictionary is not allowed.</value>
+  </data>
   <data name="UndefinedOptionalValueMessage" xml:space="preserve">
     <value>Optional object must have a value.</value>
   </data>
