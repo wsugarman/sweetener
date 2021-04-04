@@ -3,30 +3,32 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener
 {
     /// <summary>
-    /// Represents a type that may or may not be available.
+    /// Represents a type that encapsulates an optional value.
     /// </summary>
     /// <remarks>
     /// <see cref="Optional{T}"/> and <see cref="Nullable{T}"/> are not equivalent in their usage.
-    /// While <see cref="Nullable{T}"/> provides a union of value types with <see langword="null"/>,
-    /// <see cref="Optional{T}"/> provides additional semantics for a given type <typeparamref name="T"/>
-    /// that allows callers to denote a value is undefined.
+    /// While <see cref="Nullable{T}"/> types provide a union of value types with <see langword="null"/>,
+    /// <see cref="Optional{T}"/> types represent either a value of type <typeparamref name="T"/>,
+    /// which may itself be <see langword="null"/>, or no value whatsoever.
     /// </remarks>
     /// <typeparam name="T">The underlying value type of the <see cref="Optional{T}"/> generic type.</typeparam>
     [Serializable]
+    [DebuggerDisplay("{HasValue ? \"Some(\" + Value + \")\" : \"None\",nq}")]
     [SuppressMessage("Design"     , "CA1066:Type {0} should implement IEquatable<T> because it overrides Equals", Justification = "Equals method forwards calls to the underlying type where applicable")]
-    [SuppressMessage("Naming"     , "CA1716:Identifiers should not match keywords"                              , Justification = "Optional type is generic and will not conflict with keyword")]
-    [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types"                 , Justification = "It would be misleading to provide an Equals override for a wrapper around a type that may not implement Equals")]
-    [SuppressMessage("Usage"      , "CA2231:Overload operator equals on overriding value type Equals"           , Justification = "It would be misleading to provide an Equals override for a wrapper around a type that may not implement Equals")]
+    [SuppressMessage("Naming"     , "CA1716:Identifiers should not match keywords"                              , Justification = "Generic class should avoid ambiguity with Visual Basic optional parameter keyword")]
+    [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types"                 , Justification = "Underlying value type may not implement IEquatable<T>")]
+    [SuppressMessage("Usage"      , "CA2231:Overload operator equals on overriding value type Equals"           , Justification = "Underlying value type may not implement IEquatable<T>")]
     public readonly struct Optional<T>
     {
         /// <summary>
         /// Gets a value indicating whether the current <see cref="Optional{T}"/> object
-        /// has a defined value of its underlying type.
+        /// has a value of its underlying type assigned.
         /// </summary>
         /// <value>
         /// <see langword="true"/> if the current <see cref="Optional{T}"/> object has a value;
@@ -35,7 +37,7 @@ namespace Sweetener
         public bool HasValue { get; }
 
         /// <summary>
-        /// Gets the value of the current <see cref="Optional{T}"/> object if it has been defined.
+        /// Gets the value of the current <see cref="Optional{T}"/> object if it has been assigned an underlying value.
         /// </summary>
         /// <remarks>
         /// If the <see cref="HasValue"/> property is <see langword="true"/>, it is still
@@ -50,16 +52,7 @@ namespace Sweetener
         /// <exception cref="InvalidOperationException">
         /// The <see cref="HasValue"/> property is <see langword="false"/>.
         /// </exception>
-        public T Value => HasValue ? _value : throw new InvalidOperationException(SR.UndefinedOptionalValueMessage);
-
-        /// <summary>
-        /// Returns an empty <see cref="Optional{T}"/> object where the <see cref="HasValue"/>
-        /// property is <see langword="false"/>.
-        /// </summary>
-        /// <remarks><see cref="Undefined"/> is equivalent to the default value.</remarks>
-        /// <value>An empty <see cref="Optional{T}"/> object.</value>
-        [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Avoid creating non-generic Optional class that would conflict with VB keyword")]
-        public static Optional<T> Undefined { get; } = default;
+        public T Value => HasValue ? _value : throw new InvalidOperationException(SR.MissingOptionalValueMessage);
 
         private readonly T _value;
 
@@ -169,8 +162,8 @@ namespace Sweetener
         /// the <see cref="Value"/> property is not <see langword="null"/>; otherwise zero.
         /// </returns>
         public override int GetHashCode()
-            // Note that null/default will typically result in the same hash value
-            // as undefined Optional<T>, but this behavior is consistent with Nullable<T>
+            // Note that null/default will typically result in the same hash value as None,
+            // but this behavior is consistent with Nullable<T>
             // and doesn't modify the result of the underlying GetHashCode()
             => HasValue && _value != null ? _value.GetHashCode() : 0;
 
@@ -193,27 +186,159 @@ namespace Sweetener
         /// <summary>
         /// Defines an explicit conversion of an <see cref="Optional{T}"/> instance to its underlying value.
         /// </summary>
-        /// <remarks>The equivalent method for this operator is <see cref="Value"/>.</remarks>
+        /// <remarks>The equivalent property for this operator is <see cref="Value"/>.</remarks>
         /// <param name="value">An <see cref="Optional{T}"/> value.</param>
         /// <returns>The value of the <see cref="Value"/> property for the <paramref name="value"/> parameter.</returns>
         /// <exception cref="InvalidOperationException">
         /// The <see cref="HasValue"/> property is <see langword="false"/>.
         /// </exception>
-        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Value property alternative is already defined")]
+        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "The underlying value can be obtained using the Optional<T>.Value property")]
         public static explicit operator T(Optional<T> value)
             => value.Value;
 
         /// <summary>
         /// Creates a new <see cref="Optional{T}"/> object initialized to a specified value.
         /// </summary>
-        /// <remarks>The equivalent method for this operator is <see cref="Optional(T)"/>.</remarks>
+        /// <remarks>The equivalent method for this operator is <see cref="Optional{T}(T)"/>.</remarks>
         /// <param name="value">A value of type <typeparamref name="T"/>.</param>
         /// <returns>
         /// An <see cref="Optional{T}"/> object whose <see cref="Value"/> property is
         /// initialized with the <paramref name="value"/> parameter.
         /// </returns>
-        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Constructor alternative is already defined")]
+        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Optional values can alternatively be created via the constructor or the method Optional.Some<T>(T)")]
         public static implicit operator Optional<T>(T value)
             => new Optional<T>(value);
+    }
+
+    /// <summary>
+    /// Supports a type that encapsulates an optional value. This class cannot be inherited.
+    /// </summary>
+    [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Static class should avoid ambiguity with Visual Basic optional parameter keyword")]
+    public static class Optional
+    {
+        /// <summary>
+        /// Compares the relative values of two <see cref="Optional{T}"/> objects.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The underlying value type of the <paramref name="m1"/> and <paramref name="m2"/> parameters.
+        /// </typeparam>
+        /// <param name="m1">A <see cref="Optional"/> object.</param>
+        /// <param name="m2">A <see cref="Optional"/> object.</param>
+        /// <returns>
+        /// An integer that indicates the relative values of the <paramref name="m1"/> and <paramref name="m2"/>
+        /// parameters.
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Return Value</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term>Less than zero</term>
+        /// <description>
+        /// The <see cref="Optional{T}.HasValue"/> property for <paramref name="m1"/> is <see langword="false"/>,
+        /// and the <see cref="Optional{T}.HasValue"/> property for <paramref name="m2"/> is <see langword="true"/>,
+        /// or the <see cref="Optional{T}.HasValue"/> properties for <paramref name="m1"/> and <paramref name="m2"/>
+        /// are <see langword="true"/>, and the value of the <see cref="Optional{T}.Value"/> property for
+        /// <paramref name="m1"/> is less than the value of the <see cref="Optional{T}.Value"/> property for
+        /// <paramref name="m2"/>.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term>Zero</term>
+        /// <description>
+        /// The <see cref="Optional{T}.HasValue"/> properties for <paramref name="m1"/> and <paramref name="m2"/>
+        /// are <see langword="false"/>, or the <see cref="Optional{T}.HasValue"/> properties for <paramref name="m1"/>
+        /// and <paramref name="m2"/> are <see langword="true"/>, and the value of the <see cref="Optional{T}.Value"/>
+        /// property for <paramref name="m1"/> is equal to the value of the <see cref="Optional{T}.Value"/>
+        /// property for <paramref name="m2"/>.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term>Greater than zero</term>
+        /// <description>
+        /// The <see cref="Optional{T}.HasValue"/> property for <paramref name="m1"/> is <see langword="true"/>,
+        /// and the <see cref="Optional{T}.HasValue"/> property for <paramref name="m2"/> is <see langword="false"/>,
+        /// or the <see cref="Optional{T}.HasValue"/> properties for <paramref name="m1"/> and <paramref name="m2"/>
+        /// are <see langword="true"/>, and the value of the <see cref="Optional{T}.Value"/> property for
+        /// <paramref name="m1"/> is greater than the value of the <see cref="Optional{T}.Value"/> property for
+        /// <paramref name="m2"/>.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        public static int Compare<T>(Optional<T> m1, Optional<T> m2)
+        {
+            if (m1.HasValue)
+            {
+                return m2.HasValue
+                    ? Comparer<T>.Default.Compare(m1.GetValueOrDefault()!, m2.GetValueOrDefault()!)
+                    : 1;
+            }
+
+            return m2.HasValue ? -1 : 0;
+        }
+
+        /// <summary>
+        /// Indicates whether two specified <see cref="Optional{T}"/> objects are equal.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The underlying value type of the <paramref name="m1"/> and <paramref name="m2"/> parameters.
+        /// </typeparam>
+        /// <param name="m1">A <see cref="Optional"/> object.</param>
+        /// <param name="m2">A <see cref="Optional"/> object.</param>
+        /// <returns>
+        /// <see langword="true"/> if the <paramref name="m1"/> parameter is equal to the <paramref name="m2"/>
+        /// parameter; otherwise, <see langword="false"/>.
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Return Value</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term><see langword="true"/></term>
+        /// <description>
+        /// The <see cref="Optional{T}.HasValue"/> properties for <paramref name="m1"/> and <paramref name="m2"/>
+        /// are <see langword="false"/>, or the <see cref="Optional{T}.HasValue"/> properties for <paramref name="m1"/>
+        /// and <paramref name="m2"/> are <see langword="true"/>, and the <see cref="Optional{T}.Value"/> properties
+        /// of the parameters are equal.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term><see langword="false"/></term>
+        /// <description>
+        /// The <see cref="Optional{T}.HasValue"/> property is <see langword="true"/> for one parameter and
+        /// <see langword="false"/> for the other parameter, or the <see cref="Optional{T}.HasValue"/> properties for
+        /// <paramref name="m1"/> and <paramref name="m2"/> are <see langword="true"/>, and the
+        /// <see cref="Optional{T}.Value"/> properties of the parameters are unequal.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        public static bool Equals<T>(Optional<T> m1, Optional<T> m2)
+            => m1.HasValue
+                ? m2.HasValue && EqualityComparer<T>.Default.Equals(m1.GetValueOrDefault()!, m2.GetValueOrDefault()!)
+                : !m2.HasValue;
+
+        /// <summary>
+        /// Creates a new <see cref="Optional{T}"/> objet that does not encapsulate a value.
+        /// </summary>
+        /// <remarks><see cref="None"/> is equivalent to the default value.</remarks>
+        /// <value>An <see cref="Optional{T}"/> object initialized with no value.</value>
+        public static Optional<T> None<T>()
+            => default;
+
+        /// <summary>
+        /// Creates a new <see cref="Optional{T}"/> objet that encapsulates some value.
+        /// </summary>
+        /// <typeparam name="T">The underlying value type of the resulting <see cref="Optional{T}"/> object.</typeparam>
+        /// <param name="value">A value of type <typeparamref name="T"/>.</param>
+        /// <returns>
+        /// An <see cref="Optional{T}"/> object whose <see cref="Optional{T}.Value"/> property is
+        /// initialized with the <paramref name="value"/> parameter.
+        /// </returns>
+        public static Optional<T> Some<T>(T value)
+            => new Optional<T>(value);
+
+        
     }
 }
