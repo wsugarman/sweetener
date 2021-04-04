@@ -13,17 +13,17 @@
 
   <!-- Generated Files -->
   <ItemGroup>
-    <Compile Update="Delegates\AsyncAction.cs">
+    <Compile Update="AsyncAction.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>AsyncAction.tt</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Update="Delegates\AsyncFunc.cs">
+    <Compile Update="AsyncFunc.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>AsyncFunc.tt</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Update="Delegates\TryFunc.cs">
+    <Compile Update="TryFunc.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>TryFunc.tt</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -32,15 +32,15 @@
 
   <!-- Text Templating Files -->
   <ItemGroup>
-    <None Update="Delegates\AsyncFunc.tt">
+    <None Update="AsyncFunc.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AsyncFunc.cs</LastGenOutput>
     </None>
-    <None Update="Delegates\AsyncAction.tt">
+    <None Update="AsyncAction.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AsyncAction.cs</LastGenOutput>
     </None>
-    <None Update="Delegates\TryFunc.tt">
+    <None Update="TryFunc.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>TryFunc.cs</LastGenOutput>
     </None>

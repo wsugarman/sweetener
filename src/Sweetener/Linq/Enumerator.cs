@@ -27,7 +27,7 @@ namespace Sweetener.Linq
             private EmptyEnumerator()
             { }
 
-            // Current is undefined if the MoveNext() has not been called.
+            // Current is undefined if MoveNext() has not been called.
             // For the sake of performance, we'll skip any state and simply throw.
             public T Current => throw new NotSupportedException(SR.EmptyEnumeratorMessage);
 
