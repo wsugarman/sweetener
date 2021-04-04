@@ -13,27 +13,6 @@ namespace Sweetener.Test
     public class EmptyDictionaryTest
     {
         [TestMethod]
-        public void Count()
-        {
-            EmptyDictionary<string, int> elements = Map.Empty<string, int>();
-
-            // ICollection<T>
-            ICollection<KeyValuePair<string, int>> c = elements;
-            Assert.AreEqual(0, c.Count);
-
-            // IReadOnlyCollection<T>
-            IReadOnlyCollection<KeyValuePair<string, int>> r = elements;
-            Assert.AreEqual(0, r.Count);
-        }
-
-        [TestMethod]
-        public void IsReadOnly()
-        {
-            ICollection<KeyValuePair<string, int>> c = Map.Empty<string, int>();
-            Assert.IsTrue(c.IsReadOnly);
-        }
-
-        [TestMethod]
         public void Add()
         {
             EmptyDictionary<string, int> elements = Map.Empty<string, int>();
@@ -84,17 +63,31 @@ namespace Sweetener.Test
         }
 
         [TestMethod]
+        public void Count()
+        {
+            EmptyDictionary<string, int> elements = Map.Empty<string, int>();
+
+            // ICollection<T>
+            ICollection<KeyValuePair<string, int>> c = elements;
+            Assert.AreEqual(0, c.Count);
+
+            // IReadOnlyCollection<T>
+            IReadOnlyCollection<KeyValuePair<string, int>> r = elements;
+            Assert.AreEqual(0, r.Count);
+        }
+
+        [TestMethod]
         public void GetEnumerator()
         {
             EmptyDictionary<string, int> elements = Map.Empty<string, int>();
 
             // IEnumerable
             IEnumerable e1 = elements;
-            Assert.AreEqual(0, e1.Cast<KeyValuePair<string, int>>().Count());
+            Assert.IsFalse(e1.GetEnumerator().MoveNext());
 
             // IEnumerable<T>
             IEnumerable<KeyValuePair<string, int>> e2 = elements;
-            Assert.AreEqual(0, e2.Count());
+            Assert.IsFalse(e2.GetEnumerator().MoveNext());
         }
 
         [TestMethod]
@@ -110,6 +103,13 @@ namespace Sweetener.Test
             // IReadOnlyDictionary<TKey, TValue>
             IReadOnlyDictionary<string, int> r = elements;
             Assert.ThrowsException<KeyNotFoundException>(() => r["Hello"]);
+        }
+
+        [TestMethod]
+        public void IsReadOnly()
+        {
+            ICollection<KeyValuePair<string, int>> c = Map.Empty<string, int>();
+            Assert.IsTrue(c.IsReadOnly);
         }
 
         [TestMethod]
@@ -202,11 +202,11 @@ namespace Sweetener.Test
         {
             // IEnumerable
             IEnumerable e1 = EmptyDictionary<string, int>.KeyCollection.Value;
-            Assert.AreEqual(0, e1.Cast<string>().Count());
+            Assert.IsFalse(e1.GetEnumerator().MoveNext());
 
             // IEnumerable<T>
             IEnumerable<string> e2 = EmptyDictionary<string, int>.KeyCollection.Value;
-            Assert.AreEqual(0, e2.Count());
+            Assert.IsFalse(e2.GetEnumerator().MoveNext());
         }
 
         [TestMethod]
@@ -249,11 +249,11 @@ namespace Sweetener.Test
         {
             // IEnumerable
             IEnumerable e1 = EmptyDictionary<string, int>.ValueCollection.Value;
-            Assert.AreEqual(0, e1.Cast<string>().Count());
+            Assert.IsFalse(e1.GetEnumerator().MoveNext());
 
             // IEnumerable<T>
             IEnumerable<int> e2 = EmptyDictionary<string, int>.ValueCollection.Value;
-            Assert.AreEqual(0, e2.Count());
+            Assert.IsFalse(e2.GetEnumerator().MoveNext());
         }
 
         [TestMethod]
