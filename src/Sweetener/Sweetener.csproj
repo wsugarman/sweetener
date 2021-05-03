@@ -11,6 +11,10 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+  </ItemGroup>
+
   <!-- Generated Files -->
   <ItemGroup>
     <Compile Update="AsyncAction.cs">
@@ -22,6 +26,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AsyncFunc.tt</DependentUpon>
       <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Threading\Tasks\MultiTask.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MultiTask.tt</DependentUpon>
     </Compile>
     <Compile Update="TryFunc.cs">
       <AutoGen>True</AutoGen>
@@ -39,6 +48,10 @@
     <None Update="AsyncAction.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AsyncAction.cs</LastGenOutput>
+    </None>
+    <None Update="Threading\Tasks\MultiTask.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MultiTask.cs</LastGenOutput>
     </None>
     <None Update="TryFunc.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

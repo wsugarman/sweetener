@@ -1,6 +1,7 @@
 ﻿<#@ assembly name="System.Core" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Globalization" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
@@ -36,42 +37,69 @@
         GenerationEnvironment.Length = 0; // Remove everything written thus far
     }
 
-    private string GetInputTypeParameters(int count, bool contravariant = false)
-        => GenerateIncrementingList(count, contravariant ? "in T" : "T"); // T1, T2, T3
+    private string GetInputTypeParameters(int count, string typeFormat = "T{0}", bool contravariant = false)
+        => GetIncrementingStrings(contravariant ? "in " + typeFormat : typeFormat, count); // T1, T2, T3
 
-    public string GetParameters(int count)
-        => GenerateIncrementingList(count, "T", "arg"); // T1 arg1, T2 arg2, T3 arg3
+    public string GetParameters(int count, string typeFormat = "T{0}", string nameFormat = "arg{0}")
+        => GetIncrementingStrings(typeFormat + " " + nameFormat, count); // T1 arg1, T2 arg2, T3 arg3
 
-    public string GetParameters(string[] types)
-        => GetParameters(types, types.Length);
+    public string GetArguments(int count, string nameFormat = "arg{0}")
+        => GetIncrementingStrings(nameFormat, count); // arg1, arg2, arg3
 
-    public string GetParameters(string[] types, int count)
-    {
-        if (count == 0)
-            return string.Empty;
-
-        return string.Join(", ", types.Take(count).Select((t, i) => t + " " + (count == 1 ? "arg" : "arg" + (i + 1))));
-    }
-
-    public string GetArguments(int count)
-        => GenerateIncrementingList(count, "arg"); // arg1, arg2, arg3
-
-    private string GenerateIncrementingList(int count, params string[] pattern)
+    private string GetIncrementingStrings(string formatString, int count)
     {
         if (count < 0)
             throw new ArgumentOutOfRangeException(nameof(count));
 
-        if (pattern == null || pattern.Length == 0)
-            throw new ArgumentException("At least 1 value must be specified", nameof(pattern));
+        if (string.IsNullOrWhiteSpace(formatString))
+            throw new ArgumentNullException(nameof(formatString));
 
         if (count == 0)
             return string.Empty;
 
         IEnumerable<string> elements = Enumerable
-            .Repeat(pattern, count)
-            .Select((p, i) => string.Join(" ", pattern.Select(x => count == 1 ? x : x + (i + 1))));
+            .Repeat(formatString, count)
+            .Select((p, i) => string.Format(p, count == 1 ? (int?)null : i + 1));
 
         return string.Join(", ", elements);
+    }
+
+    public void PrintParamsXmlDoc(int parameterCount, int indent, string messageFormat, string parameterFormat = "arg{0}")
+    {
+        if (parameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(parameterCount));
+
+        if (string.IsNullOrWhiteSpace(messageFormat))
+            throw new ArgumentNullException(nameof(messageFormat));
+
+        string spaces = new string(' ', indent * SpacesPerTab);
+        for (int i = 1; i <= parameterCount; i++)
+        {
+            string param     = string.Format(CultureInfo.InvariantCulture, parameterFormat, parameterCount == 1 ? (int?)null : i);
+            string qualifier = parameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <param name="<#= param #>"><#= string.Format(CultureInfo.InvariantCulture, messageFormat, qualifier) #></param>
+<#+
+        }
+    }
+
+    public void PrintTypeParamsXmlDoc(int typeParameterCount, int indent, string messageFormat, string typeFormat = "T{0}")
+    {
+        if (typeParameterCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(typeParameterCount));
+
+        if (string.IsNullOrWhiteSpace(messageFormat))
+            throw new ArgumentNullException(nameof(messageFormat));
+
+        string spaces = new string(' ', indent * SpacesPerTab);
+        for (int i = 1; i <= typeParameterCount; i++)
+        {
+            string typeParameter = string.Format(CultureInfo.InvariantCulture, typeFormat, typeParameterCount == 1 ? (int?)null : i);
+            string qualifier     = typeParameterCount == 1 ? string.Empty : GetNthWord(i) + " ";
+#>
+<#= spaces #>/// <typeparam name="<#= typeParameter #>"><#= string.Format(CultureInfo.InvariantCulture, messageFormat, qualifier) #></typeparam>
+<#+
+        }
     }
 
     public string Enclose(string value, BracketType bracketType)
