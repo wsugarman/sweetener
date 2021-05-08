@@ -19,8 +19,8 @@ namespace Sweetener
         /// <remarks>
         /// This constructor initializes the <see cref="Exception.Message"/> property of
         /// the new instance to a system-supplied message that describes the error,
-        /// such as "Specified argument was null or empty." This message takes into account the current
-        /// system culture.
+        /// such as "Value cannot be null, empty, or consist only of white-space characters."
+        /// This message takes into account the current system culture.
         /// </remarks>
         public ArgumentNullOrWhiteSpaceException()
             : this(paramName: null)
@@ -34,7 +34,8 @@ namespace Sweetener
         /// <para>
         /// This constructor initializes the <see cref="Exception.Message"/> property of the
         /// new instance to a system-supplied message that describes the error, such as
-        /// "Specified argument was null or empty." This message takes into account the current system culture.
+        /// "Value cannot be null, empty, or consist only of white-space characters."
+        /// This message takes into account the current system culture.
         /// </para>
         /// <para>
         /// This constructor initializes the <see cref="ArgumentException.ParamName"/> property
