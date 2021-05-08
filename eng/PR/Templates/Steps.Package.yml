@@ -27,12 +27,11 @@ steps:
 - task: DotNetCoreCLI@2
   displayName: 'Build and Pack Library'
   inputs:
-    command: 'pack'
-    packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-    configurationToPack: '${{ parameters.BuildConfiguration }}'
-    buildProperties: 'ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package)'
+    command: 'custom'
+    custom: 'pack'
+    projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package) -warnaserror -o "$(Build.ArtifactStagingDirectory)"'
     nugetConfigPath: 'NuGet.config'
-    verbosityPack: 'normal'
 
 - task: PublishPipelineArtifact@1
   displayName: 'Publish NuPkg Artifact'

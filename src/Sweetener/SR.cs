@@ -10,6 +10,10 @@ namespace Sweetener
     {
         public static string ArgumentNegativeMessage => ExceptionResourceManager.GetString(nameof(ArgumentNegativeMessage), CultureInfo.CurrentUICulture);
 
+        public static string ArgumentNullOrEmptyMessage => ExceptionResourceManager.GetString(nameof(ArgumentNullOrEmptyMessage), CultureInfo.CurrentUICulture);
+
+        public static string ArgumentNullOrWhiteSpaceMessage => ExceptionResourceManager.GetString(nameof(ArgumentNullOrWhiteSpaceMessage), CultureInfo.CurrentUICulture);
+
         public static string EmptyEnumeratorMessage => ExceptionResourceManager.GetString(nameof(EmptyEnumeratorMessage), CultureInfo.CurrentUICulture);
 
         public static string MissingOptionalValueMessage => ExceptionResourceManager.GetString(nameof(MissingOptionalValueMessage), CultureInfo.CurrentUICulture);

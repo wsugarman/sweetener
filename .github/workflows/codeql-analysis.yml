@@ -23,12 +23,12 @@ jobs:
         languages: 'csharp'
       
     - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1.7.2
+      uses: actions/setup-dotnet@v1.8.0
       with:
         dotnet-version: '5.0.x'
         
     - name: Build Sweetener.sln
-      run: dotnet build src/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true
+      run: dotnet build src/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
