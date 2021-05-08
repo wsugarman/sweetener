@@ -7,33 +7,33 @@ using System.Runtime.Serialization;
 namespace Sweetener
 {
     /// <summary>
-    /// The exception that is thrown when the value of an argument is less than zero.
+    /// The exception that is thrown when the value of an argument is <see langword="null"/> or empty.
     /// </summary>
     [Serializable]
-    public class ArgumentNegativeException : ArgumentOutOfRangeException
+    public class ArgumentNullOrEmptyException : ArgumentException
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class.
+        /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class.
         /// </summary>
         /// <remarks>
         /// This constructor initializes the <see cref="Exception.Message"/> property of
         /// the new instance to a system-supplied message that describes the error,
-        /// such as "Specified argument was negative." This message takes into account the current
+        /// such as "Specified argument was null or empty." This message takes into account the current
         /// system culture.
         /// </remarks>
-        public ArgumentNegativeException()
+        public ArgumentNullOrEmptyException()
             : this(paramName: null)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class
+        /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
         /// with the name of the parameter that causes this exception.
         /// </summary>
         /// <remarks>
         /// <para>
         /// This constructor initializes the <see cref="Exception.Message"/> property of the
         /// new instance to a system-supplied message that describes the error, such as
-        /// "Specified argument was negative." This message takes into account the current system culture.
+        /// "Specified argument was null or empty." This message takes into account the current system culture.
         /// </para>
         /// <para>
         /// This constructor initializes the <see cref="ArgumentException.ParamName"/> property
@@ -42,25 +42,42 @@ namespace Sweetener
         /// </para>
         /// </remarks>
         /// <param name="paramName">The name of the parameter that causes this exception.</param>
-        public ArgumentNegativeException(string? paramName)
-            : base(paramName, SR.ArgumentNegativeMessage)
+        public ArgumentNullOrEmptyException(string? paramName)
+            : base(SR.ArgumentNullOrEmptyMessage, paramName)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class
+        /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
         /// with a specified error message and the exception that is the cause of this exception.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This constructor initializes the <see cref="Exception.Message"/> property of the new
+        /// instance using the value of the <paramref name="message"/> parameter. The content of
+        /// the <paramref name="message"/> parameter is intended to be understood by humans.
+        /// The caller of this constructor is required to ensure that this string has been
+        /// localized for the current system culture.
+        /// </para>
+        /// <para>
+        /// An exception that is thrown as a direct result of a previous exception should include
+        /// a reference to the previous exception in the <see cref="Exception.InnerException"/>
+        /// property. The <see cref="Exception.InnerException"/> property returns the same value
+        /// that is passed into the constructor, or <see langword="null"/> if the
+        /// <see cref="Exception.InnerException"/> property does not supply the inner exception
+        /// value to the constructor.
+        /// </para>
+        /// </remarks>
         /// <param name="message">The error message that explains the reason for this exception.</param>
         /// <param name="innerException">
         /// The exception that is the cause of the current exception, or <see langword="null"/>
         /// if no inner exception is specified.
         /// </param>
-        public ArgumentNegativeException(string? message, Exception? innerException)
+        public ArgumentNullOrEmptyException(string? message, Exception? innerException)
             : base(message, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class
+        /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
         /// with the name of the parameter that causes this exception and a specified error message.
         /// </summary>
         /// <remarks>
@@ -79,44 +96,12 @@ namespace Sweetener
         /// </remarks>
         /// <param name="paramName">The name of the parameter that caused the exception.</param>
         /// <param name="message">The message that describes the error.</param>
-        public ArgumentNegativeException(string? paramName, string? message)
-            : base(paramName, message)
-        { }
-
-        // TODO: Should ctors that accept the actual value specify numeric types instead of object? Or is that too limiting?
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class
-        /// with the parameter name, the value of the argument, and a specified error message.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This constructor initializes the <see cref="ArgumentException.ParamName"/> property
-        /// of the new instance using the <paramref name="paramName"/> parameter, the
-        /// <see cref="ArgumentOutOfRangeException.ActualValue"/> property using the
-        /// <paramref name="actualValue"/> parameter, and the <see cref="Exception.Message"/>
-        /// property using the <paramref name="message"/> parameter. The content of the
-        /// <paramref name="paramName"/> and <paramref name="message"/> parameters is intended
-        /// to be understood by humans. The caller of this constructor is required to ensure
-        /// that these strings have been localized for the current system culture.
-        /// </para>
-        /// <para>
-        /// The <paramref name="actualValue"/> parameter contains an invalid value that is passed
-        /// to the method and causes this exception to be thrown. This value is stored in the
-        /// <see cref="ArgumentOutOfRangeException.ActualValue"/> property and its string
-        /// representation is appended to the message string held in the
-        /// <see cref="Exception.Message"/> property.
-        /// </para>
-        /// </remarks>
-        /// <param name="paramName">The name of the parameter that caused the exception.</param>
-        /// <param name="actualValue">The value of the argument that causes this exception.</param>
-        /// <param name="message">The message that describes the error.</param>
-        public ArgumentNegativeException(string? paramName, object? actualValue, string? message)
-            : base(paramName, actualValue, message)
+        public ArgumentNullOrEmptyException(string? paramName, string? message)
+            : base(message, paramName)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentNegativeException"/> class
+        /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
         /// with serialized data.
         /// </summary>
         /// <remarks>
@@ -126,7 +111,7 @@ namespace Sweetener
         /// </remarks>
         /// <param name="info">The object that holds the serialized object data.</param>
         /// <param name="context">An object that describes the source or destination of the serialized data.</param>
-        protected ArgumentNegativeException(SerializationInfo info, StreamingContext context)
+        protected ArgumentNullOrEmptyException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }
