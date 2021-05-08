@@ -121,10 +121,10 @@
     <value>Specified argument was negative.</value>
   </data>
   <data name="ArgumentNullOrEmptyMessage" xml:space="preserve">
-    <value>Specified argument was null or empty.</value>
+    <value>Value cannot be null or empty.</value>
   </data>
   <data name="ArgumentNullOrWhiteSpaceMessage" xml:space="preserve">
-    <value>Specified argument was null, empty, or consists only of white-space characters.</value>
+    <value>Value cannot be null, empty, or consist only of white-space characters.</value>
   </data>
   <data name="EmptyEnumeratorMessage" xml:space="preserve">
     <value>Enumerator does not iterate over any elements.</value>
