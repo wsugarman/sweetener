@@ -52,7 +52,7 @@ steps:
   inputs:
     command: 'build'
     projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
-    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File)'
+    arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File) -warnaserror'
     nugetConfigPath: 'NuGet.config'
 
 - task: AzureKeyVault@1
