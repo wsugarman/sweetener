@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 namespace Sweetener.Threading.Tasks
 {
     /// <summary>
-    /// Provides a set of <see langword="static"/> methods for interacting with multiple instances of <see cref="Task{T}"/> and <see cref="ValueTask{T}"/>.
+    /// Provides a set of <see langword="static"/> methods for interacting with multiple <see cref="Task{T}"/> objects
+    /// whose type arguments may differ.
     /// </summary>
     public static class MultiTask
     {
@@ -29,7 +30,7 @@ namespace Sweetener.Threading.Tasks
             PrintParamsXmlDoc    (parameterCount, indent: 2, messageFormat: "The {0}task to wait on for completion.", parameterFormat: "task{0}");
 #>
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
-        public static async Task<(<#= typeParameters #>)> WhenAll<<#= typeParameters #>>(<#= parameters #>)
+        public static Task<(<#= typeParameters #>)> WhenAll<<#= typeParameters #>>(<#= parameters #>)
         {
 <#
             for (int i = 1; i <= parameterCount; i++)
@@ -42,8 +43,9 @@ namespace Sweetener.Threading.Tasks
 <#
             }
 #>
-            await Task.WhenAll(<#= GetArguments(parameterCount, "task{0}") #>).ConfigureAwait(false);
-            return (<#= GetArguments(parameterCount, "task{0}.Result") #>);
+            return Task.WhenAll(<#= GetArguments(parameterCount, "task{0}") #>).WithResultOnSuccess(
+                t => (<#= GetArguments(parameterCount, "t.Task{0}.Result") #>),
+                (<#= GetArguments(parameterCount, "Task{0}: task{0}") #>));
         }
 <#
             // Avoid extra newlines
