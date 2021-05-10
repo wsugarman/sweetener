@@ -31,7 +31,7 @@ namespace Sweetener.Threading.Tasks.Test
             using CancellationTokenSource source = new CancellationTokenSource();
             source.Cancel();
 
-            await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () =>
+            await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () =>
             {
                 try
                 {
@@ -39,7 +39,7 @@ namespace Sweetener.Threading.Tasks.Test
                         .WithResultOnSuccess(s => s, "Hello World")
                         .ConfigureAwait(false);
                 }
-                catch (OperationCanceledException oce)
+                catch (TaskCanceledException oce)
                 {
                     Assert.AreEqual(source.Token, oce.CancellationToken);
                     throw;
