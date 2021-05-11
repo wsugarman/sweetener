@@ -11,6 +11,10 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
   <!-- Generated Files -->
   <ItemGroup>
     <Compile Update="AsyncAction.cs">
@@ -22,6 +26,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AsyncFunc.tt</DependentUpon>
       <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Threading\Tasks\MultiTask.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MultiTask.tt</DependentUpon>
     </Compile>
     <Compile Update="TryFunc.cs">
       <AutoGen>True</AutoGen>
@@ -40,14 +49,14 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AsyncAction.cs</LastGenOutput>
     </None>
+    <None Update="Threading\Tasks\MultiTask.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MultiTask.cs</LastGenOutput>
+    </None>
     <None Update="TryFunc.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>TryFunc.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>
