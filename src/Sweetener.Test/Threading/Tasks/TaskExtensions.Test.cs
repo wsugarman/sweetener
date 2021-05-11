@@ -16,10 +16,10 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WithResultOnSuccess()
         {
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => TaskExtensions.WithResultOnSuccess(null!, s => 42, "State")).ConfigureAwait(false);
 
-            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => Task.CompletedTask.WithResultOnSuccess<string, int>(null!, "State")).ConfigureAwait(false);
 

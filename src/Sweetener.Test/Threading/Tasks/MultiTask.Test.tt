@@ -21,7 +21,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT<#= parameterCount #>()
         {
-            // Exceptions
+            // Bad Input
 <#
             for (int i = 1; i <= parameterCount; i++)
             {

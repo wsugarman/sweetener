@@ -15,7 +15,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT2()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
@@ -38,7 +38,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT3()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
@@ -71,7 +71,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT4()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
@@ -116,7 +116,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT5()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
@@ -175,7 +175,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT6()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
@@ -250,7 +250,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT7()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
@@ -343,7 +343,7 @@ namespace Sweetener.Threading.Tasks.Test
         [TestMethod]
         public async Task WhenAllT8()
         {
-            // Exceptions
+            // Bad Input
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(
                 () => MultiTask.WhenAll(
                     (Task<int>)null!,
