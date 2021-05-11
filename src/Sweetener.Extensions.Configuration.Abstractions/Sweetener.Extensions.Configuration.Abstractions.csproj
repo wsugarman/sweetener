@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Abstractions that sweeten Microsoft's configuration extensions</Description>
+    <RootNamespace>Sweetener.Extensions.Configuration</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
+      <_Parameter1>fa459b53-e6a2-48a9-8dea-b698ed304f8b</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>
