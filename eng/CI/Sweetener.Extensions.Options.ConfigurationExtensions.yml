@@ -1,0 +1,22 @@
+pr: none
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - eng/CI/Sweetener.Extensions.Options.ConfigurationExtensions.yml
+    - eng/CI/Scripts/*
+    - eng/CI/Templates/*
+    - eng/Scripts/*
+    - eng/Templates/*
+    - src/AssemblyInfo.Common.cs
+    - src/Directory.Build.props
+    - src/Directory.Build.targets
+    - src/Sweetener.sln
+    - src/Sweetener.Extensions.Options.ConfigurationExtensions/*
+
+jobs:
+- template: Templates/Jobs.yml
+  parameters:
+    project: 'Sweetener.Extensions.Options.ConfigurationExtensions'

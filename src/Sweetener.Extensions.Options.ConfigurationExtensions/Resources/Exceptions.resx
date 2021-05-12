@@ -117,19 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ArgumentNegativeMessage" xml:space="preserve">
-    <value>Specified argument was negative.</value>
-  </data>
-  <data name="ArgumentNullOrEmptyMessage" xml:space="preserve">
-    <value>Value cannot be null or empty.</value>
-  </data>
-  <data name="ArgumentNullOrWhiteSpaceMessage" xml:space="preserve">
-    <value>Value cannot be null, empty, or consist only of white-space characters.</value>
-  </data>
-  <data name="EmptyEnumeratorMessage" xml:space="preserve">
-    <value>Enumerator does not iterate over any elements.</value>
-  </data>
-  <data name="MissingOptionalValueMessage" xml:space="preserve">
-    <value>Optional object must have a value.</value>
+  <data name="InvalidConfigurationSectionFormat" xml:space="preserve">
+    <value>Cannot find ConfigurationSectionAttribute on type '{0}.'</value>
   </data>
 </root>
