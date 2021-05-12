@@ -1,0 +1,16 @@
+pr: none
+trigger: none
+resources:
+  pipelines:
+  - pipeline: Sweetener_Extensions_Options_ConfigurationExtensions
+    source: 'CI/Sweetener.Extensions.Options.ConfigurationExtensions - CI'
+    trigger:
+      branches:
+        include:
+        - main
+
+jobs:
+- template: Templates/Jobs.yml
+  parameters:
+    project: 'Sweetener.Extensions.Options.ConfigurationExtensions'
+    sourcePipelineId: 15
