@@ -60,7 +60,7 @@ namespace Sweetener.Extensions.Configuration
             if (!TryFindConfigurationSectionAttribute(instance.GetType(), out ConfigurationSectionAttribute? attribute))
                 throw new ArgumentException(SR.Format(SR.InvalidConfigurationSectionFormat, instance.GetType()), nameof(instance));
 
-            configuration.GetSection(attribute.Path).Bind(instance, configureOptions);
+            configuration.GetSection(attribute.Key).Bind(instance, configureOptions);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace Sweetener.Extensions.Configuration
             if (!TryFindConfigurationSectionAttribute(type, out ConfigurationSectionAttribute? attribute))
                 throw new ArgumentException(SR.Format(SR.InvalidConfigurationSectionFormat, type), nameof(type));
 
-            return configuration.GetSection(attribute.Path).Get(type, configureOptions);
+            return configuration.GetSection(attribute.Key).Get(type, configureOptions);
         }
 
         /// <summary>
@@ -138,6 +138,7 @@ namespace Sweetener.Extensions.Configuration
         /// One or more properties for type <typeparamref name="T"/> cannot be bound against the configuration.
         /// </exception>
         public static T GetSection<T>(this IConfiguration configuration)
+            where T : class
             => configuration.GetSection<T>(configureOptions: null);
 
         /// <summary>
@@ -162,6 +163,7 @@ namespace Sweetener.Extensions.Configuration
         /// One or more properties for type <typeparamref name="T"/> cannot be bound against the configuration.
         /// </exception>
         public static T GetSection<T>(this IConfiguration configuration, Action<BinderOptions>? configureOptions)
+            where T : class
         {
             if (configuration is null)
                 throw new ArgumentNullException(nameof(configuration));
@@ -169,7 +171,7 @@ namespace Sweetener.Extensions.Configuration
             if (!TryFindConfigurationSectionAttribute(typeof(T), out ConfigurationSectionAttribute? attribute))
                 throw new ArgumentException(SR.Format(SR.InvalidConfigurationSectionFormat, typeof(T)));
 
-            return configuration.GetSection(attribute.Path).Get<T>(configureOptions);
+            return configuration.GetSection(attribute.Key).Get<T>(configureOptions);
         }
 
         private static bool TryFindConfigurationSectionAttribute(Type type, [NotNullWhen(true)] out ConfigurationSectionAttribute? attribute)

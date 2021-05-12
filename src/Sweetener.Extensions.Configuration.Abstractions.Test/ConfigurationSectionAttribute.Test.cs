@@ -13,10 +13,10 @@ namespace Sweetener.Extensions.Configuration.Test
             Assert.ThrowsException<ArgumentNullException>(() => new ConfigurationSectionAttribute(null!));
 
             // Root
-            Assert.AreEqual(ConfigurationPath.Root, new ConfigurationSectionAttribute(ConfigurationPath.Root).Path);
+            Assert.AreEqual(ConfigurationSectionKey.None, new ConfigurationSectionAttribute(ConfigurationSectionKey.None).Key);
 
             // Non-root
-            Assert.AreEqual("Settings", new ConfigurationSectionAttribute("Settings").Path);
+            Assert.AreEqual("Settings", new ConfigurationSectionAttribute("Settings").Key);
         }
 
         [TestMethod]
@@ -28,7 +28,7 @@ namespace Sweetener.Extensions.Configuration.Test
                 typeof(ConfigurationSectionAttribute)) as ConfigurationSectionAttribute;
 
             Assert.IsNotNull(attribute);
-            Assert.AreEqual("Testing", attribute.Path);
+            Assert.AreEqual("Testing", attribute.Key);
 
             // Not Found (Cannot Inherit)
             Assert.IsNull(Attribute.GetCustomAttribute(typeof(NewSettings), typeof(ConfigurationSectionAttribute)));

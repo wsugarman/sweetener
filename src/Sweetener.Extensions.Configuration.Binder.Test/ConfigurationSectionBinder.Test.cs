@@ -53,7 +53,7 @@ namespace Sweetener.Extensions.Configuration.Test
         }
 
         [TestMethod]
-        public void BindSection_Object_Configure()
+        public void BindSection_Object_ConfigureOptions()
         {
             // Invalid Type for Instance
             Assert.ThrowsException<ArgumentException>(() => TestConfiguration.BindSection(new CodeCoverageSettings(), configureOptions: null));
@@ -93,7 +93,7 @@ namespace Sweetener.Extensions.Configuration.Test
         }
 
         [TestMethod]
-        public void GetSection_Type_Configure()
+        public void GetSection_Type_ConfigureOptions()
         {
             // Invalid Type for Instance
             Assert.ThrowsException<ArgumentException>(() => TestConfiguration.GetSection(typeof(CodeCoverageSettings), configureOptions: null));
@@ -129,7 +129,7 @@ namespace Sweetener.Extensions.Configuration.Test
         }
 
         [TestMethod]
-        public void GetSection_T_Configure()
+        public void GetSection_T_ConfigureOptions()
         {
             // Invalid Type for Instance
             Assert.ThrowsException<ArgumentException>(() => TestConfiguration.GetSection<CodeCoverageSettings>(configureOptions: null));

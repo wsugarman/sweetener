@@ -12,21 +12,20 @@ namespace Sweetener.Extensions.Configuration
     public sealed class ConfigurationSectionAttribute : Attribute
     {
         /// <summary>
-        /// Gets the path to this section.
+        /// Gets the key for this section.
         /// </summary>
         /// <remarks>
-        /// By default, the path should assume to be from the root of a configuration
-        /// unless configured otherwise when defining the service container.
+        /// The key may or may not be found at the root of a configuration.
         /// </remarks>
-        /// <value>The path to the attributed section's settings.</value>
-        public string Path { get; }
+        /// <value>The key for the attributed section's settings.</value>
+        public string Key { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationSectionAttribute"/>
-        /// class with the specified <paramref name="path"/>.
+        /// class with the specified <paramref name="key"/>.
         /// </summary>
-        /// <param name="path">The path to this section</param>
-        public ConfigurationSectionAttribute(string path)
-            => Path = path ?? throw new ArgumentNullException(nameof(path));
+        /// <param name="key">The key for this section</param>
+        public ConfigurationSectionAttribute(string key)
+            => Key = key ?? throw new ArgumentNullException(nameof(key));
     }
 }

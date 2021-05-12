@@ -20,7 +20,8 @@ namespace Sweetener.Extensions.DependencyInjection
     public static class OptionsConfigurationSectionServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers a configuration instance that <typeparamref name="TSection"/> will bind against,
+        /// Registers a configuration instance that <typeparamref name="TSection"/>, a type that is annotated
+        /// with <see cref="ConfigurationSectionAttribute"/>, will bind against automatically using the appropriate key,
         /// and updates the section when the configuration changes.
         /// </summary>
         /// <typeparam name="TSection">
@@ -34,15 +35,33 @@ namespace Sweetener.Extensions.DependencyInjection
         /// <typeparamref name="TSection"/> is not annotated with <see cref="ConfigurationSectionAttribute"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        /// <para><paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.</para>
-        /// <para>-or-</para>
-        /// <para>TBD.</para>
+        /// <paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.
         /// </exception>
         public static IServiceCollection ConfigureSection<TSection>(this IServiceCollection services, IConfiguration config)
             where TSection : class
             => services.ConfigureSection<TSection>(config, null);
 
-        public static IServiceCollection ConfigureSection<TOptions>(this IServiceCollection services, IConfiguration config, Action<BinderOptions>? configureBinder) where TOptions : class
+        /// <summary>
+        /// Registers a configuration instance that <typeparamref name="TSection"/>, a type that is annotated
+        /// with <see cref="ConfigurationSectionAttribute"/>, will bind against automatically using the appropriate key,
+        /// and updates the section when the configuration changes.
+        /// </summary>
+        /// <typeparam name="TSection">
+        /// The type of section being configured. The type must be annotated with
+        /// <see cref="ConfigurationSectionAttribute"/>.
+        /// </typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+        /// <param name="config">The configuration being bound that contains the section.</param>
+        /// <param name="configureBinder">Used to configure the <see cref="BinderOptions"/>.</param>
+        /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+        /// <exception cref="ArgumentException">
+        /// <typeparamref name="TSection"/> is not annotated with <see cref="ConfigurationSectionAttribute"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.
+        /// </exception>
+        public static IServiceCollection ConfigureSection<TSection>(this IServiceCollection services, IConfiguration config, Action<BinderOptions>? configureBinder)
+            where TSection : class
         {
             if (services is null)
                 throw new ArgumentNullException(nameof(services));
@@ -50,15 +69,40 @@ namespace Sweetener.Extensions.DependencyInjection
             if (config is null)
                 throw new ArgumentNullException(nameof(config));
 
-            if (!TryFindConfigurationSectionAttribute(typeof(TOptions), out ConfigurationSectionAttribute? attribute))
-                throw new ArgumentException(SR.Format(SR.InvalidConfigurationSectionFormat, typeof(TOptions)));
+            if (!TryFindConfigurationSectionAttribute(typeof(TSection), out ConfigurationSectionAttribute? attribute))
+                throw new ArgumentException(SR.Format(SR.InvalidConfigurationSectionFormat, typeof(TSection)));
 
-            return services.Configure<TOptions>(config.GetSection(attribute.Path), configureBinder);
+            return services.Configure<TSection>(config.GetSection(attribute.Key), configureBinder);
         }
 
+        /// <summary>
+        /// Registers a configuration instance for each of the types that are annotated with
+        /// <see cref="ConfigurationSectionAttribute"/> found in <see cref="AppDomain.CurrentDomain"/>
+        /// and will bind against these types automatically using the appropriate key. When the
+        /// configuration changes, so too will the associated configuration sections.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+        /// <param name="config">The configuration being bound that contains the section.</param>
+        /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.
+        /// </exception>
         public static IServiceCollection ConfigureSections(this IServiceCollection services, IConfiguration config)
             => services.ConfigureSections(config, null);
 
+        /// <summary>
+        /// Registers a configuration instance for each of the types that are annotated with
+        /// <see cref="ConfigurationSectionAttribute"/> found in <see cref="AppDomain.CurrentDomain"/>
+        /// and will bind against these types automatically using the appropriate key. When the
+        /// configuration changes, so too will the associated configuration sections.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+        /// <param name="config">The configuration being bound that contains the section.</param>
+        /// <param name="configureBinder">Used to configure the <see cref="BinderOptions"/>.</param>
+        /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.
+        /// </exception>
         public static IServiceCollection ConfigureSections(this IServiceCollection services, IConfiguration config, Action<BinderOptions>? configureBinder)
         {
             if (services is null)
@@ -81,7 +125,7 @@ namespace Sweetener.Extensions.DependencyInjection
             foreach ((Type type, ConfigurationSectionAttribute attribute) in EnumerateConfigurationSections())
             {
                 // Update section
-                arguments[1] = config.GetSection(attribute.Path);
+                arguments[1] = config.GetSection(attribute.Key);
 
                 // Dynamically invoke the configuration method
                 configureMethod
