@@ -124,10 +124,14 @@ namespace Sweetener.Extensions.DependencyInjection
             object?[] arguments = new object?[3] { services, config, configureBinder };
             foreach ((Type type, ConfigurationSectionAttribute attribute) in EnumerateConfigurationSections())
             {
-                // Update section
-                arguments[1] = config.GetSection(attribute.Key);
+                // Update section and check its existence is necessary
+                // TODO: Allow callers to include missing sections
+                IConfigurationSection section = config.GetSection(attribute.Key);
+                if (!section.Exists())
+                    continue;
 
                 // Dynamically invoke the configuration method
+                arguments[1] = section;
                 configureMethod
                     .MakeGenericMethod(type)
                     .Invoke(

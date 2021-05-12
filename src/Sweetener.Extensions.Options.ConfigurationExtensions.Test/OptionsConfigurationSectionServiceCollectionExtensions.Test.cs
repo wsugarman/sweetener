@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -136,6 +137,13 @@ namespace Sweetener.Extensions.DependencyInjection.Test
             config["WebServer:Port"] = "8081";
             Assert.AreEqual(5, configureCalls);
             Assert.AreEqual(8081, webServerMonitor.CurrentValue.Port);
+
+            // Check Missing Section "Unused"
+            // (Never registered, so this change should be ignored)
+            IOptions<Unused> unused = provider.GetRequiredService<IOptions<Unused>>();
+            config["Unused:Number"] = "42";
+            Assert.AreEqual(7, configureCalls);
+            Assert.AreEqual(0, unused.Value.Number);
         }
 
         private static IConfiguration CreateConfiguration(bool includeWeb = false)
@@ -220,7 +228,9 @@ namespace Sweetener.Extensions.DependencyInjection.Test
         [ConfigurationSection(nameof(Unused))]
         [SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes", Justification = "Type used in tests.")]
         private sealed class Unused
-        { }
+        {
+            public int Number { get; set; }
+        }
 
         [SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes", Justification = "Type used in tests.")]
         private sealed class InvalidSettings
