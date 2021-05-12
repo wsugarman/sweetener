@@ -7,10 +7,10 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+    <PackageReference Include="Sweetener.Extensions.Configuration.Abstractions" Version="5.0.0-alpha.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sweetener.Extensions.Configuration.Abstractions\Sweetener.Extensions.Configuration.Abstractions.csproj" />
     <ProjectReference Include="..\Sweetener.Extensions.Options.ConfigurationExtensions\Sweetener.Extensions.Options.ConfigurationExtensions.csproj" />
   </ItemGroup>
 
