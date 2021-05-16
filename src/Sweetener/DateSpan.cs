@@ -369,7 +369,7 @@ namespace Sweetener
         /// otherwise, <see langword="false"/>.
         /// </returns>
         public bool IsProperSupersetOf(DateSpan other)
-            => other.IsSubsetOf(this);
+            => other.IsProperSubsetOf(this);
 
         /// <summary>
         /// Determines whether an interval is a subset of a specified interval.
@@ -390,7 +390,7 @@ namespace Sweetener
             if (other.IsEmpty)
                 return IsEmpty;
 
-            return IsEmpty || (_start >= other._start && (_start.Ticks + _durationTicks) < (other._start.Ticks + other._durationTicks));
+            return IsEmpty || (_start >= other._start && (_start.Ticks + _durationTicks) <= (other._start.Ticks + other._durationTicks));
         }
 
         /// <summary>
@@ -519,7 +519,7 @@ namespace Sweetener
         public static DateSpan FromDay(int year, int month, int day, DateTimeKind kind)
         {
             DateTime start = new DateTime(year, month, day, 0, 0, 0, kind);
-            return new DateSpan(start, start.AddMonths(1));
+            return new DateSpan(start, TimeSpan.FromDays(1));
         }
 
         /// <summary>
