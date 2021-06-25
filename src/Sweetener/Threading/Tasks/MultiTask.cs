@@ -24,15 +24,17 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2)> WhenAll<T1, T2>(Task<T1> task1, Task<T2> task2)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            return Task.WhenAll(task1, task2).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result),
-                (Task1: task1, Task2: task2));
+            return Task
+                .WhenAll(task1, task2)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result),
+                    (Task1: task1, Task2: task2));
         }
 
         /// <summary>
@@ -47,18 +49,20 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2, T3)> WhenAll<T1, T2, T3>(Task<T1> task1, Task<T2> task2, Task<T3> task3)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            if (task3 == null)
+            if (task3 is null)
                 throw new ArgumentNullException(nameof(task3));
 
-            return Task.WhenAll(task1, task2, task3).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result, t.Task3.Result),
-                (Task1: task1, Task2: task2, Task3: task3));
+            return Task
+                .WhenAll(task1, task2, task3)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result, t.Task3.Result),
+                    (Task1: task1, Task2: task2, Task3: task3));
         }
 
         /// <summary>
@@ -75,21 +79,23 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2, T3, T4)> WhenAll<T1, T2, T3, T4>(Task<T1> task1, Task<T2> task2, Task<T3> task3, Task<T4> task4)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            if (task3 == null)
+            if (task3 is null)
                 throw new ArgumentNullException(nameof(task3));
 
-            if (task4 == null)
+            if (task4 is null)
                 throw new ArgumentNullException(nameof(task4));
 
-            return Task.WhenAll(task1, task2, task3, task4).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result),
-                (Task1: task1, Task2: task2, Task3: task3, Task4: task4));
+            return Task
+                .WhenAll(task1, task2, task3, task4)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result),
+                    (Task1: task1, Task2: task2, Task3: task3, Task4: task4));
         }
 
         /// <summary>
@@ -108,24 +114,26 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2, T3, T4, T5)> WhenAll<T1, T2, T3, T4, T5>(Task<T1> task1, Task<T2> task2, Task<T3> task3, Task<T4> task4, Task<T5> task5)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            if (task3 == null)
+            if (task3 is null)
                 throw new ArgumentNullException(nameof(task3));
 
-            if (task4 == null)
+            if (task4 is null)
                 throw new ArgumentNullException(nameof(task4));
 
-            if (task5 == null)
+            if (task5 is null)
                 throw new ArgumentNullException(nameof(task5));
 
-            return Task.WhenAll(task1, task2, task3, task4, task5).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result),
-                (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5));
+            return Task
+                .WhenAll(task1, task2, task3, task4, task5)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result),
+                    (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5));
         }
 
         /// <summary>
@@ -146,27 +154,29 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2, T3, T4, T5, T6)> WhenAll<T1, T2, T3, T4, T5, T6>(Task<T1> task1, Task<T2> task2, Task<T3> task3, Task<T4> task4, Task<T5> task5, Task<T6> task6)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            if (task3 == null)
+            if (task3 is null)
                 throw new ArgumentNullException(nameof(task3));
 
-            if (task4 == null)
+            if (task4 is null)
                 throw new ArgumentNullException(nameof(task4));
 
-            if (task5 == null)
+            if (task5 is null)
                 throw new ArgumentNullException(nameof(task5));
 
-            if (task6 == null)
+            if (task6 is null)
                 throw new ArgumentNullException(nameof(task6));
 
-            return Task.WhenAll(task1, task2, task3, task4, task5, task6).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result, t.Task6.Result),
-                (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5, Task6: task6));
+            return Task
+                .WhenAll(task1, task2, task3, task4, task5, task6)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result, t.Task6.Result),
+                    (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5, Task6: task6));
         }
 
         /// <summary>
@@ -189,30 +199,32 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2, T3, T4, T5, T6, T7)> WhenAll<T1, T2, T3, T4, T5, T6, T7>(Task<T1> task1, Task<T2> task2, Task<T3> task3, Task<T4> task4, Task<T5> task5, Task<T6> task6, Task<T7> task7)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            if (task3 == null)
+            if (task3 is null)
                 throw new ArgumentNullException(nameof(task3));
 
-            if (task4 == null)
+            if (task4 is null)
                 throw new ArgumentNullException(nameof(task4));
 
-            if (task5 == null)
+            if (task5 is null)
                 throw new ArgumentNullException(nameof(task5));
 
-            if (task6 == null)
+            if (task6 is null)
                 throw new ArgumentNullException(nameof(task6));
 
-            if (task7 == null)
+            if (task7 is null)
                 throw new ArgumentNullException(nameof(task7));
 
-            return Task.WhenAll(task1, task2, task3, task4, task5, task6, task7).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result, t.Task6.Result, t.Task7.Result),
-                (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5, Task6: task6, Task7: task7));
+            return Task
+                .WhenAll(task1, task2, task3, task4, task5, task6, task7)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result, t.Task6.Result, t.Task7.Result),
+                    (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5, Task6: task6, Task7: task7));
         }
 
         /// <summary>
@@ -237,33 +249,35 @@ namespace Sweetener.Threading.Tasks
         /// <returns>A task that represents the completion of all of the supplied tasks.</returns>
         public static Task<(T1, T2, T3, T4, T5, T6, T7, T8)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8>(Task<T1> task1, Task<T2> task2, Task<T3> task3, Task<T4> task4, Task<T5> task5, Task<T6> task6, Task<T7> task7, Task<T8> task8)
         {
-            if (task1 == null)
+            if (task1 is null)
                 throw new ArgumentNullException(nameof(task1));
 
-            if (task2 == null)
+            if (task2 is null)
                 throw new ArgumentNullException(nameof(task2));
 
-            if (task3 == null)
+            if (task3 is null)
                 throw new ArgumentNullException(nameof(task3));
 
-            if (task4 == null)
+            if (task4 is null)
                 throw new ArgumentNullException(nameof(task4));
 
-            if (task5 == null)
+            if (task5 is null)
                 throw new ArgumentNullException(nameof(task5));
 
-            if (task6 == null)
+            if (task6 is null)
                 throw new ArgumentNullException(nameof(task6));
 
-            if (task7 == null)
+            if (task7 is null)
                 throw new ArgumentNullException(nameof(task7));
 
-            if (task8 == null)
+            if (task8 is null)
                 throw new ArgumentNullException(nameof(task8));
 
-            return Task.WhenAll(task1, task2, task3, task4, task5, task6, task7, task8).WithResultOnSuccess(
-                t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result, t.Task6.Result, t.Task7.Result, t.Task8.Result),
-                (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5, Task6: task6, Task7: task7, Task8: task8));
+            return Task
+                .WhenAll(task1, task2, task3, task4, task5, task6, task7, task8)
+                .WithResultOnSuccess(
+                    t => (t.Task1.Result, t.Task2.Result, t.Task3.Result, t.Task4.Result, t.Task5.Result, t.Task6.Result, t.Task7.Result, t.Task8.Result),
+                    (Task1: task1, Task2: task2, Task3: task3, Task4: task4, Task5: task5, Task6: task6, Task7: task7, Task8: task8));
         }
     }
 }

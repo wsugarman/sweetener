@@ -13,10 +13,10 @@ namespace Sweetener.Threading.Tasks
         // TODO: Add Task<T> if necessary
         public static Task<TResult> WithResultOnSuccess<TState, TResult>(this Task task, Func<TState, TResult> resultSelector, TState state)
         {
-            if (task == null)
+            if (task is null)
                 throw new ArgumentNullException(nameof(task));
 
-            if (resultSelector == null)
+            if (resultSelector is null)
                 throw new ArgumentNullException(nameof(resultSelector));
 
             return task

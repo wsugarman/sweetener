@@ -160,7 +160,7 @@ namespace Sweetener.Extensions.DependencyInjection
         private static bool TryFindConfigurationSectionAttribute(Type type, [NotNullWhen(true)] out ConfigurationSectionAttribute? attribute)
         {
             attribute = Attribute.GetCustomAttribute(type, typeof(ConfigurationSectionAttribute), inherit: false) as ConfigurationSectionAttribute;
-            return attribute != null;
+            return attribute is not null;
         }
     }
 }
