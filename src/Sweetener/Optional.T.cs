@@ -150,7 +150,7 @@ namespace Sweetener
                     : HasValue == optionalOther.HasValue;
             }
 
-            return HasValue && (_value != null ? _value.Equals(obj) : obj == null);
+            return HasValue && (_value is not null ? _value.Equals(obj) : obj is null);
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Sweetener
             // Note that null/default will typically result in the same hash value as None,
             // but this behavior is consistent with Nullable<T>
             // and doesn't modify the result of the underlying GetHashCode()
-            => HasValue && _value != null ? _value.GetHashCode() : 0;
+            => HasValue && _value is not null ? _value.GetHashCode() : 0;
 
         /// <summary>
         /// Returns the text representation of the value of the current <see cref="Optional{T}"/> object.
@@ -181,7 +181,7 @@ namespace Sweetener
         /// an empty string (<c>""</c>).
         /// </returns>
         public override string? ToString()
-            => HasValue && _value != null ? _value.ToString() : "";
+            => HasValue && _value is not null ? _value.ToString() : "";
 
         /// <summary>
         /// Defines an explicit conversion of an <see cref="Optional{T}"/> instance to its underlying value.

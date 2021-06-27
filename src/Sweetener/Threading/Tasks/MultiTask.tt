@@ -37,15 +37,17 @@ namespace Sweetener.Threading.Tasks
             {
                 string taskName = string.Format(CultureInfo.InvariantCulture, "task{0}", i);
 #>
-            if (<#= taskName #> == null)
+            if (<#= taskName #> is null)
                 throw new ArgumentNullException(nameof(<#= taskName #>));
 
 <#
             }
 #>
-            return Task.WhenAll(<#= GetArguments(parameterCount, "task{0}") #>).WithResultOnSuccess(
-                t => (<#= GetArguments(parameterCount, "t.Task{0}.Result") #>),
-                (<#= GetArguments(parameterCount, "Task{0}: task{0}") #>));
+            return Task
+                .WhenAll(<#= GetArguments(parameterCount, "task{0}") #>)
+                .WithResultOnSuccess(
+                    t => (<#= GetArguments(parameterCount, "t.Task{0}.Result") #>),
+                    (<#= GetArguments(parameterCount, "Task{0}: task{0}") #>));
         }
 <#
             // Avoid extra newlines
