@@ -15,7 +15,6 @@ trigger:
     - src/Core/Sweetener/*
     - src/Directory.Build.props
     - src/Directory.Build.targets
-    
 
 jobs:
 - template: Templates/Jobs.yml
