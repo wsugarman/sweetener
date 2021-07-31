@@ -35,9 +35,9 @@ steps:
 
 - task: PowerShell@2
   name: Version
-  displayName: 'Parse Version.json'
+  displayName: 'Validate NuGet Package Version'
   inputs:
-    filePath: 'eng/CD/Scripts/ParseVersion.ps1'
+    filePath: 'eng/CD/Scripts/ParsePackageVersion.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}" -ProjectType "${{ parameters.Type }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
     pwsh: true
 

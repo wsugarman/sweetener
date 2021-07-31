@@ -77,6 +77,7 @@ steps:
   inputs:
     filePath: 'eng/CI/Scripts/SignAssemblies.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
+                -ProjectType "${{ parameters.Type }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
                 -StrongNameKeyPath "$(Agent.TempDirectory)/${{ parameters.StrongNameKeyFile }}"
                 -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
@@ -111,6 +112,7 @@ steps:
   inputs:
     filePath: 'eng/CI/Scripts/SignPackage.ps1'
     arguments: '-ProjectName "${{ parameters.Project }}"
+                -ProjectType "${{ parameters.Type }}"
                 -BuildConfiguration "${{ parameters.BuildConfiguration }}"
                 -PackageVersion "$(Version.Package)"
                 -KeyVaultUrl "${{ parameters.KeyVaultUrl }}"
