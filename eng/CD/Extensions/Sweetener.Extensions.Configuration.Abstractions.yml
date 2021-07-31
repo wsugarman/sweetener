@@ -10,7 +10,7 @@ resources:
         - main
 
 jobs:
-- template: Templates/Jobs.yml
+- template: ../Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Extensions.Configuration.Abstractions'
     type: 'Extensions'

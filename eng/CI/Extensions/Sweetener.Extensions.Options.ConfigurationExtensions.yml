@@ -17,7 +17,7 @@ trigger:
     - src/Extensions/Sweetener.Extensions.Options.ConfigurationExtensions/*
 
 jobs:
-- template: Templates/Jobs.yml
+- template: ../Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Extensions.Options.ConfigurationExtensions'
     type: 'Extensions'

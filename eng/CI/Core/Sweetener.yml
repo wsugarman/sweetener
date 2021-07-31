@@ -17,7 +17,7 @@ trigger:
     - src/Directory.Build.targets
 
 jobs:
-- template: Templates/Jobs.yml
+- template: ../Templates/Jobs.yml
   parameters:
     project: 'Sweetener'
     type: 'Core'
