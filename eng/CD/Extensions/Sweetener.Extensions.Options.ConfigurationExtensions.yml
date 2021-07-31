@@ -13,4 +13,5 @@ jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Extensions.Options.ConfigurationExtensions'
+    type: 'Extensions'
     sourcePipelineId: 15

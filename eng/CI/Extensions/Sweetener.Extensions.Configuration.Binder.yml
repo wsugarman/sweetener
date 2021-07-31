@@ -13,10 +13,11 @@ trigger:
     - src/AssemblyInfo.Common.cs
     - src/Directory.Build.props
     - src/Directory.Build.targets
-    - src/Sweetener.sln
-    - src/Sweetener.Extensions.Configuration.Binder/*
+    - src/Extensions/Sweetener.Extensions.sln
+    - src/Extensions/Sweetener.Extensions.Configuration.Binder/*
 
 jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Extensions.Configuration.Binder'
+    type: 'Extensions'

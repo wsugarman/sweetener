@@ -2,6 +2,9 @@ parameters:
 - name: project
   type: string
   default: ''
+- name: type
+  type: string
+  default: ''
 - name: sourcePipelineId
   type: number
   default: ''
@@ -14,4 +17,5 @@ jobs:
   - template: Steps.Release.yml
     parameters:
       project: '${{ parameters.Project }}'
+      type: '${{ parameters.Type }}'
       sourcePipelineId: '${{ parameters.SourcePipelineId }}'

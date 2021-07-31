@@ -2,6 +2,9 @@ parameters:
 - name: project
   type: string
   default: ''
+- name: type
+  type: string
+  default: ''
 
 jobs:
 - job: Validate
@@ -13,6 +16,7 @@ jobs:
   - template: ../../Templates/Steps.Validate.yml
     parameters:
       project: '${{ parameters.Project }}'
+      type: '${{ parameters.Type }}'
       buildConfiguration: '$(BuildConfiguration)'
 
 - job: Package
@@ -27,5 +31,6 @@ jobs:
   - template: Steps.Package.yml
     parameters:
       project: '${{ parameters.Project }}'
+      type: '${{ parameters.Type }}'
       buildConfiguration: '$(BuildConfiguration)'
       netfxTools: '$(NetFXTools)'

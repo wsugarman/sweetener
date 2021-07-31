@@ -6,6 +6,10 @@ param
 
     [Parameter(Mandatory=$True)]
     [string]
+    $ProjectType,
+
+    [Parameter(Mandatory=$True)]
+    [string]
     $BuildConfiguration,
 
     [Parameter(Mandatory=$True)]
@@ -58,7 +62,7 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # Extract the description from the project file
-$projectFile = [System.IO.Path]::Combine("src", $ProjectName, $ProjectName + ".csproj")
+$projectFile = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, $ProjectName + ".csproj")
 $description = (Select-Xml -Path $projectFile -Xpath "/Project/PropertyGroup/Description").Node.InnerText
 if ([string]::IsNullOrWhiteSpace($description))
 {
@@ -66,7 +70,7 @@ if ([string]::IsNullOrWhiteSpace($description))
 }
 
 # Find all of the assemblies to sign
-$buildDirectory = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration)
+$buildDirectory = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, "bin", $BuildConfiguration)
 $assemblies = @(Get-ChildItem -Path $buildDirectory -Include ($ProjectName + ".dll") -Recurse)
 if ($assemblies.Length -eq 0)
 {

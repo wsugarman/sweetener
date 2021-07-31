@@ -2,6 +2,9 @@ parameters:
 - name: project
   type: string
   default: ''
+- name: type
+  type: string
+  default: ''
 - name: buildConfiguration
   type: string
   default: 'Debug'
@@ -21,7 +24,7 @@ steps:
   displayName: 'Parse Version.json'
   inputs:
     filePath: 'eng/Scripts/ParseVersion.ps1'
-    arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json" -BuildId "$(Build.BuildId)"'
+    arguments: '-VersionFilePath "src/${{ parameters.Type }}/${{ parameters.Project }}/Version.json" -BuildId "$(Build.BuildId)"'
     pwsh: true
 
 - task: DotNetCoreCLI@2
@@ -29,7 +32,7 @@ steps:
   inputs:
     command: 'custom'
     custom: 'pack'
-    projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    projects: 'src/${{ parameters.Type }}/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File);PackageVersion=$(Version.Package) -warnaserror -o "$(Build.ArtifactStagingDirectory)"'
     nugetConfigPath: 'NuGet.config'
 
