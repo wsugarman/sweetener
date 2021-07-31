@@ -9,13 +9,14 @@ pr:
     - eng/Scripts/*
     - eng/Templates/*
     - src/AssemblyInfo.Common.cs
+    - src/Core/Sweetener.sln
+    - src/Core/Sweetener/*
     - src/Directory.Build.props
     - src/Directory.Build.targets
-    - src/Sweetener.sln
-    - src/Sweetener/*
 trigger: none
 
 jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener'
+    type: 'Core'

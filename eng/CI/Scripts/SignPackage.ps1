@@ -6,6 +6,10 @@ param
 
     [Parameter(Mandatory=$True)]
     [string]
+    $ProjectType,
+
+    [Parameter(Mandatory=$True)]
+    [string]
     $BuildConfiguration,
 
     [Parameter(Mandatory=$True)]
@@ -53,7 +57,7 @@ $ErrorActionPreference = "Stop"
 & dotnet tool install "NuGetKeyVaultSignTool" --version "3.1.6" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $nuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
-$package               = [System.IO.Path]::Combine("src", $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
+$package               = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
 
 if (![System.IO.File]::Exists($package))
 {

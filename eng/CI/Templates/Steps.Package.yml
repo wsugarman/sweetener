@@ -4,6 +4,9 @@ parameters:
 - name: project
   type: string
   default: ''
+- name: type
+  type: string
+  default: ''
 - name: buildConfiguration
   type: string
   default: 'Debug'
@@ -44,14 +47,14 @@ steps:
   displayName: 'Parse Version.json'
   inputs:
     filePath: 'eng/Scripts/ParseVersion.ps1'
-    arguments: '-VersionFilePath "src/${{ parameters.Project }}/Version.json"'
+    arguments: '-VersionFilePath "src/${{ parameters.Type }}/${{ parameters.Project }}/Version.json"'
     pwsh: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Build Library'
   inputs:
     command: 'build'
-    projects: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    projects: 'src/${{ parameters.Type }}/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     arguments: '-c ${{ parameters.BuildConfiguration }} -p:ContinuousIntegrationBuild=true;AssemblyVersion=$(Version.Assembly);FileVersion=$(Version.File);InformationalVersion=$(Version.File) -warnaserror'
     nugetConfigPath: 'NuGet.config'
 
@@ -95,12 +98,12 @@ steps:
   displayName: 'Pack Library'
   inputs:
     command: 'pack'
-    packagesToPack: 'src/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
+    packagesToPack: 'src/${{ parameters.Type }}/${{ parameters.Project }}/${{ parameters.Project }}.csproj'
     configurationToPack: '${{ parameters.BuildConfiguration }}'
     buildProperties: 'ContinuousIntegrationBuild=true;PackageVersion=$(Version.Package)'
     nobuild: true
     nugetConfigPath: 'NuGet.config'
-    outputDir: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
+    outputDir: 'src/${{ parameters.Type }}/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
     verbosityPack: 'normal'
 
 - task: PowerShell@2
@@ -121,7 +124,7 @@ steps:
 - task: CopyFiles@2
   displayName: 'Copy NuGet Package to Staging Directory'
   inputs:
-    SourceFolder: 'src/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
+    SourceFolder: 'src/${{ parameters.Type }}/${{ parameters.Project }}/bin/${{ parameters.BuildConfiguration }}'
     Contents: '*nupkg'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
 

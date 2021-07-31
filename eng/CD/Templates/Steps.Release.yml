@@ -4,6 +4,9 @@ parameters:
 - name: project
   type: string
   default: ''
+- name: type
+  type: string
+  default: ''
 - name: sourcePipelineId
   type: number
   default: 0
@@ -35,7 +38,7 @@ steps:
   displayName: 'Parse Version.json'
   inputs:
     filePath: 'eng/CD/Scripts/ParseVersion.ps1'
-    arguments: '-ProjectName "${{ parameters.Project }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
+    arguments: '-ProjectName "${{ parameters.Project }}" -ProjectType "${{ parameters.Type }}" -PackageDirectory "$(Pipeline.Workspace)/pkg" -SourceVersion "$(Build.SourceVersion)"'
     pwsh: true
 
 - task: NuGetCommand@2

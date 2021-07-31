@@ -11,11 +11,12 @@ pr:
     - src/AssemblyInfo.Common.cs
     - src/Directory.Build.props
     - src/Directory.Build.targets
-    - src/Sweetener.sln
-    - src/Sweetener.Extensions.Options.ConfigurationExtensions/*
+    - src/Extensions/Sweetener.Extensions.sln
+    - src/Extensions/Sweetener.Extensions.Options.ConfigurationExtensions/*
 trigger: none
 
 jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener.Extensions.Options.ConfigurationExtensions'
+    type: 'Extensions'

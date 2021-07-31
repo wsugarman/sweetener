@@ -5,18 +5,20 @@ trigger:
     - main
   paths:
     include:
-    - eng/CI/Sweetener.Extensions.Configuration.Abstractions.yml
+    - eng/CI/Sweetener.yml
     - eng/CI/Scripts/*
     - eng/CI/Templates/*
     - eng/Scripts/*
     - eng/Templates/*
     - src/AssemblyInfo.Common.cs
+    - src/Core/Sweetener.sln
+    - src/Core/Sweetener/*
     - src/Directory.Build.props
     - src/Directory.Build.targets
-    - src/Sweetener.sln
-    - src/Sweetener.Extensions.Configuration.Abstractions/*
+    
 
 jobs:
 - template: Templates/Jobs.yml
   parameters:
-    project: 'Sweetener.Extensions.Configuration.Abstractions'
+    project: 'Sweetener'
+    type: 'Core'

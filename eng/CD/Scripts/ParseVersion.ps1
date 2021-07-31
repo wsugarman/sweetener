@@ -6,6 +6,10 @@ param
 
     [Parameter(Mandatory=$True)]
     [string]
+    $ProjectType,
+
+    [Parameter(Mandatory=$True)]
+    [string]
     $PackageDirectory,
 
     [Parameter(Mandatory=$True)]
@@ -40,7 +44,7 @@ if (!$valid)
 $packageVersion = $Matches.Version
 
 # Check to see if Version file has changed
-$versionChanged = @(& git diff-tree --no-commit-id --name-only -r $SourceVersion) -contains "src/$ProjectName/Version.json"
+$versionChanged = @(& git diff-tree --no-commit-id --name-only -r $SourceVersion) -contains "src/$ProjectType/$ProjectName/Version.json"
 if ($versionChanged)
 {
     Write-Host "##vso[build.updatebuildnumber]$packageVersion"

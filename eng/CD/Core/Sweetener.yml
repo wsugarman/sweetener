@@ -13,4 +13,5 @@ jobs:
 - template: Templates/Jobs.yml
   parameters:
     project: 'Sweetener'
+    type: 'Core'
     sourcePipelineId: 8
