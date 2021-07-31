@@ -1,0 +1,10 @@
+<Project>
+
+  <!-- Include common build properties -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <ExtensionPackageVersion>5.0.0</ExtensionPackageVersion>
+  </PropertyGroup>
+
+</Project>
