@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>APIs that sweeten System.Linq in the .NET base class libraries</Description>
+    <PackageTags>collection enumerable</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
+      <_Parameter1>02b69ee9-8ce7-4e3b-bf71-76f146d1e5d4</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Collection.*.cs">
+      <DependentUpon>Collection.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Exceptions.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
