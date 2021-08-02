@@ -1,0 +1,17 @@
+pr: none
+trigger: none
+resources:
+  pipelines:
+  - pipeline: Sweetener_Linq
+    source: 'CI/Sweetener.Linq - CI'
+    trigger:
+      branches:
+        include:
+        - main
+
+jobs:
+- template: ../Templates/Jobs.yml
+  parameters:
+    project: 'Sweetener.Linq'
+    type: 'Core'
+    sourcePipelineId: 20
