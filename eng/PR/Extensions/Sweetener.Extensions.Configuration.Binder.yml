@@ -4,7 +4,7 @@ pr:
     - main
   paths:
     include:
-    - eng/PR/Sweetener.Extensions.Configuration.Binder.yml
+    - eng/PR/Extensions/Sweetener.Extensions.Configuration.Binder.yml
     - eng/PR/Templates/*
     - eng/Scripts/*
     - eng/Templates/*
