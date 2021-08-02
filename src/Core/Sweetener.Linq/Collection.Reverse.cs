@@ -19,6 +19,6 @@ namespace Sweetener.Linq
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
         public static IReadOnlyCollection<TSource> Reverse<TSource>(this IReadOnlyCollection<TSource> source)
-            => new EnumerableReadOnlyCollection<TSource>(source, Enumerable.Reverse(source));
+            => new EnumerableCollection<TSource>(source, Enumerable.Reverse(source));
     }
 }

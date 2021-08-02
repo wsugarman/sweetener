@@ -15,9 +15,16 @@ namespace Sweetener.Linq.Test
             // Invalid source
             Assert.ThrowsException<ArgumentNullException>(() => Collection.Skip<long>(null!, 1));
 
-            // Lazily evaluate the reversal and its resulting count
+            IReadOnlyCollection<long> actual;
             List<long> source = new List<long> { 1 };
-            IReadOnlyCollection<long> actual = source.Skip(2);
+
+            // Empty
+            actual = source.Skip(-5);
+            Assert.AreEqual(1, actual.Count);
+            CodeCoverageAssert.AreSequencesEqual(actual, 1);
+
+            // Lazily evaluate the skip and its resulting count
+            actual = source.Skip(2);
             Assert.AreEqual(0, actual.Count);
             CodeCoverageAssert.AreSequencesEqual(Array.Empty<long>(), actual);
 

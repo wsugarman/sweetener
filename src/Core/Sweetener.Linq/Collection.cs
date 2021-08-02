@@ -17,30 +17,10 @@ namespace Sweetener.Linq
         {
             public int Count => _source.Count;
 
-            private readonly ICollection<TElement> _source;
-            private readonly IEnumerable<TElement> _transformation;
-
-            public EnumerableCollection(ICollection<TElement> source, IEnumerable<TElement> transformation)
-            {
-                _source = source;
-                _transformation = transformation;
-            }
-
-            public IEnumerator<TElement> GetEnumerator()
-                => _transformation.GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
-        }
-
-        private sealed class EnumerableReadOnlyCollection<TElement> : IReadOnlyCollection<TElement>
-        {
-            public int Count => _source.Count;
-
             private readonly IReadOnlyCollection<TElement> _source;
             private readonly IEnumerable<TElement> _transformation;
 
-            public EnumerableReadOnlyCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation)
+            public EnumerableCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation)
             {
                 _source = source;
                 _transformation = transformation;

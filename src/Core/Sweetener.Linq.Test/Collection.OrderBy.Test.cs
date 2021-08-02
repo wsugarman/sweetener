@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Linq.Test
@@ -175,6 +176,29 @@ namespace Sweetener.Linq.Test
             // Null comparer uses default
             actual = orderedSource.ThenByDescending(x => x.Length, null);
             CodeCoverageAssert.AreSequencesEqual(actual, "apricot", "alpaca", "apple", "banana");
+        }
+
+        [TestMethod]
+        public void CreateOrderedEnumerable()
+        {
+            IOrderedEnumerable<(int, char)> actual;
+            IOrderedReadOnlyCollection<(int, char)> source = new List<(int, char)> { (2, 'b'), (1, 'a'), (3, 'b') }.OrderBy(x => x.Item2);
+
+            // No Comparer; Ascending
+            actual = source.CreateOrderedEnumerable(x => x.Item1, null, descending: false);
+            Assert.That.AreSequencesEqual(actual, (1, 'a'), (2, 'b'), (3, 'b'));
+
+            // No Comparer; Descending
+            actual = source.CreateOrderedEnumerable(x => x.Item1, null, descending: true);
+            Assert.That.AreSequencesEqual(actual, (1, 'a'), (3, 'b'), (2, 'b'));
+
+            // With Comparer; Ascending
+            actual = source.CreateOrderedEnumerable(x => x.Item1, Comparer<int>.Create((x, y) => Comparer<int>.Default.Compare(y, x)), descending: false);
+            Assert.That.AreSequencesEqual(actual, (1, 'a'), (3, 'b'), (2, 'b'));
+
+            // With Comparer; Descending
+            actual = source.CreateOrderedEnumerable(x => x.Item1, Comparer<int>.Create((x, y) => Comparer<int>.Default.Compare(y, x)), descending: true);
+            Assert.That.AreSequencesEqual(actual, (1, 'a'), (2, 'b'), (3, 'b'));
         }
     }
 }
