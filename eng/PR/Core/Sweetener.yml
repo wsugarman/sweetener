@@ -4,7 +4,7 @@ pr:
     - main
   paths:
     include:
-    - eng/PR/Sweetener.yml
+    - eng/PR/Core/Sweetener.yml
     - eng/PR/Templates/*
     - eng/Scripts/*
     - eng/Templates/*

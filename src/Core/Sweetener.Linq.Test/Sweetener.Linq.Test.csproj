@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sweetener.Linq\Sweetener.Linq.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Collection.*.Test.cs">
+      <DependentUpon>Collection.Test.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+
+</Project>

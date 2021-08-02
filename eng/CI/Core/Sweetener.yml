@@ -5,7 +5,7 @@ trigger:
     - main
   paths:
     include:
-    - eng/CI/Sweetener.yml
+    - eng/CI/Core/Sweetener.yml
     - eng/CI/Scripts/*
     - eng/CI/Templates/*
     - eng/Scripts/*
