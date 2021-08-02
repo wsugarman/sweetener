@@ -10,41 +10,6 @@ namespace Sweetener.Linq
 {
     partial class Collection
     {
-        #region OrderBy
-
-        /// <summary>
-        /// Sorts the elements of a collection in ascending order according to a key.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the elements of <paramref name="source"/>.</typeparam>
-        /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-        /// <param name="source">A collection of values to order.</param>
-        /// <param name="keySelector">A function to extract a key from an element.</param>
-        /// <returns>
-        /// An <see cref="IReadOnlyCollection{TElement}"/> whose elements are sorted according to a key.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
-        /// </exception>
-        public static IOrderedReadOnlyCollection<TSource> OrderBy<TSource, TKey>(this ICollection<TSource> source, Func<TSource, TKey> keySelector)
-            => source.OrderBy(keySelector, null);
-
-        /// <summary>
-        /// Sorts the elements of a collection in ascending order by using a specified comparer.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the elements of <paramref name="source"/>.</typeparam>
-        /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-        /// <param name="source">A collection of values to order.</param>
-        /// <param name="keySelector">A function to extract a key from an element.</param>
-        /// <param name="comparer">An <see cref="IComparer{T}"/> to compare keys.</param>
-        /// <returns>
-        /// An <see cref="IReadOnlyCollection{TElement}"/> whose elements are sorted according to a key.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
-        /// </exception>
-        public static IOrderedReadOnlyCollection<TSource> OrderBy<TSource, TKey>(this ICollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-            => new OrderedCollection<TSource>(source, Enumerable.OrderBy(source, keySelector, comparer));
-
         /// <summary>
         /// Sorts the elements of a collection in ascending order according to a key.
         /// </summary>
@@ -76,46 +41,7 @@ namespace Sweetener.Linq
         /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
         /// </exception>
         public static IOrderedReadOnlyCollection<TSource> OrderBy<TSource, TKey>(this IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-            => new ReadOnlyOrderedCollection<TSource>(source, Enumerable.OrderBy(source, keySelector, comparer));
-
-        #endregion
-
-        #region OrderByDescending
-
-        /// <summary>
-        /// Sorts the elements of a collection in descending order according to a key.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the elements of <paramref name="source"/>.</typeparam>
-        /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-        /// <param name="source">A collection of values to order.</param>
-        /// <param name="keySelector">A function to extract a key from an element.</param>
-        /// <returns>
-        /// An <see cref="IReadOnlyCollection{TElement}"/> whose elements are sorted in descending order
-        /// according to a key.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
-        /// </exception>
-        public static IOrderedReadOnlyCollection<TSource> OrderByDescending<TSource, TKey>(this ICollection<TSource> source, Func<TSource, TKey> keySelector)
-            => source.OrderBy(keySelector, null);
-
-        /// <summary>
-        /// Sorts the elements of a collection in descending order by using a specified comparer.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the elements of <paramref name="source"/>.</typeparam>
-        /// <typeparam name="TKey">The type of the key returned by <paramref name="keySelector"/>.</typeparam>
-        /// <param name="source">A collection of values to order.</param>
-        /// <param name="keySelector">A function to extract a key from an element.</param>
-        /// <param name="comparer">An <see cref="IComparer{T}"/> to compare keys.</param>
-        /// <returns>
-        /// An <see cref="IReadOnlyCollection{TElement}"/> whose elements are sorted in descending order
-        /// according to a key.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
-        /// </exception>
-        public static IOrderedReadOnlyCollection<TSource> OrderByDescending<TSource, TKey>(this ICollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-            => new OrderedCollection<TSource>(source, Enumerable.OrderByDescending(source, keySelector, comparer));
+            => new OrderedCollection<TSource>(source, Enumerable.OrderBy(source, keySelector, comparer));
 
         /// <summary>
         /// Sorts the elements of a collection in descending order according to a key.
@@ -132,7 +58,7 @@ namespace Sweetener.Linq
         /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
         /// </exception>
         public static IOrderedReadOnlyCollection<TSource> OrderByDescending<TSource, TKey>(this IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector)
-            => source.OrderBy(keySelector, null);
+            => source.OrderByDescending(keySelector, null);
 
         /// <summary>
         /// Sorts the elements of a collection in descending order by using a specified comparer.
@@ -150,11 +76,7 @@ namespace Sweetener.Linq
         /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
         /// </exception>
         public static IOrderedReadOnlyCollection<TSource> OrderByDescending<TSource, TKey>(this IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-            => new ReadOnlyOrderedCollection<TSource>(source, Enumerable.OrderByDescending(source, keySelector, comparer));
-
-        #endregion
-
-        #region ThenBy
+            => new OrderedCollection<TSource>(source, Enumerable.OrderByDescending(source, keySelector, comparer));
 
         /// <summary>
         /// Performs a subsequent ordering of the elements in a collection in ascending order according to a key.
@@ -197,10 +119,6 @@ namespace Sweetener.Linq
 
             return source.CreateOrderedCollection(keySelector, comparer ?? Comparer<TKey>.Default, descending: false);
         }
-
-        #endregion
-
-        #region ThenByDescending
 
         /// <summary>
         /// Performs a subsequent ordering of the elements in a collection in descending order, according to a key.
@@ -249,16 +167,14 @@ namespace Sweetener.Linq
             return source.CreateOrderedCollection(keySelector, comparer ?? Comparer<TKey>.Default, descending: true);
         }
 
-        #endregion
-
         private sealed class OrderedCollection<TElement> : IOrderedReadOnlyCollection<TElement>
         {
             public int Count => _source.Count;
 
-            private readonly ICollection<TElement> _source;
+            private readonly IReadOnlyCollection<TElement> _source;
             private readonly IOrderedEnumerable<TElement> _ordered;
 
-            public OrderedCollection(ICollection<TElement> source, IOrderedEnumerable<TElement> ordered)
+            public OrderedCollection(IReadOnlyCollection<TElement> source, IOrderedEnumerable<TElement> ordered)
             {
                 _source = source;
                 _ordered = ordered;
@@ -266,32 +182,6 @@ namespace Sweetener.Linq
 
             public IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending)
                 => new OrderedCollection<TElement>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
-
-            public IOrderedEnumerable<TElement> CreateOrderedEnumerable<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending)
-                => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);
-
-            public IEnumerator<TElement> GetEnumerator()
-                => _ordered.GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
-        }
-
-        private sealed class ReadOnlyOrderedCollection<TElement> : IOrderedReadOnlyCollection<TElement>
-        {
-            public int Count => _source.Count;
-
-            private readonly IReadOnlyCollection<TElement> _source;
-            private readonly IOrderedEnumerable<TElement> _ordered;
-
-            public ReadOnlyOrderedCollection(IReadOnlyCollection<TElement> source, IOrderedEnumerable<TElement> ordered)
-            {
-                _source = source;
-                _ordered = ordered;
-            }
-
-            public IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending)
-                => new ReadOnlyOrderedCollection<TElement>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
 
             public IOrderedEnumerable<TElement> CreateOrderedEnumerable<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending)
                 => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);

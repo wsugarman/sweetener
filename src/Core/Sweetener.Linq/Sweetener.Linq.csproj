@@ -17,10 +17,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\Exceptions.resx">
-      <Generator></Generator>
-    </EmbeddedResource>
-  </ItemGroup>
-
 </Project>

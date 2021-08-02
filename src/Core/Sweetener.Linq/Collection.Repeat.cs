@@ -18,6 +18,6 @@ namespace Sweetener.Linq
         /// <returns>An <see cref="IReadOnlyCollection{T}"/> that contains a repeated value.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is less than 0.</exception>
         public static IReadOnlyCollection<TResult> Repeat<TResult>(TResult element, int count)
-            => new ReadOnlyCollection<TResult>(Enumerable.Repeat(element, count), count);
+            => count == 0 ? Array.Empty<TResult>() : new ReadOnlyCollection<TResult>(Enumerable.Repeat(element, count), count);
     }
 }
