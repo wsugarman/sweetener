@@ -20,6 +20,7 @@ namespace Sweetener.Linq
         /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
         public static IReadOnlyCollection<TSource> Append<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
             => new AdditionalCollection<TSource>(source, Enumerable.Append(source, element));
+
         /// <summary>
         /// Adds a value to the beginning of the collection.
         /// </summary>
