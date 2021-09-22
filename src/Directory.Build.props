@@ -45,9 +45,9 @@
       <!-- Test Framework Packages -->
       <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="3.1.0" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestAdapter" Version="2.2.5" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.2.5" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestAdapter" Version="2.2.7" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.2.7" />
       </ItemGroup>
 
       <!-- Test File Analyzer Suppressions -->

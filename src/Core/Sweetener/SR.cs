@@ -16,6 +16,8 @@ namespace Sweetener
 
         public static string MissingOptionalValueMessage => ExceptionResourceManager.GetString(nameof(MissingOptionalValueMessage), CultureInfo.CurrentUICulture);
 
+        public static string ReadNullArray => ExceptionResourceManager.GetString(nameof(ReadNullArray), CultureInfo.CurrentUICulture);
+
         private static readonly ResourceManager ExceptionResourceManager = new ResourceManager("Sweetener.Resources.Exceptions", typeof(SR).Assembly);
     }
 }
