@@ -1,0 +1,74 @@
+name: .NET Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: The name of the csproj file
+        required: true
+        type: string
+      solution:
+        description: The name of the solution file
+        required: true
+        type: string
+      buildConfiguration:
+        default: Debug
+        description: The dotnet build configuration
+        required: false
+        type: string
+      lineCoverageThreshold:
+        default: 1
+        description: The minimum line coverage
+        required: false
+        type: number
+      branchCoverageThreshold:
+        default: 1
+        description: The minimum branch coverage
+        required: false
+        type: number
+
+jobs:
+  validate:
+    name: Validate ${{ inputs.project }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1.8.2
+        with:
+          dotnet-version: '5.0.x'
+
+      - name: Build and Test
+        run: |
+          dotnet test "src/${{ inputs.solution }}/${{ inputs.project }}.Test/${{ inputs.project }}.Test.csproj" \
+            -c "${{ inputs.buildConfiguration }}" \
+            -p:ContinuousIntegrationBuild=true \
+            -warnaserror \
+            --collect "XPlat Code Coverage" \
+            -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
+            -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ inputs.project }}]*
+
+      - name: Generate Code Coverage Report
+        uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
+        if: ${{ always() }}
+        with:
+          reporttypes: Cobertura
+          targetdir: $RUNNER_TEMP/codecoverage
+
+      - name: Upload Code Coverage Report
+        uses: actions/upload-artifact@v2.2.3
+        if: ${{ always() }}
+        with:
+          name: CodeCoverage
+          path: $RUNNER_TEMP/codecoverage
+
+      - name: Check Code Coverage
+        shell: pwsh
+        run: |
+          eng/Scripts/CheckCodeCoverage.ps1 \
+            -CodeCoverageFile "$RUNNER_TEMP/codecoverage/coverage.cobertura.xml" \
+            -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} \
+            -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}

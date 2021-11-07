@@ -1,0 +1,19 @@
+name: Sweetener Pull Request
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+    - .github/workflows/sweetener-pr.yml
+    - .github/workflows/dotnet-build-test.yml
+    - src/*
+    - src/Core/*
+    - src/Core/Sweetener/*
+    - src/Shared/*
+
+jobs:
+  validate:
+    uses: wsugarman/Sweetener/.github/workflows/dotnet-build-test.yml@${{ github.ref }}
+    with:
+      project: Sweetener
+      solution: Core
