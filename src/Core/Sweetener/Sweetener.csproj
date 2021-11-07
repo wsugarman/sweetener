@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>Common APIs that sweeten the .NET base class libraries</Description>
     <PackageTags>common</PackageTags>
   </PropertyGroup>
@@ -11,7 +12,8 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- Compatability Packages -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 

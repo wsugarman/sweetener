@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweetener.IO
 {
@@ -107,10 +109,28 @@ namespace Sweetener.IO
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="offset"/> or <paramref name="offset"/> is negative.
         /// </exception>
+        /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
+        /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
         public override int Read(byte[] buffer, int offset, int count)
             => Read(new Span<byte>(buffer ?? throw new ArgumentNullException(nameof(buffer)), offset, count));
 
-        private int Read(Span<byte> buffer)
+#if NET5_0_OR_GREATER
+        /// <summary>
+        /// Reads data from the stream and stores it to a span of bytes in memory.
+        /// </summary>
+        /// <param name="buffer">A region of memory to store data read from the stream.</param>
+        /// <returns>
+        /// The total number of bytes written into the buffer. This can be less than the number of bytes requested
+        /// if that number of bytes are not currently available, or zero if the end of the stream is reached
+        /// before any bytes are read.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
+        /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
+        public override
+#else
+        private
+#endif
+        int Read(Span<byte> buffer)
         {
             int requested = buffer.Length, remaining = buffer.Length;
             while (remaining > 0)
@@ -125,17 +145,60 @@ namespace Sweetener.IO
                 }
 
                 // Slice the current span based on the current index
-                ReadOnlySpan<byte> current = _segments.Current.Span.Slice(_currentIndex);
+                ReadOnlySpan<byte> current = _segments.Current.Span[_currentIndex..];
                 if (remaining < current.Length)
                     current = current.Slice(0, remaining);
 
                 current.CopyTo(buffer);
-                buffer = buffer.Slice(current.Length);
+                buffer = buffer[current.Length..];
                 _currentIndex += current.Length;
                 remaining -= current.Length;
             }
 
             return requested - remaining;
+        }
+
+        /// <summary>
+        /// Asynchronously reads a block of bytes from the stream and writes the data into a given buffer after
+        /// checking for cancellation requests.
+        /// </summary>
+        /// <param name="buffer">The buffer to write the data into.</param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Read(buffer, offset, count));
+        }
+
+#if NET5_0_OR_GREATER
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            => cancellationToken.IsCancellationRequested
+                ? ValueTask.FromCanceled<int>(cancellationToken)
+                : base.ReadAsync(buffer, cancellationToken);
+#endif
+
+        /// <summary>
+        /// Reads a byte from the stream and advances the position within the stream by one byte,
+        /// or returns <c>-1</c> if at the end of the stream.
+        /// </summary>
+        /// <returns>
+        /// The unsigned byte cast to an <see cref="int"/>, or <c>-1</c> if at the end of the stream.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
+        /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
+        public override unsafe int ReadByte()
+        {
+            byte b;
+            return Read(new Span<byte>(&b, 1)) == 0 ? -1 : b;
         }
 
         /// <summary>

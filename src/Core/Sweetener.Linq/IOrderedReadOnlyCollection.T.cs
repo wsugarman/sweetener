@@ -31,6 +31,6 @@ namespace Sweetener.Linq
         /// <returns>
         /// An <see cref="IOrderedReadOnlyCollection{TElement}"/> whose elements are sorted according to a key.
         /// </returns>
-        IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending);
+        IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending);
     }
 }

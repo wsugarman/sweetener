@@ -19,19 +19,23 @@ namespace Sweetener.Threading.Tasks
             if (resultSelector is null)
                 throw new ArgumentNullException(nameof(resultSelector));
 
+            if (state is null)
+                throw new ArgumentNullException(nameof(state));
+
             return task
                 .ContinueWith((t, obj) =>
                     {
                         switch (t.Status)
                         {
                             case TaskStatus.RanToCompletion:
-                                return Task.FromResult(resultSelector((TState)obj));
+                                return Task.FromResult(resultSelector((TState)obj!)); // May be null, but TState will indicate as such
                             case TaskStatus.Canceled:
                                 return ThrowIfCancellationRequested<TResult>(t);
                             default:
                                 // Preserve all of the AggregateException's errors!
                                 TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
-                                tcs.SetException(t.Exception.InnerExceptions);
+                                tcs.SetException(t.Exception!.InnerExceptions);
+
                                 return tcs.Task;
                         }
                     },
