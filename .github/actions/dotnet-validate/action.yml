@@ -44,7 +44,7 @@ runs:
       with:
         reports: ${{ github.workspace }}/TestResults/${{ inputs.project }}/*/coverage.cobertura.xml
         reporttypes: Cobertura
-        targetdir: ${{ RUNNER_TEMP }}/codecoverage
+        targetdir: ${{ runner.temp }}/codecoverage
         verbosity: Verbose
 
     - name: Upload Code Coverage Report
