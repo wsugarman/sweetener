@@ -13,7 +13,20 @@ on:
 
 jobs:
   validate:
-    uses: wsugarman/Sweetener/.github/workflows/dotnet-build-test.yml@${{ github.ref }}
-    with:
-      project: Sweetener
-      solution: Core
+    name: Validate Sweetener Changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup
+        uses: actions/setup-dotnet@v1.8.2
+        with:
+          dotnet-version: '5.0.x'
+
+      - name: Validate
+        uses: ./.github/actions/dotnet-validate
+        with:
+          project: Sweetener
+          solution: Core
