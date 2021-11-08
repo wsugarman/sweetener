@@ -34,7 +34,7 @@ runs:
           -c "${{ inputs.buildConfiguration }}" \
           -p:ContinuousIntegrationBuild=true \
           -warnaserror \
-          -r "./tests" \
+          -r "./TestResults/${{ inputs.project }}" \
           --collect "XPlat Code Coverage" \
           -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
           -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ inputs.project }}]*
@@ -42,7 +42,7 @@ runs:
     - name: Generate Code Coverage Report
       uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
       with:
-        reports: ./tests/TestResults/*/coverage.cobertura.xml
+        reports: $GITHUB_WORKSPACE/TestResults/${{ inputs.project }}/*/coverage.cobertura.xml
         reporttypes: Cobertura
         targetdir: $RUNNER_TEMP/codecoverage
 
@@ -55,7 +55,7 @@ runs:
     - name: Check Code Coverage
       shell: pwsh
       run: |
-        eng/Scripts/CheckCodeCoverage.ps1 \
-          -CodeCoverageFile "./tests/TestResults/*/coverage.cobertura.xml" \
+        ./eng/Scripts/CheckCodeCoverage.ps1 \
+          -CodeCoverageFile "./TestResults/${{ inputs.project }}/*/coverage.cobertura.xml" \
           -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} \
           -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}
