@@ -20,11 +20,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup
-        uses: actions/setup-dotnet@v1.8.2
-        with:
-          dotnet-version: '5.0.x'
-
       - name: Validate
         uses: ./.github/actions/dotnet-validate
         with:

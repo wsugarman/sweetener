@@ -34,7 +34,7 @@ runs:
           -c "${{ inputs.buildConfiguration }}" \
           -p:ContinuousIntegrationBuild=true \
           -warnaserror \
-          -r "./tests"
+          -r "./tests" \
           --collect "XPlat Code Coverage" \
           -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
           -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ inputs.project }}]*
