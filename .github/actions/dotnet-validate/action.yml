@@ -51,7 +51,7 @@ runs:
       uses: actions/upload-artifact@v2.2.3
       with:
         name: CodeCoverage
-        path: $RUNNER_TEMP/codecoverage
+        path: ${{ runner.temp }}/codecoverage
 
     - name: Check Code Coverage
       shell: pwsh
