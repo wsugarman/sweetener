@@ -42,9 +42,10 @@ runs:
     - name: Generate Code Coverage Report
       uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
       with:
-        reports: $GITHUB_WORKSPACE/TestResults/${{ inputs.project }}/*/coverage.cobertura.xml
+        reports: ${{ github.workspace }}/TestResults/${{ inputs.project }}/*/coverage.cobertura.xml
         reporttypes: Cobertura
-        targetdir: $RUNNER_TEMP/codecoverage
+        targetdir: ${{ RUNNER_TEMP }}/codecoverage
+        verbosity: Verbose
 
     - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v2.2.3
