@@ -26,7 +26,7 @@ runs:
       run: |
         ./eng/Scripts/ParseVersion.ps1 `
           -VersionFilePath './src/${{ inputs.solution }}/${{ inputs.project }}/Version.json' `
-          -BuildId '${{ github.run_id }}.${{ github.run_number }}'
+          -BuildId '${{ github.run_attempt }}'
 
     - name: Build
       shell: bash
