@@ -20,8 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Validate
+      - name: Build and Test
         uses: ./.github/actions/dotnet-validate
         with:
           project: Sweetener
           solution: Core
+          resultsDirectory: ${{ github.workspace }}/TestResults/Sweetener
+
+      - name: Check Code Coverage
+        uses: ./.github/actions/check-code-coverage
+        with:
+          reportPath: ${{ github.workspace }}/TestResults/Sweetener/*/coverage.cobertura.xml

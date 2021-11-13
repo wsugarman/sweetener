@@ -11,14 +11,10 @@ inputs:
     default: Debug
     description: The dotnet build configuration
     required: false
-  lineCoverageThreshold:
-    default: '1'
-    description: The minimum line coverage
-    required: false
-  branchCoverageThreshold:
-    default: '1'
-    description: The minimum branch coverage
-    required: false
+  resultsDirectory:
+    description: The directory where the test results are going to be placed.
+    required: true
+
 runs:
   using: composite
   steps:
@@ -27,36 +23,23 @@ runs:
       with:
         dotnet-version: '5.0.x'
 
-    - name: Build and Test
+    - name: Build
+      shell: bash
+      run: |
+        dotnet build "./src/${{ inputs.solution }}/${{ inputs.project }}.Test/${{ inputs.project }}.Test.csproj" \
+          -c "${{ inputs.buildConfiguration }}" \
+          -p:ContinuousIntegrationBuild=true \
+          -warnaserror
+
+    - name: Test
       shell: bash
       run: |
         dotnet test "./src/${{ inputs.solution }}/${{ inputs.project }}.Test/${{ inputs.project }}.Test.csproj" \
           -c "${{ inputs.buildConfiguration }}" \
           -p:ContinuousIntegrationBuild=true \
           -warnaserror \
-          -r "./TestResults/${{ inputs.project }}" \
+          --no-build \
+          -r "${{ inputs.resultsDirectory }}" \
           --collect "XPlat Code Coverage" \
           -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
           -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ inputs.project }}]*
-
-    - name: Generate Code Coverage Report
-      uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
-      with:
-        reports: ${{ github.workspace }}/TestResults/${{ inputs.project }}/*/coverage.cobertura.xml
-        reporttypes: Cobertura
-        targetdir: ${{ runner.temp }}/codecoverage
-        verbosity: Verbose
-
-    - name: Upload Code Coverage Report
-      uses: actions/upload-artifact@v2.2.3
-      with:
-        name: CodeCoverage
-        path: ${{ runner.temp }}/codecoverage
-
-    - name: Check Code Coverage
-      shell: pwsh
-      run: |
-        ./eng/Scripts/CheckCodeCoverage.ps1 \
-          -CodeCoverageFile "./TestResults/${{ inputs.project }}/*/coverage.cobertura.xml" \
-          -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} \
-          -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}

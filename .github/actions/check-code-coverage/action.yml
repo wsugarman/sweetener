@@ -1,0 +1,38 @@
+name: Check Code Coverage
+description: Validates code coverage and uploads the results.
+inputs:
+  reportPath:
+    description: The path to the cobertura coverage file.
+    required: true
+  lineCoverageThreshold:
+    default: '1'
+    description: The minimum line coverage
+    required: false
+  branchCoverageThreshold:
+    default: '1'
+    description: The minimum branch coverage
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Generate Code Coverage Report
+      uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
+      with:
+        reports: ${{ inputs.reportPath }}
+        reporttypes: HTMLInline;Cobertura;Badges
+        targetdir: ${{ runner.temp }}/codecoverage
+        verbosity: Verbose
+
+    - name: Upload Code Coverage Report
+      uses: actions/upload-artifact@v2.2.3
+      with:
+        name: CodeCoverage
+        path: ${{ runner.temp }}/codecoverage
+
+    - name: Check Code Coverage
+      shell: pwsh
+      run: |
+        ./eng/Scripts/CheckCodeCoverage.ps1 \
+          -CodeCoverageFile "${{ inputs.reportPath }}" \
+          -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} \
+          -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}
