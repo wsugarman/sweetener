@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [ main ]
     paths:
+    - .github/actions/*
     - .github/workflows/sweetener-pr.yml
     - .github/workflows/dotnet-build-test.yml
     - src/*
@@ -25,9 +26,9 @@ jobs:
         with:
           project: Sweetener
           solution: Core
-          resultsDirectory: ${{ github.workspace }}/TestResults/Sweetener
+          resultsDirectory: ${{ runner.temp }}/TestResults/Sweetener
 
       - name: Check Code Coverage
         uses: ./.github/actions/check-code-coverage
         with:
-          reportPath: ${{ github.workspace }}/TestResults/Sweetener/*/coverage.cobertura.xml
+          reportPath: ${{ runner.temp }}/TestResults/Sweetener/*/coverage.cobertura.xml

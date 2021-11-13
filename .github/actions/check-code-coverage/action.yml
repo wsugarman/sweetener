@@ -32,7 +32,7 @@ runs:
     - name: Check Code Coverage
       shell: pwsh
       run: |
-        ./eng/Scripts/CheckCodeCoverage.ps1 \
-          -CodeCoverageFile "${{ inputs.reportPath }}" \
-          -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} \
+        ./eng/Scripts/CheckCodeCoverage.ps1 `
+          -CodeCoverageFile '${{ inputs.reportPath }}' `
+          -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} `
           -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}
