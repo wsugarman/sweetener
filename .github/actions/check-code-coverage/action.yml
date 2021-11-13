@@ -21,7 +21,6 @@ runs:
         reports: ${{ inputs.reportPath }}
         reporttypes: HTMLInline;Cobertura;Badges
         targetdir: ${{ runner.temp }}/codecoverage
-        verbosity: Verbose
 
     - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v2.2.3
