@@ -26,7 +26,7 @@ runs:
 
     - name: Azure Login
       uses: azure/login@v1
-      if: ${{ input.sign == 'true' }}
+      if: ${{ inputs.sign == 'true' }}
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -62,7 +62,7 @@ runs:
 
     - name: Azure Logout
       uses: azure/CLI@v1
-      if: ${{ input.sign == 'true' && always() }}
+      if: ${{ inputs.sign == 'true' && always() }}
       with:
         inlineScript: |
           az logout
