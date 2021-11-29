@@ -85,7 +85,7 @@ foreach ($AssemblyPath in $assemblies)
 }
 
 # Sign Assemblies using AzureSignTool
-& dotnet tool install "AzureSignTool" --version "2.0.17" --tool-path $DotNetTools --configfile $NuGetConfig
+& dotnet tool install "AzureSignTool" --version "3.0.0" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $azureSignTool = [System.IO.Path]::Combine($DotNetTools, "AzureSignTool.exe")
 $manifest      = [System.IO.Path]::Combine($buildDirectory, $SignManifestName + ".txt")
