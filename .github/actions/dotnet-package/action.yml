@@ -36,7 +36,7 @@ runs:
       id: version
       shell: pwsh
       run: |
-        if ('${{ input.sign }}' -eq 'true')
+        if ('${{ inputs.sign }}' -eq 'true')
         {
             $buildId = '${{ github.run_attempt }}'
         }
