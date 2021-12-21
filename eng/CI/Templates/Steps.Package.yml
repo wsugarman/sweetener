@@ -31,10 +31,9 @@ steps:
   clean: true
 
 - task: UseDotNet@2
-  displayName: 'Install .NET 5.x SDK'
+  displayName: 'Use .NET sdk'
   inputs:
-    packageType: 'sdk'
-    version: '5.x'
+    useGlobalJson: true
 
 - task: PowerShell@2
   name: Version
