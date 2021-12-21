@@ -11,9 +11,25 @@ inputs:
     default: Debug
     description: The dotnet build configuration
     required: false
+  buildId:
+    default: ''
+    description: An optional suffix for the build version
+    required: false
   sign:
     default: 'false'
     description: Indicates whether the assemblies should be both code signed and signed with a strong name.
+    required: false
+  azureClientId:
+    default: ''
+    description: Application client ID used for fetching secrets
+    required: false
+  azureTenantId:
+    default: ''
+    description: Azure AAD tenant that contains the application client
+    required: false
+  azureSubscriptionId:
+    default: ''
+    description: Azure subscription for the key vault containing the secrets
     required: false
 
 runs:
@@ -28,22 +44,17 @@ runs:
       uses: azure/login@v1
       if: ${{ inputs.sign == 'true' }}
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id: ${{ inputs.azureClientId }}
+        tenant-id: ${{ inputs.azureTenantId }}
+        subscription-id: ${{ inputs.azureSubscriptionId }}
 
     - name: Determine Version
       id: version
       shell: pwsh
       run: |
-        if ('${{ inputs.sign }}' -eq 'true')
-        {
-            $buildId = '${{ github.run_attempt }}'
-        }
-
         ./eng/Scripts/ParseVersion.ps1 `
           -VersionFilePath './src/${{ inputs.solution }}/${{ inputs.project }}/Version.json' `
-          -BuildId $buildId
+          -BuildId '${{ inputs.buildId }}'
 
     - name: Build
       shell: bash
