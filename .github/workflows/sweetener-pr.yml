@@ -40,6 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+        # Temporarily sign for testing
       - name: Package
         uses: ./.github/actions/dotnet-package
         with:
@@ -47,3 +48,7 @@ jobs:
           solution: Core
           buildConfiguration: Release
           buildId: ${{ github.run_attempt }}
+          sign: true
+          azureClientId: ${{ secrets.AZURE_CLIENT_ID }}
+          azureTenantId: ${{ secrets.AZURE_TENANT_ID }}
+          azureSubscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
