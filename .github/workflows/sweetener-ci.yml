@@ -37,6 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
 
+    permissions:
+      id-token: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
