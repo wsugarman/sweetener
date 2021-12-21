@@ -35,6 +35,6 @@ else
 }
 
 # Output variables to be used in the build
-Write-Host "##vso[task.setvariable variable=Assembly;isOutput=true]$assemblyVersion"
-Write-Host "##vso[task.setvariable variable=File;isOutput=true]$fileVersion"
-Write-Host "##vso[task.setvariable variable=Package;isOutput=true]$packageVersion"
+Write-Host "::set-output name=assembly::$assemblyVersion"
+Write-Host "::set-output name=file::$fileVersion"
+Write-Host "::set-output name=package::$packageVersion"

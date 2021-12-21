@@ -31,7 +31,7 @@ runs:
     - name: Check Code Coverage
       shell: pwsh
       run: |
-        ./eng/Scripts/CheckCodeCoverage.ps1 `
+        ./.github/actions/check-code-coverage/scripts/CheckCodeCoverage.ps1 `
           -CodeCoverageFile '${{ inputs.reportPath }}' `
           -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} `
           -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}

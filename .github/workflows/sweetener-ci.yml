@@ -44,6 +44,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: Azure/get-keyvault-secrets@v1
+        id: keyvault
+        with:
+          keyvault: Sugarman-KeyVault
+          secrets: 'Sweetener-Strong-Name-Key'
+
       - name: Package
         uses: ./.github/actions/dotnet-package
         with:
@@ -51,6 +64,13 @@ jobs:
           solution: Core
           buildConfiguration: Release
           sign: true
-          azureClientId: ${{ secrets.AZURE_CLIENT_ID }}
-          azureTenantId: ${{ secrets.AZURE_TENANT_ID }}
-          azureSubscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          strongNameKey: ${{ steps.keyvault.outputs.Sweetener-Strong-Name-Key }}
+
+      - name: Azure Logout
+        uses: azure/CLI@v1
+        if: ${{ always() }}
+        with:
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
