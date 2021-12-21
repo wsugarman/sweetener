@@ -25,8 +25,7 @@
 
   <!-- Code Analyzers -->
   <PropertyGroup>
-    <AnalysisLevel>5.0</AnalysisLevel>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
@@ -39,7 +38,7 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
