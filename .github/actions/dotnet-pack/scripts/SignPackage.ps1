@@ -38,7 +38,7 @@ if (![System.IO.File]::Exists($PackagePath))
 & dotnet tool install "NuGetKeyVaultSignTool" --version "3.2.2" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $nuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
-& $nuGetKeyVaultSignTool sign $package `
+& $nuGetKeyVaultSignTool sign $PackagePath `
   -fd sha256 `
   -tr $TimestampUrl `
   -td sha256 `
