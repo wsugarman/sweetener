@@ -16,6 +16,10 @@ param
     [string]
     $StrongNameKeyPath,
 
+    [Parameter(Mandatory=$True)]
+    [string]
+    $AccessToken,
+
     [Parameter(Mandatory=$False)]
     [string]
     $KeyVaultCertificateName = 'William-Sugarman-Code-Signing',
@@ -99,7 +103,7 @@ $assemblies | ForEach-Object { $_.FullName } | Out-File -FilePath $manifest
   -td sha256 `
   -kvu $KeyVaultUrl `
   -kvc $KeyVaultCertificateName `
-  -kvm `
+  -kva $AccessToken `
   -q `
   -ifl $manifest
 

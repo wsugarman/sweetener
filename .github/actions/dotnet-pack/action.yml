@@ -23,6 +23,10 @@ inputs:
     default: ''
     description: Base64 .snk file contents
     required: false
+  accessToken:
+    default: ''
+    description: Access token to authenticate to Azure Key Vault
+    required: false
 
 runs:
   using: composite
@@ -63,7 +67,8 @@ runs:
           -ProjectType '${{ inputs.solution }}' `
           -BuildConfiguration '${{ inputs.buildConfiguration }}' `
           -StrongNameKeyPath '${{ runner.temp }}/snk/sweetener.snk' `
-          -DotNetTools '${{ runner.temp }}/tools'
+          -DotNetTools '${{ runner.temp }}/tools' `
+          -AccessToken '${{ inputs.accessToken }}'
 
     - name: Pack
       shell: bash
@@ -80,7 +85,8 @@ runs:
       run: |
         ./.github/actions/dotnet-pack/scripts/SignPackage.ps1 `
           -PackagePath '${{ runner.temp }}/package/${{ inputs.project }}.${{ steps.version.outputs.package }}.nupkg' `
-          -DotNetTools '${{ runner.temp }}/tools'
+          -DotNetTools '${{ runner.temp }}/tools' `
+          -AccessToken '${{ inputs.accessToken }}'
 
     - name: Upload Package
       uses: actions/upload-artifact@v2.2.3

@@ -4,6 +4,10 @@ param
     [string]
     $PackagePath,
 
+    [Parameter(Mandatory=$True)]
+    [string]
+    $AccessToken,
+
     [Parameter(Mandatory=$False)]
     [string]
     $KeyVaultCertificateName = 'William-Sugarman-Code-Signing',
@@ -44,7 +48,7 @@ $nuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultS
   -td sha256 `
   -kvu $KeyVaultUrl `
   -kvc $KeyVaultCertificateName `
-  -kvm
+  -kva $AccessToken
 
 if (!$?)
 {

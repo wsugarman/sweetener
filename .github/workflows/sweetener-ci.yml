@@ -51,12 +51,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Fetch Key Vault Secrets
-        uses: Azure/get-keyvault-secrets@v1
-        id: keyvault
-        with:
-          keyvault: Sugarman-KeyVault
-          secrets: 'Sweetener-Strong-Name-Key'
+      - name: Get Az Access Token
+        id: auth
+        shell: pwsh
+        run: |
+          $token = $(az account get-access-token | ConvertFrom-Json).accessToken
+          Write-Host "::add-mask::$token"
+          Write-Host "::set-output name=token::$token"
 
       - name: Package
         uses: ./.github/actions/dotnet-pack
@@ -65,7 +66,8 @@ jobs:
           solution: Core
           buildConfiguration: Release
           sign: true
-          strongNameKey: ${{ steps.keyvault.outputs.Sweetener-Strong-Name-Key }}
+          strongNameKey: ${{ secrets.STRONG_NAME_KEY }}
+          accessToken: ${{ steps.auth.outputs.token }}
 
       - name: Azure Logout
         shell: bash
@@ -77,6 +79,7 @@ jobs:
 
   push:
     name: Push
+    needs: package
     runs-on: ubuntu-latest
     if: ${{ success() }}
 
