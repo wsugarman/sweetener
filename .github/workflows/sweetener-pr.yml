@@ -4,12 +4,12 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-    - .github/actions/*
+    - .github/actions/**
     - .github/workflows/sweetener-pr.yml
     - src/*
     - src/Core/*
-    - src/Core/Sweetener/*
-    - src/Shared/*
+    - src/Core/Sweetener/**
+    - src/Shared/**
 
 jobs:
   validate:

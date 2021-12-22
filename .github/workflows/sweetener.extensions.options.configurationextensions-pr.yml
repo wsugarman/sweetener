@@ -4,12 +4,12 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-    - .github/actions/*
+    - .github/actions/**
     - .github/workflows/sweetener.extensions.options.configurationextensions-pr.yml
     - src/*
     - src/Extensions/*
-    - src/Extensions/Sweetener.Extensions.Options.ConfigurationExtensions/*
-    - src/Shared/*
+    - src/Extensions/Sweetener.Extensions.Options.ConfigurationExtensions/**
+    - src/Shared/**
 
 jobs:
   validate:

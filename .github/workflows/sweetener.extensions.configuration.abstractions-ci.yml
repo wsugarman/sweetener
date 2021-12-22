@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main ]
     paths:
-    - .github/actions/*
+    - .github/actions/**
     - .github/workflows/sweetener.extensions.configuration.abstractions-ci.yml
     - src/*
     - src/Extensions/*
-    - src/Extensions/Sweetener.Extensions.Configuration.Abstractions/*
-    - src/Shared/*
+    - src/Extensions/Sweetener.Extensions.Configuration.Abstractions/**
+    - src/Shared/**
 
 jobs:
   validate:
