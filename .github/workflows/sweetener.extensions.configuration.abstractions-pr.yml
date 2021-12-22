@@ -6,6 +6,8 @@ on:
     paths:
     - .github/actions/**
     - .github/workflows/sweetener.extensions.configuration.abstractions-pr.yml
+    - global.json
+    - NuGet.config
     - src/*
     - src/Extensions/*
     - src/Extensions/Sweetener.Extensions.Configuration.Abstractions/**

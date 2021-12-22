@@ -6,6 +6,8 @@ on:
     paths:
     - .github/actions/**
     - .github/workflows/sweetener.linq-pr.yml
+    - global.json
+    - NuGet.config
     - src/*
     - src/Core/*
     - src/Core/Sweetener.Linq/**
