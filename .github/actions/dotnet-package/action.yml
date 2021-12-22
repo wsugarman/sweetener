@@ -63,7 +63,7 @@ runs:
           -ProjectType '${{ inputs.solution }}' `
           -BuildConfiguration '${{ inputs.buildConfiguration }}' `
           -StrongNameKeyPath '${{ runner.temp }}/snk/sweetener.snk' `
-          -DotNetTools `${{ runner.temp }}/tools`
+          -DotNetTools '${{ runner.temp }}/tools'
 
     - name: Pack
       shell: bash

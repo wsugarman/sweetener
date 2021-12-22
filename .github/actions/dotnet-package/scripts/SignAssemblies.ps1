@@ -38,6 +38,10 @@ param
 
     [Parameter(Mandatory=$False)]
     [string]
+    $StrongNameExe = "C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools/sn.exe",
+
+    [Parameter(Mandatory=$False)]
+    [string]
     $DotNetTools = "tools",
 
     [Parameter(Mandatory=$False)]
@@ -69,7 +73,12 @@ if ($assemblies.Length -eq 0)
 foreach ($AssemblyPath in $assemblies)
 {
     # Strong Name Tool should be on PATH for ubuntu-latest as Mono is installed
-    & sn -R $AssemblyPath $StrongNameKeyPath
+    & $StrongNameExe -Ra $AssemblyPath $StrongNameKeyPath
+
+    if (!$?)
+    {
+        throw [Exception]::new("Strong Name tool returned exit code '$LastExitCode'")
+    }
 }
 
 # Sign Assemblies using AzureSignTool
