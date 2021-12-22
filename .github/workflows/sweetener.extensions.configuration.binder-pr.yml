@@ -48,4 +48,4 @@ jobs:
           project: Sweetener.Extensions.Configuration.Binder
           solution: Extensions
           buildConfiguration: Release
-          buildId: ${{ github.run_attempt }}
+          pullRequestNumber: ${{ github.event.pull_request.number }}

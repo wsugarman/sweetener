@@ -59,7 +59,7 @@ jobs:
           project: Sweetener
           solution: Core
           buildConfiguration: Release
-          buildId: ${{ github.run_attempt }}
+          pullRequestNumber: ${{ github.event.pull_request.number }}
           sign: true
           strongNameKey: ${{ secrets.STRONG_NAME_KEY }}
 

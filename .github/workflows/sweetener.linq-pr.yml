@@ -48,4 +48,4 @@ jobs:
           project: Sweetener.Linq
           solution: Core
           buildConfiguration: Release
-          buildId: ${{ github.run_attempt }}
+          pullRequestNumber: ${{ github.event.pull_request.number }}
