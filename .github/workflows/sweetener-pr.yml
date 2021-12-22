@@ -51,7 +51,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: Azure/get-keyvault-secrets@v1
+      - name: Fetch Key Vault Secrets
+        uses: Azure/get-keyvault-secrets@v1
         id: keyvault
         with:
           keyvault: Sugarman-KeyVault

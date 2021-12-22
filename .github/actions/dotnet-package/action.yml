@@ -62,7 +62,8 @@ runs:
           -ProjectName  '${{ inputs.project }}' `
           -ProjectType '${{ inputs.solution }}' `
           -BuildConfiguration '${{ inputs.buildConfiguration }}' `
-          -StrongNameKeyPath '${{ runner.temp }}/snk/sweetener.snk'
+          -StrongNameKeyPath '${{ runner.temp }}/snk/sweetener.snk' `
+          -DotNetTools `${{ runner.temp }}/tools`
 
     - name: Pack
       shell: bash

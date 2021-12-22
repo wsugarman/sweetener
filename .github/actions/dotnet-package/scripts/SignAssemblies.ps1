@@ -57,7 +57,7 @@ if ([string]::IsNullOrWhiteSpace($description))
     throw [InvalidOperationException]::new("Cannot find 'Description' in $projectFile")
 }
 
-# Find all of the assemblies to sign
+# Find all of the assemblies to sign (in case we have multiple target frameworks)
 $buildDirectory = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, "bin", $BuildConfiguration)
 $assemblies = @(Get-ChildItem -Path $buildDirectory -Include ($ProjectName + ".dll") -Recurse)
 if ($assemblies.Length -eq 0)
@@ -69,7 +69,7 @@ if ($assemblies.Length -eq 0)
 foreach ($AssemblyPath in $assemblies)
 {
     # Strong Name Tool should be on PATH for ubuntu-latest as Mono is installed
-    & sn -Ra $AssemblyPath $StrongNameKeyPath
+    & sn -R $AssemblyPath $StrongNameKeyPath
 }
 
 # Sign Assemblies using AzureSignTool
