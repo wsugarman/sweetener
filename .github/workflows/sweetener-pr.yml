@@ -36,8 +36,8 @@ jobs:
 
   package:
     name: Package
+    needs: validate
     runs-on: windows-latest
-    if: ${{ success() }}
 
     permissions:
       id-token: write
