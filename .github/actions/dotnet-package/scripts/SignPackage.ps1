@@ -2,19 +2,7 @@ param
 (
     [Parameter(Mandatory=$True)]
     [string]
-    $ProjectName,
-
-    [Parameter(Mandatory=$True)]
-    [string]
-    $ProjectType,
-
-    [Parameter(Mandatory=$True)]
-    [string]
-    $BuildConfiguration,
-
-    [Parameter(Mandatory=$True)]
-    [string]
-    $PackageVersion,
+    $Package,
 
     [Parameter(Mandatory=$False)]
     [string]
@@ -41,26 +29,22 @@ param
 Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
+if (![System.IO.File]::Exists($Package))
+{
+    throw [System.IO.FileNotFoundException]::new("Cannot find '$Package'")
+}
+
 # Sign Package using NuGetKeyVaultSignTool
 & dotnet tool install "NuGetKeyVaultSignTool" --version "3.2.2" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $nuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
-$package               = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")
-
-if (![System.IO.File]::Exists($package))
-{
-    throw [System.IO.FileNotFoundException]::new("Cannot find '$package'")
-}
-
 & $nuGetKeyVaultSignTool sign $package `
   -fd sha256 `
   -tr $TimestampUrl `
   -td sha256 `
   -kvu $KeyVaultUrl `
-  -kvt $KeyVaultTenantId `
-  -kvi $KeyVaultClientId `
-  -kvs $KeyVaultClientSecret `
-  -kvc $KeyVaultCertificateName
+  -kvc $KeyVaultCertificateName `
+  -kvm
 
 if (!$?)
 {

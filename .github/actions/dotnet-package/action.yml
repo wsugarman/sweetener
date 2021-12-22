@@ -79,10 +79,7 @@ runs:
       shell: pwsh
       run: |
         ./.github/actions/dotnet-package/scripts/SignPackage.ps1 `
-          -ProjectName  '${{ inputs.project }}' `
-          -ProjectType '${{ inputs.solution }}' `
-          -BuildConfiguration '${{ inputs.buildConfiguration }}' `
-          -PackageVersion '${{ steps.version.outputs.package }}' `
+          -Package '${{ runner.temp }}/package/${{ inputs.project }}.${{ steps.version.outputs.package }}.nupkg' `
           -DotNetTools '${{ runner.temp }}/tools'
 
     - name: Upload Package
