@@ -69,10 +69,9 @@ jobs:
           strongNameKey: ${{ steps.keyvault.outputs.Sweetener-Strong-Name-Key }}
 
       - name: Azure Logout
-        uses: azure/CLI@v1
+        shell: bash
         if: ${{ always() }}
-        with:
-          inlineScript: |
-            az logout
-            az cache purge
-            az account clear
+        run: |
+          az logout
+          az cache purge
+          az account clear
