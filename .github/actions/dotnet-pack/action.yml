@@ -34,7 +34,7 @@ runs:
       if: ${{ inputs.sign == 'true' }}
       shell: pwsh
       run: |
-        ./.github/actions/dotnet-package/scripts/CreateFile.ps1 `
+        ./.github/actions/dotnet-pack/scripts/CreateFile.ps1 `
           -Base64StringContent '${{ inputs.strongNameKey }}' `
           -OutputFilePath "${{ runner.temp }}/snk/sweetener.snk"
 
@@ -42,7 +42,7 @@ runs:
       id: version
       shell: pwsh
       run: |
-        ./.github/actions/dotnet-package/scripts/ParseVersion.ps1 `
+        ./.github/actions/dotnet-pack/scripts/ParseVersion.ps1 `
           -VersionFilePath './src/${{ inputs.solution }}/${{ inputs.project }}/Version.json' `
           -BuildId '${{ inputs.buildId }}'
 
@@ -58,7 +58,7 @@ runs:
       if: ${{ inputs.sign == 'true' }}
       shell: pwsh
       run: |
-        ./.github/actions/dotnet-package/scripts/SignAssemblies.ps1 `
+        ./.github/actions/dotnet-pack/scripts/SignAssemblies.ps1 `
           -ProjectName  '${{ inputs.project }}' `
           -ProjectType '${{ inputs.solution }}' `
           -BuildConfiguration '${{ inputs.buildConfiguration }}' `
@@ -78,8 +78,8 @@ runs:
       if: ${{ inputs.sign == 'true' }}
       shell: pwsh
       run: |
-        ./.github/actions/dotnet-package/scripts/SignPackage.ps1 `
-          -Package '${{ runner.temp }}/package/${{ inputs.project }}.${{ steps.version.outputs.package }}.nupkg' `
+        ./.github/actions/dotnet-pack/scripts/SignPackage.ps1 `
+          -PackagePath '${{ runner.temp }}/package/${{ inputs.project }}.${{ steps.version.outputs.package }}.nupkg' `
           -DotNetTools '${{ runner.temp }}/tools'
 
     - name: Upload Package
@@ -92,5 +92,5 @@ runs:
       if: ${{ inputs.sign == 'true' && always() }}
       shell: pwsh
       run: |
-        ./.github/actions/dotnet-package/scripts/DeleteFile.ps1 `
+        ./.github/actions/dotnet-pack/scripts/DeleteFile.ps1 `
           -FilePath "${{ runner.temp }}/snk/sweetener.snk"

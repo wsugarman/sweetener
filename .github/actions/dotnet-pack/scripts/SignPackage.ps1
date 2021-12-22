@@ -2,7 +2,7 @@ param
 (
     [Parameter(Mandatory=$True)]
     [string]
-    $Package,
+    $PackagePath,
 
     [Parameter(Mandatory=$False)]
     [string]
@@ -29,9 +29,9 @@ param
 Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
-if (![System.IO.File]::Exists($Package))
+if (![System.IO.File]::Exists($PackagePath))
 {
-    throw [System.IO.FileNotFoundException]::new("Cannot find '$Package'")
+    throw [System.IO.FileNotFoundException]::new("Cannot find '$PackagePath'")
 }
 
 # Sign Package using NuGetKeyVaultSignTool
