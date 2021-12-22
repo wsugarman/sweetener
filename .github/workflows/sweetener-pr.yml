@@ -4,12 +4,14 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-    - .github/actions/*
+    - .github/actions/**
     - .github/workflows/sweetener-pr.yml
+    - global.json
+    - NuGet.config
     - src/*
     - src/Core/*
-    - src/Core/Sweetener/*
-    - src/Shared/*
+    - src/Core/Sweetener/**
+    - src/Shared/**
 
 jobs:
   validate:
@@ -46,4 +48,4 @@ jobs:
           project: Sweetener
           solution: Core
           buildConfiguration: Release
-          buildId: ${{ github.run_attempt }}
+          pullRequestNumber: ${{ github.event.pull_request.number }}

@@ -6,7 +6,7 @@ param
 
     [Parameter(Mandatory=$False)]
     [Nullable[int]]
-    $BuildId = $null
+    $PullRequestNumber = $null
 )
 
 # Turn off trace and stop on any error
@@ -16,13 +16,11 @@ $ErrorActionPreference = "Stop"
 $versionParts = Get-Content $VersionFilePath | Out-String | ConvertFrom-Json
 $assemblyVersion = [string]::Format("{0}.0.0.0", $versionParts.major)
 
-# A Continuous Integration (CI) build will use its optional suffix in the package version,
-# while all other builds, presumably created through PRs, will instead append the incrementing
-# build number to both the file and package version
-if ($BuildId)
+# PR builds indicate that they're unofficial and pre-release via a change to their file and package versions.
+if ($PullRequestNumber)
 {
-    $fileVersion    = [string]::Format("{0}.{1}.{2}.{3}"      , $versionParts.major, $versionParts.minor, $versionParts.patch, $BuildId)
-    $packageVersion = [string]::Format("{0}.{1}.{2}-build.{3}", $versionParts.major, $versionParts.minor, $versionParts.patch, $BuildId)
+    $fileVersion    = [string]::Format("{0}.{1}.{2}.{3}"   , $versionParts.major, $versionParts.minor, $versionParts.patch, $PullRequestNumber)
+    $packageVersion = [string]::Format("{0}.{1}.{2}-pr.{3}", $versionParts.major, $versionParts.minor, $versionParts.patch, $PullRequestNumber)
 }
 else
 {

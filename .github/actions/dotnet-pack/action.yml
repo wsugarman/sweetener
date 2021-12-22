@@ -11,9 +11,9 @@ inputs:
     default: Debug
     description: The dotnet build configuration
     required: false
-  buildId:
+  pullRequestNumber:
     default: ''
-    description: An optional suffix for the build version
+    description: An optional pull request number
     required: false
   sign:
     default: 'false'
@@ -44,7 +44,7 @@ runs:
       run: |
         ./.github/actions/dotnet-pack/scripts/ParseVersion.ps1 `
           -VersionFilePath './src/${{ inputs.solution }}/${{ inputs.project }}/Version.json' `
-          -BuildId '${{ inputs.buildId }}'
+          -PullRequestNumber '${{ inputs.pullRequestNumber }}'
 
     - name: Build
       shell: bash
