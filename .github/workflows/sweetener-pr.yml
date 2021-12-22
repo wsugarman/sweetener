@@ -46,3 +46,4 @@ jobs:
           project: Sweetener
           solution: Core
           buildConfiguration: Release
+          buildId: ${{ github.run_attempt }}
