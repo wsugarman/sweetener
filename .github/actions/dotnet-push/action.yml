@@ -20,7 +20,7 @@ runs:
     - name: dotnet nuget push
       shell: bash
       run: |
-        dotnet nuget push "${{ runner.temp }}/downloads/package/*.nupkg" `
-          --source https://api.nuget.org/v3/index.json `
-          --api-key ${{ inputs.apiKey }} `
+        dotnet nuget push "${{ runner.temp }}/downloads/package/*.nupkg" \
+          --source "https://api.nuget.org/v3/index.json" \
+          --api-key "${{ inputs.apiKey }}" \
           --skip-duplicate
