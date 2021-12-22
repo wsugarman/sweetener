@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
     - .github/actions/*
-    - .github/workflows/sweetener-pr.yml
+    - .github/workflows/sweetener-ci.yml
     - src/*
     - src/Core/*
     - src/Core/Sweetener/*
@@ -25,16 +25,16 @@ jobs:
         with:
           project: Sweetener
           solution: Core
-          resultsDirectory: ${{ runner.temp }}/TestResults/Sweetener
+          resultsDirectory: ${{ runner.temp }}/TestResults
 
       - name: Ensure Code Coverage
         uses: ./.github/actions/check-code-coverage
         with:
-          reportPath: ${{ runner.temp }}/TestResults/Sweetener/*/coverage.cobertura.xml
+          reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
 
   package:
     name: Package
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: ${{ success() }}
 
     permissions:

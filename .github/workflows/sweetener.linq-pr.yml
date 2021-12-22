@@ -1,14 +1,14 @@
-name: Sweetener Pull Request
+name: Sweetener.Linq Pull Request
 
 on:
   pull_request:
     branches: [ main ]
     paths:
     - .github/actions/*
-    - .github/workflows/sweetener-pr.yml
+    - .github/workflows/sweetener.linq-pr.yml
     - src/*
     - src/Core/*
-    - src/Core/Sweetener/*
+    - src/Core/Sweetener.Linq/*
     - src/Shared/*
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: Test
         uses: ./.github/actions/dotnet-validate
         with:
-          project: Sweetener
+          project: Sweetener.Linq
           solution: Core
           resultsDirectory: ${{ runner.temp }}/TestResults
 
@@ -34,7 +34,7 @@ jobs:
 
   package:
     name: Package
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     permissions:
       id-token: write
@@ -43,35 +43,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-        # Temporarily sign for testing
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Fetch Key Vault Secrets
-        uses: Azure/get-keyvault-secrets@v1
-        id: keyvault
-        with:
-          keyvault: Sugarman-KeyVault
-          secrets: 'Sweetener-Strong-Name-Key'
-
       - name: Package
         uses: ./.github/actions/dotnet-package
         with:
-          project: Sweetener
+          project: Sweetener.Linq
           solution: Core
           buildConfiguration: Release
           buildId: ${{ github.run_attempt }}
-          sign: true
-          strongNameKey: ${{ steps.keyvault.outputs.Sweetener-Strong-Name-Key }}
-
-      - name: Azure Logout
-        shell: bash
-        if: ${{ always() }}
-        run: |
-          az logout
-          az cache purge
-          az account clear

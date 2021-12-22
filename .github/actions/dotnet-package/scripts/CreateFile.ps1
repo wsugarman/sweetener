@@ -25,5 +25,5 @@ if ([string]::IsNullOrWhiteSpace($OutputFilePath))
 
 # Extract the bytes and write them to the file
 $fileBytes = [System.Convert]::FromBase64String($Base64StringContent)
-New-Item -ItemType 'file' -Path $OutputFilePath -Force
+New-Item -ItemType 'file' -Path $OutputFilePath -Force | Out-Null
 [System.IO.File]::WriteAllBytes($OutputFilePath, $fileBytes)
