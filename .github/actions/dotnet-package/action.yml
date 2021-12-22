@@ -71,7 +71,7 @@ runs:
         dotnet pack "./src/${{ inputs.solution }}/${{ inputs.project }}/${{ inputs.project }}.csproj" \
           -c "${{ inputs.buildConfiguration }}" \
           "-p:ContinuousIntegrationBuild=true;PackageVersion=${{ steps.version.outputs.package }}" \
-          --no-build `
+          --no-build \
           -o "${{ runner.temp }}/package"
 
     - name: Upload Package
