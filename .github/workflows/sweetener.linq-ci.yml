@@ -66,6 +66,7 @@ jobs:
           buildConfiguration: Release
           sign: true
           strongNameKey: ${{ steps.keyvault.outputs.Sweetener-Strong-Name-Key }}
+          accessToken: ${{ env.ACTIONS_RUNTIME_TOKEN }}
 
       - name: Azure Logout
         shell: bash
