@@ -74,6 +74,17 @@ runs:
           --no-build \
           -o "${{ runner.temp }}/package"
 
+    - name: Sign Package
+      if: ${{ inputs.sign == 'true' }}
+      shell: pwsh
+      run: |
+        ./.github/actions/dotnet-package/scripts/SignPackage.ps1 `
+          -ProjectName  '${{ inputs.project }}' `
+          -ProjectType '${{ inputs.solution }}' `
+          -BuildConfiguration '${{ inputs.buildConfiguration }}' `
+          -PackageVersion '${{ steps.version.outputs.package }}' `
+          -DotNetTools '${{ runner.temp }}/tools'
+
     - name: Upload Package
       uses: actions/upload-artifact@v2.2.3
       with:
