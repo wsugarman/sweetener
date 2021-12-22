@@ -43,6 +43,7 @@ namespace Sweetener.Threading.Tasks
         }
 
         [ExcludeFromCodeCoverage]
+        [SuppressMessage("Performance", "CA1849: Call async methods when in an async method", Justification = "Task is already complete.")]
         private static Task<TResult> ThrowIfCancellationRequested<TResult>(Task t)
         {
             // Getting the result will cause an exception to be thrown such that

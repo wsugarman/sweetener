@@ -1,0 +1,26 @@
+name: dotnet nuget push
+description: Push the NuGet package if there is a version change
+inputs:
+  apiKey:
+    description: API Key for NuGet.org
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup
+      uses: actions/setup-dotnet@v1.9.0
+
+    - name: Download Package
+      uses: actions/download-artifact@v2
+      with:
+        name: Package
+        path: ${{ runner.temp }}/downloads/package
+
+    - name: dotnet nuget push
+      shell: bash
+      run: |
+        dotnet nuget push "${{ runner.temp }}/downloads/package/*.nupkg" `
+          --source https://api.nuget.org/v3/index.json `
+          --api-key ${{ inputs.apiKey }} `
+          --skip-duplicate

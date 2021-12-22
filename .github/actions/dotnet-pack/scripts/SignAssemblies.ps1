@@ -16,21 +16,13 @@ param
     [string]
     $StrongNameKeyPath,
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory=$False)]
     [string]
-    $KeyVaultUrl,
+    $KeyVaultCertificateName = 'William-Sugarman-Code-Signing',
 
-    [Parameter(Mandatory=$True)]
+    [Parameter(Mandatory=$False)]
     [string]
-    $KeyVaultCertificateName,
-
-    [Parameter(Mandatory=$True)]
-    [string]
-    $KeyVaultClientId,
-
-    [Parameter(Mandatory=$True)]
-    [string]
-    $KeyVaultClientSecret,
+    $KeyVaultUrl = 'https://sugarman-keyvault.vault.azure.net/',
 
     [Parameter(Mandatory=$False)]
     [string]
@@ -46,7 +38,7 @@ param
 
     [Parameter(Mandatory=$False)]
     [string]
-    $NetFXTools = "C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools",
+    $StrongNameExe = "C:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.8 Tools/sn.exe",
 
     [Parameter(Mandatory=$False)]
     [string]
@@ -69,7 +61,7 @@ if ([string]::IsNullOrWhiteSpace($description))
     throw [InvalidOperationException]::new("Cannot find 'Description' in $projectFile")
 }
 
-# Find all of the assemblies to sign
+# Find all of the assemblies to sign (in case we have multiple target frameworks)
 $buildDirectory = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, "bin", $BuildConfiguration)
 $assemblies = @(Get-ChildItem -Path $buildDirectory -Include ($ProjectName + ".dll") -Recurse)
 if ($assemblies.Length -eq 0)
@@ -78,10 +70,15 @@ if ($assemblies.Length -eq 0)
 }
 
 # Sign with Enhanced Strong Name
-$strongNameTool = [System.IO.Path]::Combine($NetFXTools, "sn.exe")
 foreach ($AssemblyPath in $assemblies)
 {
-    & $strongNameTool -Ra $AssemblyPath $StrongNameKeyPath
+    # Strong Name Tool should be on PATH for ubuntu-latest as Mono is installed
+    & $StrongNameExe -Ra $AssemblyPath $StrongNameKeyPath
+
+    if (!$?)
+    {
+        throw [Exception]::new("Strong Name tool returned exit code '$LastExitCode'")
+    }
 }
 
 # Sign Assemblies using AzureSignTool
@@ -101,9 +98,8 @@ $assemblies | ForEach-Object { $_.FullName } | Out-File -FilePath $manifest
   -tr $TimestampUrl `
   -td sha256 `
   -kvu $KeyVaultUrl `
-  -kvi $KeyVaultClientId `
-  -kvs $KeyVaultClientSecret `
   -kvc $KeyVaultCertificateName `
+  -kvm `
   -q `
   -ifl $manifest
 

@@ -54,7 +54,7 @@ Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
 # Sign Package using NuGetKeyVaultSignTool
-& dotnet tool install "NuGetKeyVaultSignTool" --version "3.1.6" --tool-path $DotNetTools --configfile $NuGetConfig
+& dotnet tool install "NuGetKeyVaultSignTool" --version "3.2.2" --tool-path $DotNetTools --configfile $NuGetConfig
 
 $nuGetKeyVaultSignTool = [System.IO.Path]::Combine($DotNetTools, "NuGetKeyVaultSignTool.exe")
 $package               = [System.IO.Path]::Combine("src", $ProjectType, $ProjectName, "bin", $BuildConfiguration, "$ProjectName.$PackageVersion.nupkg")

@@ -1,0 +1,43 @@
+name: dotnet test
+description: Ensures quality by running cross-platform tests and code coverage
+inputs:
+  project:
+    description: The name of the csproj file
+    required: true
+  solution:
+    description: The name of the solution file
+    required: true
+  buildConfiguration:
+    default: Debug
+    description: The dotnet build configuration
+    required: false
+  resultsDirectory:
+    description: The directory where the test results are going to be placed
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup
+      uses: actions/setup-dotnet@v1.9.0
+
+    - name: Build
+      shell: bash
+      run: |
+        dotnet build "./src/${{ inputs.solution }}/${{ inputs.project }}.Test/${{ inputs.project }}.Test.csproj" \
+          -c "${{ inputs.buildConfiguration }}" \
+          -p:ContinuousIntegrationBuild=true \
+          -warnaserror
+
+    - name: Test
+      shell: bash
+      run: |
+        dotnet test "./src/${{ inputs.solution }}/${{ inputs.project }}.Test/${{ inputs.project }}.Test.csproj" \
+          -c "${{ inputs.buildConfiguration }}" \
+          -p:ContinuousIntegrationBuild=true \
+          -warnaserror \
+          --no-build \
+          -r "${{ inputs.resultsDirectory }}" \
+          --collect "XPlat Code Coverage" \
+          -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
+          -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ inputs.project }}]*

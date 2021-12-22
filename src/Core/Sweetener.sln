@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BB6E7D2D-ABDF-4E1A-8AD4-7262ED7B020C}"
 	ProjectSection(SolutionItems) = preProject
-		..\.editorconfig = ..\.editorconfig
+		...\..\.editorconfig = ..\..\.editorconfig
 		..\CodeCoverage.runsettings = ..\CodeCoverage.runsettings
 		..\Directory.Build.props = ..\Directory.Build.props
 	EndProjectSection

@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: CodeQL
 
 on:
   push:
@@ -21,12 +21,10 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: 'csharp'
-      
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1.8.0
-      with:
-        dotnet-version: '5.0.x'
-        
+
+    - name: Setup
+      uses: actions/setup-dotnet@v1.9.0
+
     - name: Build Sweetener.sln
       run: dotnet build src/Core/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
 
