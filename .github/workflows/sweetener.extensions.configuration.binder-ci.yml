@@ -1,4 +1,4 @@
-name: Sweetener.Extensions.Configuration.Binder Continuous Integration
+name: Sweetener.Extensions.Configuration.Binder
 
 on:
   push:

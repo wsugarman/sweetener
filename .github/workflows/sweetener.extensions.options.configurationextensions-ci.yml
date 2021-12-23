@@ -1,4 +1,4 @@
-name: Sweetener.Extensions.Options.ConfigurationExtensions Continuous Integration
+name: Sweetener.Extensions.Options.ConfigurationExtensions
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Sweetener.Extensions.Configuration.Abstractions Continuous Integration
+name: Sweetener.Extensions.Configuration.Abstractions
 
 on:
   push:

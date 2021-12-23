@@ -1,4 +1,4 @@
-name: Sweetener.Linq Pull Request
+name: Sweetener.Linq PR
 
 on:
   pull_request:

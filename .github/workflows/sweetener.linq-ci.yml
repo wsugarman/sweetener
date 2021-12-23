@@ -1,4 +1,4 @@
-name: Sweetener.Linq Continuous Integration
+name: Sweetener.Linq
 
 on:
   push:

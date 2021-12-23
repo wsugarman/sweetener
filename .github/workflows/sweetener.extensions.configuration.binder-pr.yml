@@ -1,4 +1,4 @@
-name: Sweetener.Extensions.Configuration.Binder Pull Request
+name: Sweetener.Extensions.Configuration.Binder PR
 
 on:
   pull_request:
