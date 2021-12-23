@@ -12,7 +12,9 @@ runs:
   steps:
     - name: Copy Code Coverage
       shell: pwsh
-      run: Copy-Item "${{ inputs.reportPath }}" -Destination "${{ runner.temp }}/codecoverage/"
+      run: |
+        New-Item -ItemType 'directory' -Path '${{ runner.temp }}/codecoverage/' | Out-Null
+        Copy-Item '${{ inputs.reportPath }}' -Destination '${{ runner.temp }}/codecoverage/'
 
     - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v2.2.3
