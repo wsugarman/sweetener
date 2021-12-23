@@ -12,7 +12,7 @@ runs:
   steps:
     - name: Copy Code Coverage
       shell: pwsh
-      run: Copy-Item "${{ inputs.reportPath }}" -Destination "${{ runner.temp }}/codecoverage"
+      run: Copy-Item "${{ inputs.reportPath }}" -Destination "${{ runner.temp }}/codecoverage/"
 
     - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v2.2.3
@@ -26,4 +26,4 @@ runs:
         files: ${{ runner.temp }}/codecoverage/coverage.cobertura.xml
         flags: ${{ inputs.flag }}
         fail_ci_if_error: true
-
+        verbose: true
