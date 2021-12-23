@@ -14,10 +14,20 @@ inputs:
   resultsDirectory:
     description: The directory where the test results are going to be placed
     required: true
+  initializeCodeQL:
+    default: 'true'
+    description: Indicates whether CodeQL should be initialized
+    required: false
 
 runs:
   using: composite
   steps:
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      if: ${{ inputs.initializeCodeQL == 'true' }}
+      with:
+        languages: 'csharp'
+
     - name: Setup
       uses: actions/setup-dotnet@v1.9.0
 

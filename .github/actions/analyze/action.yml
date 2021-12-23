@@ -1,11 +1,11 @@
-name: Check Code Coverage
-description: Validates code coverage and uploads the results.
+name: Analyze
+description: Analyzes the code coverage results and scans the code using CodeQL
 inputs:
   reportPath:
     description: The path to the cobertura coverage file.
     required: true
-  flag:
-    description: The Codecov flag that identifies the specific coverage within the mono repo
+  category:
+    description: A unique moniker that identifies a specific portion of the mono repo
     required: true
 runs:
   using: composite
@@ -26,5 +26,10 @@ runs:
       uses: codecov/codecov-action@v2.1.0
       with:
         files: ${{ runner.temp }}/codecoverage/coverage.cobertura.xml
-        flags: ${{ inputs.flag }}
+        flags: ${{ inputs.category }}
         fail_ci_if_error: true
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
+      with:
+        category: ${{ inputs.category }}

@@ -18,6 +18,9 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
 
+    permissions:
+      security-events: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -29,11 +32,11 @@ jobs:
           solution: Core
           resultsDirectory: ${{ runner.temp }}/TestResults
 
-      - name: Code Coverage
-        uses: ./.github/actions/check-code-coverage
+      - name: Analyze
+        uses: ./.github/actions/analyze
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
-          flag: Sweetener
+          category: Sweetener
 
   package:
     name: Package
