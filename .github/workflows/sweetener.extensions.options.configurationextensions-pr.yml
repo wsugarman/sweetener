@@ -33,7 +33,7 @@ jobs:
         uses: ./.github/actions/check-code-coverage
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
-          flag: ext.options.configext
+          flag: Options.ConfigurationExtensions
 
   package:
     name: Package

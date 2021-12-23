@@ -2,8 +2,8 @@ coverage:
   status:
     project:
       default:
-        target: number
-        threshold: 100%
+        target: 100%
+        threshold: 0%
 flag_management:
   default_rules:
     carryforward: true

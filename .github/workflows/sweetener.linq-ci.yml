@@ -33,7 +33,7 @@ jobs:
         uses: ./.github/actions/check-code-coverage
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
-          flag: linq
+          flag: Sweetener.Linq
 
   package:
     name: Package

@@ -33,7 +33,7 @@ jobs:
         uses: ./.github/actions/check-code-coverage
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
-          flag: ext.config.abstractions
+          flag: Configuration.Abstractions
 
   package:
     name: Package
