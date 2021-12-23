@@ -19,7 +19,7 @@ runs:
     - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v2.2.3
       with:
-        name: CodeCoverage
+        name: Coverage
         path: ${{ runner.temp }}/codecoverage
 
     - name: Codecov Upload
@@ -28,4 +28,3 @@ runs:
         files: ${{ runner.temp }}/codecoverage/coverage.cobertura.xml
         flags: ${{ inputs.flag }}
         fail_ci_if_error: true
-        verbose: true
