@@ -1,4 +1,4 @@
-name: Sweetener.Extensions.Configuration.Binder Continuous Integration
+name: Sweetener.Extensions.Configuration.Binder
 
 on:
   push:
@@ -14,8 +14,8 @@ on:
     - src/Shared/**
 
 jobs:
-  validate:
-    name: Validate
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,14 +29,15 @@ jobs:
           solution: Extensions
           resultsDirectory: ${{ runner.temp }}/TestResults
 
-      - name: Ensure Code Coverage
+      - name: Code Coverage
         uses: ./.github/actions/check-code-coverage
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
+          flag: Configuration.Binder
 
   package:
     name: Package
-    needs: validate
+    needs: test
     runs-on: windows-latest
 
     permissions:
@@ -79,7 +80,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Package
+      - name: Push Package
         uses: ./.github/actions/dotnet-push
         with:
           apiKey: ${{ secrets.NUGET_API_KEY }}

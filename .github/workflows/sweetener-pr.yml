@@ -1,4 +1,4 @@
-name: Sweetener Pull Request
+name: Sweetener PR
 
 on:
   pull_request:
@@ -14,8 +14,8 @@ on:
     - src/Shared/**
 
 jobs:
-  validate:
-    name: Validate
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,10 +29,11 @@ jobs:
           solution: Core
           resultsDirectory: ${{ runner.temp }}/TestResults
 
-      - name: Ensure Code Coverage
+      - name: Code Coverage
         uses: ./.github/actions/check-code-coverage
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
+          flag: Sweetener
 
   package:
     name: Package
