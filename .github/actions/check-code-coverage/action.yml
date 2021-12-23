@@ -4,23 +4,15 @@ inputs:
   reportPath:
     description: The path to the cobertura coverage file.
     required: true
-  lineCoverageThreshold:
-    default: '1'
-    description: The minimum line coverage
-    required: false
-  branchCoverageThreshold:
-    default: '1'
-    description: The minimum branch coverage
-    required: false
+  flag:
+    description: The Codecov flag that identifies the specific coverage within the mono repo
+    required: true
 runs:
   using: composite
   steps:
-    - name: Generate Code Coverage Report
-      uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
-      with:
-        reports: ${{ inputs.reportPath }}
-        reporttypes: HTMLInline;Cobertura;Badges
-        targetdir: ${{ runner.temp }}/codecoverage
+    - name: Copy Code Coverage
+      shell: pwsh
+      run: Copy-Item "${{ inputs.reportPath }}" -Destination "${{ runner.temp }}/codecoverage"
 
     - name: Upload Code Coverage Report
       uses: actions/upload-artifact@v2.2.3
@@ -28,10 +20,10 @@ runs:
         name: CodeCoverage
         path: ${{ runner.temp }}/codecoverage
 
-    - name: Check Code Coverage
-      shell: pwsh
-      run: |
-        ./.github/actions/check-code-coverage/scripts/CheckCodeCoverage.ps1 `
-          -CodeCoverageFile '${{ inputs.reportPath }}' `
-          -LineCoverageThreshold ${{ inputs.lineCoverageThreshold }} `
-          -BranchCoverageThreshold ${{ inputs.branchCoverageThreshold }}
+    - name: Codecov Upload
+      uses: codecov/codecov-action@v2.1.0
+      with:
+        files: ${{ runner.temp }}/codecoverage/coverage.cobertura.xml
+        flags: ${{ inputs.flag }}
+        fail_ci_if_error: true
+
