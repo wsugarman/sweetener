@@ -20,7 +20,7 @@
 
   <!-- Tools -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Code Analyzers -->
@@ -44,9 +44,9 @@
       <!-- Test Framework Packages -->
       <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="3.1.0" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestAdapter" Version="2.2.5" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.2.5" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestAdapter" Version="2.2.8" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
       </ItemGroup>
 
       <!-- Test File Analyzer Suppressions -->

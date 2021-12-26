@@ -32,11 +32,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>MultiTask.tt</DependentUpon>
     </Compile>
-    <Compile Update="TryFunc.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TryFunc.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
   </ItemGroup>
 
   <!-- Text Templating Files -->
@@ -52,10 +47,6 @@
     <None Update="Threading\Tasks\MultiTask.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>MultiTask.cs</LastGenOutput>
-    </None>
-    <None Update="TryFunc.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TryFunc.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
