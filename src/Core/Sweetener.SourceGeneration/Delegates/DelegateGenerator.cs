@@ -16,6 +16,8 @@ namespace Sweetener.SourceGeneration.Delegates
     {
         public abstract string FileName { get; }
 
+        public virtual IReadOnlyCollection<string> ImportedNamespaces => Array.Empty<string>();
+
         public void Execute(GeneratorExecutionContext context)
         {
             AnalyzerConfigOptions assemblyOptions = context.AnalyzerConfigOptions.GetOptions(context.Compilation.SyntaxTrees.FirstOrDefault());
@@ -48,17 +50,25 @@ namespace Sweetener.SourceGeneration.Delegates
         public virtual void Initialize(GeneratorInitializationContext context)
         { }
 
-        protected virtual IReadOnlyCollection<string> GetImports()
-            => Array.Empty<string>();
+        protected abstract void WriteDelegate(IndentedTextWriter sourceWriter, int i);
 
-        protected abstract void WriteDelegates(IndentedTextWriter sourceWriter, DelegateGeneratorOptions options);
+        private void WriteDelegates(IndentedTextWriter sourceWriter, DelegateGeneratorOptions options)
+        {
+            for (int i = 0; i < options.TypeOverloads; i++)
+            {
+                WriteDelegate(sourceWriter, i);
+
+                // Newline between methods
+                if (i != options.TypeOverloads - 1)
+                    sourceWriter.WriteLineNoTabs(string.Empty);
+            }
+        }
 
         private void AppendImports(IndentedTextWriter sourceWriter)
         {
-            IReadOnlyCollection<string> imports = GetImports();
-            if (imports.Count > 0)
+            if (ImportedNamespaces.Count > 0)
             {
-                foreach (string @namespace in imports)
+                foreach (string @namespace in ImportedNamespaces)
                     sourceWriter.WriteLine($"using {@namespace};");
 
                 sourceWriter.WriteLine();

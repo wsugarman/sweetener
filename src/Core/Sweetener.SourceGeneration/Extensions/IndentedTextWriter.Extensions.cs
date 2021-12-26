@@ -29,6 +29,9 @@ namespace Sweetener.SourceGeneration.Extensions
             params string[] description)
             => sourceWriter.WriteXmlDocElement("param", name, description);
 
+        public static IndentedTextWriter WriteXmlRemarks(this IndentedTextWriter sourceWriter, params string[] summary)
+            => sourceWriter.WriteXmlDocElement("remarks", summary);
+
         public static IndentedTextWriter WriteXmlReturns(this IndentedTextWriter sourceWriter, params string[] summary)
             => sourceWriter.WriteXmlDocElement("returns", summary);
 
