@@ -34,7 +34,7 @@ namespace Sweetener.SourceGeneration.Delegates
                     CultureInfo.InvariantCulture,
                     "public delegate bool TryFunc{0}({1});",
                     Input.GetTypeParameters(i, contravariant: true).Concat("TResult").Enclose(BracketType.AngleBrackets),
-                    Input.GetParameters(i).Concat("[MaybeNullWhen(false)] out TResult result").Enclose(BracketType.None)));
+                    Input.GetParameters(i).Concat("[MaybeNullWhen(false)] out TResult result").ToCsv()));
         }
     }
 }

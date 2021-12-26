@@ -21,11 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Test", "Sweetener.Test\Sweetener.Test.csproj", "{A7F1B2E0-FBDC-4245-88DA-EEE8A8AECE9E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TextTemplating", "TextTemplating", "{FEBCD5BA-3F16-4B69-B7AD-A3766FE71F98}"
-	ProjectSection(SolutionItems) = preProject
-		..\TextTemplating\Include.t4 = ..\TextTemplating\Include.t4
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,9 +50,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{FEBCD5BA-3F16-4B69-B7AD-A3766FE71F98} = {BB6E7D2D-ABDF-4E1A-8AD4-7262ED7B020C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4604FD9D-6DEB-43A7-AA51-932827DA7AF9}

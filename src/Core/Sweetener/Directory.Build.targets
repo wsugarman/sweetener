@@ -3,12 +3,14 @@
   <!-- Define any new properties used solely by the source generator -->
   <PropertyGroup>
     <DelegateTypeOverloads>16</DelegateTypeOverloads>
+    <TaskTypeOverloads>8</TaskTypeOverloads>
   </PropertyGroup>
 
   <!-- Expose the following properties to the source generator -->
   <ItemGroup>
     <CompilerVisibleProperty Include="DelegateTypeOverloads" />
     <CompilerVisibleProperty Include="RootNamespace" />
+    <CompilerVisibleProperty Include="TaskTypeOverloads" />
   </ItemGroup>
 
   <!-- Include the source generator -->

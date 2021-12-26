@@ -11,25 +11,4 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <!-- Generated Files -->
-  <ItemGroup>
-    <Compile Update="Threading\Tasks\MultiTask.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MultiTask.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <!-- Text Templating Files -->
-  <ItemGroup>
-    <None Update="Threading\Tasks\MultiTask.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>MultiTask.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
 </Project>

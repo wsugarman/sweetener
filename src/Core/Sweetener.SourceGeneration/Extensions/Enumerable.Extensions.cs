@@ -35,5 +35,8 @@ namespace Sweetener.SourceGeneration.Extensions
                 _ => throw new ArgumentOutOfRangeException(nameof(bracketType)),
             };
         }
+
+        public static string? ToCsv(this IEnumerable<string> source)
+            => source.Enclose(BracketType.None, separator: ", ");
     }
 }
