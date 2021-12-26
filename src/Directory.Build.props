@@ -88,6 +88,7 @@
         <Compile Include="$(SharedDirectory)AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
+        <Compile Include="$(SharedDirectory)IsExternalInit.cs" Visible="false" />
         <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
       </ItemGroup>
 

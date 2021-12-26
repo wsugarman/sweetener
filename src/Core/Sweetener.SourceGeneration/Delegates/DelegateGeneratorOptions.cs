@@ -2,40 +2,28 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Globalization;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Sweetener.SourceGeneration.Delegates
 {
-    internal readonly struct DelegateGeneratorOptions : IEquatable<DelegateGeneratorOptions>
+    internal sealed class DelegateGeneratorOptions : SourceGeneratorOptions
     {
-        public string Namespace { get; }
-
         public int TypeOverloads { get; }
 
-        public DelegateGeneratorOptions(string @namespace, int typeOverloads)
+        public DelegateGeneratorOptions(AnalyzerConfigOptions assemblyOptions, AnalyzerConfigOptions globalOptions)
+            : base(assemblyOptions, globalOptions)
         {
-            if (string.IsNullOrWhiteSpace(@namespace))
-                throw new ArgumentNullException(nameof(@namespace));
+            if (!globalOptions.TryGetValue("build_property.DelegateTypeOverloads", out string? overloads))
+                throw new ArgumentException($"Cannot find 'DelegateTypeOverloads' property.");
+
+            if (!int.TryParse(overloads, NumberStyles.Integer, CultureInfo.InvariantCulture, out int typeOverloads))
+                throw new ArgumentException($"Cannot parse 'DelegateTypeOverloads' property value '{overloads}' as an integer.");
 
             if (typeOverloads < 0)
-                throw new ArgumentOutOfRangeException(nameof(typeOverloads));
+                throw new ArgumentOutOfRangeException("'DelegateTypeOverloads' property cannot be negative.", (Exception?)null);
 
-            Namespace = @namespace;
             TypeOverloads = typeOverloads;
         }
-
-        public override bool Equals(object obj)
-            => obj is DelegateGeneratorOptions other && Equals(other);
-
-        public bool Equals(DelegateGeneratorOptions other)
-            => Namespace == other.Namespace && TypeOverloads == other.TypeOverloads;
-
-        public override int GetHashCode()
-            => Namespace.GetHashCode() ^ TypeOverloads.GetHashCode();
-
-        public static bool operator ==(DelegateGeneratorOptions left, DelegateGeneratorOptions right)
-            => left.Equals(right);
-
-        public static bool operator !=(DelegateGeneratorOptions left, DelegateGeneratorOptions right)
-            => !left.Equals(right);
     }
 }

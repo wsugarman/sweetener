@@ -4,8 +4,8 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Sweetener.SourceGeneration.Extensions;
@@ -18,14 +18,15 @@ namespace Sweetener.SourceGeneration.Delegates
 
         public void Execute(GeneratorExecutionContext context)
         {
-            DelegateGeneratorOptions options = GetOptions(context.Compilation.AssemblyName, context.AnalyzerConfigOptions.GlobalOptions);
+            AnalyzerConfigOptions assemblyOptions = context.AnalyzerConfigOptions.GetOptions(context.Compilation.SyntaxTrees.FirstOrDefault());
+            DelegateGeneratorOptions options = new DelegateGeneratorOptions(assemblyOptions, context.AnalyzerConfigOptions.GlobalOptions);
 
             using StringWriter buffer = new StringWriter();
             using IndentedTextWriter sourceWriter = new IndentedTextWriter(buffer, "    ");
 
-            sourceWriter.WriteXmlComments(Headers.Copyright);
+            sourceWriter.WriteXmlComments(options.Copyright);
             sourceWriter.WriteLine();
-            sourceWriter.WriteXmlComments(Headers.GeneratedCode);
+            sourceWriter.WriteXmlComments(options.GeneratedHeader);
             sourceWriter.WriteLine();
 
             AppendImports(sourceWriter);
@@ -51,17 +52,6 @@ namespace Sweetener.SourceGeneration.Delegates
             => Array.Empty<string>();
 
         protected abstract void WriteDelegates(IndentedTextWriter sourceWriter, DelegateGeneratorOptions options);
-
-        private static DelegateGeneratorOptions GetOptions(string? assemblyName, AnalyzerConfigOptions configOptions)
-        {
-            if (!configOptions.TryGetValue("build_property.RootNamespace", out string? @namespace))
-                throw new InvalidOperationException($"Cannot find 'RootNamespace' for assembly '{assemblyName}'.");
-
-            if (!configOptions.TryGetValue("build_property.DelegateTypeOverloads", out string? overloads))
-                throw new InvalidOperationException($"Cannot find 'DelegateTypeOverloads' for assembly '{assemblyName}'.");
-
-            return new DelegateGeneratorOptions(@namespace, int.Parse(overloads, CultureInfo.InvariantCulture));
-        }
 
         private void AppendImports(IndentedTextWriter sourceWriter)
         {
