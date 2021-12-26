@@ -17,11 +17,6 @@
 
   <!-- Generated Files -->
   <ItemGroup>
-    <Compile Update="AsyncFunc.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AsyncFunc.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <Compile Update="Threading\Tasks\MultiTask.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -31,10 +26,6 @@
 
   <!-- Text Templating Files -->
   <ItemGroup>
-    <None Update="AsyncFunc.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>AsyncFunc.cs</LastGenOutput>
-    </None>
     <None Update="Threading\Tasks\MultiTask.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>MultiTask.cs</LastGenOutput>

@@ -54,12 +54,12 @@ namespace Sweetener.SourceGeneration.Delegates
 
         private void WriteDelegates(IndentedTextWriter sourceWriter, DelegateGeneratorOptions options)
         {
-            for (int i = 0; i < options.TypeOverloads; i++)
+            for (int i = 0; i <= options.TypeOverloads; i++)
             {
                 WriteDelegate(sourceWriter, i);
 
                 // Newline between methods
-                if (i != options.TypeOverloads - 1)
+                if (i != options.TypeOverloads)
                     sourceWriter.WriteLineNoTabs(string.Empty);
             }
         }
