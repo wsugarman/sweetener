@@ -3,6 +3,8 @@
   <!-- Common Build Properties -->
   <PropertyGroup>
     <SrcDirectory>$(MSBuildThisFileDirectory)</SrcDirectory>
+    <CoreDirectory>$(SrcDirectory)Core\</CoreDirectory>
+    <ExtensionsDirectory>$(SrcDirectory)Extensions\</ExtensionsDirectory>
     <ResourcesDirectory>$(SrcDirectory)Resources\</ResourcesDirectory>
     <SharedDirectory>$(SrcDirectory)Shared\</SharedDirectory>
   </PropertyGroup>
@@ -20,7 +22,7 @@
 
   <!-- Tools -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Code Analyzers -->
@@ -38,15 +40,16 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
+        <RootNamespace>$(MSBuildProjectName.Substring(0, $([MSBuild]::Subtract($(MSBuildProjectName.Length), 5))))</RootNamespace>
         <TargetFramework>net6.0</TargetFramework>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
       <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="3.1.0" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestAdapter" Version="2.2.5" PrivateAssets="All" />
-        <PackageReference Include="MSTest.TestFramework" Version="2.2.5" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestAdapter" Version="2.2.8" PrivateAssets="All" />
+        <PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
       </ItemGroup>
 
       <!-- Test File Analyzer Suppressions -->
@@ -88,6 +91,7 @@
         <Compile Include="$(SharedDirectory)AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
+        <Compile Include="$(SharedDirectory)IsExternalInit.cs" Visible="false" />
         <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
       </ItemGroup>
 

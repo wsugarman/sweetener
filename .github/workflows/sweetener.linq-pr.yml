@@ -10,7 +10,9 @@ on:
     - NuGet.config
     - src/*
     - src/Core/*
+    - src/Core/Sweetener.Generators/**
     - src/Core/Sweetener.Linq/**
+    - src/Core/Sweetener.Linq.Test/**
     - src/Shared/**
 
 jobs:
