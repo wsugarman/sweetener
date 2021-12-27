@@ -5,14 +5,13 @@ using System;
 using System.Globalization;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.Generators.Threading.Tasks
+namespace Sweetener.Generators.Templates.Core.Tasks
 {
-    internal sealed class MultiTaskGeneratorOptions : SourceGeneratorOptions
+    internal sealed class MultiTaskOptions
     {
         public int TypeOverloads { get; }
 
-        public MultiTaskGeneratorOptions(AnalyzerConfigOptions assemblyOptions, AnalyzerConfigOptions globalOptions)
-            : base(assemblyOptions, globalOptions, "Threading.Tasks")
+        public MultiTaskOptions(AnalyzerConfigOptions globalOptions)
         {
             if (!globalOptions.TryGetValue("build_property.TaskTypeOverloads", out string? overloads))
                 throw new ArgumentException($"Cannot find 'TaskTypeOverloads' property.");

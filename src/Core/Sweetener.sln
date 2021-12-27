@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BB6E7D
 		..\..\.globalconfig = ..\..\.globalconfig
 		..\CodeCoverage.runsettings = ..\CodeCoverage.runsettings
 		..\Directory.Build.props = ..\Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener", "Sweetener\Sweetener.csproj", "{0CAE764E-CB11-4B4B-A0D2-F340BCFF7711}"

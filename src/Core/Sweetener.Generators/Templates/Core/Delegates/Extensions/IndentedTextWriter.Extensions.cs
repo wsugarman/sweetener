@@ -4,7 +4,7 @@
 using System.CodeDom.Compiler;
 using Sweetener.Generators.Extensions;
 
-namespace Sweetener.Generators.Delegates.Extensions
+namespace Sweetener.Generators.Templates.Core.Delegates.Extensions
 {
     internal static class IndentedTextWriterExtensions
     {

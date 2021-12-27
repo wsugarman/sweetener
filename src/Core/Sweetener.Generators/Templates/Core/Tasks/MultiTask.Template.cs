@@ -5,27 +5,27 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Sweetener.Generators.Extensions;
 
-namespace Sweetener.Generators.Threading.Tasks
+namespace Sweetener.Generators.Templates.Core.Tasks
 {
-    [Generator]
-    internal sealed class MultiTaskGenerator : SourceGenerator<MultiTaskGeneratorOptions>
+    [Project("Sweetener")]
+    internal sealed class MultiTaskSourceFile : SourceTemplate
     {
-        public override string FileName => "MultiTask";
+        protected override string Name => "MultiTask";
 
-        public override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[]
+        protected override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[]
         {
             "System",
             "System.Threading.Tasks",
         };
 
-        protected override MultiTaskGeneratorOptions CreateOptions(AnalyzerConfigOptions assemblyOptions, AnalyzerConfigOptions globalOptions)
-            => new MultiTaskGeneratorOptions(assemblyOptions, globalOptions);
+        protected override string? ChildNamespace => "Threading.Tasks";
 
-        protected override void Execute(IndentedTextWriter sourceWriter, MultiTaskGeneratorOptions options)
+        protected override void WriteBody(IndentedTextWriter sourceWriter, GeneratorExecutionContext context)
         {
+            MultiTaskOptions options = new MultiTaskOptions(context.AnalyzerConfigOptions.GlobalOptions);
+
             sourceWriter.WriteXmlSummary(
                 "Provides a set of <see langword=\"static\"/> methods for interacting with multiple <see cref=\"Task{T}\"/> objects",
                 "whose type arguments may differ.");

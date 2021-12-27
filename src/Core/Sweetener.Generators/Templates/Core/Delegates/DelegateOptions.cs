@@ -5,14 +5,13 @@ using System;
 using System.Globalization;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.Generators.Delegates
+namespace Sweetener.Generators.Templates.Core.Delegates
 {
-    internal sealed class DelegateGeneratorOptions : SourceGeneratorOptions
+    internal sealed class DelegateOptions
     {
         public int TypeOverloads { get; }
 
-        public DelegateGeneratorOptions(AnalyzerConfigOptions assemblyOptions, AnalyzerConfigOptions globalOptions)
-            : base(assemblyOptions, globalOptions)
+        public DelegateOptions(AnalyzerConfigOptions globalOptions)
         {
             if (!globalOptions.TryGetValue("build_property.DelegateTypeOverloads", out string? overloads))
                 throw new ArgumentException($"Cannot find 'DelegateTypeOverloads' property.");

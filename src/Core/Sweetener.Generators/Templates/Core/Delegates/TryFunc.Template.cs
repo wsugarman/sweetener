@@ -4,18 +4,17 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
-using Microsoft.CodeAnalysis;
-using Sweetener.Generators.Delegates.Extensions;
 using Sweetener.Generators.Extensions;
+using Sweetener.Generators.Templates.Core.Delegates.Extensions;
 
-namespace Sweetener.Generators.Delegates
+namespace Sweetener.Generators.Templates.Core.Delegates
 {
-    [Generator]
-    internal sealed class TryFuncGenerator : DelegateGenerator
+    [Project("Sweetener")]
+    internal sealed class TryFuncSourceFile : DelegateSourceFile
     {
-        public override string FileName => "TryFunc";
+        protected override string Name => "TryFunc";
 
-        public override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[] { "System.Diagnostics.CodeAnalysis" };
+        protected override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[] { "System.Diagnostics.CodeAnalysis" };
 
         protected override void WriteDelegate(IndentedTextWriter sourceWriter, int i)
         {

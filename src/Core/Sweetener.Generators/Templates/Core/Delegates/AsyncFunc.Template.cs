@@ -4,18 +4,17 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
-using Microsoft.CodeAnalysis;
-using Sweetener.Generators.Delegates.Extensions;
 using Sweetener.Generators.Extensions;
+using Sweetener.Generators.Templates.Core.Delegates.Extensions;
 
-namespace Sweetener.Generators.Delegates
+namespace Sweetener.Generators.Templates.Core.Delegates
 {
-    [Generator]
-    internal sealed class AsyncFuncGenerator : DelegateGenerator
+    [Project("Sweetener")]
+    internal sealed class AsyncFuncSourceFile : DelegateSourceFile
     {
-        public override string FileName => "AsyncFunc";
+        protected override string Name => "AsyncFunc";
 
-        public override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[] { "System.Threading.Tasks" };
+        protected override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[] { "System.Threading.Tasks" };
 
         protected override void WriteDelegate(IndentedTextWriter sourceWriter, int i)
         {

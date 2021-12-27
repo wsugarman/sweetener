@@ -4,23 +4,26 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Sweetener.Generators
 {
-    internal abstract class SourceGeneratorOptions
+    internal sealed class SourceTemplateOptions
     {
-        public string Namespace { get; }
+        public string RootNamespace { get; }
 
         public IReadOnlyCollection<string> FileHeader { get; }
 
         public IReadOnlyCollection<string> GeneratedHeader { get; }
 
-        protected SourceGeneratorOptions(
-            AnalyzerConfigOptions assemblyOptions,
-            AnalyzerConfigOptions globalOptions,
-            string? childNamespace = null)
+        public bool IsUnitTest { get; }
+
+        public SourceTemplateOptions(GeneratorExecutionContext context)
         {
+            AnalyzerConfigOptions assemblyOptions = context.AnalyzerConfigOptions.GetOptions(context.Compilation.SyntaxTrees.FirstOrDefault());
+            AnalyzerConfigOptions globalOptions = context.AnalyzerConfigOptions.GlobalOptions;
+
             if (!globalOptions.TryGetValue("build_property.RootNamespace", out string? rootNamespace))
                 throw new ArgumentException("Cannot find 'RootNamespace' property.");
 
@@ -30,9 +33,10 @@ namespace Sweetener.Generators
             if (!assemblyOptions.TryGetValue("generated_file_header_template", out string? generated))
                 throw new ArgumentException("Cannot find 'generated_file_header_template' key in .editorconfig.");
 
-            Namespace = string.IsNullOrEmpty(childNamespace) ? rootNamespace : rootNamespace + '.' + childNamespace;
+            RootNamespace = rootNamespace;
             FileHeader = SplitLines(header);
             GeneratedHeader = SplitLines(generated);
+            IsUnitTest = (context.Compilation.AssemblyName?.EndsWith(".Test", StringComparison.InvariantCulture)).GetValueOrDefault();
         }
 
         private static string[] SplitLines(string value)

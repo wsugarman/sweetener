@@ -1,31 +1,29 @@
 ﻿// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
-using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Sweetener.Generators.Extensions;
+using Sweetener.Generators.Templates.Core.Tasks;
 
-namespace Sweetener.Generators.Threading.Tasks.Testing
+namespace Sweetener.Generators.Templates.Core.Tests.Tasks
 {
-    [Generator]
-    internal sealed class MultiTaskUnitTestGenerator : SourceGenerator<MultiTaskGeneratorOptions>
+    [Project("Sweetener.Test")]
+    internal sealed class MultiTaskTestSourceFile : SourceTemplate
     {
-        public override string FileName => "MultiTask";
+        protected override string Name => "MultiTask.Test";
 
-        public override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[]
+        protected override IReadOnlyCollection<string> ImportedNamespaces { get; } = new string[]
         {
             "System",
             "System.Threading.Tasks",
             "Microsoft.VisualStudio.TestTools.UnitTesting",
         };
 
-        public override bool IsUnitTest => true;
+        protected override string? ChildNamespace => "Threading.Tasks.Test";
 
         private static readonly IReadOnlyList<(string TaskType, string ValueType, string Value)> Arguments = new List<(string, string, string)>
         {
@@ -39,11 +37,10 @@ namespace Sweetener.Generators.Threading.Tasks.Testing
             ("Task<sbyte>"   , "sbyte"   , "(sbyte)-3")
         };
 
-        protected override MultiTaskGeneratorOptions CreateOptions(AnalyzerConfigOptions assemblyOptions, AnalyzerConfigOptions globalOptions)
-            => new MultiTaskGeneratorOptions(assemblyOptions, globalOptions);
-
-        protected override void Execute(IndentedTextWriter sourceWriter, MultiTaskGeneratorOptions options)
+        protected override void WriteBody(IndentedTextWriter sourceWriter, GeneratorExecutionContext context)
         {
+            MultiTaskOptions options = new MultiTaskOptions(context.AnalyzerConfigOptions.GlobalOptions);
+
             sourceWriter.WriteLine("[TestClass]");
             sourceWriter.WriteLine("public class MultiTaskTest");
 

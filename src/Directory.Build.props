@@ -3,6 +3,8 @@
   <!-- Common Build Properties -->
   <PropertyGroup>
     <SrcDirectory>$(MSBuildThisFileDirectory)</SrcDirectory>
+    <CoreDirectory>$(SrcDirectory)Core\</CoreDirectory>
+    <ExtensionsDirectory>$(SrcDirectory)Extensions\</ExtensionsDirectory>
     <ResourcesDirectory>$(SrcDirectory)Resources\</ResourcesDirectory>
     <SharedDirectory>$(SrcDirectory)Shared\</SharedDirectory>
   </PropertyGroup>

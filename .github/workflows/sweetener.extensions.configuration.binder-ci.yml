@@ -11,6 +11,7 @@ on:
     - src/*
     - src/Extensions/*
     - src/Extensions/Sweetener.Extensions.Configuration.Binder/**
+    - src/Extensions/Sweetener.Extensions.Configuration.Binder.Test/**
     - src/Shared/**
 
 jobs:

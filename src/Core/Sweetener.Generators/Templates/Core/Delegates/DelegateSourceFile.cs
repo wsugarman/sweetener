@@ -2,17 +2,15 @@
 // Licensed under the MIT License.
 
 using System.CodeDom.Compiler;
-using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis;
 
-namespace Sweetener.Generators.Delegates
+namespace Sweetener.Generators.Templates.Core.Delegates
 {
-    internal abstract class DelegateGenerator : SourceGenerator<DelegateGeneratorOptions>
+    internal abstract class DelegateSourceFile : SourceTemplate
     {
-        protected override DelegateGeneratorOptions CreateOptions(AnalyzerConfigOptions assemblyOptions, AnalyzerConfigOptions globalOptions)
-            => new DelegateGeneratorOptions(assemblyOptions, globalOptions);
-
-        protected override void Execute(IndentedTextWriter sourceWriter, DelegateGeneratorOptions options)
+        protected override void WriteBody(IndentedTextWriter sourceWriter, GeneratorExecutionContext context)
         {
+            DelegateOptions options = new DelegateOptions(context.AnalyzerConfigOptions.GlobalOptions);
             for (int i = 0; i <= options.TypeOverloads; i++)
             {
                 WriteDelegate(sourceWriter, i);
