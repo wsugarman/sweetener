@@ -24,7 +24,10 @@ namespace Sweetener.Generators.Extensions
             sourceWriter.Indent--;
         }
 
-        public static void WriteXmlComments(this IndentedTextWriter sourceWriter, IEnumerable<string> comments)
+        public static void WriteSingleLineComments(this IndentedTextWriter sourceWriter, params string[] comments)
+            => sourceWriter.WriteSingleLineComments((IEnumerable<string>)comments);
+
+        public static void WriteSingleLineComments(this IndentedTextWriter sourceWriter, IEnumerable<string> comments)
         {
             if (sourceWriter is null)
                 throw new ArgumentNullException(nameof(sourceWriter));

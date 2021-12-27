@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Sweetener.Generators.Extensions
 {
@@ -19,7 +20,7 @@ namespace Sweetener.Generators.Extensions
             yield return next;
         }
 
-        public static string? Enclose(this IEnumerable<string> source, BracketType bracketType, string separator = ", ")
+        public static string Enclose(this IEnumerable<string> source, BracketType bracketType, string separator = ", ")
         {
             string value = string.Join(separator, source);
             if (string.IsNullOrEmpty(value))
@@ -36,7 +37,7 @@ namespace Sweetener.Generators.Extensions
             };
         }
 
-        public static string? ToCsv(this IEnumerable<string> source)
+        public static string ToCsv(this IEnumerable<string> source)
             => source.Enclose(BracketType.None, separator: ", ");
     }
 }

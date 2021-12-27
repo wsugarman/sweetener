@@ -38,6 +38,7 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
+        <RootNamespace>$(MSBuildProjectName.Substring(0, $([MSBuild]::Subtract($(MSBuildProjectName.Length), 5))))</RootNamespace>
         <TargetFramework>net6.0</TargetFramework>
       </PropertyGroup>
 
