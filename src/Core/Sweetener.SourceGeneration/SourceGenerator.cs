@@ -41,7 +41,6 @@ namespace Sweetener.SourceGeneration
             using (sourceWriter.WriteNewBlockScope())
                 Execute(sourceWriter, options);
 
-            sourceWriter.WriteLine();
             sourceWriter.Flush();
             context.AddSource($"{FileName}.g.cs", buffer.ToString());
         }

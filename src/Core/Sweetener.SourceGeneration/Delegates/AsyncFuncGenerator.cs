@@ -29,7 +29,7 @@ namespace Sweetener.SourceGeneration.Delegates
             sourceWriter.WriteXmlTypeParam("TResult", "The type of the return value of the method that this delegate encapsulates.");
             sourceWriter.WriteXmlParams(i);
             sourceWriter.WriteXmlReturns(
-                "A task that represents the asynchronous operation.The value of its <see cref=\"Task{TResult}.Result\"/>",
+                "A task that represents the asynchronous operation. The value of its <see cref=\"Task{TResult}.Result\"/>",
                 "property contains the return value of the method that this delegate encapsulates.");
 
             sourceWriter.WriteLine(
