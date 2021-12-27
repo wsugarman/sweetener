@@ -8,6 +8,8 @@
           <Exclude>[Sweetener*.Test]*</Exclude>
           <Include>[Sweetener*]*</Include>
           <ExcludeByAttribute>ExcludeFromCodeCoverage</ExcludeByAttribute>
+          <!-- Remove ExcludeByFile once coverlet-coverage/coverlet#1198 is resolved -->
+          <ExcludeByFile>**/*.g.cs</ExcludeByFile>
           <SingleHit>false</SingleHit>
           <UseSourceLink>true</UseSourceLink>
           <IncludeTestAssembly>false</IncludeTestAssembly>
