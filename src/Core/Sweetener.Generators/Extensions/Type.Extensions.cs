@@ -4,23 +4,23 @@
 using System;
 using System.Reflection;
 
-namespace Sweetener.Generators.Extensions
+namespace Sweetener.Generators.Extensions;
+
+internal static class TypeExtensions
 {
-    internal static class TypeExtensions
+    public static bool HasDefaultCtor(this Type type)
     {
-        public static bool HasDefaultCtor(this Type type)
-        {
-            if (type is null)
-                throw new ArgumentNullException(nameof(type));
+        if (type is null)
+            throw new ArgumentNullException(nameof(type));
 
-            return type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null) is not null;
-        }
+        return type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null) is not null;
+    }
 
-        public static bool InheritsFrom(this Type type, Type baseType)
-        {
-            
+    public static bool InheritsFrom(this Type type, Type baseType)
+    {
+        if (type is null)
+            throw new ArgumentNullException(nameof(type));
 
-            return type.BaseType is not null && (type.BaseType == baseType || type.BaseType.InheritsFrom(baseType));
-        }
+        return type.BaseType is not null && (type.BaseType == baseType || type.BaseType.InheritsFrom(baseType));
     }
 }

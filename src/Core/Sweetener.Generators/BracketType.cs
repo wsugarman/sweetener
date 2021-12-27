@@ -1,14 +1,13 @@
 ﻿// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
-namespace Sweetener.Generators
+namespace Sweetener.Generators;
+
+internal enum BracketType
 {
-    internal enum BracketType
-    {
-        None,
-        CurlyBraces,
-        AngleBrackets,
-        SquareBrackets,
-        Parentheses,
-    }
+    None,
+    CurlyBraces,
+    AngleBrackets,
+    SquareBrackets,
+    Parentheses,
 }
