@@ -3,24 +3,23 @@
 
 using System;
 
-namespace Sweetener
+namespace Sweetener;
+
+/// <summary>
+/// Represents the disposal of no unmanaged resources. This class cannot be inherited.
+/// </summary>
+public sealed class NullDisposable : IDisposable
 {
     /// <summary>
-    /// Represents the disposal of no unmanaged resources. This class cannot be inherited.
+    /// Gets the shared instance of <see cref="NullDisposable"/>
     /// </summary>
-    public sealed class NullDisposable : IDisposable
-    {
-        /// <summary>
-        /// Gets the shared instance of <see cref="NullDisposable"/>
-        /// </summary>
-        /// <value>The <see cref="NullDisposable"/> instance.</value>
-        public static NullDisposable Instance { get; } = new NullDisposable();
+    /// <value>The <see cref="NullDisposable"/> instance.</value>
+    public static NullDisposable Instance { get; } = new NullDisposable();
 
-        private NullDisposable()
-        { }
+    private NullDisposable()
+    { }
 
-        /// <inheritdoc/>
-        public void Dispose()
-        { }
-    }
+    /// <inheritdoc/>
+    public void Dispose()
+    { }
 }
