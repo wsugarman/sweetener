@@ -8,9 +8,9 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Sweetener.SourceGeneration.Extensions;
+using Sweetener.Generators.Extensions;
 
-namespace Sweetener.SourceGeneration
+namespace Sweetener.Generators
 {
     internal abstract class SourceGenerator<TOptions> : ISourceGenerator
         where TOptions : SourceGeneratorOptions

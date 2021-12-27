@@ -5,7 +5,7 @@ using System;
 using System.Globalization;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.SourceGeneration.Threading.Tasks
+namespace Sweetener.Generators.Threading.Tasks
 {
     internal sealed class MultiTaskGeneratorOptions : SourceGeneratorOptions
     {

@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Sweetener.SourceGeneration.Extensions;
+using Sweetener.Generators.Extensions;
 
-namespace Sweetener.SourceGeneration.Threading.Tasks
+namespace Sweetener.Generators.Threading.Tasks
 {
     [Generator]
     internal sealed class MultiTaskGenerator : SourceGenerator<MultiTaskGeneratorOptions>

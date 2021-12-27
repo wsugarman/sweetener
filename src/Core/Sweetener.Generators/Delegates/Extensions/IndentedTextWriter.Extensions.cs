@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.CodeDom.Compiler;
-using Sweetener.SourceGeneration.Extensions;
+using Sweetener.Generators.Extensions;
 
-namespace Sweetener.SourceGeneration.Delegates.Extensions
+namespace Sweetener.Generators.Delegates.Extensions
 {
     internal static class IndentedTextWriterExtensions
     {

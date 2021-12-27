@@ -4,7 +4,7 @@
 using System.CodeDom.Compiler;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.SourceGeneration.Delegates
+namespace Sweetener.Generators.Delegates
 {
     internal abstract class DelegateGenerator : SourceGenerator<DelegateGeneratorOptions>
     {

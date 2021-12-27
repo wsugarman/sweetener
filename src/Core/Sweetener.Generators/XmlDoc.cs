@@ -1,7 +1,7 @@
 ﻿// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
-namespace Sweetener.SourceGeneration
+namespace Sweetener.Generators
 {
     internal static class XmlDoc
     {

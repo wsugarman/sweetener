@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Sweetener.SourceGeneration
+namespace Sweetener.Generators
 {
     internal static class Numbers
     {

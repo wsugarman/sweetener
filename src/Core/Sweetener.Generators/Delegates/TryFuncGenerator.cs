@@ -5,10 +5,10 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
-using Sweetener.SourceGeneration.Delegates.Extensions;
-using Sweetener.SourceGeneration.Extensions;
+using Sweetener.Generators.Delegates.Extensions;
+using Sweetener.Generators.Extensions;
 
-namespace Sweetener.SourceGeneration.Delegates
+namespace Sweetener.Generators.Delegates
 {
     [Generator]
     internal sealed class TryFuncGenerator : DelegateGenerator

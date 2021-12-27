@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Sweetener.SourceGeneration.Extensions
+namespace Sweetener.Generators.Extensions
 {
     internal static class IndentedTextWriterExtensions
     {
