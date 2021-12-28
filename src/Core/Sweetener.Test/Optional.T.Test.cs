@@ -5,103 +5,103 @@ using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Test
+namespace Sweetener.Test;
+
+[TestClass]
+public class OptionalTest
 {
-    [TestClass]
-    public class OptionalTest
+    [TestMethod]
+    public void Value()
     {
-        [TestMethod]
-        public void Value()
-        {
-            Optional<double> optionalNumber;
+        Optional<double> optionalNumber;
 
-            // Has Value
-            optionalNumber = new Optional<double>(3.14D);
-            Assert.AreEqual(3.14D, optionalNumber.Value);
+        // Has Value
+        optionalNumber = new Optional<double>(3.14D);
+        Assert.AreEqual(3.14D, optionalNumber.Value);
 
-            // Does Not Have Value
-            optionalNumber = default;
-            Assert.ThrowsException<InvalidOperationException>(() => optionalNumber.Value);
-        }
+        // Does Not Have Value
+        optionalNumber = default;
+        Assert.ThrowsException<InvalidOperationException>(() => optionalNumber.Value);
+    }
 
-        [TestMethod]
-        public void Ctor()
-        {
-            Optional<int> optionalNumber;
+    [TestMethod]
+    public void Ctor()
+    {
+        Optional<int> optionalNumber;
 
-            // Default ctor
-            optionalNumber = new Optional<int>();
+        // Default ctor
+        optionalNumber = new Optional<int>();
 
-            Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
+        Assert.IsFalse(optionalNumber.HasValue);
+        Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
 
-            // Default value
-            optionalNumber = default;
+        // Default value
+        optionalNumber = default;
 
-            Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
-        }
+        Assert.IsFalse(optionalNumber.HasValue);
+        Assert.AreEqual(default, optionalNumber.GetValueOrDefault());
+    }
 
-        [TestMethod]
-        public void Ctor_Value()
-        {
-            Optional<int> optionalNumber = new Optional<int>(42);
+    [TestMethod]
+    public void Ctor_Value()
+    {
+        Optional<int> optionalNumber = new Optional<int>(42);
 
-            Assert.IsTrue(optionalNumber.HasValue);
-            Assert.AreEqual(42, optionalNumber.Value);
-        }
+        Assert.IsTrue(optionalNumber.HasValue);
+        Assert.AreEqual(42, optionalNumber.Value);
+    }
 
-        [TestMethod]
-        public void GetValueOrDefault()
-        {
-            Optional<string> optionalString;
+    [TestMethod]
+    public void GetValueOrDefault()
+    {
+        Optional<string> optionalString;
 
-            // Has Value
-            optionalString = new Optional<string>("Foo");
-            Assert.AreEqual("Foo", optionalString.GetValueOrDefault());
+        // Has Value
+        optionalString = new Optional<string>("Foo");
+        Assert.AreEqual("Foo", optionalString.GetValueOrDefault());
 
-            // Does Not Have Value
-            optionalString = default;
-            Assert.AreEqual(default, optionalString.GetValueOrDefault());
-        }
+        // Does Not Have Value
+        optionalString = default;
+        Assert.AreEqual(default, optionalString.GetValueOrDefault());
+    }
 
-        [TestMethod]
-        public void GetValueOrDefault_Value()
-        {
-            Optional<string> optionalString;
+    [TestMethod]
+    public void GetValueOrDefault_Value()
+    {
+        Optional<string> optionalString;
 
-            // Has Value
-            optionalString = new Optional<string>("Bar");
-            Assert.AreEqual("Bar", optionalString.GetValueOrDefault("Baz"));
+        // Has Value
+        optionalString = new Optional<string>("Bar");
+        Assert.AreEqual("Bar", optionalString.GetValueOrDefault("Baz"));
 
-            // Does Not Have Value
-            optionalString = default;
-            Assert.AreEqual("Baz", optionalString.GetValueOrDefault("Baz"));
-        }
+        // Does Not Have Value
+        optionalString = default;
+        Assert.AreEqual("Baz", optionalString.GetValueOrDefault("Baz"));
+    }
 
-        [TestMethod]
-        public void TryGetValue()
-        {
-            Optional<DateTime> optionalDate;
+    [TestMethod]
+    public void TryGetValue()
+    {
+        Optional<DateTime> optionalDate;
 
-            // Has Value
-            optionalDate = new Optional<DateTime>(new DateTime(1234, 5, 6, 7, 8, 9));
-            Assert.IsTrue(optionalDate.TryGetValue(out DateTime value));
-            Assert.AreEqual(new DateTime(1234, 5, 6, 7, 8, 9), value);
+        // Has Value
+        optionalDate = new Optional<DateTime>(new DateTime(1234, 5, 6, 7, 8, 9));
+        Assert.IsTrue(optionalDate.TryGetValue(out DateTime value));
+        Assert.AreEqual(new DateTime(1234, 5, 6, 7, 8, 9), value);
 
-            // Does Not Have Value
-            optionalDate = default;
-            Assert.IsFalse(optionalDate.TryGetValue(out value));
-            Assert.AreEqual(default, value);
-        }
+        // Does Not Have Value
+        optionalDate = default;
+        Assert.IsFalse(optionalDate.TryGetValue(out value));
+        Assert.AreEqual(default, value);
+    }
 
-        [TestMethod]
-        public void Equals()
-        {
-            Optional<TimeSpan> optionalTime;
-            Optional<string?> optionalString;
+    [TestMethod]
+    public void Equals()
+    {
+        Optional<TimeSpan> optionalTime;
+        Optional<string?> optionalString;
 
-            #region Has Value
+        #region Has Value
 
             optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
 
@@ -125,7 +125,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Has (Default) Value
+        #region Has (Default) Value
 
             optionalTime = new Optional<TimeSpan>(default);
 
@@ -148,7 +148,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Does Not Have Value
+        #region Does Not Have Value
 
             optionalTime = default;
 
@@ -168,15 +168,15 @@ namespace Sweetener.Test
             Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
 
             #endregion
-        }
+    }
 
-        [TestMethod]
-        public void GetHashCodeTest()
-        {
-            Optional<TimeSpan> optionalTime;
-            Optional<string?> optionalString;
+    [TestMethod]
+    public void GetHashCodeTest()
+    {
+        Optional<TimeSpan> optionalTime;
+        Optional<string?> optionalString;
 
-            #region Has Value
+        #region Has Value
 
             optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
             Assert.AreEqual(new TimeSpan(10, 11, 12).GetHashCode(), optionalTime.GetHashCode());
@@ -188,7 +188,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Has (Default) Value
+        #region Has (Default) Value
 
             // It happens that default(TimeSpan).GetHashCode() == 0
             optionalTime = new Optional<TimeSpan>(default);
@@ -199,7 +199,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Does Not Have Value
+        #region Does Not Have Value
 
             optionalTime = default;
             Assert.AreEqual(0, optionalTime.GetHashCode());
@@ -208,15 +208,15 @@ namespace Sweetener.Test
             Assert.AreEqual(0, optionalString.GetHashCode());
 
             #endregion
-        }
+    }
 
-        [TestMethod]
-        public void ToStringTest()
-        {
-            Optional<TimeSpan> optionalTime;
-            Optional<string?> optionalString;
+    [TestMethod]
+    public void ToStringTest()
+    {
+        Optional<TimeSpan> optionalTime;
+        Optional<string?> optionalString;
 
-            #region Has Value
+        #region Has Value
 
             optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
             Assert.AreEqual(new TimeSpan(10, 11, 12).ToString(), optionalTime.ToString());
@@ -226,7 +226,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Has (Default) Value
+        #region Has (Default) Value
 
             optionalTime = new Optional<TimeSpan>(default);
             Assert.AreEqual(new TimeSpan().ToString(), optionalTime.ToString());
@@ -236,7 +236,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Does Not Have Value
+        #region Does Not Have Value
 
             optionalTime = default;
             Assert.AreEqual(string.Empty, optionalTime.ToString());
@@ -245,38 +245,38 @@ namespace Sweetener.Test
             Assert.AreEqual(string.Empty, optionalString.ToString());
 
             #endregion
-        }
+    }
 
-        [TestMethod]
-        public void OptionalCastOperator()
-        {
-            Optional<int> optionalNumber = 42;
+    [TestMethod]
+    public void OptionalCastOperator()
+    {
+        Optional<int> optionalNumber = 42;
 
-            Assert.AreEqual(true, optionalNumber.HasValue);
-            Assert.AreEqual(42  , optionalNumber.Value   );
-        }
+        Assert.AreEqual(true, optionalNumber.HasValue);
+        Assert.AreEqual(42  , optionalNumber.Value   );
+    }
 
-        [TestMethod]
-        public void ValueCastOperator()
-        {
-            Optional<double> optionalNumber;
+    [TestMethod]
+    public void ValueCastOperator()
+    {
+        Optional<double> optionalNumber;
 
-            // Has Value
-            optionalNumber = new Optional<double>(3.14D);
-            Assert.AreEqual(3.14D, (double)optionalNumber);
+        // Has Value
+        optionalNumber = new Optional<double>(3.14D);
+        Assert.AreEqual(3.14D, (double)optionalNumber);
 
-            // Does Not Have Value
-            optionalNumber = default;
-            Assert.ThrowsException<InvalidOperationException>(() => (double)optionalNumber);
-        }
+        // Does Not Have Value
+        optionalNumber = default;
+        Assert.ThrowsException<InvalidOperationException>(() => (double)optionalNumber);
+    }
 
-        [TestMethod]
-        public void Compare_Optional()
-        {
-            Optional<TimeSpan> optionalTime;
-            Optional<string?> optionalString;
+    [TestMethod]
+    public void Compare_Optional()
+    {
+        Optional<TimeSpan> optionalTime;
+        Optional<string?> optionalString;
 
-            #region Has Value
+        #region Has Value
 
             optionalTime = new Optional<TimeSpan>(new TimeSpan(1, 2, 3));
 
@@ -294,7 +294,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Has (Default) Value
+        #region Has (Default) Value
 
             optionalTime = new Optional<TimeSpan>(default);
 
@@ -310,7 +310,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Does Not Have Value
+        #region Does Not Have Value
 
             optionalTime = default;
 
@@ -323,15 +323,15 @@ namespace Sweetener.Test
             Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>(default))); // HasValue Compare
 
             #endregion
-        }
+    }
 
-        [TestMethod]
-        public void Equals_Optional()
-        {
-            Optional<TimeSpan> optionalTime;
-            Optional<string?> optionalString;
+    [TestMethod]
+    public void Equals_Optional()
+    {
+        Optional<TimeSpan> optionalTime;
+        Optional<string?> optionalString;
 
-            #region Has Value
+        #region Has Value
 
             optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
 
@@ -347,7 +347,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Has (Default) Value
+        #region Has (Default) Value
 
             optionalTime = new Optional<TimeSpan>(default);
 
@@ -363,7 +363,7 @@ namespace Sweetener.Test
 
             #endregion
 
-            #region Does Not Have Value
+        #region Does Not Have Value
 
             optionalTime = default;
 
@@ -378,34 +378,33 @@ namespace Sweetener.Test
             Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>(default        ))); // No match (despite matching value)
 
             #endregion
-        }
+    }
 
-        [TestMethod]
-        public void None()
-        {
-            Optional<byte> optionalNumber = Optional.None<byte>();
-            Assert.IsFalse(optionalNumber.HasValue);
-            Assert.AreEqual((byte)0, optionalNumber.GetValueOrDefault());
+    [TestMethod]
+    public void None()
+    {
+        Optional<byte> optionalNumber = Optional.None<byte>();
+        Assert.IsFalse(optionalNumber.HasValue);
+        Assert.AreEqual((byte)0, optionalNumber.GetValueOrDefault());
 
-            Optional<string> optionalString = Optional.None<string>();
-            Assert.IsFalse(optionalString.HasValue);
-            Assert.AreEqual(null, optionalString.GetValueOrDefault());
-        }
+        Optional<string> optionalString = Optional.None<string>();
+        Assert.IsFalse(optionalString.HasValue);
+        Assert.AreEqual(null, optionalString.GetValueOrDefault());
+    }
 
-        [TestMethod]
-        public void Some()
-        {
-            Optional<byte> optionalNumber = Optional.Some<byte>(12);
-            Assert.IsTrue(optionalNumber.HasValue);
-            Assert.AreEqual((byte)12, optionalNumber.Value);
+    [TestMethod]
+    public void Some()
+    {
+        Optional<byte> optionalNumber = Optional.Some<byte>(12);
+        Assert.IsTrue(optionalNumber.HasValue);
+        Assert.AreEqual((byte)12, optionalNumber.Value);
 
-            Optional<string> optionalString = Optional.Some("Hello World");
-            Assert.IsTrue(optionalString.HasValue);
-            Assert.AreEqual("Hello World", optionalString.Value);
+        Optional<string> optionalString = Optional.Some("Hello World");
+        Assert.IsTrue(optionalString.HasValue);
+        Assert.AreEqual("Hello World", optionalString.Value);
 
-            Optional<Stream?> optionalStream = Optional.Some<Stream?>(null);
-            Assert.IsTrue(optionalStream.HasValue);
-            Assert.AreEqual(null, optionalStream.Value);
-        }
+        Optional<Stream?> optionalStream = Optional.Some<Stream?>(null);
+        Assert.IsTrue(optionalStream.HasValue);
+        Assert.AreEqual(null, optionalStream.Value);
     }
 }

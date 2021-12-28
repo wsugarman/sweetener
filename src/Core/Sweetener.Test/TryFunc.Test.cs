@@ -3,31 +3,30 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Test
+namespace Sweetener.Test;
+
+[TestClass]
+public class TryFuncTest
 {
-    [TestClass]
-    public class TryFuncTest
+    [TestMethod]
+    public void Defined()
     {
-        [TestMethod]
-        public void Defined()
-        {
-            Assert.IsNotNull(typeof(TryFunc<>));
-            Assert.IsNotNull(typeof(TryFunc<,>));
-            Assert.IsNotNull(typeof(TryFunc<,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,,,,>));
-        }
+        Assert.IsNotNull(typeof(TryFunc<>));
+        Assert.IsNotNull(typeof(TryFunc<,>));
+        Assert.IsNotNull(typeof(TryFunc<,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(TryFunc<,,,,,,,,,,,,,,,,>));
     }
 }

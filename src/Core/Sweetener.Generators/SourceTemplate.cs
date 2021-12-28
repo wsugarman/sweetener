@@ -27,17 +27,16 @@ internal abstract class SourceTemplate
             throw new ArgumentNullException(nameof(sourceWriter));
 
         sourceWriter.WriteSingleLineComments(options.FileHeader);
-        sourceWriter.WriteLine();
+        sourceWriter.WriteLineNoTabs(string.Empty);
         sourceWriter.WriteSingleLineComments(options.GeneratedHeader);
-        sourceWriter.WriteLine();
+        sourceWriter.WriteLineNoTabs(string.Empty);
 
         AppendImports(sourceWriter);
 
         string @namespace = options.RootNamespace + (string.IsNullOrWhiteSpace(ChildNamespace) ? null : '.' + ChildNamespace);
-        sourceWriter.WriteLine($"namespace {@namespace}");
-
-        using (sourceWriter.WriteNewBlockScope())
-            WriteBody(sourceWriter, context);
+        sourceWriter.WriteLine($"namespace {@namespace};");
+        sourceWriter.WriteLineNoTabs(string.Empty);
+        WriteBody(sourceWriter, context);
     }
 
     protected abstract void WriteBody(IndentedTextWriter sourceWriter, GeneratorExecutionContext context);
