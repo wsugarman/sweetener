@@ -17,7 +17,7 @@ internal static class Input
         => GetIncrementingStrings(typeFormat + " " + nameFormat, count); // T1 arg1, T2 arg2, T3 arg3
 
     public static IEnumerable<string> GetTypeParameters(int count, string typeFormat = "T{0}", bool contravariant = false)
-    => GetIncrementingStrings(contravariant ? "in " + typeFormat : typeFormat, count); // T1, T2, T3
+        => GetIncrementingStrings(contravariant ? "in " + typeFormat : typeFormat, count); // T1, T2, T3
 
     private static IEnumerable<string> GetIncrementingStrings(string formatString, int count)
     {
