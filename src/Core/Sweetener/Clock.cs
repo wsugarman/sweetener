@@ -17,36 +17,20 @@ public static class Clock
     public static IClock System { get; } = new SystemClock();
 
     /// <summary>
-    /// Returns a new clock whose value is the specified local date and time.
+    /// Returns a new clock whose value is the specified date and time.
     /// </summary>
-    /// <remarks>
-    /// If the specified <see cref="DateTime.Kind"/> is <see cref="DateTimeKind.Unspecified"/>, the value is
-    /// assumed to be a local date and time.
-    /// </remarks>
     /// <param name="value">A date and time.</param>
     /// <returns>An <see cref="IClock"/> whose current date and time is the specified value.</returns>
-    public static IClock FromLocal(DateTime value)
+    public static IClock From(DateTimeOffset value)
         => new FixedClock(value.ToUniversalTime());
-
-    /// <summary>
-    /// Returns a new clock whose value is the specified Coordinated Universal Time (UTC) date and time.
-    /// </summary>
-    /// <remarks>
-    /// If the specified <see cref="DateTime.Kind"/> is <see cref="DateTimeKind.Unspecified"/>, the value is
-    /// assumed to be a UTC date and time.
-    /// </remarks>
-    /// <param name="value">A date and time.</param>
-    /// <returns>An <see cref="IClock"/> whose current date and time is the specified value.</returns>
-    public static IClock FromUtc(DateTime value)
-        => new FixedClock(value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : value);
 
     #region System Clock
 
     private sealed class SystemClock : IClock
     {
-        public DateTime Now => DateTime.Now;
+        public DateTimeOffset Now => DateTimeOffset.Now;
 
-        public DateTime UtcNow => DateTime.UtcNow;
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 
         public SystemClock()
         { }
@@ -58,11 +42,11 @@ public static class Clock
 
     private sealed class FixedClock : IClock
     {
-        public DateTime Now => UtcNow.ToLocalTime();
+        public DateTimeOffset Now => UtcNow.ToLocalTime();
 
-        public DateTime UtcNow { get; private set; }
+        public DateTimeOffset UtcNow { get; private set; }
 
-        public FixedClock(DateTime utcNow)
+        public FixedClock(DateTimeOffset utcNow)
             => UtcNow = utcNow;
     }
 

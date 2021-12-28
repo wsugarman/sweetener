@@ -10,16 +10,9 @@ namespace Sweetener;
 /// </summary>
 public interface IClock
 {
-    /// <summary>
-    /// Gets a <see cref="DateTime"/> object that is set to the current date and time, expressed as the local time.
-    /// </summary>
-    /// <value>An object whose value is the current local date and time.</value>
-    DateTime Now { get; }
+    /// <inheritdoc cref="DateTimeOffset.Now"/>
+    DateTimeOffset Now { get; }
 
-    /// <summary>
-    /// Gets a <see cref="DateTime"/> object that is set to the current date and time, expressed as the
-    /// Coordinated Universal Time (UTC).
-    /// </summary>
-    /// <value>An object whose value is the current UTC date and time.</value>
-    DateTime UtcNow { get; }
+    /// <inheritdoc cref="DateTimeOffset.UtcNow"/>
+    DateTimeOffset UtcNow { get; }
 }
