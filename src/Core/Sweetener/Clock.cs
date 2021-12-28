@@ -44,7 +44,7 @@ public static class Clock
     {
         public DateTimeOffset Now => UtcNow.ToLocalTime();
 
-        public DateTimeOffset UtcNow { get; private set; }
+        public DateTimeOffset UtcNow { get; }
 
         public FixedClock(DateTimeOffset utcNow)
             => UtcNow = utcNow;
