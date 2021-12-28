@@ -5,8 +5,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Linq;
 
-namespace Sweetener.Linq.Test;
+namespace Sweetener.Test.Linq;
 
 [TestClass]
 public class EnumeratorTest

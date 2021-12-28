@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Linq.Test;
+namespace Sweetener.Test.Linq;
 
 internal static class CodeCoverageAssert
 {

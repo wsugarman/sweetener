@@ -7,8 +7,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Threading.Tasks;
 
-namespace Sweetener.Threading.Tasks.Test;
+namespace Sweetener.Test.Threading.Tasks;
 
 [TestClass]
 public class TaskExtensionsTest
@@ -18,7 +19,7 @@ public class TaskExtensionsTest
     {
         // Bad Input
         await Assert.ThrowsExceptionAsync<ArgumentNullException>(
-            () => TaskExtensions.WithResultOnSuccess(null!, s => 42, "State")).ConfigureAwait(false);
+            () => Sweetener.Threading.Tasks.TaskExtensions.WithResultOnSuccess(null!, s => 42, "State")).ConfigureAwait(false);
 
         await Assert.ThrowsExceptionAsync<ArgumentNullException>(
             () => Task.CompletedTask.WithResultOnSuccess<string, int>(null!, "State")).ConfigureAwait(false);

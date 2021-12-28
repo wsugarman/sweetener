@@ -21,9 +21,10 @@ internal sealed class MultiTaskTestSourceFile : SourceTemplate
             "System",
             "System.Threading.Tasks",
             "Microsoft.VisualStudio.TestTools.UnitTesting",
+            "Sweetener.Threading.Tasks",
     };
 
-    protected override string? ChildNamespace => "Threading.Tasks.Test";
+    protected override string? ChildNamespace => "Threading.Tasks";
 
     private static readonly IReadOnlyList<(string TaskType, string ValueType, string Value)> Arguments = new List<(string, string, string)>
     {

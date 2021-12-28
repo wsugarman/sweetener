@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Linq.Test;
+namespace Sweetener.Test.Linq;
 
 [TestClass]
 public partial class CollectionTest
