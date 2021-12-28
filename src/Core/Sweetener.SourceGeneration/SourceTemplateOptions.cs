@@ -7,7 +7,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.Generators;
+namespace Sweetener.SourceGeneration;
 
 internal sealed class SourceTemplateOptions
 {

@@ -4,7 +4,7 @@
 using System;
 using System.Reflection;
 
-namespace Sweetener.Generators.Extensions;
+namespace Sweetener.SourceGeneration.Extensions;
 
 internal static class TypeExtensions
 {

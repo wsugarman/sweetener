@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Sweetener.Generators;
+namespace Sweetener.SourceGeneration;
 
 internal static class Input
 {

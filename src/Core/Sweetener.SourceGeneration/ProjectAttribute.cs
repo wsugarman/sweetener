@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Sweetener.Generators;
+namespace Sweetener.SourceGeneration;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 internal sealed class ProjectAttribute : Attribute

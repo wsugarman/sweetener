@@ -11,7 +11,7 @@ on:
     - src/*
     - src/Core/*
     - src/Core/Sweetener/**
-    - src/Core/Sweetener.Generators/**
+    - src/Core/Sweetener.SourceGeneration/**
     - src/Core/Sweetener.Test/**
     - src/Shared/**
 

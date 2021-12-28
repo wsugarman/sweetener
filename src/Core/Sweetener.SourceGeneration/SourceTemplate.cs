@@ -5,9 +5,9 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
-using Sweetener.Generators.Extensions;
+using Sweetener.SourceGeneration.Extensions;
 
-namespace Sweetener.Generators;
+namespace Sweetener.SourceGeneration;
 
 internal abstract class SourceTemplate
 {

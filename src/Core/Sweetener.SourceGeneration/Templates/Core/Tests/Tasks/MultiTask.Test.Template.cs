@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Sweetener.Generators.Extensions;
-using Sweetener.Generators.Templates.Core.Tasks;
+using Sweetener.SourceGeneration.Extensions;
+using Sweetener.SourceGeneration.Templates.Core.Tasks;
 
-namespace Sweetener.Generators.Templates.Core.Tests.Tasks;
+namespace Sweetener.SourceGeneration.Templates.Core.Tests.Tasks;
 
 [Project("Sweetener.Test")]
 internal sealed class MultiTaskTestSourceFile : SourceTemplate

@@ -5,7 +5,7 @@ using System;
 using System.Globalization;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.Generators.Templates.Core.Delegates;
+namespace Sweetener.SourceGeneration.Templates.Core.Delegates;
 
 internal sealed class DelegateOptions
 {

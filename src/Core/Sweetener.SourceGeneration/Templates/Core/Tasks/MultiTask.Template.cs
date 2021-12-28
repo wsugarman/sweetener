@@ -5,9 +5,9 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
-using Sweetener.Generators.Extensions;
+using Sweetener.SourceGeneration.Extensions;
 
-namespace Sweetener.Generators.Templates.Core.Tasks;
+namespace Sweetener.SourceGeneration.Templates.Core.Tasks;
 
 [Project("Sweetener")]
 internal sealed class MultiTaskSourceFile : SourceTemplate

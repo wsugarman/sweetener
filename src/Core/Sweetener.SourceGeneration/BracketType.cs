@@ -1,7 +1,7 @@
 ﻿// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
-namespace Sweetener.Generators;
+namespace Sweetener.SourceGeneration;
 
 internal enum BracketType
 {

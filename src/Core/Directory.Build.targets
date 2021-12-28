@@ -2,7 +2,7 @@
 
   <!-- Add the Source Generator to every project (except to the generator project itself) -->
   <Choose>
-    <When Condition="'$(MSBuildProjectName)' != 'Sweetener.Generators'">
+    <When Condition="'$(MSBuildProjectName)' != 'Sweetener.SourceGeneration'">
 
       <!-- Define any new properties used solely by the source generator -->
       <PropertyGroup>
@@ -20,7 +20,7 @@
       <!-- Include the source generator -->
       <!-- Note that the source generator will output files based on the project -->
       <ItemGroup>
-        <ProjectReference Include="$(CoreDirectory)Sweetener.Generators\Sweetener.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(CoreDirectory)Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
       </ItemGroup>
 
     </When>

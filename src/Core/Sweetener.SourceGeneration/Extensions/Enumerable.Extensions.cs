@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Sweetener.Generators.Extensions;
+namespace Sweetener.SourceGeneration.Extensions;
 
 internal static class EnumerableExtensions
 {

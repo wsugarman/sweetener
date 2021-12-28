@@ -4,10 +4,10 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
-using Sweetener.Generators.Extensions;
-using Sweetener.Generators.Templates.Core.Delegates.Extensions;
+using Sweetener.SourceGeneration.Extensions;
+using Sweetener.SourceGeneration.Templates.Core.Delegates.Extensions;
 
-namespace Sweetener.Generators.Templates.Core.Delegates;
+namespace Sweetener.SourceGeneration.Templates.Core.Delegates;
 
 [Project("Sweetener")]
 internal sealed class TryFuncTemplate : DelegateSourceTemplate

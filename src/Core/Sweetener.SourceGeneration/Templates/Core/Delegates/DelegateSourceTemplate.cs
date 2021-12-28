@@ -4,7 +4,7 @@
 using System.CodeDom.Compiler;
 using Microsoft.CodeAnalysis;
 
-namespace Sweetener.Generators.Templates.Core.Delegates;
+namespace Sweetener.SourceGeneration.Templates.Core.Delegates;
 
 internal abstract class DelegateSourceTemplate : SourceTemplate
 {

@@ -5,7 +5,7 @@ using System;
 using System.Globalization;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Sweetener.Generators.Templates.Core.Tasks;
+namespace Sweetener.SourceGeneration.Templates.Core.Tasks;
 
 internal sealed class MultiTaskOptions
 {
