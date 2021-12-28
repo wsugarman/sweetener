@@ -79,6 +79,9 @@ csharp_style_conditional_delegate_call = true:suggestion
 # Code block preferences
 csharp_prefer_braces = false:suggestion
 
+# Namespaces
+csharp_style_namespace_declarations = file_scoped:error
+
 # Formatting conventions
 # Most use "rule_name = false|true"
 

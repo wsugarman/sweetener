@@ -3,31 +3,30 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Test
+namespace Sweetener.Test;
+
+[TestClass]
+public class AsyncActionTest
 {
-    [TestClass]
-    public class AsyncActionTest
+    [TestMethod]
+    public void Defined()
     {
-        [TestMethod]
-        public void Defined()
-        {
-            Assert.IsNotNull(typeof(AsyncAction));
-            Assert.IsNotNull(typeof(AsyncAction<>));
-            Assert.IsNotNull(typeof(AsyncAction<,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,,,>));
-            Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,,,,>));
-        }
+        Assert.IsNotNull(typeof(AsyncAction));
+        Assert.IsNotNull(typeof(AsyncAction<>));
+        Assert.IsNotNull(typeof(AsyncAction<,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,,,>));
+        Assert.IsNotNull(typeof(AsyncAction<,,,,,,,,,,,,,,,>));
     }
 }
