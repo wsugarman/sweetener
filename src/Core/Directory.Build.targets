@@ -1,0 +1,29 @@
+<Project>
+
+  <!-- Add the Source Generator to every project (except to the generator project itself) -->
+  <Choose>
+    <When Condition="'$(MSBuildProjectName)' != 'Sweetener.SourceGeneration'">
+
+      <!-- Define any new properties used solely by the source generator -->
+      <PropertyGroup>
+        <DelegateTypeOverloads>16</DelegateTypeOverloads>
+        <TaskTypeOverloads>8</TaskTypeOverloads>
+      </PropertyGroup>
+
+      <!-- Expose the following properties to the source generator -->
+      <ItemGroup>
+        <CompilerVisibleProperty Include="DelegateTypeOverloads" />
+        <CompilerVisibleProperty Include="RootNamespace" />
+        <CompilerVisibleProperty Include="TaskTypeOverloads" />
+      </ItemGroup>
+
+      <!-- Include the source generator -->
+      <!-- Note that the source generator will output files based on the project -->
+      <ItemGroup>
+        <ProjectReference Include="$(CoreDirectory)Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+      </ItemGroup>
+
+    </When>
+  </Choose>
+
+</Project>

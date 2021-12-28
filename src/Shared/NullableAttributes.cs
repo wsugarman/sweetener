@@ -7,7 +7,7 @@
 // repository on GitHub.
 //
 // Documentation: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/attributes/nullable-analysis
-// Source: https://github.com/dotnet/runtime/blob/v5.0.0/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
+// Source: https://github.com/dotnet/runtime/blob/v6.0.0/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
 
 #if NETSTANDARD2_0
 

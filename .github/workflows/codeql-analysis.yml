@@ -1,17 +1,22 @@
-name: "CodeQL"
+name: CodeQL
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  schedule:
-    - cron: '0 16 * * 1'
+    paths:
+      - global.json
+      - NuGet.config
+      - src/**
 
 jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
 
     steps:
     - name: Checkout Repository
@@ -21,14 +26,15 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: 'csharp'
-      
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1.8.0
-      with:
-        dotnet-version: '5.0.x'
-        
+
+    - name: Setup
+      uses: actions/setup-dotnet@v1.9.0
+
     - name: Build Sweetener.sln
-      run: dotnet build src/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
+      run: dotnet build src/Core/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
+
+    - name: Build Sweetener.Extensions.sln
+      run: dotnet build src/Extensions/Sweetener.Extensions.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1

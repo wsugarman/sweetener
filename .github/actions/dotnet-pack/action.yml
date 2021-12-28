@@ -1,0 +1,96 @@
+name: dotnet pack
+description: Packages a .NET project and uploads the result as an artifact
+inputs:
+  project:
+    description: The name of the csproj file
+    required: true
+  solution:
+    description: The name of the solution file
+    required: true
+  buildConfiguration:
+    default: Debug
+    description: The dotnet build configuration
+    required: false
+  pullRequestNumber:
+    default: ''
+    description: An optional pull request number
+    required: false
+  sign:
+    default: 'false'
+    description: Indicates whether the assemblies should be both code signed and signed with a strong name.
+    required: false
+  strongNameKey:
+    default: ''
+    description: Base64 .snk file contents
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Setup
+      uses: actions/setup-dotnet@v1.9.0
+
+    - name: Create .snk File
+      if: ${{ inputs.sign == 'true' }}
+      shell: pwsh
+      run: |
+        ./.github/actions/dotnet-pack/scripts/CreateFile.ps1 `
+          -Base64StringContent '${{ inputs.strongNameKey }}' `
+          -OutputFilePath "${{ runner.temp }}/snk/sweetener.snk"
+
+    - name: Determine Version
+      id: version
+      shell: pwsh
+      run: |
+        ./.github/actions/dotnet-pack/scripts/ParseVersion.ps1 `
+          -VersionFilePath './src/${{ inputs.solution }}/${{ inputs.project }}/Version.json' `
+          -PullRequestNumber '${{ inputs.pullRequestNumber }}'
+
+    - name: Build
+      shell: bash
+      run: |
+        dotnet build "./src/${{ inputs.solution }}/${{ inputs.project }}/${{ inputs.project }}.csproj" \
+          -c "${{ inputs.buildConfiguration }}" \
+          "-p:ContinuousIntegrationBuild=true;AssemblyVersion=${{ steps.version.outputs.assembly }};FileVersion=${{ steps.version.outputs.file }};InformationalVersion=${{ steps.version.outputs.file }}" \
+          -warnaserror
+
+    - name: Sign Assembly
+      if: ${{ inputs.sign == 'true' }}
+      shell: pwsh
+      run: |
+        ./.github/actions/dotnet-pack/scripts/SignAssemblies.ps1 `
+          -ProjectName  '${{ inputs.project }}' `
+          -ProjectType '${{ inputs.solution }}' `
+          -BuildConfiguration '${{ inputs.buildConfiguration }}' `
+          -StrongNameKeyPath '${{ runner.temp }}/snk/sweetener.snk' `
+          -DotNetTools '${{ runner.temp }}/tools'
+
+    - name: Pack
+      shell: bash
+      run: |
+        dotnet pack "./src/${{ inputs.solution }}/${{ inputs.project }}/${{ inputs.project }}.csproj" \
+          -c "${{ inputs.buildConfiguration }}" \
+          "-p:ContinuousIntegrationBuild=true;PackageVersion=${{ steps.version.outputs.package }}" \
+          --no-build \
+          -o "${{ runner.temp }}/package"
+
+    - name: Sign Package
+      if: ${{ inputs.sign == 'true' }}
+      shell: pwsh
+      run: |
+        ./.github/actions/dotnet-pack/scripts/SignPackage.ps1 `
+          -PackagePath '${{ runner.temp }}/package/${{ inputs.project }}.${{ steps.version.outputs.package }}.nupkg' `
+          -DotNetTools '${{ runner.temp }}/tools'
+
+    - name: Upload Package
+      uses: actions/upload-artifact@v2.2.3
+      with:
+        name: Package
+        path: ${{ runner.temp }}/package
+
+    - name: Delete .snk File
+      if: ${{ inputs.sign == 'true' && always() }}
+      shell: pwsh
+      run: |
+        ./.github/actions/dotnet-pack/scripts/DeleteFile.ps1 `
+          -FilePath "${{ runner.temp }}/snk/sweetener.snk"
