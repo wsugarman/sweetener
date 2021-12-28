@@ -4,19 +4,18 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration.Memory;
 
-namespace Sweetener.Extensions.Configuration.Test
-{
-    [SuppressMessage("Naming", "CA1710: Identifiers should have correct suffix", Justification = "This type is not a collection.")]
-    internal class ReloadingMemoryConfigurationProvider : MemoryConfigurationProvider
-    {
-        public ReloadingMemoryConfigurationProvider(ReloadingMemoryConfigurationSource source)
-            : base(new MemoryConfigurationSource { InitialData = source.InitialData })
-        { }
+namespace Sweetener.Extensions.Options.Test.Configuration;
 
-        public override void Set(string key, string value)
-        {
-            base.Set(key, value);
-            OnReload();
-        }
+[SuppressMessage("Naming", "CA1710: Identifiers should have correct suffix", Justification = "This type is not a collection.")]
+internal class ReloadingMemoryConfigurationProvider : MemoryConfigurationProvider
+{
+    public ReloadingMemoryConfigurationProvider(ReloadingMemoryConfigurationSource source)
+        : base(new MemoryConfigurationSource { InitialData = source.InitialData })
+    { }
+
+    public override void Set(string key, string value)
+    {
+        base.Set(key, value);
+        OnReload();
     }
 }
