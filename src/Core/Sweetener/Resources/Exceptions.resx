@@ -141,6 +141,9 @@
   <data name="InvalidDateSpanRangeMessage" xml:space="preserve">
     <value>The start or end of the DateSpan results in an un-representable DateTime.</value>
   </data>
+  <data name="InvalidTypeFormat" xml:space="preserve">
+    <value>Object must be of type {0}.</value>
+  </data>
   <data name="KindMismatchMessage" xml:space="preserve">
     <value>DateTimeKind values must match.</value>
   </data>

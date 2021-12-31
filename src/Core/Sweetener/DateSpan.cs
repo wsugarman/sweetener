@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
+using Sweetener.Extensions;
 
 namespace Sweetener;
 
@@ -11,9 +10,27 @@ namespace Sweetener;
 /// Represents an interval between two instants in time, typically expressed as a date and time of day.
 /// </summary>
 [Serializable]
-[DebuggerDisplay("{GetDebuggerDisplay(),nq}")]
-internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan>
+public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan> //, IFormattable
 {
+    /// <summary>
+    /// Gets the instant in time that starts the interval represented by this instance.
+    /// </summary>
+    /// <value>The <see cref="DateTime"/> that indicates the inclusive start of this interval.</value>
+    public DateTime Start { get; }
+
+    /// <summary>
+    /// Gets the instant in time that ends the interval represented by this instance.
+    /// </summary>
+    /// <value>The <see cref="DateTime"/> that indicates the exclusive end of this interval.</value>
+    public DateTime End => Start + Duration;
+
+    /// <summary>
+    /// Gets the length of time represented by this instance irrespective of when it starts and ends.
+    /// This value is always non-negative.
+    /// </summary>
+    /// <value>The <see cref="TimeSpan"/> that indicates the length of time.</value>
+    public TimeSpan Duration { get; }
+
     /// <summary>
     /// Gets a value that indicates whether the interval represented by this instance is based on local time,
     /// Coordinated Universal Time (UTC), or neither.
@@ -22,75 +39,20 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// One of the enumeration values that indicates what the current time represents.
     /// The default is <see cref="DateTimeKind.Unspecified"/>.
     /// </value>
-    public DateTimeKind Kind => _start.Kind;
-
-    /// <summary>
-    /// Gets the instant in time that starts the interval represented by this instance.
-    /// </summary>
-    /// <value>The <see cref="DateTime"/> that indicates the inclusive start of this interval.</value>
-    /// <exception cref="InvalidOperationException">The interval is empty.</exception>
-    public DateTime Start => IsEmpty ? throw new InvalidOperationException(SR.EmptyDateSpanMessage) : _start;
-
-    /// <summary>
-    /// Gets the instant in time that ends the interval represented by this instance.
-    /// </summary>
-    /// <value>The <see cref="DateTime"/> that indicates the exclusive end of this interval.</value>
-    /// <exception cref="InvalidOperationException">
-    /// <para>The interval is empty.</para>
-    /// <para>-or-</para>
-    /// <para>The value is greater than <see cref="DateTime.MaxValue"/>.</para>
-    /// </exception>
-    public DateTime End
-    {
-        get
-        {
-            if (IsEmpty)
-                throw new InvalidOperationException(SR.EmptyDateSpanMessage);
-
-            long endTicks = _start.Ticks + _durationTicks;
-            if (endTicks - 1 == MaxDateTimeTicks)
-                throw new InvalidOperationException(SR.InvalidDateSpanEndMessage);
-
-            return new DateTime(endTicks, Kind);
-        }
-    }
-
-    /// <summary>
-    /// Gets the length of time represented by this instance irrespective of when it starts and ends.
-    /// This value is always non-negative.
-    /// </summary>
-    /// <value>The <see cref="TimeSpan"/> that indicates the length of time.</value>
-    public TimeSpan Duration => new TimeSpan(_durationTicks);
-
-    /// <summary>
-    /// Gets a value that indicates whether the interval does not contain any instant of time.
-    /// </summary>
-    /// <value>
-    /// <see langword="true"/> if the <see cref="Duration"/> property returns <see cref="TimeSpan.Zero"/>;
-    /// otherwise <see langword="false"/>.
-    /// </value>
-    public bool IsEmpty => _durationTicks == 0;
-
-    private readonly DateTime _start;
-    private readonly long _durationTicks;
-
-    // Must be resolved before MaxValue and MinValue
-    private static readonly long MaxDateTimeTicks = DateTime.MaxValue.Ticks;
+    public DateTimeKind Kind => Start.Kind;
 
     /// <summary>
     /// Represents the largest possible value of <see cref="DateSpan"/>. This field is read-only.
     /// </summary>
-    public static readonly DateSpan MaxValue = new DateSpan(DateTime.MinValue, (DateTime.MaxValue - DateTime.MinValue).Ticks + 1L);
+    public static readonly DateSpan MaxValue = new DateSpan(DateTime.MinValue, DateTime.MaxValue);
 
     /// <summary>
     /// Represents the smallest possible value of <see cref="DateSpan"/>. This field is read-only.
     /// </summary>
     /// <remarks>
-    /// This value is equivalent to the default value for <see cref="DateSpan"/>. The value of the
-    /// <see cref="Duration"/> property is <see cref="TimeSpan.Zero"/> and the <see cref="IsEmpty"/>
-    /// property returns <see langword="true"/>.
+    /// This value is equivalent to the default value for <see cref="DateSpan"/>.
     /// </remarks>
-    public static readonly DateSpan MinValue = new DateSpan(DateTime.MinValue, 0L);
+    public static readonly DateSpan MinValue = new DateSpan(DateTime.MinValue, TimeSpan.Zero);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DateSpan"/> structure that represents the interval
@@ -99,25 +61,22 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// <param name="start">The inclusive start of the interval.</param>
     /// <param name="end">The exclusive end of the interval.</param>
     /// <exception cref="ArgumentException">
-    /// <para>
     /// <paramref name="start"/> and <paramref name="end"/> do not have the same <see cref="DateTime.Kind"/> value.
-    /// </para>
-    /// <para>-or-</para>
-    /// <para><paramref name="end"/> takes place before <paramref name="start"/>.</para>
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="end"/> occurs before <paramref name="start"/>.
     /// </exception>
     public DateSpan(DateTime start, DateTime end)
     {
         if (start.Kind != end.Kind)
             throw new ArgumentException(SR.KindMismatchMessage);
 
-        long durationTicks = (end - start).Ticks;
-        if (durationTicks < 0)
-        {
-            throw new ArgumentException(SR.EndBeforeStartMessage, nameof(end));
-        }
+        TimeSpan duration = end - start;
+        if (duration < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(end), SR.EndBeforeStartMessage);
 
-        _start         = durationTicks == 0 ? DateTime.MinValue : start; // normalize empty span
-        _durationTicks = durationTicks;
+        Start    = start;
+        Duration = duration;
     }
 
     /// <summary>
@@ -132,11 +91,23 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// <param name="start">The inclusive start of the interval.</param>
     /// <param name="duration">The length of the interval.</param>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// The interval extends beyond the range of valid <see cref="DateTime"/> values.
+    /// <para><paramref name="duration"/> is negative.</para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The <see cref="End"/> extends beyond the range of valid <see cref="DateTime"/> values.
+    /// </para>
     /// </exception>
     public DateSpan(DateTime start, TimeSpan duration)
-        : this(start, duration.Ticks)
-    { }
+    {
+        if (duration < TimeSpan.Zero)
+            throw new ArgumentNegativeException(nameof(duration));
+
+        if (start.Ticks + duration.Ticks > DateTime.MaxValue.Ticks)
+            throw new ArgumentOutOfRangeException(nameof(duration), SR.InvalidDateSpanRangeMessage);
+
+        Start    = start;
+        Duration = duration;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DateSpan"/> structure that represents the interval
@@ -155,19 +126,196 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para><paramref name="durationTicks"/> is negative.</para>
     /// <para>-or-</para>
-    /// <para>The interval extends beyond the range of valid <see cref="DateTime"/> values.</para>
+    /// <para>
+    /// The <see cref="End"/> extends beyond the range of valid <see cref="DateTime"/> values.
+    /// </para>
     /// </exception>
     public DateSpan(DateTime start, long durationTicks)
-    {
-        if (durationTicks < 0)
-            throw new ArgumentOutOfRangeException(nameof(durationTicks), SR.EndBeforeStartMessage);
+        : this(start, TimeSpan.FromTicks(durationTicks))
+    { }
 
-        if (MaxDateTimeTicks - start.Ticks + 1 < durationTicks)
-            throw new ArgumentOutOfRangeException(nameof(durationTicks), SR.InvalidDateSpanRangeMessage);
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the value of the specified <see cref="TimeSpan"/>
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">A positive or negative time interval.</param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the time interval represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan Extend(TimeSpan value)
+        => new DateSpan(Start, End.Add(value));
 
-        _start         = durationTicks == 0 ? DateTime.MinValue : start; // normalize empty span
-        _durationTicks = durationTicks;
-    }
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of days
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional days. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of days represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendDays(double value)
+        => new DateSpan(Start, End.AddDays(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of hours
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional hours. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of hours represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendHours(double value)
+        => new DateSpan(Start, End.AddHours(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of milliseconds
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional milliseconds. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of milliseconds represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendMilliseconds(double value)
+        => new DateSpan(Start, End.AddMilliseconds(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of minutes
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional minutes. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of minutes represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendMinutes(double value)
+        => new DateSpan(Start, End.AddMinutes(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of months
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of months. The <paramref name="value"/> parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of months represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendMonths(int value)
+        => new DateSpan(Start, End.AddMonths(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of seconds
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional seconds. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of seconds represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendSeconds(double value)
+        => new DateSpan(Start, End.AddSeconds(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of ticks
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of 100-nanosecond ticks. The <paramref name="value"/> parameter can be positive or negative.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of ticks represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendTicks(long value)
+        => new DateSpan(Start, End.AddTicks(value));
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of years
+    /// to the <see cref="End"/> property of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of years. The <paramref name="value"/> parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
+    /// property for the current instance and the number of years represented by <paramref name="value"/>.
+    /// The value of the <see cref="Start"/> property is unchanged.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that either occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </exception>
+    public DateSpan ExtendYears(int value)
+        => new DateSpan(Start, End.AddTicks(value));
 
     /// <summary>
     /// Compares the value of this instance to a specified object that contains a specified <see cref="DateSpan"/>
@@ -176,7 +324,7 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// </summary>
     /// <remarks>
     /// To determine the relationship of the current instance to <paramref name="obj"/>, the
-    /// <see cref="CompareTo(object)"/> method ignores the Kind property. Before comparing
+    /// <see cref="CompareTo(object)"/> method ignores the <see cref="Kind"/> property. Before comparing
     /// <see cref="DateSpan"/> objects, make sure that the objects represent times in the same time zone.
     /// You can do this by comparing the values of their <see cref="Kind"/> properties.
     /// </remarks>
@@ -210,7 +358,7 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
             return 1;
 
         if (obj is not DateSpan other)
-            throw new ArgumentException("Argument must be a DateSpan");
+            throw new ArgumentException(SR.Format(SR.InvalidTypeFormat, nameof(DateSpan)), nameof(obj));
 
         return CompareTo(other);
     }
@@ -222,7 +370,7 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// </summary>
     /// <remarks>
     /// To determine the relationship of the current instance to <paramref name="other"/>, the
-    /// <see cref="CompareTo(DateSpan)"/> method ignores the Kind property. Before comparing
+    /// <see cref="CompareTo(DateSpan)"/> method ignores the <see cref="Kind"/> property. Before comparing
     /// <see cref="DateSpan"/> objects, make sure that the objects represent times in the same time zone.
     /// You can do this by comparing the values of their <see cref="Kind"/> properties.
     /// </remarks>
@@ -250,20 +398,51 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// </returns>
     public int CompareTo(DateSpan other)
     {
-        int cmp = _start.CompareTo(other._start);
-        return cmp == 0 ? _durationTicks.CompareTo(other._durationTicks) : cmp;
+        int cmp = Start.CompareTo(other.Start);
+        return cmp == 0 ? Duration.CompareTo(other.Duration) : cmp;
     }
 
     /// <summary>
     /// Determines whether the <see cref="DateSpan"/> contains a specific <paramref name="value"/>.
     /// </summary>
+    /// <remarks>
+    /// To determine the whether the current instance contains the <paramref name="value"/>, the
+    /// <see cref="Contains(DateTime)"/> method ignores the <see cref="Kind"/> property. Before
+    /// invoking the method, make sure that the objects represent times in the same time zone.
+    /// You can do this by comparing the values of their <see cref="Kind"/> properties.
+    /// </remarks>
     /// <param name="value">The <see cref="DateTime"/> to locate in the <see cref="DateSpan"/>.</param>
     /// <returns>
     /// <see langword="true"/> if <paramref name="value"/> is within the
     /// interval; otherwise, <see langword="false"/>.
     /// </returns>
     public bool Contains(DateTime value)
-        => !IsEmpty && value >= _start && value.Ticks < _start.Ticks + _durationTicks;
+        => value >= Start && value < End;
+
+    /// <summary>
+    /// Determines whether the <see cref="DateSpan"/> contains another <see cref="DateSpan"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// To determine the whether the current instance contains the other <see cref="DateSpan"/>, the
+    /// <see cref="Contains(DateSpan)"/> method ignores the <see cref="Kind"/> property. Before
+    /// invoking the method, make sure that the objects represent times in the same time zone.
+    /// You can do this by comparing the values of their <see cref="Kind"/> properties.
+    /// </para>
+    /// <para>
+    /// An empty <see cref="DateSpan"/>, whose value of the <see cref="Duration"/> property is
+    /// <see cref="TimeSpan.Zero"/>, is considered within another <see cref="DateSpan"/> instance
+    /// if its start time resides within the interval.
+    /// </para>
+    /// </remarks>
+    /// <param name="other">Another <see cref="DateSpan"/> instance.</param>
+    /// <returns>
+    /// <see langword="true"/> if the values of the <see cref="Start"/> and <see cref="End"/> properties
+    /// of the <paramref name="other"/> interval are within the values of the <see cref="Start"/> and
+    /// <see cref="End"/> properties of the current instance; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool Contains(DateSpan other)
+        => other.Start >= Start && other.End <= End;
 
     /// <summary>
     /// Returns a value indicating whether this instance is equal to a specified object.
@@ -292,7 +471,14 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// value of this instance; otherwise, <see langword="false"/>.
     /// </returns>
     public bool Equals(DateSpan other)
-        => _start.Equals(other._start) && _durationTicks.Equals(other._durationTicks);
+        => Start.Equals(other.Start) && Duration.Equals(other.Duration);
+
+    /// <summary>
+    /// Returns the hash code for this instance.
+    /// </summary>
+    /// <returns>A 32-bit signed integer hash code.</returns>
+    public override int GetHashCode()
+        => Start.GetHashCode() ^ Duration.GetHashCode();
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> instance that represents the intersection of
@@ -306,109 +492,17 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// </remarks>
     /// <param name="other">The <see cref="DateSpan"/> to compare to the current interval.</param>
     /// <returns>
-    /// The intersection of the intervals if they overlap; otherwise <see cref="MinValue"/>.
+    /// The intersection of the intervals if they overlap; otherwise, the default value.
     /// </returns>
     public DateSpan IntersectWith(DateSpan other)
     {
-        if (IsEmpty || other.IsEmpty)
-            return default;
+        (DateSpan first, DateSpan second) = GetAscendingOrder(this, other);
 
-        DateSpan earlier, later;
-        if (_start <= other._start)
-        {
-            earlier = this;
-            later = other;
-        }
-        else
-        {
-            earlier = other;
-            later = this;
-        }
-
-        long maxIntersectionTicks = earlier._start.Ticks + earlier._durationTicks - later._start.Ticks;
-        return maxIntersectionTicks >= 0
-            ? new DateSpan(later._start, Math.Min(later._durationTicks, maxIntersectionTicks))
+        long maxIntersection = first.End.Ticks - second.Start.Ticks;
+        return maxIntersection > 0
+            ? new DateSpan(second.Start, Math.Min(second.Duration.Ticks, maxIntersection))
             : default;
     }
-
-    /// <summary>
-    /// Determines whether an interval is a proper (strict) subset of a specified interval.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// If the current interval is a proper subset of <paramref name="other"/>, <paramref name="other"/>
-    /// must have at least one instant of time that the current interval does not have.
-    /// </para>
-    /// <para>
-    /// The <see cref="IsProperSubsetOf(DateSpan)"/> method does not consider the value of the
-    /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values. Before invoking the method,
-    /// ensure that the objects represent intervals in the same time zone. Otherwise, the result will not account
-    /// for the difference between time zones.
-    /// </para>
-    /// </remarks>
-    /// <param name="other">The interval to compare to the current interval.</param>
-    /// <returns>
-    /// <see langword="true"/> if the current interval is a proper subset of <paramref name="other"/>;
-    /// otherwise, <see langword="false"/>.
-    /// </returns>
-    public bool IsProperSubsetOf(DateSpan other)
-        => IsSubsetOf(other) && _durationTicks != other._durationTicks;
-
-    /// <summary>
-    /// Determines whether an interval is a proper (strict) superset of a specified interval.
-    /// </summary>
-    /// <remarks>
-    /// The <see cref="IsProperSupersetOf(DateSpan)"/> method does not consider the value of the
-    /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values. Before invoking the method,
-    /// ensure that the objects represent intervals in the same time zone. Otherwise, the result will not account
-    /// for the difference between time zones.
-    /// </remarks>
-    /// <param name="other">The interval to compare to the current interval.</param>
-    /// <returns>
-    /// <see langword="true"/> if the current interval is a proper superset of <paramref name="other"/>;
-    /// otherwise, <see langword="false"/>.
-    /// </returns>
-    public bool IsProperSupersetOf(DateSpan other)
-        => other.IsProperSubsetOf(this);
-
-    /// <summary>
-    /// Determines whether an interval is a subset of a specified interval.
-    /// </summary>
-    /// <remarks>
-    /// The <see cref="IsSubsetOf(DateSpan)"/> method does not consider the value of the
-    /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values. Before invoking the method,
-    /// ensure that the objects represent intervals in the same time zone. Otherwise, the result will not account
-    /// for the difference between time zones.
-    /// </remarks>
-    /// <param name="other">The interval to compare to the current interval.</param>
-    /// <returns>
-    /// <see langword="true"/> if the current interval is a subset of <paramref name="other"/>;
-    /// otherwise, <see langword="false"/>.
-    /// </returns>
-    public bool IsSubsetOf(DateSpan other)
-    {
-        if (other.IsEmpty)
-            return IsEmpty;
-
-        return IsEmpty || (_start >= other._start && (_start.Ticks + _durationTicks) <= (other._start.Ticks + other._durationTicks));
-    }
-
-    /// <summary>
-    /// Determines whether an interval is a superset of a specified interval.
-    /// </summary>
-    /// <remarks>
-    /// The <see cref="IsSupersetOf(DateSpan)"/> method does not consider the value of the
-    /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values. Before invoking the method,
-    /// ensure that the objects represent intervals in the same time zone. Otherwise, the result will not account
-    /// for the difference between time zones.
-    /// </remarks>
-    /// <param name="other">The interval to compare to the current interval.</param>
-    /// <returns>
-    /// <see langword="true"/> if the current interval is a superset of <paramref name="other"/>;
-    /// otherwise, <see langword="false"/>.
-    /// </returns>
-    public bool IsSupersetOf(DateSpan other)
-        => other.IsSubsetOf(this);
 
     /// <summary>
     /// Determines whether the current interval overlaps with the specified interval.
@@ -426,41 +520,248 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// </returns>
     public bool Overlaps(DateSpan other)
     {
-        if (IsEmpty || other.IsEmpty)
-            return default;
-
-        DateSpan earlier, later;
-        if (_start <= other._start)
-        {
-            earlier = this;
-            later = other;
-        }
-        else
-        {
-            earlier = other;
-            later = this;
-        }
-
-        return earlier._start.Ticks + earlier._durationTicks - later._start.Ticks > 0;
-    }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal string GetDebuggerDisplay()
-    {
-        if (IsEmpty)
-            return "{}";
-
-        return _durationTicks == 1
-            ? $"{{{_start}}}"
-            : $"[{_start}, {_start.AddTicks(_durationTicks)})";
+        (DateSpan first, DateSpan second) = GetAscendingOrder(this, other);
+        return first.Contains(second.Start);
     }
 
     /// <summary>
-    /// Returns the hash code for this instance.
+    /// Returns a new <see cref="DateSpan"/> that adds the value of the specified <see cref="TimeSpan"/>
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
-    /// <returns>A 32-bit signed integer hash code.</returns>
-    public override int GetHashCode()
-        => _start.GetHashCode() ^ _durationTicks.GetHashCode();
+    /// <param name="value">A positive or negative time interval.</param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the time interval represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan Shift(TimeSpan value)
+        => new DateSpan(Start.Add(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of days
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional days. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of days represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftDays(double value)
+        => new DateSpan(Start.AddDays(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of hours
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional hours. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of hours represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftHours(double value)
+        => new DateSpan(Start.AddHours(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of milliseconds
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional milliseconds. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of milliseconds represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftMilliseconds(double value)
+        => new DateSpan(Start.AddMilliseconds(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of minutes
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional minutes. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of minutes represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftMinutes(double value)
+        => new DateSpan(Start.AddMinutes(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of months
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of months. The <paramref name="value"/> parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of months represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftMonths(int value)
+        => new DateSpan(Start.AddMonths(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of seconds
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of whole and fractional seconds. The <paramref name="value"/>
+    /// parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of seconds represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftSeconds(double value)
+        => new DateSpan(Start.AddSeconds(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of ticks
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of 100-nanosecond ticks. The <paramref name="value"/> parameter can be positive or negative.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of ticks represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftTicks(long value)
+        => new DateSpan(Start.AddTicks(value), Duration);
+
+    /// <summary>
+    /// Returns a new <see cref="DateSpan"/> that adds the specified number of years
+    /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
+    /// </summary>
+    /// <param name="value">
+    /// A number of years. The <paramref name="value"/> parameter can be negative or positive.
+    /// </param>
+    /// <returns>
+    /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
+    /// their respective values for the current instance and the number of years represented
+    /// by <paramref name="value"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs after <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan ShiftYears(int value)
+        => new DateSpan(Start.AddYears(value), Duration);
+
+    // TODO: Write ToString and Parse/ParseExact
 
     /// <summary>
     /// Returns a <see cref="DateSpan"/> that represents the given instant in time.
@@ -557,6 +858,8 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// <para><paramref name="year"/> is less than 1 or greater than 9999.</para>
     /// <para>-or-</para>
     /// <para><paramref name="month"/> is less than 1 or greater than 12.</para>
+    /// <para>-or-</para>
+    /// <para><paramref name="month"/> is less than 1 or greater than 12.</para>
     /// </exception>
     public static DateSpan FromMonth(int year, int month, DateTimeKind kind)
     {
@@ -588,15 +891,12 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// <paramref name="kind"/> is not one of the <see cref="DateTimeKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="year"/> is less than 1 or greater than 9999.
+    /// <paramref name="year"/> is less than 1 or greater than 9998.
     /// </exception>
     public static DateSpan FromYear(int year, DateTimeKind kind)
     {
-        // Avoid creating a DateTime object for the year 10,000 if necessary
         DateTime start = new DateTime(year, 1, 1, 0, 0, 0, kind);
-        return year == DateTime.MaxValue.Year
-            ? new DateSpan(start, MaxDateTimeTicks + 1L - start.Ticks)
-            : new DateSpan(start, start.AddYears(1));
+        return new DateSpan(start, start.AddYears(1));
     }
 
     /// <summary>
@@ -719,4 +1019,17 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
     /// <returns>An object that represents the <paramref name="value"/>.</returns>
     public static explicit operator DateSpan(DateTime value)
         => FromDateTime(value);
+
+    private static (DateSpan First, DateSpan Second) GetAscendingOrder(DateSpan x, DateSpan y)
+    {
+        // Order by smallest start followed by largest duration to help with other methods like Overlaps
+        if (x.Start < y.Start)
+            return (x, y);
+        else if (x.Start > y.Start)
+            return (y, x);
+        else if (x.Duration >= y.Duration)
+            return (x, y);
+        else
+            return (y, x);
+    }
 }
