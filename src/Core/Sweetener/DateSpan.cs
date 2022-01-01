@@ -135,36 +135,54 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the value of the specified <see cref="TimeSpan"/>
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Extend"/> method takes into account leap years and
+    /// The <see cref="Add"/> method takes into account leap years and
     /// the number of days in a month when performing date arithmetic.
     /// </remarks>
     /// <param name="value">A positive or negative time interval.</param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the time interval represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the time interval represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan Extend(TimeSpan value)
-        => new DateSpan(Start, End.Add(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan Add(TimeSpan value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.Add(value), End),
+            EndpointKind.End   => new DateSpan(Start           , End.Add(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of days
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
     /// <para>
     /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
     /// </para>
     /// <para>
-    /// The <see cref="ExtendDays"/> method takes into account leap years and
+    /// The <see cref="AddDays"/> method takes into account leap years and
     /// the number of days in a month when performing date arithmetic.
     /// </para>
     /// </remarks>
@@ -172,22 +190,40 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// A number of whole and fractional days. The <paramref name="value"/>
     /// parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of days represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of days represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendDays(double value)
-        => new DateSpan(Start, End.AddDays(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddDays(double value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddDays(value), End),
+            EndpointKind.End   => new DateSpan(Start               , End.AddDays(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of hours
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -196,7 +232,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// <para>
     /// Converting time intervals of less than an hour to a fraction can involve a loss of precision
     /// if the result is a non-terminating repeating decimal. (For example, one minute is 0.016667 of an hour.)
-    /// If this is problematic, you can use the <see cref="Extend"/> method, which enables you to
+    /// If this is problematic, you can use the <see cref="Add"/> method, which enables you to
     /// specify more than one kind of time interval in a single method call and
     /// eliminates the need to convert time intervals to fractional parts of an hour.
     /// </para>
@@ -205,22 +241,40 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// A number of whole and fractional hours. The <paramref name="value"/>
     /// parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of hours represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of hours represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendHours(double value)
-        => new DateSpan(Start, End.AddHours(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddHours(double value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddHours(value), End),
+            EndpointKind.End   => new DateSpan(Start                , End.AddHours(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of milliseconds
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
     /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
@@ -229,22 +283,40 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// A number of whole and fractional milliseconds. The <paramref name="value"/>
     /// parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of milliseconds represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of milliseconds represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendMilliseconds(double value)
-        => new DateSpan(Start, End.AddMilliseconds(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddMilliseconds(double value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddMilliseconds(value), End),
+            EndpointKind.End   => new DateSpan(Start                       , End.AddMilliseconds(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of minutes
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
     /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
@@ -253,27 +325,45 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// A number of whole and fractional minutes. The <paramref name="value"/>
     /// parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of minutes represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of minutes represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendMinutes(double value)
-        => new DateSpan(Start, End.AddMinutes(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddMinutes(double value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddMinutes(value), End),
+            EndpointKind.End   => new DateSpan(Start                  , End.AddMinutes(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of months
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
-    /// The <see cref="ExtendMonths"/> method calculates the resulting month and year,
+    /// The <see cref="AddMonths"/> method calculates the resulting month and year,
     /// taking into account leap years and the number of days in a month, then adjusts the day part of the
-    /// resulting <see cref="DateSpan"/> object. If the resulting value of the <see cref="End"/>
+    /// resulting <see cref="DateSpan"/> object. If the resulting value of either
     /// property is a day that is not valid in the resulting month, the last valid day of the
     /// resulting month is used. For example, March 31st + 1 month = April 30th,
     /// and March 31st - 1 month = February 28 for a non-leap year and February 29 for a leap year.
@@ -281,22 +371,40 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// <param name="value">
     /// A number of months. The <paramref name="value"/> parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of months represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of months represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendMonths(int value)
-        => new DateSpan(Start, End.AddMonths(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddMonths(int value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddMonths(value), End),
+            EndpointKind.End   => new DateSpan(Start                 , End.AddMonths(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of seconds
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
     /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
@@ -305,61 +413,97 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// A number of whole and fractional seconds. The <paramref name="value"/>
     /// parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of seconds represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of seconds represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendSeconds(double value)
-        => new DateSpan(Start, End.AddSeconds(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddSeconds(double value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddSeconds(value), End),
+            EndpointKind.End   => new DateSpan(Start                  , End.AddSeconds(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of ticks
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <param name="value">
     /// A number of 100-nanosecond ticks. The <paramref name="value"/> parameter can be positive or negative.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of ticks represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of ticks represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendTicks(long value)
-        => new DateSpan(Start, End.AddTicks(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddTicks(long value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddTicks(value), End),
+            EndpointKind.End   => new DateSpan(Start                , End.AddTicks(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of years
-    /// to the <see cref="End"/> property of this instance.
+    /// to the property of this instance corresponding to the given <see cref="EndpointKind"/>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The <see cref="ExtendYears"/> method calculates the resulting year taking into account leap years.
+    /// The <see cref="AddYears"/> method calculates the resulting year taking into account leap years.
     /// </para>
     /// <para>
-    /// If the current value of the <see cref="End"/> property represents the leap day in a leap year,
+    /// If the current value of the given property represents the leap day in a leap year,
     /// the return value depends on the target date:
     /// </para>
     /// <list type="bullet">
     /// <item>
     /// <description>
-    /// If <paramref name="value"/> + the current value of the <see cref="End"/> property
+    /// If <paramref name="value"/> + the current value of the property
     /// is also a leap year, the return value will use the leap day in that year.
     /// </description>
     /// </item>
     /// <item>
     /// <description>
-    /// If <paramref name="value"/> + the current value of the <see cref="End"/> property
+    /// If <paramref name="value"/> + the current value of the property
     /// is not a leap year, the return value will use the day before the leap day in that year.
     /// </description>
     /// </item>
@@ -368,18 +512,36 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// <param name="value">
     /// A number of years. The <paramref name="value"/> parameter can be negative or positive.
     /// </param>
+    /// <param name="endpoint">
+    /// A value of type <see cref="EndpointKind"/> indicating the interval endpoint to be modified.
+    /// </param>
     /// <returns>
-    /// An object whose <see cref="End"/> property is the sum of the value of the <see cref="End"/>
-    /// property for the current instance and the number of years represented by <paramref name="value"/>.
-    /// The value of the <see cref="Start"/> property is unchanged.
+    /// An object whose property specified by <paramref name="endpoint"/> is the sum of the value
+    /// of the current instance's value and the number of years represented by <paramref name="value"/>.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
-    /// that either occurs before the value of the <see cref="Start"/> property or after
-    /// <see cref="DateTime.MaxValue"/>.
+    /// <exception cref="ArgumentException">
+    /// <paramref name="endpoint"/> is an unrecognized value.
     /// </exception>
-    public DateSpan ExtendYears(int value)
-        => new DateSpan(Start, End.AddYears(value));
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="Start"/> property
+    /// that occurs before <see cref="DateTime.MinValue"/> or after the value of the <see cref="End"/>
+    /// property.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting <see cref="DateSpan"/> has a value for the <see cref="End"/> property
+    /// that occurs before the value of the <see cref="Start"/> property or after
+    /// <see cref="DateTime.MaxValue"/>.
+    /// </para>
+    /// </exception>
+    public DateSpan AddYears(int value, EndpointKind endpoint)
+        => endpoint switch
+        {
+            EndpointKind.Start => new DateSpan(Start.AddYears(value), End),
+            EndpointKind.End   => new DateSpan(Start                , End.AddYears(value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+        };
 
     /// <summary>
     /// Compares the value of this instance to a specified object that contains a specified <see cref="DateSpan"/>
@@ -506,7 +668,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// <see cref="End"/> properties of the current instance; otherwise, <see langword="false"/>.
     /// </returns>
     public bool Contains(DateSpan other)
-        => other.Start >= Start && other.End <= End;
+        => Contains(Start) && other.End <= End;
 
     /// <summary>
     /// Returns a value indicating whether this instance is equal to a specified object.
@@ -549,7 +711,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// this <see cref="DateSpan"/> instance with the <paramref name="other"/> instance.
     /// </summary>
     /// <remarks>
-    /// The <see cref="IntersectWith(DateSpan)"/> method does not consider the value of the
+    /// The <see cref="IntersectWith"/> method does not consider the value of the
     /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values when performing the intersection.
     /// Before intersecting <see cref="DateSpan"/> objects, ensure that the objects represent intervals in the
     /// same time zone. Otherwise, the result will include the difference between time zones.
@@ -572,7 +734,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Determines whether the current interval overlaps with the specified interval.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Overlaps(DateSpan)"/> method does not consider the value of the
+    /// The <see cref="Overlaps"/> method does not consider the value of the
     /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values. Before invoking the method,
     /// ensure that the objects represent intervals in the same time zone. Otherwise, the result will not account
     /// for the difference between time zones.
