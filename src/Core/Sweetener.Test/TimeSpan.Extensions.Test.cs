@@ -3,9 +3,8 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Sweetener.Extensions;
 
-namespace Sweetener.Test.Extensions;
+namespace Sweetener.Test;
 
 [TestClass]
 public class TimeSpanExtensionsTest
