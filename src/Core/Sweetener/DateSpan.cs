@@ -592,6 +592,10 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the value of the specified <see cref="TimeSpan"/>
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// The <see cref="Shift"/> method takes into account leap years and
+    /// the number of days in a month when performing date arithmetic.
+    /// </remarks>
     /// <param name="value">A positive or negative time interval.</param>
     /// <returns>
     /// An object whose <see cref="Start"/> and <see cref="End"/> properties are the sum of
@@ -616,6 +620,15 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of days
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
+    /// </para>
+    /// <para>
+    /// The <see cref="ShiftDays"/> method takes into account leap years and
+    /// the number of days in a month when performing date arithmetic.
+    /// </para>
+    /// </remarks>
     /// <param name="value">
     /// A number of whole and fractional days. The <paramref name="value"/>
     /// parameter can be negative or positive.
@@ -643,6 +656,18 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of hours
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
+    /// </para>
+    /// <para>
+    /// Converting time intervals of less than an hour to a fraction can involve a loss of precision
+    /// if the result is a non-terminating repeating decimal. (For example, one minute is 0.016667 of an hour.)
+    /// If this is problematic, you can use the <see cref="Shift"/> method, which enables you to
+    /// specify more than one kind of time interval in a single method call and
+    /// eliminates the need to convert time intervals to fractional parts of an hour.
+    /// </para>
+    /// </remarks>
     /// <param name="value">
     /// A number of whole and fractional hours. The <paramref name="value"/>
     /// parameter can be negative or positive.
@@ -670,6 +695,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of milliseconds
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
+    /// </remarks>
     /// <param name="value">
     /// A number of whole and fractional milliseconds. The <paramref name="value"/>
     /// parameter can be negative or positive.
@@ -697,6 +725,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of minutes
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
+    /// </remarks>
     /// <param name="value">
     /// A number of whole and fractional minutes. The <paramref name="value"/>
     /// parameter can be negative or positive.
@@ -724,6 +755,14 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of months
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// The <see cref="ShiftMonths"/> method calculates the resulting months and years,
+    /// taking into account leap years and the number of days in a month, then adjusts the day part of the
+    /// resulting <see cref="DateSpan"/> object. If the resulting value of the <see cref="Start"/>
+    /// or <see cref="End"/> property is a day that is not valid in the resulting month,
+    /// the last valid day of the resulting month is used. For example, March 31st + 1 month = April 30th,
+    /// and March 31st - 1 month = February 28 for a non-leap year and February 29 for a leap year.
+    /// </remarks>
     /// <param name="value">
     /// A number of months. The <paramref name="value"/> parameter can be negative or positive.
     /// </param>
@@ -750,6 +789,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of seconds
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// The <paramref name="value"/> parameter is rounded to the nearest millisecond.
+    /// </remarks>
     /// <param name="value">
     /// A number of whole and fractional seconds. The <paramref name="value"/>
     /// parameter can be negative or positive.
@@ -803,6 +845,29 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Returns a new <see cref="DateSpan"/> that adds the specified number of years
     /// to both the <see cref="Start"/> and <see cref="End"/> properties of this instance.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <see cref="ShiftYears"/> method calculates the resulting years taking into account leap years.
+    /// </para>
+    /// <para>
+    /// If the current value of the <see cref="Start"/> or <see cref="End"/> property represents
+    /// the leap day in a leap year, the return value depends on the target date:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// <description>
+    /// If <paramref name="value"/> + the current value of the <see cref="Start"/> or <see cref="End"/>
+    /// property is also a leap year, the return value will use the leap day in that year.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// If <paramref name="value"/> + the current value of the <see cref="Start"/> or <see cref="End"/>
+    /// property is not a leap year, the return value will use the day before the leap day in that year.
+    /// </description>
+    /// </item>
+    /// </list>
+    /// </remarks>
     /// <param name="value">
     /// A number of years. The <paramref name="value"/> parameter can be negative or positive.
     /// </param>

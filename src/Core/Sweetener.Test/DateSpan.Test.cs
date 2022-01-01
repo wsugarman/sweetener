@@ -188,7 +188,7 @@ public class DateSpanTest
         Assert.AreEqual(before.Kind                 , after.Kind    );
     }
 
-    private static void Extend(Func<DateSpan, int, DateSpan> extend, Func<DateTime, int, DateTime> getEnd)
+    private static void Extend(Func<DateSpan, int, DateSpan> extend, Func<DateTime, int, DateTime> addFunc)
     {
         // Too Small
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpan.MinValue, -12));
@@ -201,11 +201,11 @@ public class DateSpanTest
         DateTime start = new DateTime(1991, 10, 12, 13, 14, 15, DateTimeKind.Local);
 
         DateSpan after;
-        DateSpan before = new DateSpan(start, getEnd(start, 50));
+        DateSpan before = new DateSpan(start, addFunc(start, 50));
 
         // Increase
         after = extend(before, 2);
-        newEnd = getEnd(before.End, 2);
+        newEnd = addFunc(before.End, 2);
         Assert.AreEqual(before.Start         , after.Start   );
         Assert.AreEqual(newEnd               , after.End     );
         Assert.AreEqual(newEnd - before.Start, after.Duration);
@@ -213,7 +213,7 @@ public class DateSpanTest
 
         // Decrease
         after = extend(before, -37);
-        newEnd = getEnd(before.End, -37);
+        newEnd = addFunc(before.End, -37);
         Assert.AreEqual(before.Start         , after.Start   );
         Assert.AreEqual(newEnd               , after.End     );
         Assert.AreEqual(newEnd - before.Start, after.Duration);
@@ -335,4 +335,112 @@ public class DateSpanTest
     [TestMethod]
     public void NotEqualsOperator()
         => Equals((d1, d2) => !(d1 != d2));
+
+    [TestMethod]
+    public void Shift()
+        => Shift((d, v) => d.Shift(TimeSpan.FromMinutes(150) * v), (s, v) => s.AddMinutes(150 * v));
+
+    [TestMethod]
+    public void ShiftDays()
+        => Shift((d, f) => d.ShiftDays(f), TimeSpan.FromDays(1));
+
+    [TestMethod]
+    public void ShiftHours()
+        => Shift((d, f) => d.ShiftHours(f), TimeSpan.FromHours(1));
+
+    [TestMethod]
+    public void ShiftMilliseconds() // Avoid issues rounding in DateTime.AddMilliseconds(double)
+        => Shift((d, f) => d.ShiftMilliseconds(100 * f), TimeSpan.FromMilliseconds(100));
+
+    [TestMethod]
+    public void ShiftMinutes()
+        => Shift((d, f) => d.ShiftMinutes(f), TimeSpan.FromMinutes(1));
+
+    [TestMethod]
+    public void ShiftMonths()
+        => Shift((d, v) => d.ShiftMonths(v), (s, v) => s.AddMonths(v));
+
+    [TestMethod]
+    public void ShiftSeconds()
+        => Shift((d, f) => d.ShiftSeconds(f), TimeSpan.FromSeconds(1));
+
+    [TestMethod]
+    public void ShiftTicks()
+        => Shift((d, v) => d.ShiftTicks(v), (s, v) => s.AddTicks(v));
+
+    [TestMethod]
+    public void ShiftYears()
+        => Shift((d, v) => d.ShiftYears(v), (s, v) => s.AddYears(v));
+
+    private static void Shift(Func<DateSpan, double, DateSpan> extend, TimeSpan unit)
+    {
+        // Negative Infinity
+        Assert.ThrowsException<ArgumentOutOfRangeException>(
+            () => extend(new DateSpan(DateTime.Now, 1000), double.NegativeInfinity));
+
+        // Positive Infinity
+        Assert.ThrowsException<ArgumentOutOfRangeException>(
+            () => extend(new DateSpan(DateTime.Now, 1000), double.PositiveInfinity));
+
+        // Too Small
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpan.MinValue, -12));
+
+        // Too Large
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpan.MaxValue, 5));
+
+        // Normal Use-Cases
+        TimeSpan difference;
+        DateSpan after;
+        DateSpan before = new DateSpan(
+            new DateTime(1991, 10, 12, 13, 14, 15, DateTimeKind.Local),
+            unit * 100);
+
+        // Increase
+        after = extend(before, 10.6);
+        difference = unit * 10.6;
+        Assert.AreEqual(before.Start                   + difference, after.Start   );
+        Assert.AreEqual(before.Start + before.Duration + difference, after.End     );
+        Assert.AreEqual(before.Duration                            , after.Duration);
+        Assert.AreEqual(before.Kind                                , after.Kind    );
+
+        // Decrease
+        after = extend(before, -8.2);
+        difference = unit * -8.2;
+        Assert.AreEqual(before.Start                   + difference, after.Start   );
+        Assert.AreEqual(before.Start + before.Duration + difference, after.End     );
+        Assert.AreEqual(before.Duration                            , after.Duration);
+        Assert.AreEqual(before.Kind                                , after.Kind    );
+    }
+
+    private static void Shift(Func<DateSpan, int, DateSpan> extend, Func<DateTime, int, DateTime> addFunc)
+    {
+        // Too Small
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpan.MinValue, -12));
+
+        // Too Large
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpan.MaxValue, 5));
+
+        // Normal Use-Cases
+        DateTime newStart;
+        DateTime start = new DateTime(1991, 10, 12, 13, 14, 15, DateTimeKind.Local);
+
+        DateSpan after;
+        DateSpan before = new DateSpan(start, addFunc(start, 50));
+
+        // Increase
+        after = extend(before, 10);
+        newStart = addFunc(before.Start, 10);
+        Assert.AreEqual(newStart                     , after.Start   );
+        Assert.AreEqual(newStart.Add(before.Duration), after.End     );
+        Assert.AreEqual(before.Duration              , after.Duration);
+        Assert.AreEqual(before.Kind                  , after.Kind    );
+
+        // Decrease
+        after = extend(before, -8);
+        newStart = addFunc(before.Start, -8);
+        Assert.AreEqual(newStart                     , after.Start   );
+        Assert.AreEqual(newStart.Add(before.Duration), after.End     );
+        Assert.AreEqual(before.Duration              , after.Duration);
+        Assert.AreEqual(before.Kind                  , after.Kind    );
+    }
 }
