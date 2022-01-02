@@ -6,7 +6,7 @@ using System;
 namespace Sweetener;
 
 /// <summary>
-/// Represents an interval between two instants in time, typically expressed as a date and time of day.
+/// Represents an interval between two instants in time, each expressed as a date and time of day.
 /// </summary>
 [Serializable]
 public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan> //, IFormattable
@@ -1205,6 +1205,31 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         DateTime start = new DateTime(year, 1, 1, 0, 0, 0, kind);
         return new DateSpan(start, start.AddYears(1));
     }
+
+    /// <summary>
+    /// Creates a new <see cref="DateSpan"/> object that has the same value as the specified
+    /// <see cref="DateSpan"/>, but its values for the <see cref="Start"/> and <see cref="End"/>
+    /// properties are designated as either local time, Coordinated Universal Time (UTC), or neither,
+    /// as indicated by the specified <see cref="DateTimeKind"/> value.
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="SpecifyKind"/> method leaves the times unchanged, and only sets the
+    /// <see cref="Kind"/> property to <paramref name="kind"/>.
+    /// </remarks>
+    /// <param name="value">A time interval.</param>
+    /// <param name="kind">
+    /// One of the enumeration values that indicates whether the new object represents local time, UTC, or neither.
+    /// </param>
+    /// <returns>
+    /// A new object that has the same value for the <see cref="Start"/> and <see cref="End"/>
+    /// properties as the <paramref name="value"/> parameter, and the <see cref="DateTimeKind"/>
+    /// value specified by the <paramref name="kind"/> parameter.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="kind"/> is not one of the <see cref="DateTimeKind"/> values.
+    /// </exception>
+    public static DateSpan SpecifyKind(DateSpan value, DateTimeKind kind)
+        => new DateSpan(DateTime.SpecifyKind(value.Start, kind), value.Duration);
 
     /// <summary>
     /// Determines whether two specified instances of <see cref="DateSpan"/> are equal.
