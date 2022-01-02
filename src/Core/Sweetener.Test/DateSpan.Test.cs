@@ -588,4 +588,84 @@ public class DateSpanTest
         Assert.AreEqual(before.Duration              , after.Duration);
         Assert.AreEqual(before.Kind                  , after.Kind    );
     }
+
+    [TestMethod]
+    public void FromDateTime()
+    {
+        DateSpan actual;
+
+        DateTime utcNow = DateTime.UtcNow;
+        actual = DateSpan.FromDateTime(utcNow);
+        Assert.AreEqual(utcNow               , actual.Start   );
+        Assert.AreEqual(utcNow.AddTicks(1)   , actual.End     );
+        Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc     , actual.Kind    );
+
+        DateTime now = DateTime.Now;
+        actual = DateSpan.FromDateTime(now);
+        Assert.AreEqual(now                  , actual.Start   );
+        Assert.AreEqual(now.AddTicks(1)      , actual.End     );
+        Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local   , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void FromDay()
+    {
+        DateSpan actual = DateSpan.FromDay(1981, 02, 03);
+        Assert.AreEqual(new DateTime(1981, 02, 03), actual.Start   );
+        Assert.AreEqual(new DateTime(1981, 02, 04), actual.End     );
+        Assert.AreEqual(TimeSpan.FromDays(1)      , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified  , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void FromDay_Kind()
+    {
+        DateSpan actual = DateSpan.FromDay(1981, 02, 03, DateTimeKind.Local);
+        Assert.AreEqual(new DateTime(1981, 02, 03), actual.Start   );
+        Assert.AreEqual(new DateTime(1981, 02, 04), actual.End     );
+        Assert.AreEqual(TimeSpan.FromDays(1)      , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local        , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void FromMonth()
+    {
+        DateSpan actual = DateSpan.FromMonth(2022, 01);
+        Assert.AreEqual(new DateTime(2022, 01, 01), actual.Start   );
+        Assert.AreEqual(new DateTime(2022, 02, 01), actual.End     );
+        Assert.AreEqual(TimeSpan.FromDays(31)     , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified  , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void FromMonth_Kind()
+    {
+        DateSpan actual = DateSpan.FromMonth(2022, 01, DateTimeKind.Local);
+        Assert.AreEqual(new DateTime(2022, 01, 01), actual.Start   );
+        Assert.AreEqual(new DateTime(2022, 02, 01), actual.End     );
+        Assert.AreEqual(TimeSpan.FromDays(31)     , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local        , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void FromYear()
+    {
+        DateSpan actual = DateSpan.FromYear(2010);
+        Assert.AreEqual(new DateTime(2010, 01, 01), actual.Start   );
+        Assert.AreEqual(new DateTime(2011, 01, 01), actual.End     );
+        Assert.AreEqual(TimeSpan.FromDays(365)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified  , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void FromYear_Kind()
+    {
+        DateSpan actual = DateSpan.FromYear(2010, DateTimeKind.Local);
+        Assert.AreEqual(new DateTime(2010, 01, 01), actual.Start   );
+        Assert.AreEqual(new DateTime(2011, 01, 01), actual.End     );
+        Assert.AreEqual(TimeSpan.FromDays(365)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local        , actual.Kind    );
+    }
 }
