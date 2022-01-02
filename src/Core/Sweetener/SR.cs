@@ -14,13 +14,7 @@ internal static class SR
 
     public static string ArgumentNullOrWhiteSpaceMessage => ExceptionResourceManager.GetString(nameof(ArgumentNullOrWhiteSpaceMessage), CultureInfo.CurrentUICulture);
 
-    public static string EmptyDateSpanMessage => ExceptionResourceManager.GetString(nameof(EmptyDateSpanMessage), CultureInfo.CurrentUICulture);
-
-    public static string EmptyEnumeratorMessage => ExceptionResourceManager.GetString(nameof(EmptyEnumeratorMessage), CultureInfo.CurrentUICulture);
-
     public static string EndBeforeStartMessage => ExceptionResourceManager.GetString(nameof(EndBeforeStartMessage), CultureInfo.CurrentUICulture);
-
-    public static string InvalidDateSpanEndMessage => ExceptionResourceManager.GetString(nameof(InvalidDateSpanEndMessage), CultureInfo.CurrentUICulture);
 
     public static string InvalidDateSpanRangeMessage => ExceptionResourceManager.GetString(nameof(InvalidDateSpanRangeMessage), CultureInfo.CurrentUICulture);
 
