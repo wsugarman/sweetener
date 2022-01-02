@@ -135,6 +135,9 @@
   <data name="InvalidTypeFormat" xml:space="preserve">
     <value>Object must be of type {0}.</value>
   </data>
+  <data name="InvalidValueFormat" xml:space="preserve">
+    <value>Invalid {0} value.</value>
+  </data>
   <data name="KindMismatchMessage" xml:space="preserve">
     <value>DateTimeKind values must match.</value>
   </data>

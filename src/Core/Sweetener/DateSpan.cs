@@ -176,7 +176,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.Add(value), End),
             EndpointKind.End   => new DateSpan(Start           , End.Add(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -204,7 +204,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of days represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -224,7 +224,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddDays(value), End),
             EndpointKind.End   => new DateSpan(Start               , End.AddDays(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -255,7 +255,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of hours represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -275,7 +275,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddHours(value), End),
             EndpointKind.End   => new DateSpan(Start                , End.AddHours(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -297,7 +297,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of milliseconds represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -317,7 +317,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddMilliseconds(value), End),
             EndpointKind.End   => new DateSpan(Start                       , End.AddMilliseconds(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -339,7 +339,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of minutes represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -359,7 +359,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddMinutes(value), End),
             EndpointKind.End   => new DateSpan(Start                  , End.AddMinutes(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -385,7 +385,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of months represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -405,7 +405,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddMonths(value), End),
             EndpointKind.End   => new DateSpan(Start                 , End.AddMonths(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -427,7 +427,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of seconds represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -447,7 +447,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddSeconds(value), End),
             EndpointKind.End   => new DateSpan(Start                  , End.AddSeconds(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -465,7 +465,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of ticks represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -485,7 +485,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddTicks(value), End),
             EndpointKind.End   => new DateSpan(Start                , End.AddTicks(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>
@@ -526,7 +526,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// of the current instance's value and the number of years represented by <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="endpoint"/> is an unrecognized value.
+    /// <paramref name="endpoint"/> is not one of the <see cref="EndpointKind"/> values.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// <para>
@@ -546,7 +546,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         {
             EndpointKind.Start => new DateSpan(Start.AddYears(value), End),
             EndpointKind.End   => new DateSpan(Start                , End.AddYears(value)),
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint)),
+            _ => throw new ArgumentException(SR.Format(SR.InvalidValueFormat, nameof(EndpointKind)), nameof(value)),
         };
 
     /// <summary>

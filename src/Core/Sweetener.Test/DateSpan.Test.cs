@@ -291,6 +291,9 @@ public class DateSpanTest
         Assert.ThrowsException<ArgumentOutOfRangeException>(
             () => addFunc(new DateSpan(new DateTime(1990, 09, 09), 1L), 10, EndpointKind.Start));
 
+        // Invalid Endpoint
+        Assert.ThrowsException<ArgumentException>(() => addFunc(default, 10.7, (EndpointKind)42));
+
         // Normal Use-Cases
         TimeSpan difference;
         DateSpan after;
@@ -354,6 +357,9 @@ public class DateSpanTest
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpan.MaxValue, 5, EndpointKind.End));
         Assert.ThrowsException<ArgumentOutOfRangeException>(
             () => addFunc(new DateSpan(new DateTime(1990, 09, 09), 1L), 10, EndpointKind.Start));
+
+        // Invalid Endpoint
+        Assert.ThrowsException<ArgumentException>(() => addFunc(default, 10, (EndpointKind)42));
 
         // Normal Use-Cases
         DateTime newTime;
