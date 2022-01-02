@@ -49,7 +49,8 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Represents the smallest possible value of <see cref="DateSpan"/>. This field is read-only.
     /// </summary>
     /// <remarks>
-    /// This value is equivalent to the default value for <see cref="DateSpan"/>.
+    /// This value is equivalent to the default value for <see cref="DateSpan"/> and is often
+    /// referred to as the "empty" time interval in documentation.
     /// </remarks>
     public static readonly DateSpan MinValue = new DateSpan(DateTime.MinValue, TimeSpan.Zero);
 
@@ -57,6 +58,11 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Initializes a new instance of the <see cref="DateSpan"/> structure that represents the interval
     /// between the specified <paramref name="start"/> and <paramref name="end"/> times.
     /// </summary>
+    /// <remarks>
+    /// If the interval is empty such that values represented by <paramref name="start"/> and
+    /// <paramref name="end"/> are equivalent, then the resulting <see cref="Start"/> and
+    /// <see cref="End"/> properties are normalized to <see cref="DateTime.MinValue"/>.
+    /// </remarks>
     /// <param name="start">The inclusive start of the interval.</param>
     /// <param name="end">The exclusive end of the interval.</param>
     /// <exception cref="ArgumentException">
@@ -74,7 +80,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         if (duration < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(end), SR.EndBeforeStartMessage);
 
-        Start    = start;
+        Start    = duration == TimeSpan.Zero ? DateTime.MinValue : start;
         Duration = duration;
     }
 
@@ -83,9 +89,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// starting from the given instant of time for the given duration.
     /// </summary>
     /// <remarks>
-    /// If the <paramref name="duration"/> is less than <see cref="TimeSpan.Zero"/>, the value of the
-    /// <see cref="Start"/> property will be shifted such that the resulting value of the <see cref="Duration"/>
-    /// property is positive.
+    /// If the interval is empty such that the value represented by <paramref name="duration"/>
+    /// is <see cref="TimeSpan.Zero"/>, then the resulting <see cref="Start"/> property
+    /// is normalized to <see cref="DateTime.MinValue"/>.
     /// </remarks>
     /// <param name="start">The inclusive start of the interval.</param>
     /// <param name="duration">The length of the interval.</param>
@@ -104,7 +110,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         if (start.Ticks + duration.Ticks > DateTime.MaxValue.Ticks)
             throw new ArgumentOutOfRangeException(nameof(duration), SR.InvalidDateSpanRangeMessage);
 
-        Start    = start;
+        Start    = duration == TimeSpan.Zero ? DateTime.MinValue : start;
         Duration = duration;
     }
 
@@ -113,9 +119,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// starting from the given instant of time for the given duration.
     /// </summary>
     /// <remarks>
-    /// If the <paramref name="durationTicks"/> is less than <c>0</c>, the value of the
-    /// <see cref="Start"/> property will be shifted such that the resulting value of the <see cref="Duration"/>
-    /// property is positive.
+    /// If the interval is empty such that the value represented by <paramref name="durationTicks"/>
+    /// is <c>0</c>, then the resulting <see cref="Start"/> property
+    /// is normalized to <see cref="DateTime.MinValue"/>.
     /// </remarks>
     /// <param name="start">The inclusive start of the interval.</param>
     /// <param name="durationTicks">
@@ -656,9 +662,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// You can do this by comparing the values of their <see cref="Kind"/> properties.
     /// </para>
     /// <para>
-    /// An empty <see cref="DateSpan"/>, whose value of the <see cref="Duration"/> property is
-    /// <see cref="TimeSpan.Zero"/>, is considered within another <see cref="DateSpan"/> instance
-    /// if its start time resides within the interval.
+    /// All time intervals contain the empty interval (represented by <see cref="MinValue"/>).
     /// </para>
     /// </remarks>
     /// <param name="other">Another <see cref="DateSpan"/> instance.</param>
@@ -668,7 +672,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// <see cref="End"/> properties of the current instance; otherwise, <see langword="false"/>.
     /// </returns>
     public bool Contains(DateSpan other)
-        => Contains(Start) && other.End <= End;
+        => other.Duration == TimeSpan.Zero || (other.Start >= Start && other.End <= End);
 
     /// <summary>
     /// Returns a value indicating whether this instance is equal to a specified object.
@@ -722,6 +726,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// </returns>
     public DateSpan IntersectWith(DateSpan other)
     {
+        if (Duration == TimeSpan.Zero || other.Duration == TimeSpan.Zero)
+            return default;
+
         (DateSpan first, DateSpan second) = GetAscendingOrder(this, other);
 
         long maxIntersection = first.End.Ticks - second.Start.Ticks;
@@ -734,10 +741,16 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// Determines whether the current interval overlaps with the specified interval.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The <see cref="Overlaps"/> method does not consider the value of the
     /// <see cref="Kind"/> property of the two <see cref="DateSpan"/> values. Before invoking the method,
     /// ensure that the objects represent intervals in the same time zone. Otherwise, the result will not account
     /// for the difference between time zones.
+    /// </para>
+    /// <para>
+    /// The empty time interval (represented by <see cref="MinValue"/>) does not overlap with
+    /// any other interval.
+    /// </para>
     /// </remarks>
     /// <param name="other">The interval to compare to the current interval.</param>
     /// <returns>
@@ -746,6 +759,9 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// </returns>
     public bool Overlaps(DateSpan other)
     {
+        if (Duration == TimeSpan.Zero || other.Duration == TimeSpan.Zero)
+            return false;
+
         (DateSpan first, DateSpan second) = GetAscendingOrder(this, other);
         return first.Contains(second.Start);
     }
@@ -1312,15 +1328,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         => FromDateTime(value);
 
     private static (DateSpan First, DateSpan Second) GetAscendingOrder(DateSpan x, DateSpan y)
-    {
-        // Order by smallest start followed by largest duration to help with other methods like Overlaps
-        if (x.Start < y.Start)
-            return (x, y);
-        else if (x.Start > y.Start)
-            return (y, x);
-        else if (x.Duration >= y.Duration)
-            return (x, y);
-        else
-            return (y, x);
-    }
+        // Order by smallest start to help with other methods like Overlaps.
+        // If they are equivalent, then the order doesn't matter
+        => x.Start <= y.Start ? (x, y) : (y, x);
 }

@@ -45,10 +45,10 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(expectedStart, expectedStart);
-        Assert.AreEqual(expectedStart   , actual.Start   );
-        Assert.AreEqual(expectedStart   , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero   , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
 
         // Normal Use-Case
         actual = new DateSpan(expectedStart, expectedStart.AddDays(5));
@@ -74,10 +74,10 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(expectedStart, TimeSpan.Zero);
-        Assert.AreEqual(expectedStart   , actual.Start   );
-        Assert.AreEqual(expectedStart   , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero   , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
 
         // Normal Use-Case
         actual = new DateSpan(expectedStart, TimeSpan.FromDays(5));
@@ -101,15 +101,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(expectedStart, 0L);
-        Assert.AreEqual(expectedStart, actual.Start   );
-        Assert.AreEqual(expectedStart, actual.End     );
-        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
 
         // Normal Use-Case
         actual = new DateSpan(expectedStart, 10000);
         Assert.AreEqual(expectedStart                , actual.Start   );
         Assert.AreEqual(expectedStart.AddTicks(10000), actual.End     );
         Assert.AreEqual(TimeSpan.FromTicks(10000)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc             , actual.Kind    );
     }
 
     [TestMethod]
@@ -173,21 +175,14 @@ public class DateSpanTest
     public void Contains_DateSpan()
     {
         // Empty Instance
-        DateSpan empty = new DateSpan(DateTime.UtcNow, 0L);
-
-        Assert.IsFalse(empty.Contains(empty.ShiftHours(-1)));
-        Assert.IsTrue(empty.Contains(empty));
-        Assert.IsFalse(empty.Contains(empty.ShiftHours(1)));
+        Assert.IsTrue (DateSpan.MinValue.Contains(DateSpan.MinValue));
+        Assert.IsFalse(DateSpan.MinValue.Contains(DateSpan.FromYear(2022)));
 
         // Non-Empty Instance
         DateSpan interval = DateSpan.FromMonth(2000, 06);
 
         // Empty Argument
-        Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddDays(-1), 0L)));
-        Assert.IsTrue (interval.Contains(new DateSpan(interval.Start            , 0L)));
-        Assert.IsTrue (interval.Contains(new DateSpan(interval.Start.AddDays(15), 0L)));
-        Assert.IsFalse(interval.Contains(new DateSpan(interval.End              , 0L)));
-        Assert.IsFalse(interval.Contains(new DateSpan(interval.End  .AddDays( 1), 0L)));
+        Assert.IsTrue(interval.Contains(DateSpan.MinValue));
 
         // Moving around the interval
         Assert.IsFalse(interval.Contains(interval.ShiftYears(-1)));
@@ -200,7 +195,7 @@ public class DateSpanTest
         Assert.IsTrue(interval.Contains(DateSpan.FromDay(2000, 06, 15, DateTimeKind.Local)));
 
         // Larger interval
-        Assert.IsTrue(interval.Contains(DateSpan.FromYear(2000, DateTimeKind.Utc)));
+        Assert.IsFalse(interval.Contains(DateSpan.FromYear(2000, DateTimeKind.Utc)));
         Assert.IsFalse(interval.Contains(interval.AddMonths( 1, EndpointKind.End  )));
         Assert.IsFalse(interval.Contains(interval.AddMonths(-1, EndpointKind.Start)));
     }
@@ -430,37 +425,52 @@ public class DateSpanTest
 
     [TestMethod]
     public void IntersectWith()
-    {
-        DateTime utcNow = DateTime.UtcNow;
+        => AssertIntersectionMethod((d1, d2) => d1.IntersectWith(d2), d => d);
 
+    [TestMethod]
+    public void Overlaps()
+        => AssertIntersectionMethod((d1, d2) => d1.Overlaps(d2), d => d != default);
+
+    private static void AssertIntersectionMethod<T>(
+        Func<DateSpan, DateSpan, T> getActual,
+        Func<DateSpan, T> getExpected)
+    {
         // Empty Input
-        Assert.AreEqual(default, DateSpan.FromYear(4000).IntersectWith(default));
-        Assert.AreEqual(default, DateSpan.MinValue      .IntersectWith(DateSpan.FromYear(3000)));
-        Assert.AreEqual(default, DateSpan.MinValue      .IntersectWith(default));
+        AssertSymmetric(default, default, DateSpan.FromYear(4000));
+        Assert.AreEqual(getExpected(default), getActual(default, default));
 
         // Empty Results
-        Assert.AreEqual(default, DateSpan.FromYear(3000)   .IntersectWith(DateSpan.FromDay(2000, 10, 10)));
-        Assert.AreEqual(default, DateSpan.FromDay(10, 9, 8).IntersectWith(DateSpan.FromDay(  10,  9,  9)));
-        Assert.AreEqual(default, DateSpan.FromDay(10, 9, 8).IntersectWith(DateSpan.FromDay(  10,  9,  7)));
+        AssertSymmetric(default, DateSpan.FromMonth(1991, 1), DateSpan.FromMonth(2000, 1));
+        Assert.AreEqual(getExpected(default), getActual(DateSpan.FromDay(10, 9, 8), DateSpan.FromDay(10, 9, 9)));
+        Assert.AreEqual(getExpected(default), getActual(DateSpan.FromDay(10, 9, 8), DateSpan.FromDay(10, 9, 7)));
 
         // Single DateTime
-        Assert.AreEqual(DateSpan.FromDateTime(utcNow), DateSpan.FromMonth(utcNow.Year, utcNow.Month).IntersectWith(DateSpan.FromDateTime(utcNow)));
+        DateTime utcNow = DateTime.UtcNow;
+        AssertSymmetric(
+            DateSpan.FromDateTime(utcNow),
+            DateSpan.FromMonth(utcNow.Year, utcNow.Month),
+            DateSpan.FromDateTime(utcNow));
 
         // Subset
-        Assert.AreEqual(DateSpan.FromMonth(1234, 5), DateSpan.FromMonth(1234, 5).IntersectWith(DateSpan.FromYear(1234)));
+        AssertSymmetric(DateSpan.FromMonth(1234, 5), DateSpan.FromMonth(1234, 5), DateSpan.FromYear(1234));
+
+        // Same Start
+        AssertSymmetric(
+            DateSpan.FromDay(2010, 11, 12),
+            DateSpan.FromDay(2010, 11, 12),
+            new DateSpan(new DateTime(2010, 11, 12), TimeSpan.FromHours(36)));
 
         // Complex Intersection
         DateSpan d1       = DateSpan.FromDay(1456, 7, 8);
         DateSpan d2       = new DateSpan(new DateTime(1456, 7, 8, 9, 0, 0), TimeSpan.FromDays(2));
         DateSpan expected = new DateSpan(new DateTime(1456, 7, 8, 9, 0, 0), TimeSpan.FromHours(15));
-        Assert.AreEqual(expected, d1.IntersectWith(d2));
-        Assert.AreEqual(expected, d2.IntersectWith(d1));
-    }
+        AssertSymmetric(expected, d1, d2);
 
-    [TestMethod]
-    public void Overlaps()
-    {
-
+        void AssertSymmetric(DateSpan expected, DateSpan first, DateSpan second)
+        {
+            Assert.AreEqual(getExpected(expected), getActual(first , second));
+            Assert.AreEqual(getExpected(expected), getActual(second, first ));
+        }
     }
 
     [TestMethod]
