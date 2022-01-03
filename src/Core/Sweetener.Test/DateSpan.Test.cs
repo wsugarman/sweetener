@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Sweetener.Test;
@@ -15,17 +16,122 @@ public class DateSpanTest
         Assert.AreEqual(DateTime.MinValue                    , DateSpan.MaxValue.Start   );
         Assert.AreEqual(DateTime.MaxValue                    , DateSpan.MaxValue.End     );
         Assert.AreEqual(DateTime.MaxValue - DateTime.MinValue, DateSpan.MaxValue.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified             , DateSpan.MaxValue.Kind    );
     }
 
     [TestMethod]
     public void MinValue()
     {
-        Assert.AreEqual(DateTime.MinValue, DateSpan.MinValue.Start   );
-        Assert.AreEqual(DateTime.MinValue, DateSpan.MinValue.End     );
-        Assert.AreEqual(TimeSpan.Zero    , DateSpan.MinValue.Duration);
+        Assert.AreEqual(DateTime.MinValue       , DateSpan.MinValue.Start   );
+        Assert.AreEqual(DateTime.MinValue       , DateSpan.MinValue.End     );
+        Assert.AreEqual(TimeSpan.Zero           , DateSpan.MinValue.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, DateSpan.MinValue.Kind    );
 
         Assert.AreEqual(default, DateSpan.MinValue);
     }
+
+    // For many of the ctor tests, we'll rely on the underlying DateTime ctor to
+    // throw ArgumentOutOfRangeExceptions for invalid years, months, etc.
+
+    [TestMethod]
+    public void Ctor_Seconds()
+    {
+        // Negative Duration
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, -TimeSpan.FromHours(4)));
+
+        // Normal Use-Case
+        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, TimeSpan.FromHours(4));
+        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10), actual.Start   );
+        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)               , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified            , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void Ctor_Seconds_Kind()
+    {
+        // Invalid Kind
+        Assert.ThrowsException<ArgumentException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, (DateTimeKind)100, TimeSpan.FromHours(4)));
+
+        // Negative Duration
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, -TimeSpan.FromHours(4)));
+
+        // Normal Use-Case
+        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, TimeSpan.FromHours(4));
+        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10, DateTimeKind.Local), actual.Start   );
+        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10, DateTimeKind.Local), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)                                   , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local                                      , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void Ctor_Milliseconds()
+    {
+        // Negative Duration
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, 36, -TimeSpan.FromHours(4)));
+
+        // Normal Use-Case
+        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, TimeSpan.FromHours(4));
+        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10, 36), actual.Start   );
+        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10, 36), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)                   , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified                , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void Ctor_Milliseconds_Calendar()
+    {
+        // Null Calendar
+        Assert.ThrowsException<ArgumentNullException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, null!, TimeSpan.FromHours(4)));
+
+        // Negative Duration
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), -TimeSpan.FromHours(4)));
+
+        // Normal Use-Case
+        DateSpan actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.FromHours(4));
+        Assert.AreEqual(new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar()), actual.Start   );
+        Assert.AreEqual(new DateTime(5782, 4, 29, 14, 25, 10, 36, new HebrewCalendar()), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)                                          , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified                                       , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void Ctor_Milliseconds_Kind()
+    {
+        // Invalid Kind
+        Assert.ThrowsException<ArgumentException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, 36, (DateTimeKind)100, TimeSpan.FromHours(4)));
+
+        // Negative Duration
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Local, -TimeSpan.FromHours(4)));
+
+        // Normal Use-Case
+        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc, TimeSpan.FromHours(4));
+        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc), actual.Start   );
+        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10, 36, DateTimeKind.Utc), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)                                     , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc                                          , actual.Kind    );
+    }
+
+    [TestMethod]
+    public void Ctor_Milliseconds_Calendar_Kind()
+    {
+        // Null Calendar
+        Assert.ThrowsException<ArgumentNullException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, null!, DateTimeKind.Utc, TimeSpan.FromHours(4)));
+
+        // Invalid Kind
+        Assert.ThrowsException<ArgumentException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), (DateTimeKind)100, TimeSpan.FromHours(4)));
+
+        // Negative Duration
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, - TimeSpan.FromHours(4)));
+
+        // Normal Use-Case
+        DateSpan actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, TimeSpan.FromHours(4));
+        Assert.AreEqual(new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc), actual.Start   );
+        Assert.AreEqual(new DateTime(5782, 4, 29, 14, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)                                                            , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc                                                                 , actual.Kind    );
+    }
+
 
     [TestMethod]
     public void Ctor_DateTime_DateTime()
@@ -637,68 +743,106 @@ public class DateSpanTest
 
     [TestMethod]
     public void FromDay()
-    {
-        DateSpan actual = DateSpan.FromDay(1981, 02, 03);
-        Assert.AreEqual(new DateTime(1981, 02, 03), actual.Start   );
-        Assert.AreEqual(new DateTime(1981, 02, 04), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(1)      , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified  , actual.Kind    );
-    }
+        => FromDay((y, m, d) => DateSpan.FromDay(y, m, d));
 
     [TestMethod]
     public void FromDay_Kind()
     {
         Assert.ThrowsException<ArgumentException>(() => DateSpan.FromDay(1981, 02, 03, (DateTimeKind)47));
 
-        DateSpan actual = DateSpan.FromDay(1981, 02, 03, DateTimeKind.Local);
-        Assert.AreEqual(new DateTime(1981, 02, 03), actual.Start   );
-        Assert.AreEqual(new DateTime(1981, 02, 04), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(1)      , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local        , actual.Kind    );
+        FromDay((y, m, d) => DateSpan.FromDay(y, m, d, DateTimeKind.Local), kind: DateTimeKind.Local);
+    }
+
+    [TestMethod]
+    public void FromDay_Calendar_Kind()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() => DateSpan.FromDay(1981, 02, 03, null!, (DateTimeKind)47));
+        Assert.ThrowsException<ArgumentException>(() => DateSpan.FromDay(1981, 02, 03, new HebrewCalendar(), (DateTimeKind)47));
+
+        FromDay((y, m, d) => DateSpan.FromDay(y, m, d, new HebrewCalendar(), DateTimeKind.Local), 5782, 4, 10, new HebrewCalendar(), DateTimeKind.Local);
+    }
+
+    private static void FromDay(
+        Func<int, int, int, DateSpan> fromDay,
+        int year = 1981,
+        int month = 02,
+        int day = 03,
+        Calendar? calendar = null,
+        DateTimeKind kind = DateTimeKind.Unspecified)
+    {
+        DateSpan actual = fromDay(year, month, day);
+        DateTime expectedStart = new DateTime(year, month, day, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), kind);
+
+        Assert.AreEqual(expectedStart           , actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(1), actual.End  );
+        Assert.AreEqual(kind                    , actual.Kind );
     }
 
     [TestMethod]
     public void FromMonth()
-    {
-        DateSpan actual = DateSpan.FromMonth(2022, 01);
-        Assert.AreEqual(new DateTime(2022, 01, 01), actual.Start   );
-        Assert.AreEqual(new DateTime(2022, 02, 01), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(31)     , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified  , actual.Kind    );
-    }
+        => FromMonth((y, m) => DateSpan.FromMonth(y, m));
 
     [TestMethod]
     public void FromMonth_Kind()
     {
         Assert.ThrowsException<ArgumentException>(() => DateSpan.FromMonth(2022, 01, (DateTimeKind)47));
 
-        DateSpan actual = DateSpan.FromMonth(2022, 01, DateTimeKind.Local);
-        Assert.AreEqual(new DateTime(2022, 01, 01), actual.Start   );
-        Assert.AreEqual(new DateTime(2022, 02, 01), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(31)     , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local        , actual.Kind    );
+        FromMonth((y, m) => DateSpan.FromMonth(y, m, DateTimeKind.Local), kind: DateTimeKind.Local);
+    }
+
+    [TestMethod]
+    public void FromMonth_Calendar_Kind()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() => DateSpan.FromMonth(2022, 03, null!, DateTimeKind.Local));
+        Assert.ThrowsException<ArgumentException>(() => DateSpan.FromMonth(2022, 03, new HebrewCalendar(), (DateTimeKind)47));
+
+        FromMonth((y, m) => DateSpan.FromMonth(y, m, new HebrewCalendar(), DateTimeKind.Local), 5757, 5, new HebrewCalendar(), DateTimeKind.Local);
+    }
+
+    private static void FromMonth(
+        Func<int, int, DateSpan> fromMonth,
+        int year = 2022,
+        int month = 03,
+        Calendar? calendar = null,
+        DateTimeKind kind = DateTimeKind.Unspecified)
+    {
+        DateSpan actual = fromMonth(year, month);
+        DateTime expectedStart = new DateTime(year, month, 01, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), kind);
+
+        Assert.AreEqual(expectedStart             , actual.Start);
+        Assert.AreEqual(expectedStart.AddMonths(1), actual.End  );
+        Assert.AreEqual(kind                      , actual.Kind );
     }
 
     [TestMethod]
     public void FromYear()
-    {
-        DateSpan actual = DateSpan.FromYear(2010);
-        Assert.AreEqual(new DateTime(2010, 01, 01), actual.Start   );
-        Assert.AreEqual(new DateTime(2011, 01, 01), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(365)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified  , actual.Kind    );
-    }
+        => FromYear(y => DateSpan.FromYear(y));
 
     [TestMethod]
     public void FromYear_Kind()
     {
         Assert.ThrowsException<ArgumentException>(() => DateSpan.FromYear(2010, (DateTimeKind)47));
 
-        DateSpan actual = DateSpan.FromYear(2010, DateTimeKind.Local);
-        Assert.AreEqual(new DateTime(2010, 01, 01), actual.Start   );
-        Assert.AreEqual(new DateTime(2011, 01, 01), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(365)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local        , actual.Kind    );
+        FromYear(y => DateSpan.FromYear(y, DateTimeKind.Local), kind: DateTimeKind.Local);
+    }
+
+    [TestMethod]
+    public void FromYear_Calendar_Kind()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() => DateSpan.FromYear(2010, null!, DateTimeKind.Local));
+        Assert.ThrowsException<ArgumentException>(() => DateSpan.FromYear(2010, new HebrewCalendar(), (DateTimeKind)47));
+
+        FromYear(y => DateSpan.FromYear(y, new HebrewCalendar(), DateTimeKind.Local), 5757, new HebrewCalendar(), DateTimeKind.Local);
+    }
+
+    private static void FromYear(Func<int, DateSpan> fromYear, int year = 2010, Calendar? calendar = null, DateTimeKind kind = DateTimeKind.Unspecified)
+    {
+        DateSpan actual = fromYear(year);
+        DateTime expectedStart = new DateTime(year, 01, 01, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), kind);
+
+        Assert.AreEqual(expectedStart            , actual.Start);
+        Assert.AreEqual(expectedStart.AddYears(1), actual.End  );
+        Assert.AreEqual(kind                     , actual.Kind );
     }
 
     [TestMethod]
