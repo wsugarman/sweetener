@@ -121,7 +121,7 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
     /// </item>
     /// <item>
     /// <description>
-    /// If the value of <see cref="Sweetener.DateSpan.Kind"/> is <see cref="DateTimeKind.Local"/> or
+    /// If the value of <see cref="DateSpan.Kind"/> is <see cref="DateTimeKind.Local"/> or
     /// <see cref="DateTimeKind.Unspecified"/>, the <see cref="Offset"/> property is set equal to the
     /// offset of the local system's current time zone.
     /// </description>
@@ -154,7 +154,7 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
     /// <param name="offset">The time's offset from Coordinated Universal Time (UTC).</param>
     /// <exception cref="ArgumentException">
     /// <para>
-    /// The value of the <see cref="Sweetener.DateSpan.Kind"/> property for the <paramref name="dateSpan"/> parameter
+    /// The value of the <see cref="DateSpan.Kind"/> property for the <paramref name="dateSpan"/> parameter
     /// equals <see cref="DateTimeKind.Utc"/> and <paramref name="offset"/> does not equal <see cref="TimeSpan.Zero"/>.
     /// </para>
     /// <para>-or-</para>
@@ -321,6 +321,45 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
     /// </exception>
     public DateSpanOffset(int startYear, int startMonth, int startDay, int startHour, int startMinute, int startSecond, int startMillisecond, Calendar calendar, TimeSpan offset, TimeSpan duration)
         : this(new DateTimeOffset(startYear, startMonth, startDay, startHour, startMinute, startSecond, startMillisecond, calendar, offset), duration)
+    { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DateSpanOffset"/> using the specified
+    /// starting time, offset, and duration.
+    /// </summary>
+    /// <remarks>
+    /// If the interval is empty such that the value represented by <paramref name="duration"/>
+    /// is <see cref="TimeSpan.Zero"/>, then the resulting <see cref="Start"/> property
+    /// is normalized to <see cref="DateTimeOffset.MinValue"/>.
+    /// </remarks>
+    /// <param name="start">The inclusive start of the interval.</param>
+    /// <param name="offset">The offset from Coordinated Universal Time (UTC) for the start and end.</param>
+    /// <param name="duration">The length of the interval.</param>
+    /// <exception cref="ArgumentException">
+    /// <para>
+    /// The value of the <see cref="DateSpan.Kind"/> property for the <paramref name="start"/> parameter
+    /// equals <see cref="DateTimeKind.Utc"/> and <paramref name="offset"/> does not equal <see cref="TimeSpan.Zero"/>.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The value of the <see cref="Sweetener.DateSpan.Kind"/> property for the <paramref name="start"/> parameter
+    /// equals <see cref="DateTimeKind.Local"/> and duration represented by the <paramref name="offset"/>
+    /// parameter does not equal the offset of the system's local time zone.
+    /// </para>
+    /// <para>-or-</para>
+    /// <para><paramref name="offset"/> is not specified in whole minutes.</para>
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <para><paramref name="offset"/> is less than -14 hours or greater than 14 hours.</para>
+    /// <para>-or-</para>
+    /// <para>
+    /// The resulting value for the <see cref="Start"/> or <see cref="End"/> property is less than
+    /// <see cref="DateTime.MinValue"/> or greater than <see cref="DateTime.MaxValue"/> when converted
+    /// to Coordinated Universal Time (UTC) via the <see cref="DateTimeOffset.UtcDateTime"/> property.
+    /// </para>
+    /// </exception>
+    public DateSpanOffset(DateTime start, TimeSpan offset, TimeSpan duration)
+        : this(new DateTimeOffset(start, offset), duration)
     { }
 
     /// <summary>
@@ -974,7 +1013,14 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
     /// this <see cref="DateSpanOffset"/> instance with the <paramref name="other"/> instance.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This method compares <see cref="DateSpanOffset"/> objects by comparing their <see cref="UtcDateSpan"/> values.
+    /// </para>
+    /// <para>
+    /// In the event that the current instance and the <paramref name="other"/> instance have different
+    /// offsets from Coordinated Universal Time (UTC), the resulting value, if not empty,
+    /// uses the value of the offset from the later <see cref="DateSpanOffset"/> instance.
+    /// </para>
     /// </remarks>
     /// <param name="other">The <see cref="DateSpanOffset"/> to compare to the current interval.</param>
     /// <returns>
@@ -987,7 +1033,7 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
 
         (DateSpanOffset first, DateSpanOffset second) = GetAscendingOrder(this, other);
 
-        long maxIntersection = first.End.Ticks - second.Start.Ticks;
+        long maxIntersection = (first.End - second.Start).Ticks;
         return maxIntersection > 0
             ? new DateSpanOffset(second.Start, Math.Min(second.Duration.Ticks, maxIntersection))
             : default;
