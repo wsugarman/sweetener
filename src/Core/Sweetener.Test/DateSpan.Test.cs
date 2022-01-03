@@ -39,12 +39,22 @@ public class DateSpanTest
         // Negative Duration
         Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, -TimeSpan.FromHours(4)));
 
+        DateSpan actual;
+        DateTime expectedStart = new DateTime(2020, 1, 2, 10, 25, 10);
+
+        // Empty
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, TimeSpan.Zero);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+
         // Normal Use-Case
-        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, TimeSpan.FromHours(4));
-        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10), actual.Start   );
-        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)               , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified            , actual.Kind    );
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, TimeSpan.FromHours(4));
+        Assert.AreEqual(expectedStart            , actual.Start   );
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified , actual.Kind    );
     }
 
     [TestMethod]
@@ -56,12 +66,22 @@ public class DateSpanTest
         // Negative Duration
         Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, -TimeSpan.FromHours(4)));
 
+        DateSpan actual;
+        DateTime expectedStart = new DateTime(2020, 1, 2, 10, 25, 10, DateTimeKind.Local);
+
+        // Empty
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, TimeSpan.Zero);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+
         // Normal Use-Case
-        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, TimeSpan.FromHours(4));
-        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10, DateTimeKind.Local), actual.Start   );
-        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10, DateTimeKind.Local), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)                                   , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local                                      , actual.Kind    );
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, TimeSpan.FromHours(4));
+        Assert.AreEqual(expectedStart            , actual.Start   );
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local       , actual.Kind    );
     }
 
     [TestMethod]
@@ -70,12 +90,22 @@ public class DateSpanTest
         // Negative Duration
         Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, 36, -TimeSpan.FromHours(4)));
 
+        DateSpan actual;
+        DateTime expectedStart = new DateTime(2020, 1, 2, 10, 25, 10, 36);
+
+        // Empty
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, TimeSpan.Zero);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+
         // Normal Use-Case
-        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, TimeSpan.FromHours(4));
-        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10, 36), actual.Start   );
-        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10, 36), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)                   , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified                , actual.Kind    );
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, TimeSpan.FromHours(4));
+        Assert.AreEqual(expectedStart            , actual.Start   );
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified , actual.Kind    );
     }
 
     [TestMethod]
@@ -87,12 +117,22 @@ public class DateSpanTest
         // Negative Duration
         Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), -TimeSpan.FromHours(4)));
 
+        DateSpan actual;
+        DateTime expectedStart = new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar());
+
+        // Empty
+        actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.Zero);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+
         // Normal Use-Case
-        DateSpan actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.FromHours(4));
-        Assert.AreEqual(new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar()), actual.Start   );
-        Assert.AreEqual(new DateTime(5782, 4, 29, 14, 25, 10, 36, new HebrewCalendar()), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)                                          , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified                                       , actual.Kind    );
+        actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.FromHours(4));
+        Assert.AreEqual(expectedStart            , actual.Start   );
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified , actual.Kind    );
     }
 
     [TestMethod]
@@ -104,12 +144,22 @@ public class DateSpanTest
         // Negative Duration
         Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Local, -TimeSpan.FromHours(4)));
 
+        DateSpan actual;
+        DateTime expectedStart = new DateTime(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc);
+
+        // Empty
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc, TimeSpan.Zero);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+
         // Normal Use-Case
-        DateSpan actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc, TimeSpan.FromHours(4));
-        Assert.AreEqual(new DateTime(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc), actual.Start   );
-        Assert.AreEqual(new DateTime(2020, 1, 2, 14, 25, 10, 36, DateTimeKind.Utc), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)                                     , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc                                          , actual.Kind    );
+        actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc, TimeSpan.FromHours(4));
+        Assert.AreEqual(expectedStart            , actual.Start   );
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc         , actual.Kind    );
     }
 
     [TestMethod]
@@ -124,14 +174,23 @@ public class DateSpanTest
         // Negative Duration
         Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, - TimeSpan.FromHours(4)));
 
-        // Normal Use-Case
-        DateSpan actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, TimeSpan.FromHours(4));
-        Assert.AreEqual(new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc), actual.Start   );
-        Assert.AreEqual(new DateTime(5782, 4, 29, 14, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)                                                            , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc                                                                 , actual.Kind    );
-    }
+        DateSpan actual;
+        DateTime expectedStart = new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc);
 
+        // Empty
+        actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, TimeSpan.Zero);
+        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
+        Assert.AreEqual(DateTime.MinValue       , actual.End     );
+        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+
+        // Normal Use-Case
+        actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, TimeSpan.FromHours(4));
+        Assert.AreEqual(expectedStart            , actual.Start   );
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
+        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc         , actual.Kind    );
+    }
 
     [TestMethod]
     public void Ctor_DateTime_DateTime()
