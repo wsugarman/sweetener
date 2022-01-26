@@ -9,35 +9,35 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Sweetener.Test;
 
 [TestClass]
-public class ArgumentNullOrEmptyExceptionTest
+public class ArgumentWhiteSpaceExceptionTest
 {
     [TestMethod]
     public void Ctor()
     {
-        ArgumentNullOrEmptyException exception = new ArgumentNullOrEmptyException();
+        ArgumentWhiteSpaceException exception = new ArgumentWhiteSpaceException();
 
-        Assert.AreEqual(null                         , exception.InnerException);
-        Assert.AreEqual(SR.ArgumentNullOrEmptyMessage, exception.Message       );
-        Assert.AreEqual(null                         , exception.ParamName     );
+        Assert.AreEqual(null                        , exception.InnerException);
+        Assert.AreEqual(SR.ArgumentWhiteSpaceMessage, exception.Message       );
+        Assert.AreEqual(null                        , exception.ParamName     );
     }
 
     [TestMethod]
     public void Ctor_ParameterName()
     {
-        ArgumentNullOrEmptyException exception = new ArgumentNullOrEmptyException("parameter1");
+        ArgumentWhiteSpaceException exception = new ArgumentWhiteSpaceException("parameter1");
 
         Assert.AreEqual(null        , exception.InnerException);
         Assert.AreEqual("parameter1", exception.ParamName     );
 
         // There will be an additional line concerning the parameter name
-        Assert.IsTrue(exception.Message.StartsWith(SR.ArgumentNullOrEmptyMessage, StringComparison.Ordinal));
+        Assert.IsTrue(exception.Message.StartsWith(SR.ArgumentWhiteSpaceMessage, StringComparison.Ordinal));
     }
 
     [TestMethod]
     public void Ctor_Message_InnerException()
     {
         Exception innerException = new FormatException();
-        ArgumentNullOrEmptyException exception = new ArgumentNullOrEmptyException("Hello World", innerException);
+        ArgumentWhiteSpaceException exception = new ArgumentWhiteSpaceException("Hello World", innerException);
 
         Assert.AreSame (innerException, exception.InnerException);
         Assert.AreEqual("Hello World" , exception.Message       );
@@ -47,7 +47,7 @@ public class ArgumentNullOrEmptyExceptionTest
     [TestMethod]
     public void Ctor_ParameterName_Message()
     {
-        ArgumentNullOrEmptyException exception = new ArgumentNullOrEmptyException("parameter1", "Hello World");
+        ArgumentWhiteSpaceException exception = new ArgumentWhiteSpaceException("parameter1", "Hello World");
 
         Assert.AreEqual(null        , exception.InnerException);
         Assert.AreEqual("parameter1", exception.ParamName     );
@@ -60,8 +60,8 @@ public class ArgumentNullOrEmptyExceptionTest
     [TestMethod]
     public void Ctor_SerializationInfo_StreamingContext()
     {
-        ArgumentNullOrEmptyException? after;
-        ArgumentNullOrEmptyException before = new ArgumentNullOrEmptyException("parameter1", "Hello World");
+        ArgumentWhiteSpaceException? after;
+        ArgumentWhiteSpaceException before = new ArgumentWhiteSpaceException("parameter1", "Hello World");
 
         using (MemoryStream buffer = new MemoryStream())
         {
@@ -73,7 +73,7 @@ public class ArgumentNullOrEmptyExceptionTest
 
             buffer.Seek(0, SeekOrigin.Begin);
 
-            after = formatter.Deserialize(buffer) as ArgumentNullOrEmptyException;
+            after = formatter.Deserialize(buffer) as ArgumentWhiteSpaceException;
 #pragma warning restore CA2300, CA2301, SYSLIB0011
         }
 

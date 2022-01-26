@@ -7,33 +7,33 @@ using System.Runtime.Serialization;
 namespace Sweetener;
 
 /// <summary>
-/// The exception that is thrown when the value of an argument is <see langword="null"/> or empty.
+/// The exception that is thrown when the value of an argument is empty.
 /// </summary>
 [Serializable]
-public class ArgumentNullOrEmptyException : ArgumentException
+public class ArgumentEmptyException : ArgumentException
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class.
+    /// Initializes a new instance of the <see cref="ArgumentEmptyException"/> class.
     /// </summary>
     /// <remarks>
     /// This constructor initializes the <see cref="Exception.Message"/> property of
     /// the new instance to a system-supplied message that describes the error,
-    /// such as "Value cannot be null or empty." This message takes into account the current
+    /// such as "Value cannot be empty." This message takes into account the current
     /// system culture.
     /// </remarks>
-    public ArgumentNullOrEmptyException()
+    public ArgumentEmptyException()
         : this(paramName: null)
     { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
+    /// Initializes a new instance of the <see cref="ArgumentEmptyException"/> class
     /// with the name of the parameter that causes this exception.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This constructor initializes the <see cref="Exception.Message"/> property of the
     /// new instance to a system-supplied message that describes the error, such as
-    /// "Value cannot be null or empty." This message takes into account the current system culture.
+    /// "Value cannot be empty." This message takes into account the current system culture.
     /// </para>
     /// <para>
     /// This constructor initializes the <see cref="ArgumentException.ParamName"/> property
@@ -42,12 +42,12 @@ public class ArgumentNullOrEmptyException : ArgumentException
     /// </para>
     /// </remarks>
     /// <param name="paramName">The name of the parameter that causes this exception.</param>
-    public ArgumentNullOrEmptyException(string? paramName)
-        : base(SR.ArgumentNullOrEmptyMessage, paramName)
+    public ArgumentEmptyException(string? paramName)
+        : base(SR.ArgumentEmptyMessage, paramName)
     { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
+    /// Initializes a new instance of the <see cref="ArgumentEmptyException"/> class
     /// with a specified error message and the exception that is the cause of this exception.
     /// </summary>
     /// <remarks>
@@ -72,12 +72,12 @@ public class ArgumentNullOrEmptyException : ArgumentException
     /// The exception that is the cause of the current exception, or <see langword="null"/>
     /// if no inner exception is specified.
     /// </param>
-    public ArgumentNullOrEmptyException(string? message, Exception? innerException)
+    public ArgumentEmptyException(string? message, Exception? innerException)
         : base(message, innerException)
     { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
+    /// Initializes a new instance of the <see cref="ArgumentEmptyException"/> class
     /// with the name of the parameter that causes this exception and a specified error message.
     /// </summary>
     /// <remarks>
@@ -96,12 +96,12 @@ public class ArgumentNullOrEmptyException : ArgumentException
     /// </remarks>
     /// <param name="paramName">The name of the parameter that caused the exception.</param>
     /// <param name="message">The message that describes the error.</param>
-    public ArgumentNullOrEmptyException(string? paramName, string? message)
+    public ArgumentEmptyException(string? paramName, string? message)
         : base(message, paramName)
     { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ArgumentNullOrEmptyException"/> class
+    /// Initializes a new instance of the <see cref="ArgumentEmptyException"/> class
     /// with serialized data.
     /// </summary>
     /// <remarks>
@@ -111,7 +111,7 @@ public class ArgumentNullOrEmptyException : ArgumentException
     /// </remarks>
     /// <param name="info">The object that holds the serialized object data.</param>
     /// <param name="context">An object that describes the source or destination of the serialized data.</param>
-    protected ArgumentNullOrEmptyException(SerializationInfo info, StreamingContext context)
+    protected ArgumentEmptyException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     { }
 }

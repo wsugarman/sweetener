@@ -10,9 +10,9 @@ internal static class SR
 {
     public static string ArgumentNegativeMessage => ExceptionResourceManager.GetString(nameof(ArgumentNegativeMessage), CultureInfo.CurrentUICulture);
 
-    public static string ArgumentNullOrEmptyMessage => ExceptionResourceManager.GetString(nameof(ArgumentNullOrEmptyMessage), CultureInfo.CurrentUICulture);
+    public static string ArgumentEmptyMessage => ExceptionResourceManager.GetString(nameof(ArgumentEmptyMessage), CultureInfo.CurrentUICulture);
 
-    public static string ArgumentNullOrWhiteSpaceMessage => ExceptionResourceManager.GetString(nameof(ArgumentNullOrWhiteSpaceMessage), CultureInfo.CurrentUICulture);
+    public static string ArgumentWhiteSpaceMessage => ExceptionResourceManager.GetString(nameof(ArgumentWhiteSpaceMessage), CultureInfo.CurrentUICulture);
 
     public static string MissingOptionalValueMessage => ExceptionResourceManager.GetString(nameof(MissingOptionalValueMessage), CultureInfo.CurrentUICulture);
 
