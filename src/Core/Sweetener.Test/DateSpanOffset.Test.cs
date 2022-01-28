@@ -37,7 +37,7 @@ public class DateSpanOffsetTest
 
         // Non-Utc
         actual = new DateSpanOffset(interval, TimeSpan.FromHours(5));
-        Assert.AreEqual(interval.ShiftHours(-5), actual.UtcDateSpan);
+        Assert.AreEqual(new DateSpan(interval.Start.AddHours(-5), interval.Duration), actual.UtcDateSpan);
 
         // Utc
         actual = new DateSpanOffset(interval, TimeSpan.Zero);
@@ -45,23 +45,14 @@ public class DateSpanOffsetTest
     }
 
     [TestMethod]
-    public void MaxValue()
+    public void Empty()
     {
-        Assert.AreEqual(DateTimeOffset.MinValue                          , DateSpanOffset.MaxValue.Start   );
-        Assert.AreEqual(DateTimeOffset.MaxValue                          , DateSpanOffset.MaxValue.End     );
-        Assert.AreEqual(DateTimeOffset.MaxValue - DateTimeOffset.MinValue, DateSpanOffset.MaxValue.Duration);
-        Assert.AreEqual(TimeSpan.Zero                                    , DateSpanOffset.MaxValue.Offset  );
-    }
+        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.Empty.Start   );
+        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.Empty.End     );
+        Assert.AreEqual(TimeSpan.Zero          , DateSpanOffset.Empty.Duration);
+        Assert.AreEqual(TimeSpan.Zero          , DateSpanOffset.Empty.Offset  );
 
-    [TestMethod]
-    public void MinValue()
-    {
-        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.MinValue.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.MinValue.End     );
-        Assert.AreEqual(TimeSpan.Zero          , DateSpanOffset.MinValue.Duration);
-        Assert.AreEqual(TimeSpan.Zero          , DateSpanOffset.MaxValue.Offset  );
-
-        Assert.AreEqual(default, DateSpanOffset.MinValue);
+        Assert.AreEqual(default, DateSpanOffset.Empty);
     }
 
     // For many of the ctor tests, we'll rely on the underlying DateTimeOffset ctor to
@@ -320,9 +311,9 @@ public class DateSpanOffsetTest
     public void CompareTo_Object()
     {
         // Wrong Type
-        Assert.ThrowsException<ArgumentException>(() => DateSpanOffset.MinValue.CompareTo("hello world"));
+        Assert.ThrowsException<ArgumentException>(() => DateSpanOffset.Empty.CompareTo("hello world"));
 
-        Assert.AreEqual(1, DateSpanOffset.MinValue.CompareTo(null!));
+        Assert.AreEqual(1, DateSpanOffset.Empty.CompareTo(null!));
         CompareTo((d1, d2) => d1.CompareTo((object)d2));
     }
 
@@ -361,7 +352,7 @@ public class DateSpanOffsetTest
         DateSpanOffset interval = DateSpanOffset.FromMonth(1000, 10, TimeSpan.Zero);
 
         // False
-        Assert.IsFalse(DateSpanOffset.MinValue.Contains(DateTimeOffset.UtcNow));
+        Assert.IsFalse(DateSpanOffset.Empty.Contains(DateTimeOffset.UtcNow));
         Assert.IsFalse(interval.Contains(DateTimeOffset.MinValue));
         Assert.IsFalse(interval.Contains(new DateTimeOffset( 900,  4, 16, 0, 0, 0, TimeSpan.FromHours( 1))));
         Assert.IsFalse(interval.Contains(new DateTimeOffset(1000, 10,  1, 0, 0, 0, TimeSpan.FromHours( 1))));
@@ -379,30 +370,30 @@ public class DateSpanOffsetTest
     public void Contains_DateSpan()
     {
         // Empty Instance
-        Assert.IsTrue (DateSpanOffset.MinValue.Contains(DateSpanOffset.MinValue));
-        Assert.IsFalse(DateSpanOffset.MinValue.Contains(DateSpanOffset.FromYear(2022, TimeSpan.Zero)));
+        Assert.IsTrue (DateSpanOffset.Empty.Contains(DateSpanOffset.Empty));
+        Assert.IsFalse(DateSpanOffset.Empty.Contains(DateSpanOffset.FromYear(2022, TimeSpan.Zero)));
 
         // Non-Empty Instance
         DateSpanOffset interval = DateSpanOffset.FromMonth(2000, 06, TimeSpan.Zero);
 
         // Empty Argument
-        Assert.IsTrue(interval.Contains(DateSpanOffset.MinValue));
+        Assert.IsTrue(interval.Contains(DateSpanOffset.Empty));
 
         // Moving around the interval
-        Assert.IsFalse(interval.Contains(interval.ShiftYears(-1)));
-        Assert.IsFalse(interval.Contains(interval.ShiftDays(-15)));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddYears(-1), interval.Duration)));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddDays(-15), interval.Duration)));
         Assert.IsFalse(interval.Contains(DateSpanOffset.FromMonth(2000, 06, TimeSpan.FromHours(5))));
         Assert.IsTrue (interval.Contains(interval));
-        Assert.IsFalse(interval.Contains(interval.ShiftDays(15)));
-        Assert.IsFalse(interval.Contains(interval.ShiftYears(1)));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddDays(15), interval.Duration)));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddYears(1), interval.Duration)));
 
         // Smaller interval
         Assert.IsTrue(interval.Contains(DateSpanOffset.FromDay(2000, 06, 15, TimeSpan.FromHours(1))));
 
         // Larger interval
         Assert.IsFalse(interval.Contains(DateSpanOffset.FromYear(2000, TimeSpan.FromHours(2))));
-        Assert.IsFalse(interval.Contains(interval.AddMonths( 1, EndpointKind.End  )));
-        Assert.IsFalse(interval.Contains(interval.AddMonths(-1, EndpointKind.Start)));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start              , interval.End.AddMonths( 1))));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddMonths(-1), interval.End              )));
     }
 
     [TestMethod]
@@ -435,186 +426,6 @@ public class DateSpanOffsetTest
         Assert.IsFalse(equals(
             new DateSpanOffset(2000, 1, 2, 3, 4, 5, 6, TimeSpan.Zero        , TimeSpan.FromHours(1)),
             new DateSpanOffset(2000, 1, 2, 3, 4, 5, 6, TimeSpan.FromHours(1), TimeSpan.FromHours(1))));
-    }
-
-    [TestMethod]
-    public void Add()
-        => Add((d, v, k) => d.Add(TimeSpan.FromHours(3) * v, k), (s, v) => s.AddHours(3 * v));
-
-    [TestMethod]
-    public void AddDays()
-        => Add((d, f, k) => d.AddDays(f, k), TimeSpan.FromDays(1));
-
-    [TestMethod]
-    public void AddHours()
-        => Add((d, f, k) => d.AddHours(f, k), TimeSpan.FromHours(1));
-
-    [TestMethod]
-    public void AddMilliseconds() // Avoid issues rounding in DateTimeOffset.AddMilliseconds(double)
-        => Add((d, f, k) => d.AddMilliseconds(100 * f, k), TimeSpan.FromMilliseconds(100));
-
-    [TestMethod]
-    public void AddMinutes()
-        => Add((d, f, k) => d.AddMinutes(f, k), TimeSpan.FromMinutes(1));
-
-    [TestMethod]
-    public void AddMonths()
-        => Add((d, v, k) => d.AddMonths(v, k), (s, v) => s.AddMonths(v));
-
-    [TestMethod]
-    public void AddSeconds()
-        => Add((d, f, k) => d.AddSeconds(f, k), TimeSpan.FromSeconds(1));
-
-    [TestMethod]
-    public void AddTicks()
-        => Add((d, v, k) => d.AddTicks(v, k), (s, v) => s.AddTicks(v));
-
-    [TestMethod]
-    public void AddYears()
-        => Add((d, v, k) => d.AddYears(v, k), (s, v) => s.AddYears(v));
-
-    private static void Add(Func<DateSpanOffset, double, EndpointKind, DateSpanOffset> addFunc, TimeSpan unit)
-    {
-        // Negative Infinity
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(DateTimeOffset.Now, 1000), double.NegativeInfinity, EndpointKind.Start));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(DateTimeOffset.Now, 1000), double.NegativeInfinity, EndpointKind.End));
-
-        // Positive Infinity
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(DateTimeOffset.Now, 1000), double.PositiveInfinity, EndpointKind.Start));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(DateTimeOffset.Now, 1000), double.PositiveInfinity, EndpointKind.End));
-
-        // Too Small
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpanOffset.MinValue, -12.3, EndpointKind.Start));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpanOffset.MinValue, -12.3, EndpointKind.End  ));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(new DateTimeOffset(1990, 09, 09, 0, 0, 0, TimeSpan.Zero), 1L), -10, EndpointKind.End));
-
-        // Too Large
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(new DateSpanOffset(DateTimeOffset.MaxValue, 0L), 5.9, EndpointKind.Start));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpanOffset.MaxValue, 5.9, EndpointKind.End));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(new DateTimeOffset(1990, 09, 09, 0, 0, 0, TimeSpan.Zero), 1L), 10, EndpointKind.Start));
-
-        // Invalid Endpoint
-        Assert.ThrowsException<ArgumentException>(() => addFunc(default, 10.7, (EndpointKind)42));
-
-        // Normal Use-Cases
-        TimeSpan difference;
-        DateSpanOffset after;
-        DateSpanOffset before = new DateSpanOffset(
-            new DateTimeOffset(1991, 10, 12, 13, 14, 15, TimeSpan.FromHours(-4)),
-            unit * 100);
-
-        #region Start
-
-        // Increase
-        after = addFunc(before, 2.5, EndpointKind.Start);
-        difference = unit * 2.5;
-        Assert.AreEqual(before.Start    + difference, after.Start   );
-        Assert.AreEqual(before.End                  , after.End     );
-        Assert.AreEqual(before.Duration - difference, after.Duration);
-        Assert.AreEqual(before.Offset               , after.Offset  );
-
-        // Decrease
-        after = addFunc(before, -37.1, EndpointKind.Start);
-        difference = unit * -37.1;
-        Assert.AreEqual(before.Start    + difference, after.Start   );
-        Assert.AreEqual(before.End                  , after.End     );
-        Assert.AreEqual(before.Duration - difference, after.Duration);
-        Assert.AreEqual(before.Offset               , after.Offset  );
-
-        #endregion
-
-        #region End
-
-        // Increase
-        after = addFunc(before, 2.5, EndpointKind.End);
-        difference = unit * 2.5;
-        Assert.AreEqual(before.Start                , after.Start   );
-        Assert.AreEqual(before.End      + difference, after.End     );
-        Assert.AreEqual(before.Duration + difference, after.Duration);
-        Assert.AreEqual(before.Offset               , after.Offset  );
-
-        // Decrease
-        after = addFunc(before, -37.1, EndpointKind.End);
-        difference = unit * -37.1;
-        Assert.AreEqual(before.Start                , after.Start   );
-        Assert.AreEqual(before.End      + difference, after.End     );
-        Assert.AreEqual(before.Duration + difference, after.Duration);
-        Assert.AreEqual(before.Offset               , after.Offset  );
-
-        #endregion
-    }
-
-    private static void Add(
-        Func<DateSpanOffset, int, EndpointKind, DateSpanOffset> addFunc,
-        Func<DateTimeOffset, int, DateTimeOffset> addTimeFunc)
-    {
-        // Too Small
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpanOffset.MinValue, -12, EndpointKind.Start));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpanOffset.MinValue, -12, EndpointKind.End  ));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(new DateTimeOffset(1990, 09, 09, 0, 0, 0, TimeSpan.Zero), 1L), -10, EndpointKind.End));
-
-        // Too Large
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(new DateSpanOffset(DateTimeOffset.MaxValue, 0L), 5, EndpointKind.Start));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => addFunc(DateSpanOffset.MaxValue, 5, EndpointKind.End));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => addFunc(new DateSpanOffset(new DateTimeOffset(1990, 09, 09, 0, 0, 0, TimeSpan.Zero), 1L), 10, EndpointKind.Start));
-
-        // Invalid Endpoint
-        Assert.ThrowsException<ArgumentException>(() => addFunc(default, 10, (EndpointKind)42));
-
-        // Normal Use-Cases
-        DateTimeOffset newTime;
-        DateTimeOffset start = new DateTimeOffset(1991, 10, 12, 13, 14, 15, TimeSpan.FromHours(7));
-
-        DateSpanOffset after;
-        DateSpanOffset before = new DateSpanOffset(start, addTimeFunc(start, 50));
-
-        #region End
-
-        // Increase
-        after = addFunc(before, 2, EndpointKind.Start);
-        newTime = addTimeFunc(before.Start, 2);
-        Assert.AreEqual(newTime             , after.Start   );
-        Assert.AreEqual(before.End          , after.End     );
-        Assert.AreEqual(before.End - newTime, after.Duration);
-        Assert.AreEqual(before.Offset       , after.Offset  );
-
-        // Decrease
-        after = addFunc(before, -37, EndpointKind.Start);
-        newTime = addTimeFunc(before.Start, -37);
-        Assert.AreEqual(newTime             , after.Start   );
-        Assert.AreEqual(before.End          , after.End     );
-        Assert.AreEqual(before.End - newTime, after.Duration);
-        Assert.AreEqual(before.Offset       , after.Offset  );
-
-        #endregion
-
-        #region End
-
-        // Increase
-        after = addFunc(before, 2, EndpointKind.End);
-        newTime = addTimeFunc(before.End, 2);
-        Assert.AreEqual(before.Start          , after.Start   );
-        Assert.AreEqual(newTime               , after.End     );
-        Assert.AreEqual(newTime - before.Start, after.Duration);
-        Assert.AreEqual(before.Offset         , after.Offset  );
-
-        // Decrease
-        after = addFunc(before, -37, EndpointKind.End);
-        newTime = addTimeFunc(before.End, -37);
-        Assert.AreEqual(before.Start          , after.Start   );
-        Assert.AreEqual(newTime               , after.End     );
-        Assert.AreEqual(newTime - before.Start, after.Duration);
-        Assert.AreEqual(before.Offset         , after.Offset  );
-
-        #endregion
     }
 
     [TestMethod]
@@ -697,114 +508,6 @@ public class DateSpanOffsetTest
     [TestMethod]
     public void LessThanOrEqualOperator()
         => CompareTo((d1, d2) => d1 <= d2, true, true, false);
-
-    [TestMethod]
-    public void Shift()
-        => Shift((d, v) => d.Shift(TimeSpan.FromMinutes(150) * v), (s, v) => s.AddMinutes(150 * v));
-
-    [TestMethod]
-    public void ShiftDays()
-        => Shift((d, f) => d.ShiftDays(f), TimeSpan.FromDays(1));
-
-    [TestMethod]
-    public void ShiftHours()
-        => Shift((d, f) => d.ShiftHours(f), TimeSpan.FromHours(1));
-
-    [TestMethod]
-    public void ShiftMilliseconds() // Avoid issues rounding in DateTimeOffset.AddMilliseconds(double)
-        => Shift((d, f) => d.ShiftMilliseconds(100 * f), TimeSpan.FromMilliseconds(100));
-
-    [TestMethod]
-    public void ShiftMinutes()
-        => Shift((d, f) => d.ShiftMinutes(f), TimeSpan.FromMinutes(1));
-
-    [TestMethod]
-    public void ShiftMonths()
-        => Shift((d, v) => d.ShiftMonths(v), (s, v) => s.AddMonths(v));
-
-    [TestMethod]
-    public void ShiftSeconds()
-        => Shift((d, f) => d.ShiftSeconds(f), TimeSpan.FromSeconds(1));
-
-    [TestMethod]
-    public void ShiftTicks()
-        => Shift((d, v) => d.ShiftTicks(v), (s, v) => s.AddTicks(v));
-
-    [TestMethod]
-    public void ShiftYears()
-        => Shift((d, v) => d.ShiftYears(v), (s, v) => s.AddYears(v));
-
-    private static void Shift(Func<DateSpanOffset, double, DateSpanOffset> extend, TimeSpan unit)
-    {
-        // Negative Infinity
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => extend(new DateSpanOffset(DateTimeOffset.Now, 1000), double.NegativeInfinity));
-
-        // Positive Infinity
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => extend(new DateSpanOffset(DateTimeOffset.Now, 1000), double.PositiveInfinity));
-
-        // Too Small
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpanOffset.MinValue, -12));
-
-        // Too Large
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpanOffset.MaxValue, 5));
-
-        // Normal Use-Cases
-        TimeSpan difference;
-        DateSpanOffset after;
-        DateSpanOffset before = new DateSpanOffset(
-            new DateTimeOffset(1991, 10, 12, 13, 14, 15, TimeSpan.FromHours(3)),
-            unit * 100);
-
-        // Increase
-        after = extend(before, 10.6);
-        difference = unit * 10.6;
-        Assert.AreEqual(before.Start                   + difference, after.Start   );
-        Assert.AreEqual(before.Start + before.Duration + difference, after.End     );
-        Assert.AreEqual(before.Duration                            , after.Duration);
-        Assert.AreEqual(TimeSpan.FromHours(3)                      , after.Offset  );
-
-        // Decrease
-        after = extend(before, -8.2);
-        difference = unit * -8.2;
-        Assert.AreEqual(before.Start                   + difference, after.Start   );
-        Assert.AreEqual(before.Start + before.Duration + difference, after.End     );
-        Assert.AreEqual(before.Duration                            , after.Duration);
-        Assert.AreEqual(TimeSpan.FromHours(3)                      , after.Offset  );
-    }
-
-    private static void Shift(Func<DateSpanOffset, int, DateSpanOffset> extend, Func<DateTimeOffset, int, DateTimeOffset> addFunc)
-    {
-        // Too Small
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpanOffset.MinValue, -12));
-
-        // Too Large
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => extend(DateSpanOffset.MaxValue, 5));
-
-        // Normal Use-Cases
-        DateTimeOffset newStart;
-        DateTimeOffset start = new DateTimeOffset(1991, 10, 12, 13, 14, 15, TimeSpan.FromHours(3));
-
-        DateSpanOffset after;
-        DateSpanOffset before = new DateSpanOffset(start, addFunc(start, 50));
-
-        // Increase
-        after = extend(before, 10);
-        newStart = addFunc(before.Start, 10);
-        Assert.AreEqual(newStart                     , after.Start   );
-        Assert.AreEqual(newStart.Add(before.Duration), after.End     );
-        Assert.AreEqual(before.Duration              , after.Duration);
-        Assert.AreEqual(TimeSpan.FromHours(3)        , after.Offset  );
-
-        // Decrease
-        after = extend(before, -8);
-        newStart = addFunc(before.Start, -8);
-        Assert.AreEqual(newStart                     , after.Start   );
-        Assert.AreEqual(newStart.Add(before.Duration), after.End     );
-        Assert.AreEqual(before.Duration              , after.Duration);
-        Assert.AreEqual(TimeSpan.FromHours(3)        , after.Offset  );
-    }
 
     [TestMethod]
     public void ImpicitDateSpanCast()
