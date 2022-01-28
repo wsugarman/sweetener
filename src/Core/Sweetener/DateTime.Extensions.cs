@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Sweetener.Extensions;
+namespace Sweetener;
 
 /// <summary>
 /// Provides a set of additional methods for <see cref="DateTime"/> structures.
