@@ -10,7 +10,7 @@ namespace Sweetener;
 /// Represents an interval between two instants in time, each expressed as a date and time of day.
 /// </summary>
 [Serializable]
-public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan> //, IFormattable
+public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan>
 {
     /// <summary>
     /// Gets the instant in time that starts the interval represented by this instance.
@@ -593,6 +593,12 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
 
     // TODO: Write ToString and Parse/ParseExact
     // TODO: Should DateSpan have methods for extending or shifting the interval?
+
+    public override string ToString()
+        => DateSpanFormat.Format(this, null, null);
+
+    public string ToString(string? format)
+        => DateSpanFormat.Format(this, format, null);
 
     /// <summary>
     /// Returns a <see cref="DateSpan"/> that represents the given instant in time.

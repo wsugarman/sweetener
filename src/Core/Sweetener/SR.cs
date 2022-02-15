@@ -18,6 +18,8 @@ internal static class SR
 
     public static string InvalidDateSpanRangeMessage => ExceptionResourceManager.GetString(nameof(InvalidDateSpanRangeMessage), CultureInfo.CurrentUICulture);
 
+    public static string InvalidInputStringFormatMessage => ExceptionResourceManager.GetString(nameof(InvalidInputStringFormatMessage), CultureInfo.CurrentUICulture);
+
     public static string InvalidTypeFormat => ExceptionResourceManager.GetString(nameof(InvalidTypeFormat), CultureInfo.CurrentUICulture);
 
     public static string KindMismatchMessage => ExceptionResourceManager.GetString(nameof(KindMismatchMessage), CultureInfo.CurrentUICulture);
