@@ -503,6 +503,21 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
         => other.Duration == TimeSpan.Zero || (other.Start >= Start && other.End <= End);
 
     /// <summary>
+    /// Deconstructs this instance into the values of the <see cref="Start"/> and <see cref="End"/> 
+    /// properties.
+    /// </summary>
+    /// <param name="start">
+    /// When this method returns, contains the value of the <see cref="Start"/> property.
+    /// This parameter is passed uninitialized.
+    /// </param>
+    /// <param name="end">
+    /// When this method returns, contains the value of the <see cref="End"/> property.
+    /// This parameter is passed uninitialized.
+    /// </param>
+    public void Deconstruct(out DateTime start, out DateTime end)
+        => (start, end) = (Start, End);
+
+    /// <summary>
     /// Returns a value indicating whether this instance is equal to a specified object.
     /// </summary>
     /// <remarks>
@@ -594,11 +609,20 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     // TODO: Write ToString and Parse/ParseExact
     // TODO: Should DateSpan have methods for extending or shifting the interval?
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public override string ToString()
-        => DateSpanFormat.Format(this, null, null);
+        => DateSpanFormat.Format(this, null);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="format"></param>
+    /// <returns></returns>
     public string ToString(string? format)
-        => DateSpanFormat.Format(this, format, null);
+        => DateSpanFormat.Format(this, format);
 
     /// <summary>
     /// Returns a <see cref="DateSpan"/> that represents the given instant in time.

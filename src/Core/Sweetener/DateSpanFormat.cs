@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
+using System.Globalization;
 
 namespace Sweetener;
 
@@ -20,66 +19,89 @@ internal static class DateSpanFormat
      * Proposal 1: <format>[-]
      * Example: P-
      */
-    internal const string BasicDateTimeFormat = "yyyyMMdd'T'HHmmss.FFFFFFFK";
+    internal const string BasicDateTimeFormat    = "yyyyMMdd'T'HHmmss.FFFFFFFK";
     internal const string ExtendedDateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.FFFFFFFK";
-    internal const string DurationFormat = "[“P”][i][“Y”][i][“M”][i][“D”][“T”][i][“H”][i][“M”][i][“S”]";
+
+    internal const string BasicStartEndFormat         = $"{{0:{BasicDateTimeFormat}}}/{{1:{BasicDateTimeFormat}}}";
+    internal const string ExtendedStartEndFormat      = $"{{0:{ExtendedDateTimeFormat}}}/{{1:{ExtendedDateTimeFormat}}}";
+    internal const string BasicStartDurationFormat    = $"{{0:{BasicDateTimeFormat}}}/{{1:C}}";
+    internal const string ExtendedStartDurationFormat = $"{{0:{ExtendedDateTimeFormat}}}/{{1:C}}";
+    internal const string BasicDurationEndFormat      = $"{{0:C}}/{{1:{BasicDateTimeFormat}}}";
+    internal const string ExtendedDurationEndFormat   = $"{{0:C}}/{{1:{ExtendedDateTimeFormat}}}";
 
     public static string Format(DateSpan dateSpan, string? format)
     {
-        if (format is not null)
+        FormatOptions options = format is null || format.Length == 0
+            ? new FormatOptions { Extended = true, Representation = IsoRepresentation.StartEnd, Minimize = false }
+            : ParseStandardFormat(format);
+
+        return options.Representation switch
         {
-        }
+            IsoRepresentation.StartEnd      => FormatStartEnd     (dateSpan.Start, dateSpan.End, options),
+            IsoRepresentation.StartDuration => FormatStartDuration(dateSpan.Start, dateSpan.End, options),
+            _                               => FormatDurationEnd  (dateSpan.Start, dateSpan.End, options),
+        };
     }
 
-    private static string Format(DateSpan dateSpan, IsoIntervalFormat format)
-    {
-        switch (format.Interval)
-        {
-            case IsoInterval.StartEnd:
-                return "";
-            case IsoInterval.StartDuration:
-                return "";
-            default: // IsoInterval.DurationEnd
-                return "";
-        }
-    }
-
-    private static bool TryParseStandardFormat(string format, out IsoIntervalFormat intervalFormat)
+    private static FormatOptions ParseStandardFormat(string format)
     {
         if (format.Length == 1 || format.Length == 2)
         {
-            bool extended = format.Length == 2 && format[1] == '+';
-            switch (format[0])
+            bool minimize = format.Length == 2 && format[1] == '-';
+            return format[0] switch
             {
-                case 'p':
-                    intervalFormat = new IsoIntervalFormat { Extended = extended, Interval = IsoInterval.StartEnd, Minimize = true };
-                    return true;
-                case 'P':
-                    intervalFormat = new IsoIntervalFormat { Extended = extended, Interval = IsoInterval.StartEnd, Minimize = false };
-                    return true;
-                case 's':
-                    intervalFormat = new IsoIntervalFormat { Extended = extended, Interval = IsoInterval.StartDuration, Minimize = true };
-                    return true;
-                case 'S':
-                    intervalFormat = new IsoIntervalFormat { Extended = extended, Interval = IsoInterval.StartDuration, Minimize = false };
-                    return true;
-                case 'e':
-                    intervalFormat = new IsoIntervalFormat { Extended = extended, Interval = IsoInterval.DurationEnd, Minimize = true };
-                    return true;
-                case 'E':
-                    intervalFormat = new IsoIntervalFormat { Extended = extended, Interval = IsoInterval.DurationEnd, Minimize = false };
-                    return true;
-            }
+                'i' => new FormatOptions { Extended = false, Minimize = minimize, Representation = IsoRepresentation.StartEnd      },
+                'I' => new FormatOptions { Extended = true , Minimize = minimize, Representation = IsoRepresentation.StartEnd      },
+                's' => new FormatOptions { Extended = false, Minimize = minimize, Representation = IsoRepresentation.StartDuration },
+                'S' => new FormatOptions { Extended = true , Minimize = minimize, Representation = IsoRepresentation.StartDuration },
+                'e' => new FormatOptions { Extended = false, Minimize = minimize, Representation = IsoRepresentation.DurationEnd   },
+                'E' => new FormatOptions { Extended = true , Minimize = minimize, Representation = IsoRepresentation.DurationEnd   },
+                _ => throw new FormatException(SR.InvalidInputStringFormatMessage),
+            };
         }
 
-        intervalFormat = default;
-        return false;
+        throw new FormatException(SR.InvalidInputStringFormatMessage);
+    }
+
+    private static string FormatStartEnd(DateTime start, DateTime end, FormatOptions options)
+    {
+        if (!options.Minimize)
+            return options.Extended
+                ? string.Format(CultureInfo.InvariantCulture, ExtendedStartEndFormat, start, DateTime.SpecifyKind(end, DateTimeKind.Unspecified))
+                : string.Format(CultureInfo.InvariantCulture, BasicStartEndFormat   , start, DateTime.SpecifyKind(end, DateTimeKind.Unspecified));
+
+
+        return "";
+    }
+
+    private static string FormatStartDuration(DateTime start, DateTime end, FormatOptions options)
+    {
+        IntervalDuration duration = IntervalDuration.FromInterval(start, end);
+
+        if (!options.Minimize)
+            return options.Extended
+                ? string.Format(CultureInfo.InvariantCulture, ExtendedStartDurationFormat, start, duration)
+                : string.Format(CultureInfo.InvariantCulture, BasicStartDurationFormat   , start, duration);
+
+        return "";
+    }
+
+    private static string FormatDurationEnd(DateTime start, DateTime end, FormatOptions options)
+    {
+        IntervalDuration duration = IntervalDuration.FromInterval(start, end);
+
+        if (!options.Minimize)
+            return options.Extended
+                ? string.Format(CultureInfo.InvariantCulture, ExtendedDurationEndFormat, duration, end)
+                : string.Format(CultureInfo.InvariantCulture, BasicDurationEndFormat   , duration, end);
+
+        return "";
     }
 
     [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Private type")]
-    private readonly struct IsoIntervalFormat
+    private readonly struct FormatOptions
     {
-        public IsoInterval Interval { get; init; }
+        public IsoRepresentation Representation { get; init; }
 
         public bool Minimize { get; init; }
 
@@ -88,9 +110,8 @@ internal static class DateSpanFormat
         public int FractionalPrecision { get; init; }
     }
 
-    private enum IsoInterval
+    private enum IsoRepresentation
     {
-        Unknown,
         StartEnd,
         StartDuration,
         DurationEnd,
