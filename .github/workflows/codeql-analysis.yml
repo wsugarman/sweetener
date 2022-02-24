@@ -28,7 +28,7 @@ jobs:
         languages: 'csharp'
 
     - name: Setup
-      uses: actions/setup-dotnet@v1.9.0
+      uses: actions/setup-dotnet@v1.9.1
 
     - name: Build Sweetener.sln
       run: dotnet build src/Core/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
