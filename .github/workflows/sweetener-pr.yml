@@ -34,7 +34,7 @@ jobs:
       - name: Test x86
         shell: bash
         run: |
-          dotnet test "./src/Sweetener/Sweetener.Test/Sweetener.Test.csproj" \
+          dotnet test "./src/Core/Sweetener.Test/Sweetener.Test.csproj" \
             -c "Debug" \
             -p:ContinuousIntegrationBuild=true;Platforms=x86 \
             -warnaserror \
