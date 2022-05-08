@@ -31,6 +31,19 @@ jobs:
           solution: Core
           resultsDirectory: ${{ runner.temp }}/TestResults
 
+      - name: Test x86
+        shell: bash
+        run: |
+          dotnet test "./src/Sweetener/Sweetener.Test/Sweetener.Test.csproj" \
+            -c "Debug" \
+            -p:ContinuousIntegrationBuild=true;Platforms=x86 \
+            -warnaserror \
+            -r "${{ runner.temp }}/TestResults" \
+            --filter TestCategory=PlatformSpecific \
+            --collect "XPlat Code Coverage" \
+            -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
+            -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[Sweetener]*
+
       - name: Code Coverage
         uses: ./.github/actions/check-code-coverage
         with:

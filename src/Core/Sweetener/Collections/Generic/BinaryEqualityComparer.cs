@@ -36,9 +36,11 @@ public class BinaryEqualityComparer : IEqualityComparer<byte[]>
     /// </returns>
     public bool Equals(byte[] x, byte[] y)
     {
-        if (x is null)
-            return y is null;
-        else if (y is null)
+        if (ReferenceEquals(x, y))
+            return true;
+
+        // We can safely short-circuit as the above predicate checks if they're both null
+        if (x is null || y is null)
             return false;
 
         return Equals(new ReadOnlySpan<byte>(x), new ReadOnlySpan<byte>(y));
