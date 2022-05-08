@@ -3,6 +3,7 @@
 
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Sweetener.SourceGeneration.Extensions;
 using Sweetener.SourceGeneration.Templates.Core.Delegates.Extensions;
@@ -10,6 +11,7 @@ using Sweetener.SourceGeneration.Templates.Core.Delegates.Extensions;
 namespace Sweetener.SourceGeneration.Templates.Core.Delegates;
 
 [Project("Sweetener")]
+[SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes", Justification = "Templates are loaded via reflection.")]
 internal sealed class AsyncActionTemplate : DelegateSourceTemplate
 {
     protected override string Name => "AsyncAction";

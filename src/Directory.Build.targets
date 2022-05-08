@@ -20,7 +20,7 @@
       <!-- Include the source generator -->
       <!-- Note that the source generator will output files based on the project -->
       <ItemGroup>
-        <ProjectReference Include="$(CoreDirectory)Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(SharedDirectory)Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
       </ItemGroup>
 
     </When>
