@@ -15,7 +15,7 @@ namespace Sweetener.Collections.Generic;
 /// <see cref="IComparer{T}"/> and <see cref="IEqualityComparer{T}"/>. Instead, the comparer exposes
 /// <see langword="static"/> methods for operating upon <see cref="ReadOnlySpan{T}"/> structures.
 /// </remarks>
-public class BinaryComparer : IComparer<byte[]?>, IEqualityComparer<byte[]?>
+public sealed class BinaryComparer : IComparer<byte[]?>, IEqualityComparer<byte[]?>
 {
     /// <summary>
     /// Gets the singleton <see cref="BinaryComparer"/> instance for comparing byte arrays.
