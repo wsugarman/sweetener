@@ -4,6 +4,7 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -12,7 +13,7 @@ using Sweetener.SourceGeneration.Extensions;
 namespace Sweetener.SourceGeneration;
 
 [Generator]
-internal sealed class ProjectSourceGenerator : ISourceGenerator
+public sealed class ProjectSourceGenerator : ISourceGenerator
 {
     private const string TabString = "    ";
 

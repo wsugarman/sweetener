@@ -3,6 +3,7 @@
 
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -12,6 +13,7 @@ using Sweetener.SourceGeneration.Templates.Core.Tasks;
 namespace Sweetener.SourceGeneration.Templates.Core.Tests.Tasks;
 
 [Project("Sweetener.Test")]
+[SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes", Justification = "Templates are loaded via reflection.")]
 internal sealed class MultiTaskTestSourceFile : SourceTemplate
 {
     protected override string Name => "MultiTask.Test";

@@ -1,6 +1,6 @@
 <Project>
 
-  <!-- Common Build Properties -->
+  <!-- Common Locations -->
   <PropertyGroup>
     <SrcDirectory>$(MSBuildThisFileDirectory)</SrcDirectory>
     <CoreDirectory>$(SrcDirectory)Core\</CoreDirectory>
@@ -9,21 +9,20 @@
     <SharedDirectory>$(SrcDirectory)Shared\</SharedDirectory>
   </PropertyGroup>
 
+  <!-- Common Assembly and Build Properties -->
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(ResourcesDirectory)Public.snk</AssemblyOriginatorKeyFile>
+    <Copyright>Copyright © 2022 William Sugarman.</Copyright>
     <Deterministic>true</Deterministic>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <Product>Sweetener</Product>
     <RunSettingsFilePath>$(SrcDirectory)CodeCoverage.runsettings</RunSettingsFilePath>
     <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
   </PropertyGroup>
-
-  <!-- Tools -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-  </ItemGroup>
 
   <!-- Code Analyzers -->
   <PropertyGroup>
@@ -31,9 +30,38 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
+  <!-- Support for new .NET/C# Features in .NET Standard 2.0 -->
+  <ItemGroup>
+    <Compile Include="$(SharedDirectory)IsExternalInit.cs" Visible="false" />
+    <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
+  </ItemGroup>
+
+  <!-- Tools -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+  </ItemGroup>
+
   <!-- Below are items and properties that vary between projects -->
   <!-- Common framework and tooling PackageReference elements are also kept in sync here -->
   <Choose>
+    <When Condition="'$(MSBuildProjectName)' == 'Sweetener.SourceGeneration'">
+
+      <!-- Do not sign the assembly -->
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+        <SignAssembly>false</SignAssembly>
+        <TargetFramework>netstandard2.0</TargetFramework>
+      </PropertyGroup>
+
+      <!-- Not CLS Compliant -->
+      <ItemGroup>
+        <AssemblyAttribute Include="System.CLSCompliantAttribute ">
+          <_Parameter1>false</_Parameter1>
+          <_Parameter1_TypeName>System.Boolean</_Parameter1_TypeName>
+        </AssemblyAttribute>
+      </ItemGroup>
+
+    </When>
     <When Condition="$(MSBuildProjectName.EndsWith('Test'))">
 
       <!-- Unit Test Properties -->
@@ -61,15 +89,12 @@
 
       <!-- Assembly and Build Properties -->
       <PropertyGroup>
-        <Copyright>Copyright © 2022 William Sugarman.</Copyright>
         <DelaySign>true</DelaySign>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
         <!-- NU5105: We're purposefully using SemVar 2.0 -->
-        <NoWarn>NU5105</NoWarn>
-        <Product>Sweetener</Product>
+        <NoWarn>$(NoWarn);NU5105</NoWarn>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -85,13 +110,11 @@
         <MinClientVersion>4.9.0</MinClientVersion>
       </PropertyGroup>
 
-      <!-- Common Assembly and Source Files -->
+      <!-- Non-Package Assembly Info -->
       <ItemGroup>
         <Compile Include="$(SharedDirectory)AssemblyInfo.cs">
           <Link>Properties\AssemblyInfo.cs</Link>
         </Compile>
-        <Compile Include="$(SharedDirectory)IsExternalInit.cs" Visible="false" />
-        <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
       </ItemGroup>
 
       <!-- Other Miscellaneous Files -->

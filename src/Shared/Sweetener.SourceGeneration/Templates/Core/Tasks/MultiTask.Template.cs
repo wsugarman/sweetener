@@ -3,6 +3,7 @@
 
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
 using Sweetener.SourceGeneration.Extensions;
@@ -10,6 +11,7 @@ using Sweetener.SourceGeneration.Extensions;
 namespace Sweetener.SourceGeneration.Templates.Core.Tasks;
 
 [Project("Sweetener")]
+[SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes", Justification = "Templates are loaded via reflection.")]
 internal sealed class MultiTaskSourceFile : SourceTemplate
 {
     protected override string Name => "MultiTask";

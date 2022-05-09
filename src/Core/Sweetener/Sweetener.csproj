@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>Common APIs that sweeten the .NET base class libraries</Description>
     <PackageTags>common</PackageTags>
   </PropertyGroup>
@@ -9,6 +10,10 @@
     <AssemblyAttribute Include="System.Runtime.InteropServices.Guid">
       <_Parameter1>3238523c-5921-4100-9eb9-17cfa9a03121</_Parameter1>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="6.0.1" />
   </ItemGroup>
 
 </Project>
