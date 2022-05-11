@@ -9,15 +9,7 @@ updates:
     open-pull-requests-limit: 10
 
   - package-ecosystem: "nuget"
-    directory: "/src/Core"
-    schedule:
-      interval: "daily"
-      time: "09:00"
-      timezone: "America/Los_Angeles"
-    open-pull-requests-limit: 10
-
-  - package-ecosystem: "nuget"
-    directory: "/src/Extensions"
+    directory: "/src"
     schedule:
       interval: "daily"
       time: "09:00"

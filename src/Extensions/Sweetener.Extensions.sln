@@ -11,17 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C72913
 		..\Directory.Build.props = ..\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Abstractions", "Sweetener.Extensions.Configuration.Abstractions\Sweetener.Extensions.Configuration.Abstractions.csproj", "{A3A696AC-DF2C-4B85-A14D-47D696D29198}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Abstractions.Test", "Sweetener.Extensions.Configuration.Abstractions.Test\Sweetener.Extensions.Configuration.Abstractions.Test.csproj", "{70873C10-F8D1-4AC0-A9F4-46D97FDFA9A4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Binder", "Sweetener.Extensions.Configuration.Binder\Sweetener.Extensions.Configuration.Binder.csproj", "{E43BD5CF-726F-43E8-86C8-99DC88997C55}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Binder.Test", "Sweetener.Extensions.Configuration.Binder.Test\Sweetener.Extensions.Configuration.Binder.Test.csproj", "{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Options.ConfigurationExtensions", "Sweetener.Extensions.Options.ConfigurationExtensions\Sweetener.Extensions.Options.ConfigurationExtensions.csproj", "{E89D7552-9044-456E-BA05-F176463ACCE8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Options.ConfigurationExtensions.Test", "Sweetener.Extensions.Options.ConfigurationExtensions.Test\Sweetener.Extensions.Options.ConfigurationExtensions.Test.csproj", "{E4F1A2FC-403E-4BF8-A270-32423EC84F7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,14 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A3A696AC-DF2C-4B85-A14D-47D696D29198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A3A696AC-DF2C-4B85-A14D-47D696D29198}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A3A696AC-DF2C-4B85-A14D-47D696D29198}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A3A696AC-DF2C-4B85-A14D-47D696D29198}.Release|Any CPU.Build.0 = Release|Any CPU
-		{70873C10-F8D1-4AC0-A9F4-46D97FDFA9A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{70873C10-F8D1-4AC0-A9F4-46D97FDFA9A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{70873C10-F8D1-4AC0-A9F4-46D97FDFA9A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{70873C10-F8D1-4AC0-A9F4-46D97FDFA9A4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E43BD5CF-726F-43E8-86C8-99DC88997C55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E43BD5CF-726F-43E8-86C8-99DC88997C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E43BD5CF-726F-43E8-86C8-99DC88997C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -45,14 +29,6 @@ Global
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E89D7552-9044-456E-BA05-F176463ACCE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E89D7552-9044-456E-BA05-F176463ACCE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E89D7552-9044-456E-BA05-F176463ACCE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E89D7552-9044-456E-BA05-F176463ACCE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E4F1A2FC-403E-4BF8-A270-32423EC84F7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E4F1A2FC-403E-4BF8-A270-32423EC84F7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E4F1A2FC-403E-4BF8-A270-32423EC84F7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E4F1A2FC-403E-4BF8-A270-32423EC84F7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
