@@ -18,6 +18,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Config
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Binder.Test", "Sweetener.Extensions.Configuration.Binder.Test\Sweetener.Extensions.Configuration.Binder.Test.csproj", "{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration", "..\Shared\Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj", "{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweetener.Extensions.Configuration", "Sweetener.Extensions.Configuration\Sweetener.Extensions.Configuration.csproj", "{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +36,14 @@ Global
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
