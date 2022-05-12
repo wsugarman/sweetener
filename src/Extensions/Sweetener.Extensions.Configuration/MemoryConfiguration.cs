@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -22,7 +23,8 @@ namespace Sweetener.Extensions.Configuration;
 /// Unlike other configurations which may have multiple providers, the <see cref="MemoryConfiguration"/> stores
 /// all of its data within a single in-memory provider.
 /// </remarks>
-public sealed class MemoryConfiguration : IConfiguration
+[SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "Name derived from MemoryConfigurationProvider and MemoryConfigurationSource.")]
+public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePair<string, string>>
 {
     // TODO: Should this class implement IConfigurationRoot?
 
@@ -53,9 +55,24 @@ public sealed class MemoryConfiguration : IConfiguration
     { }
 
     private MemoryConfiguration(ConfigurationProvider provider)
-    {
-        _provider = provider;
-    }
+        => _provider = provider;
+
+    // Note: Add(string, string) and IEnumerable<KeyValuePair<string, string>> are only implemented
+    //       to allow users to conveniently leverage collection initializers.
+
+    /// <summary>
+    /// Adds the specified <paramref name="key"/> and <paramref name="value"/> to the configuration.
+    /// </summary>
+    /// <remarks>
+    /// If the <paramref name="key"/> already exists in the configuration,
+    /// its value is overwritten with the given <paramref name="value"/>.
+    /// </remarks>
+    /// <param name="key">The key of the element to add or update.</param>
+    /// <param name="value">The value of the element to add. May be <see langword="null"/>.</param>
+    public void Add(string key, string value)
+        => _provider.Set(key, value);
+
+    // TOOD: Should Remove(string) be implemented?
 
     /// <inheritdoc cref="IConfiguration.GetChildren"/>
     public IEnumerable<IConfigurationSection> GetChildren()
@@ -76,6 +93,13 @@ public sealed class MemoryConfiguration : IConfiguration
     public IConfigurationSection GetSection(string key)
         => new ConfigurationSection(this, key);
 
+    // TODO: Should this expose IConfigurationSection instead?
+    IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
+        => ConfigurationExtensions.AsEnumerable(this).GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => ConfigurationExtensions.AsEnumerable(this).GetEnumerator();
+
     private IEnumerable<IConfigurationSection> GetChildren(string path)
     {
         IEnumerable<string> childKeys = _provider.GetChildKeys(Enumerable.Empty<string>(), path);
@@ -92,7 +116,7 @@ public sealed class MemoryConfiguration : IConfiguration
             set => _root[ConfigurationPath.Combine(Path, key)] = value;
         }
 
-        // This is computed lazily like in Microsoft.Extensions.Configuration.ConfigurationSection
+        // Note: This is computed lazily like in Microsoft.Extensions.Configuration.ConfigurationSection
         public string Key => _key is null ? _key = ConfigurationPath.GetSectionKey(Path) : _key;
 
         public string Path { get; }
