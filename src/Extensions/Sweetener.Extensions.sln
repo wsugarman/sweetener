@@ -14,9 +14,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C72913
 		..\Shared\GlobalTestSuppressions.cs = ..\Shared\GlobalTestSuppressions.cs
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration", "Sweetener.Extensions.Configuration\Sweetener.Extensions.Configuration.csproj", "{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Binder", "Sweetener.Extensions.Configuration.Binder\Sweetener.Extensions.Configuration.Binder.csproj", "{E43BD5CF-726F-43E8-86C8-99DC88997C55}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Binder.Test", "Sweetener.Extensions.Configuration.Binder.Test\Sweetener.Extensions.Configuration.Binder.Test.csproj", "{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sweetener.Extensions.Configuration.Test", "Sweetener.Extensions.Configuration.Test\Sweetener.Extensions.Configuration.Test.csproj", "{F192C036-0CF2-446A-8DE4-9A7C216ED66F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration", "..\Shared\Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj", "{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +30,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E43BD5CF-726F-43E8-86C8-99DC88997C55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E43BD5CF-726F-43E8-86C8-99DC88997C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E43BD5CF-726F-43E8-86C8-99DC88997C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -32,6 +42,14 @@ Global
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA9C3C18-1B76-48EE-9DAA-363CF8638DEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

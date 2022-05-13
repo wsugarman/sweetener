@@ -1,17 +1,17 @@
-name: Sweetener
+name: Sweetener.Extensions.Configuration
 
 on:
   push:
     branches: [ main ]
     paths:
     - .github/actions/**
-    - .github/workflows/sweetener-ci.yml
+    - .github/workflows/sweetener.extensions.configuration-ci.yml
     - global.json
     - NuGet.config
     - src/*
-    - src/Core/*
-    - src/Core/Sweetener/**
-    - src/Core/Sweetener.Test/**
+    - src/Extensions/*
+    - src/Extensions/Sweetener.Extensions.Configuration/**
+    - src/Extensions/Sweetener.Extensions.Configuration.Test/**
     - src/Shared/**
 
 jobs:
@@ -26,15 +26,15 @@ jobs:
       - name: Test
         uses: ./.github/actions/dotnet-test
         with:
-          project: Sweetener
-          solution: Core
+          project: Sweetener.Extensions.Configuration
+          solution: Extensions
           resultsDirectory: ${{ runner.temp }}/TestResults
 
       - name: Code Coverage
         uses: ./.github/actions/check-code-coverage
         with:
           reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
-          flag: Sweetener
+          flag: Configuration
 
   package:
     name: Package
@@ -58,8 +58,8 @@ jobs:
       - name: Package
         uses: ./.github/actions/dotnet-pack
         with:
-          project: Sweetener
-          solution: Core
+          project: Sweetener.Extensions.Configuration
+          solution: Extensions
           buildConfiguration: Release
           sign: true
           strongNameKey: ${{ secrets.STRONG_NAME_KEY }}
