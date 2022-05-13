@@ -65,6 +65,41 @@ public sealed class MemoryConfigurationTest : IDisposable
         });
 
     [TestMethod]
+    public void Ctor()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() => new MemoryConfiguration(null));
+
+        var alternative = new MemoryConfiguration(
+            new Dictionary<string, string>
+            {
+                { "Key1"                          , "Value1" },
+                { "Key2"                          , "Value2" },
+                { "Key3"                          , null     },
+                { "Section1:Key1"                 , "Value3" },
+                { "Section1:Key2"                 , "Value4" },
+                { "Section1:Key3"                 , null     },
+                { "Section1:Section2:Key5"        , "Value5" },
+                { "Section:Key1"                  , "Value1" },
+                { "Section:Key2"                  , "Value2" },
+                { "Section:Key3"                  , null     },
+                { "Section:Section1:Key1"         , "Value3" },
+                { "Section:Section1:Key2"         , "Value4" },
+                { "Section:Section1:Key3"         , null     },
+                { "Section:Section1:Section2:Key5", "Value5" },
+            });
+
+        List<KeyValuePair<string, string>> expected = _config    .ToList();
+        List<KeyValuePair<string, string>> actual   = alternative.ToList();
+
+        Assert.AreEqual(expected.Count, actual.Count);
+        for (int i = 0; i < expected.Count; i++)
+        {
+            Assert.AreEqual(expected[i].Key, actual[i].Key);
+            Assert.AreEqual(expected[i].Value, actual[i].Value);
+        }
+    }
+
+    [TestMethod]
     public void Get()
         => Get(c => c);
 
