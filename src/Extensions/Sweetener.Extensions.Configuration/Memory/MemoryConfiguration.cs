@@ -4,16 +4,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 
-namespace Sweetener.Extensions.Configuration;
+namespace Sweetener.Extensions.Configuration.Memory;
 
-// Note that Microsoft.Extensions.Configuration* libraries do not include
-// nullable reference types for their .NET Standard 2.0 targets
+// Note that the Microsoft.Extensions.Configuration* libraries do not include
+// nullable reference types for their .NET Standard 2.0 targets.
 #nullable disable
 
 /// <summary>
@@ -69,6 +70,7 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
     /// </remarks>
     /// <param name="key">The key of the element to add or update.</param>
     /// <param name="value">The value of the element to add. May be <see langword="null"/>.</param>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public void Add(string key, string value)
         => _provider.Set(key, value);
 
@@ -102,7 +104,10 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
 
     private IEnumerable<IConfigurationSection> GetChildren(string path)
     {
-        IEnumerable<string> childKeys = _provider.GetChildKeys(Enumerable.Empty<string>(), path);
+        IEnumerable<string> childKeys = _provider
+            .GetChildKeys(Enumerable.Empty<string>(), path)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
         return path is null
             ? childKeys.Select(key => GetSection(key))
             : childKeys.Select(key => GetSection(ConfigurationPath.Combine(path, key)));
@@ -154,9 +159,7 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
         public ConfigurationProvider(IEnumerable<KeyValuePair<string, string>> initialData)
         {
             foreach (KeyValuePair<string, string> pair in initialData ?? throw new ArgumentNullException(nameof(initialData)))
-            {
                 Data.Add(pair.Key, pair.Value);
-            }
         }
     }
 }
