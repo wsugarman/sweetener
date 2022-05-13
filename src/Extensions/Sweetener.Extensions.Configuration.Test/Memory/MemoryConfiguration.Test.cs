@@ -94,7 +94,7 @@ public sealed class MemoryConfigurationTest : IDisposable
         Assert.AreEqual(expected.Count, actual.Count);
         for (int i = 0; i < expected.Count; i++)
         {
-            Assert.AreEqual(expected[i].Key, actual[i].Key);
+            Assert.AreEqual(expected[i].Key  , actual[i].Key  );
             Assert.AreEqual(expected[i].Value, actual[i].Value);
         }
     }
@@ -129,7 +129,7 @@ public sealed class MemoryConfigurationTest : IDisposable
 
     [TestMethod]
     public void GetEnumerator_Object()
-        => GetEnumerator(c => ((IEnumerable)c).Cast<KeyValuePair<string, string>>());
+        => GetEnumerator(c => Enumerate<KeyValuePair<string, string>>(c));
 
     [TestMethod]
     public void Section_Get()
@@ -138,6 +138,10 @@ public sealed class MemoryConfigurationTest : IDisposable
     [TestMethod]
     public void Section_Set()
         => Set((c, k, v) => Assert.AreEqual(v, c[k] = v), c => c.GetSection("Section"));
+
+    [TestMethod]
+    public void Section_SetValue()
+        => Set((c, k, v) => Assert.AreEqual(v, c.GetSection(k).Value = v), c => c.GetSection("Section"));
 
     [TestMethod]
     public void Section_GetChildren()
@@ -261,5 +265,11 @@ public sealed class MemoryConfigurationTest : IDisposable
         Assert.AreEqual(value   , actual.Value);
         Assert.AreEqual(path    , actual.Path );
         Assert.AreEqual(children, actual.GetChildren().Count());
+    }
+
+    private static IEnumerable<T> Enumerate<T>(IEnumerable source)
+    {
+        foreach (object obj in source)
+            yield return (T)obj;
     }
 }
