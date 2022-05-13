@@ -10,7 +10,6 @@ on:
     - NuGet.config
     - src/*
     - src/Core/*
-    - src/Core/Sweetener.SourceGeneration/**
     - src/Core/Sweetener.Linq/**
     - src/Core/Sweetener.Linq.Test/**
     - src/Shared/**
