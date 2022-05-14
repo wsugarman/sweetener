@@ -71,7 +71,7 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
