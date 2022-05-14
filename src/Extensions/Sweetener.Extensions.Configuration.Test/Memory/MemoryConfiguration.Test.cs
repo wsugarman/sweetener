@@ -267,7 +267,7 @@ public sealed class MemoryConfigurationTest : IDisposable
 
     private static IEnumerable<T> Enumerate<T>(IEnumerable source)
     {
-        foreach (object obj in source)
-            yield return (T)obj;
+        foreach (object? obj in source)
+            yield return (T)obj!;
     }
 }

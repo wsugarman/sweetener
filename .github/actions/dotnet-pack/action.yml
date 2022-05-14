@@ -28,7 +28,7 @@ runs:
   using: composite
   steps:
     - name: Setup
-      uses: actions/setup-dotnet@v1.9.0
+      uses: actions/setup-dotnet@v2
 
     - name: Create .snk File
       if: ${{ inputs.sign == 'true' }}
@@ -84,7 +84,7 @@ runs:
           -DotNetTools '${{ runner.temp }}/tools'
 
     - name: Upload Package
-      uses: actions/upload-artifact@v2.2.3
+      uses: actions/upload-artifact@v3
       with:
         name: Package
         path: ${{ runner.temp }}/package

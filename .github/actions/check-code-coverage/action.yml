@@ -23,7 +23,7 @@ runs:
         path: ${{ runner.temp }}/codecoverage
 
     - name: Codecov Upload
-      uses: codecov/codecov-action@v2.1.0
+      uses: codecov/codecov-action@v3.1
       with:
         files: ${{ runner.temp }}/codecoverage/coverage.cobertura.xml
         flags: ${{ inputs.flag }}
