@@ -1,28 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <!-- Generated Files -->
-  <ItemGroup>
-    <Compile Update="Threading\Tasks\MultiTask.Test.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MultiTask.Test.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-  </ItemGroup>
-
-  <!-- Text Templating Files -->
-  <ItemGroup>
-    <None Update="Threading\Tasks\MultiTask.Test.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>MultiTask.Test.cs</LastGenOutput>
-    </None>
   </ItemGroup>
 
 </Project>

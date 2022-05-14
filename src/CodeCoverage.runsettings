@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
-  <RunConfiguration>
-    <TargetPlatform>x64</TargetPlatform>
-  </RunConfiguration>
   <DataCollectionRunSettings>
     <DataCollectors>
       <DataCollector friendlyName="XPlat Code Coverage">
@@ -11,6 +8,8 @@
           <Exclude>[Sweetener*.Test]*</Exclude>
           <Include>[Sweetener*]*</Include>
           <ExcludeByAttribute>ExcludeFromCodeCoverage</ExcludeByAttribute>
+          <!-- Remove ExcludeByFile once coverlet-coverage/coverlet#1198 is resolved -->
+          <ExcludeByFile>**/*.g.cs</ExcludeByFile>
           <SingleHit>false</SingleHit>
           <UseSourceLink>true</UseSourceLink>
           <IncludeTestAssembly>false</IncludeTestAssembly>

@@ -11,10 +11,4 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(ExtensionPackageVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="$(ExtensionPackageVersion)" />
-    <PackageReference Include="Sweetener.Extensions.Configuration.Abstractions" Version="5.0.0-alpha.1" />
-  </ItemGroup>
-
 </Project>

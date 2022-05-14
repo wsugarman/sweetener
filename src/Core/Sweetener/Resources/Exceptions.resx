@@ -117,14 +117,26 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentEmptyMessage" xml:space="preserve">
+    <value>Value cannot be empty.</value>
+  </data>
   <data name="ArgumentNegativeMessage" xml:space="preserve">
     <value>Specified argument was negative.</value>
   </data>
-  <data name="ArgumentNullOrEmptyMessage" xml:space="preserve">
-    <value>Value cannot be null or empty.</value>
+  <data name="ArgumentWhiteSpaceMessage" xml:space="preserve">
+    <value>Value cannot be empty or consist only of white-space characters.</value>
   </data>
-  <data name="ArgumentNullOrWhiteSpaceMessage" xml:space="preserve">
-    <value>Value cannot be null, empty, or consist only of white-space characters.</value>
+  <data name="EndBeforeStartMessage" xml:space="preserve">
+    <value>The end of the interval takes place before the start.</value>
+  </data>
+  <data name="InvalidDateSpanRangeMessage" xml:space="preserve">
+    <value>The start or end of the DateSpan results in an un-representable DateTime.</value>
+  </data>
+  <data name="InvalidTypeFormat" xml:space="preserve">
+    <value>Object must be of type {0}.</value>
+  </data>
+  <data name="KindMismatchMessage" xml:space="preserve">
+    <value>DateTimeKind values must match.</value>
   </data>
   <data name="MissingOptionalValueMessage" xml:space="preserve">
     <value>Optional object must have a value.</value>

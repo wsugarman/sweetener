@@ -8,228 +8,227 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Sweetener.IO
+namespace Sweetener.IO;
+
+/// <summary>
+/// Provides a unified stream over a sequence of byte segments.
+/// </summary>
+public class SegmentedStream : Stream
 {
     /// <summary>
-    /// Provides a unified stream over a sequence of byte segments.
+    /// Gets a value indicating whether the current stream supports reading.
     /// </summary>
-    public class SegmentedStream : Stream
+    /// <value><see langword="true"/> if the stream supports reading; otherwise, <see langword="false"/>.</value>
+    public override bool CanRead => true;
+
+    /// <summary>
+    /// Gets a value indicating whether the current stream supports seeking.
+    /// </summary>
+    /// <value><see langword="true"/> if the stream supports seeking; otherwise, <see langword="false"/>.</value>
+    public override bool CanSeek => false;
+
+    /// <summary>
+    /// Gets a value indicating whether the current stream supports writing.
+    /// </summary>
+    /// <value><see langword="true"/> if the stream supports writing; otherwise, <see langword="false"/>.</value>
+    public override bool CanWrite => false;
+
+    /// <summary>
+    /// Gets the length of the data available on the stream.
+    /// This property is not currently supported and always throws a <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <value>The length of the data available on the stream.</value>
+    /// <exception cref="NotSupportedException">Any use of this property.</exception>
+    public override long Length => throw new NotSupportedException();
+
+    /// <summary>
+    /// Gets or sets the current position in the stream.
+    /// This property is not currently supported and always throws a <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <value>The current position in the stream.</value>
+    /// <exception cref="NotSupportedException">Any use of this property.</exception>
+    public override long Position
     {
-        /// <summary>
-        /// Gets a value indicating whether the current stream supports reading.
-        /// </summary>
-        /// <value><see langword="true"/> if the stream supports reading; otherwise, <see langword="false"/>.</value>
-        public override bool CanRead => true;
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
+    }
 
-        /// <summary>
-        /// Gets a value indicating whether the current stream supports seeking.
-        /// </summary>
-        /// <value><see langword="true"/> if the stream supports seeking; otherwise, <see langword="false"/>.</value>
-        public override bool CanSeek => false;
+    private int _currentIndex;
+    private readonly IEnumerator<ReadOnlyMemory<byte>> _segments;
 
-        /// <summary>
-        /// Gets a value indicating whether the current stream supports writing.
-        /// </summary>
-        /// <value><see langword="true"/> if the stream supports writing; otherwise, <see langword="false"/>.</value>
-        public override bool CanWrite => false;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SegmentedStream"/> class
+    /// based on the specified sequence of byte arrays.
+    /// </summary>
+    /// <param name="buffers">The sequence of byte arrays to be read as a single logical stream.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="buffers"/> is <see langword="null"/>.</exception>
+    public SegmentedStream(IEnumerable<byte[]> buffers)
+        : this(buffers?.Select(x => new ReadOnlyMemory<byte>(x ?? throw new InvalidOperationException(SR.ReadNullArray)))!)
+    { }
 
-        /// <summary>
-        /// Gets the length of the data available on the stream.
-        /// This property is not currently supported and always throws a <see cref="NotSupportedException"/>.
-        /// </summary>
-        /// <value>The length of the data available on the stream.</value>
-        /// <exception cref="NotSupportedException">Any use of this property.</exception>
-        public override long Length => throw new NotSupportedException();
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SegmentedStream"/> class
+    /// based on the specified sequence of contiguous regions of memory.
+    /// </summary>
+    /// <param name="regions">
+    /// The sequence of contiguous regions of memory to be read as a single logical stream.
+    /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="regions"/> is <see langword="null"/>.</exception>
+    public SegmentedStream(IEnumerable<ReadOnlyMemory<byte>> regions)
+        => _segments = regions?.GetEnumerator() ?? throw new ArgumentNullException(nameof(regions));
 
-        /// <summary>
-        /// Gets or sets the current position in the stream.
-        /// This property is not currently supported and always throws a <see cref="NotSupportedException"/>.
-        /// </summary>
-        /// <value>The current position in the stream.</value>
-        /// <exception cref="NotSupportedException">Any use of this property.</exception>
-        public override long Position
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
-        }
+    /// <summary>
+    /// Overrides the <see cref="Stream.Flush"/> method so that no action is performed.
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="SegmentedStream"/> does not support write operations, and therefore
+    /// this method is redundant.
+    /// </remarks>
+    public override void Flush()
+    { }
 
-        private int _currentIndex;
-        private readonly IEnumerator<ReadOnlyMemory<byte>> _segments;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SegmentedStream"/> class
-        /// based on the specified sequence of byte arrays.
-        /// </summary>
-        /// <param name="buffers">The sequence of byte arrays to be read as a single logical stream.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="buffers"/> is <see langword="null"/>.</exception>
-        public SegmentedStream(IEnumerable<byte[]> buffers)
-            : this(buffers?.Select(x => new ReadOnlyMemory<byte>(x ?? throw new InvalidOperationException(SR.ReadNullArray)))!)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SegmentedStream"/> class
-        /// based on the specified sequence of contiguous regions of memory.
-        /// </summary>
-        /// <param name="regions">
-        /// The sequence of contiguous regions of memory to be read as a single logical stream.
-        /// </param>
-        /// <exception cref="ArgumentNullException"><paramref name="regions"/> is <see langword="null"/>.</exception>
-        public SegmentedStream(IEnumerable<ReadOnlyMemory<byte>> regions)
-            => _segments = regions?.GetEnumerator() ?? throw new ArgumentNullException(nameof(regions));
-
-        /// <summary>
-        /// Overrides the <see cref="Stream.Flush"/> method so that no action is performed.
-        /// </summary>
-        /// <remarks>
-        /// The <see cref="SegmentedStream"/> does not support write operations, and therefore
-        /// this method is redundant.
-        /// </remarks>
-        public override void Flush()
-        { }
-
-        /// <summary>
-        /// Reads a block of bytes from the stream and writes the data into a given buffer.
-        /// </summary>
-        /// <param name="buffer">
-        /// When this method returns, contains the specified byte array with the values between
-        /// <paramref name="offset"/> and (<paramref name="offset"/> + <paramref name="count"/> - 1) replaced
-        /// by the bytes read from the stream.
-        /// </param>
-        /// <param name="offset">The byte offset in array at which the read bytes will be placed.</param>
-        /// <param name="count">The maximum number of bytes to read.</param>
-        /// <returns>
-        /// The total number of bytes written into the buffer. This can be less than the number of bytes requested
-        /// if that number of bytes are not currently available, or zero if the end of the stream is reached
-        /// before any bytes are read.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="offset"/> subtracted from the buffer length is less than <paramref name="count"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="offset"/> or <paramref name="offset"/> is negative.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
-        public override int Read(byte[] buffer, int offset, int count)
-            => Read(new Span<byte>(buffer ?? throw new ArgumentNullException(nameof(buffer)), offset, count));
+    /// <summary>
+    /// Reads a block of bytes from the stream and writes the data into a given buffer.
+    /// </summary>
+    /// <param name="buffer">
+    /// When this method returns, contains the specified byte array with the values between
+    /// <paramref name="offset"/> and (<paramref name="offset"/> + <paramref name="count"/> - 1) replaced
+    /// by the bytes read from the stream.
+    /// </param>
+    /// <param name="offset">The byte offset in array at which the read bytes will be placed.</param>
+    /// <param name="count">The maximum number of bytes to read.</param>
+    /// <returns>
+    /// The total number of bytes written into the buffer. This can be less than the number of bytes requested
+    /// if that number of bytes are not currently available, or zero if the end of the stream is reached
+    /// before any bytes are read.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="offset"/> subtracted from the buffer length is less than <paramref name="count"/>.
+    /// </exception>
+    /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="offset"/> or <paramref name="offset"/> is negative.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
+    public override int Read(byte[] buffer, int offset, int count)
+        => Read(new Span<byte>(buffer ?? throw new ArgumentNullException(nameof(buffer)), offset, count));
 
 #if NET5_0_OR_GREATER
-        /// <summary>
-        /// Reads data from the stream and stores it to a span of bytes in memory.
-        /// </summary>
-        /// <param name="buffer">A region of memory to store data read from the stream.</param>
-        /// <returns>
-        /// The total number of bytes written into the buffer. This can be less than the number of bytes requested
-        /// if that number of bytes are not currently available, or zero if the end of the stream is reached
-        /// before any bytes are read.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
-        public override
+    /// <summary>
+    /// Reads data from the stream and stores it to a span of bytes in memory.
+    /// </summary>
+    /// <param name="buffer">A region of memory to store data read from the stream.</param>
+    /// <returns>
+    /// The total number of bytes written into the buffer. This can be less than the number of bytes requested
+    /// if that number of bytes are not currently available, or zero if the end of the stream is reached
+    /// before any bytes are read.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
+    public override
 #else
-        private
+    private
 #endif
-        int Read(Span<byte> buffer)
+    int Read(Span<byte> buffer)
+    {
+        int requested = buffer.Length, remaining = buffer.Length;
+        while (remaining > 0)
         {
-            int requested = buffer.Length, remaining = buffer.Length;
-            while (remaining > 0)
+            // If we're at the end of the current segment, check if we can read the next one
+            if (_segments.Current.Length - _currentIndex == 0)
             {
-                // If we're at the end of the current segment, check if we can read the next one
-                if (_segments.Current.Length - _currentIndex == 0)
-                {
-                    if (!_segments.MoveNext())
-                        break;
+                if (!_segments.MoveNext())
+                    break;
 
-                    _currentIndex = 0;
-                }
-
-                // Slice the current span based on the current index
-                ReadOnlySpan<byte> current = _segments.Current.Span[_currentIndex..];
-                if (remaining < current.Length)
-                    current = current.Slice(0, remaining);
-
-                current.CopyTo(buffer);
-                buffer = buffer[current.Length..];
-                _currentIndex += current.Length;
-                remaining -= current.Length;
+                _currentIndex = 0;
             }
 
-            return requested - remaining;
+            // Slice the current span based on the current index
+            ReadOnlySpan<byte> current = _segments.Current.Span[_currentIndex..];
+            if (remaining < current.Length)
+                current = current.Slice(0, remaining);
+
+            current.CopyTo(buffer);
+            buffer = buffer[current.Length..];
+            _currentIndex += current.Length;
+            remaining -= current.Length;
         }
 
-        /// <summary>
-        /// Asynchronously reads a block of bytes from the stream and writes the data into a given buffer after
-        /// checking for cancellation requests.
-        /// </summary>
-        /// <param name="buffer">The buffer to write the data into.</param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(Read(buffer, offset, count));
-        }
+        return requested - remaining;
+    }
+
+    /// <summary>
+    /// Asynchronously reads a block of bytes from the stream and writes the data into a given buffer after
+    /// checking for cancellation requests.
+    /// </summary>
+    /// <param name="buffer">The buffer to write the data into.</param>
+    /// <param name="offset"></param>
+    /// <param name="count"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(Read(buffer, offset, count));
+    }
 
 #if NET5_0_OR_GREATER
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-            => cancellationToken.IsCancellationRequested
-                ? ValueTask.FromCanceled<int>(cancellationToken)
-                : base.ReadAsync(buffer, cancellationToken);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="buffer"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        => cancellationToken.IsCancellationRequested
+            ? ValueTask.FromCanceled<int>(cancellationToken)
+            : base.ReadAsync(buffer, cancellationToken);
 #endif
 
-        /// <summary>
-        /// Reads a byte from the stream and advances the position within the stream by one byte,
-        /// or returns <c>-1</c> if at the end of the stream.
-        /// </summary>
-        /// <returns>
-        /// The unsigned byte cast to an <see cref="int"/>, or <c>-1</c> if at the end of the stream.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
-        /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
-        public override unsafe int ReadByte()
-        {
-            byte b;
-            return Read(new Span<byte>(&b, 1)) == 0 ? -1 : b;
-        }
-
-        /// <summary>
-        /// Sets the current position of the stream to the given value.
-        /// This method is not currently supported and always throws a <see cref="NotSupportedException"/>.
-        /// </summary>
-        /// <param name="offset">This parameter is not used.</param>
-        /// <param name="origin">This parameter is not used.</param>
-        /// <returns>The position in the stream.</returns>
-        /// <exception cref="NotSupportedException">Any use of this method.</exception>
-        public override long Seek(long offset, SeekOrigin origin)
-            => throw new NotSupportedException();
-
-        /// <summary>
-        /// Sets the length of the stream.
-        /// This method is not currently supported and always throws a <see cref="NotSupportedException"/>.
-        /// </summary>
-        /// <param name="value">This parameter is not used.</param>
-        /// <exception cref="NotSupportedException">Any use of this method.</exception>
-        public override void SetLength(long value)
-            => throw new NotSupportedException();
-
-        /// <summary>
-        /// Writes data to the stream from a specified range of a byte array.
-        /// This method is not currently supported and always throws a <see cref="NotSupportedException"/>.
-        /// </summary>
-        /// <param name="buffer">This parameter is not used.</param>
-        /// <param name="offset">This parameter is not used.</param>
-        /// <param name="count">This parameter is not used.</param>
-        /// <exception cref="NotSupportedException">Any use of this method.</exception>
-        public override void Write(byte[] buffer, int offset, int count)
-            => throw new NotSupportedException();
+    /// <summary>
+    /// Reads a byte from the stream and advances the position within the stream by one byte,
+    /// or returns <c>-1</c> if at the end of the stream.
+    /// </summary>
+    /// <returns>
+    /// The unsigned byte cast to an <see cref="int"/>, or <c>-1</c> if at the end of the stream.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
+    public override unsafe int ReadByte()
+    {
+        byte b;
+        return Read(new Span<byte>(&b, 1)) == 0 ? -1 : b;
     }
+
+    /// <summary>
+    /// Sets the current position of the stream to the given value.
+    /// This method is not currently supported and always throws a <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <param name="offset">This parameter is not used.</param>
+    /// <param name="origin">This parameter is not used.</param>
+    /// <returns>The position in the stream.</returns>
+    /// <exception cref="NotSupportedException">Any use of this method.</exception>
+    public override long Seek(long offset, SeekOrigin origin)
+        => throw new NotSupportedException();
+
+    /// <summary>
+    /// Sets the length of the stream.
+    /// This method is not currently supported and always throws a <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <param name="value">This parameter is not used.</param>
+    /// <exception cref="NotSupportedException">Any use of this method.</exception>
+    public override void SetLength(long value)
+        => throw new NotSupportedException();
+
+    /// <summary>
+    /// Writes data to the stream from a specified range of a byte array.
+    /// This method is not currently supported and always throws a <see cref="NotSupportedException"/>.
+    /// </summary>
+    /// <param name="buffer">This parameter is not used.</param>
+    /// <param name="offset">This parameter is not used.</param>
+    /// <param name="count">This parameter is not used.</param>
+    /// <exception cref="NotSupportedException">Any use of this method.</exception>
+    public override void Write(byte[] buffer, int offset, int count)
+        => throw new NotSupportedException();
 }

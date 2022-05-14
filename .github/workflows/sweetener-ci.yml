@@ -1,0 +1,87 @@
+name: Sweetener
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - .github/actions/**
+    - .github/workflows/sweetener-ci.yml
+    - global.json
+    - NuGet.config
+    - src/*
+    - src/Core/*
+    - src/Core/Sweetener/**
+    - src/Core/Sweetener.Test/**
+    - src/Shared/**
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Test
+        uses: ./.github/actions/dotnet-test
+        with:
+          project: Sweetener
+          solution: Core
+          resultsDirectory: ${{ runner.temp }}/TestResults
+
+      - name: Code Coverage
+        uses: ./.github/actions/check-code-coverage
+        with:
+          reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
+          flag: Sweetener
+
+  package:
+    name: Package
+    needs: test
+    runs-on: windows-latest
+
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Package
+        uses: ./.github/actions/dotnet-pack
+        with:
+          project: Sweetener
+          solution: Core
+          buildConfiguration: Release
+          sign: true
+          strongNameKey: ${{ secrets.STRONG_NAME_KEY }}
+
+      - name: Azure Logout
+        shell: bash
+        if: ${{ always() }}
+        run: |
+          az logout
+          az cache purge
+          az account clear
+
+  push:
+    name: Push
+    needs: package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Push Package
+        uses: ./.github/actions/dotnet-push
+        with:
+          apiKey: ${{ secrets.NUGET_API_KEY }}

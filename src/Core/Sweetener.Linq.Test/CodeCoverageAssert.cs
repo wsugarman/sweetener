@@ -5,18 +5,17 @@ using System.Collections;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Linq.Test
-{
-    internal static class CodeCoverageAssert
-    {
-        public static void AreSequencesEqual<T>(IEnumerable<T> actual, params T[] expected)
-            => AreSequencesEqual(expected, actual);
+namespace Sweetener.Test.Linq;
 
-        public static void AreSequencesEqual<T>(IEnumerable<T> expected, IEnumerable<T> actual)
-        {
-            // Enumerate using both IEnumerable<T> and IEnumerable for code coverage
-            Assert.That.AreSequencesEqual(expected, actual);
-            Assert.That.AreSequencesEqual((IEnumerable)expected, actual);
-        }
+internal static class CodeCoverageAssert
+{
+    public static void AreSequencesEqual<T>(IEnumerable<T> actual, params T[] expected)
+        => AreSequencesEqual(expected, actual);
+
+    public static void AreSequencesEqual<T>(IEnumerable<T> expected, IEnumerable<T> actual)
+    {
+        // Enumerate using both IEnumerable<T> and IEnumerable for code coverage
+        Assert.That.AreSequencesEqual(expected, actual);
+        Assert.That.AreSequencesEqual((IEnumerable)expected, actual);
     }
 }

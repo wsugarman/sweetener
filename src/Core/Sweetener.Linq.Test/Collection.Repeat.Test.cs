@@ -4,28 +4,28 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Linq;
 
-namespace Sweetener.Linq.Test
+namespace Sweetener.Test.Linq;
+
+partial class CollectionTest
 {
-    partial class CollectionTest
+    [TestMethod]
+    public void Repeat()
     {
-        [TestMethod]
-        public void Repeat()
-        {
-            // Invalid count
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => Collection.Repeat(1, -2));
+        // Invalid count
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => Collection.Repeat(1, -2));
 
-            IReadOnlyCollection<double> actual;
+        IReadOnlyCollection<double> actual;
 
-            // Empty
-            actual = Collection.Repeat(1.23d, 0);
-            Assert.AreEqual(0, actual.Count);
-            Assert.AreSame(Array.Empty<double>(), actual);
+        // Empty
+        actual = Collection.Repeat(1.23d, 0);
+        Assert.AreEqual(0, actual.Count);
+        Assert.AreSame(Array.Empty<double>(), actual);
 
-            // Count > 0
-            actual = Collection.Repeat(3.14d, 3);
-            Assert.AreEqual(3, actual.Count);
-            CodeCoverageAssert.AreSequencesEqual(actual, 3.14d, 3.14d, 3.14d);
-        }
+        // Count > 0
+        actual = Collection.Repeat(3.14d, 3);
+        Assert.AreEqual(3, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, 3.14d, 3.14d, 3.14d);
     }
 }

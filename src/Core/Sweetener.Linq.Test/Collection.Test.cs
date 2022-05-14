@@ -3,9 +3,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Sweetener.Linq.Test
-{
-    [TestClass]
-    public partial class CollectionTest
-    { }
-}
+namespace Sweetener.Test.Linq;
+
+[TestClass]
+public partial class CollectionTest
+{ }
