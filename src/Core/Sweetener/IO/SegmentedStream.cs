@@ -48,7 +48,7 @@ public sealed class SegmentedStream : Stream
     /// </summary>
     /// <value>The length of the data available on the stream.</value>
     /// <exception cref="NotSupportedException">Any use of this property.</exception>
-    public override long Length => throw new NotSupportedException();
+    public override long Length => throw new NotSupportedException(SR.StreamSeekNotSupportedMessage);
 
     /// <summary>
     /// Gets or sets the current position in the stream.
@@ -58,8 +58,8 @@ public sealed class SegmentedStream : Stream
     /// <exception cref="NotSupportedException">Any use of this property.</exception>
     public override long Position
     {
-        get => throw new NotSupportedException();
-        set => throw new NotSupportedException();
+        get => throw new NotSupportedException(SR.StreamSeekNotSupportedMessage);
+        set => throw new NotSupportedException(SR.StreamSeekNotSupportedMessage);
     }
 
     private bool _isClosed;
@@ -148,7 +148,6 @@ public sealed class SegmentedStream : Stream
     /// if that number of bytes are not currently available, or zero if the end of the stream is reached
     /// before any bytes are read.
     /// </returns>
-    /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
     public
 #if NETCOREAPP2_1_OR_GREATER
@@ -171,9 +170,9 @@ public sealed class SegmentedStream : Stream
             }
 
             // Slice the current span based on the current index
-            ReadOnlySpan<byte> current = _segments.Current.Span[_currentIndex..];
-            if (remaining < current.Length)
-                current = current.Slice(0, remaining);
+            ReadOnlySpan<byte> current = _segments.Current.Span;
+            int length = Math.Min(remaining, current.Length - _currentIndex);
+            current = current.Slice(_currentIndex, length);
 
             current.CopyTo(buffer);
             buffer = buffer[current.Length..];
@@ -244,7 +243,6 @@ public sealed class SegmentedStream : Stream
             : base.ReadAsync(buffer, cancellationToken);
 #endif
 
-
     /// <summary>
     /// Reads a byte from the stream and advances the position within the stream by one byte,
     /// or returns <c>-1</c> if at the end of the stream.
@@ -272,7 +270,7 @@ public sealed class SegmentedStream : Stream
     /// <returns>The position in the stream.</returns>
     /// <exception cref="NotSupportedException">Any use of this method.</exception>
     public override long Seek(long offset, SeekOrigin origin)
-        => throw new NotSupportedException();
+        => throw new NotSupportedException(SR.StreamSeekNotSupportedMessage);
 
     /// <summary>
     /// Sets the length of the stream.
@@ -281,7 +279,7 @@ public sealed class SegmentedStream : Stream
     /// <param name="value">This parameter is not used.</param>
     /// <exception cref="NotSupportedException">Any use of this method.</exception>
     public override void SetLength(long value)
-        => throw new NotSupportedException();
+        => throw new NotSupportedException(SR.StreamSeekNotSupportedMessage);
 
     /// <summary>
     /// Writes data to the stream from a specified range of a byte array.
@@ -292,11 +290,11 @@ public sealed class SegmentedStream : Stream
     /// <param name="count">This parameter is not used.</param>
     /// <exception cref="NotSupportedException">Any use of this method.</exception>
     public override void Write(byte[] buffer, int offset, int count)
-        => throw new NotSupportedException();
+        => throw new NotSupportedException(SR.StreamWriteNotSupportedMessage);
 
     private void EnsureOpen()
     {
         if (_isClosed)
-            throw new ObjectDisposedException(nameof(SegmentedStream));
+            throw new ObjectDisposedException(null, SR.ClosedStreamMessage);
     }
 }

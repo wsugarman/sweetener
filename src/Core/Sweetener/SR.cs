@@ -14,6 +14,8 @@ internal static class SR
 
     public static string ArgumentWhiteSpaceMessage => ExceptionResourceManager.GetString(nameof(ArgumentWhiteSpaceMessage), CultureInfo.CurrentUICulture)!;
 
+    public static string ClosedStreamMessage => ExceptionResourceManager.GetString(nameof(ClosedStreamMessage), CultureInfo.CurrentUICulture)!;
+
     public static string EndBeforeStartMessage => ExceptionResourceManager.GetString(nameof(EndBeforeStartMessage), CultureInfo.CurrentUICulture)!;
 
     public static string InvalidDateSpanRangeMessage => ExceptionResourceManager.GetString(nameof(InvalidDateSpanRangeMessage), CultureInfo.CurrentUICulture)!;
@@ -23,6 +25,11 @@ internal static class SR
     public static string KindMismatchMessage => ExceptionResourceManager.GetString(nameof(KindMismatchMessage), CultureInfo.CurrentUICulture)!;
 
     public static string MissingOptionalValueMessage => ExceptionResourceManager.GetString(nameof(MissingOptionalValueMessage), CultureInfo.CurrentUICulture)!;
+
+    public static string StreamSeekNotSupportedMessage => ExceptionResourceManager.GetString(nameof(StreamSeekNotSupportedMessage), CultureInfo.CurrentUICulture)!;
+
+    public static string StreamWriteNotSupportedMessage => ExceptionResourceManager.GetString(nameof(StreamWriteNotSupportedMessage), CultureInfo.CurrentUICulture)!;
+
 
     private static readonly ResourceManager ExceptionResourceManager = new ResourceManager("Sweetener.Resources.Exceptions", typeof(SR).Assembly);
 

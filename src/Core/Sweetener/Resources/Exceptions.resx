@@ -126,6 +126,9 @@
   <data name="ArgumentWhiteSpaceMessage" xml:space="preserve">
     <value>Value cannot be empty or consist only of white-space characters.</value>
   </data>
+  <data name="ClosedStreamMessage" xml:space="preserve">
+    <value>Cannot access a closed Stream.</value>
+  </data>
   <data name="EndBeforeStartMessage" xml:space="preserve">
     <value>The end of the interval takes place before the start.</value>
   </data>
@@ -140,5 +143,11 @@
   </data>
   <data name="MissingOptionalValueMessage" xml:space="preserve">
     <value>Optional object must have a value.</value>
+  </data>
+  <data name="StreamSeekNotSupportedMessage" xml:space="preserve">
+    <value>Stream does not support seeking.</value>
+  </data>
+  <data name="StreamWriteNotSupportedMessage" xml:space="preserve">
+    <value>Stream does not support writing.</value>
   </data>
 </root>
