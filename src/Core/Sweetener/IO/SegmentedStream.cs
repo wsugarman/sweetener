@@ -58,24 +58,14 @@ public class SegmentedStream : Stream
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SegmentedStream"/> class
-    /// based on the specified sequence of byte arrays.
-    /// </summary>
-    /// <param name="buffers">The sequence of byte arrays to be read as a single logical stream.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="buffers"/> is <see langword="null"/>.</exception>
-    public SegmentedStream(IEnumerable<byte[]> buffers)
-        : this(buffers?.Select(x => new ReadOnlyMemory<byte>(x ?? throw new InvalidOperationException(SR.ReadNullArray)))!)
-    { }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SegmentedStream"/> class
     /// based on the specified sequence of contiguous regions of memory.
     /// </summary>
-    /// <param name="regions">
+    /// <param name="segments">
     /// The sequence of contiguous regions of memory to be read as a single logical stream.
     /// </param>
-    /// <exception cref="ArgumentNullException"><paramref name="regions"/> is <see langword="null"/>.</exception>
-    public SegmentedStream(IEnumerable<ReadOnlyMemory<byte>> regions)
-        => _segments = regions?.GetEnumerator() ?? throw new ArgumentNullException(nameof(regions));
+    /// <exception cref="ArgumentNullException"><paramref name="segments"/> is <see langword="null"/>.</exception>
+    public SegmentedStream(IEnumerable<ReadOnlyMemory<byte>> segments)
+        => _segments = segments?.GetEnumerator() ?? throw new ArgumentNullException(nameof(segments));
 
     /// <summary>
     /// Overrides the <see cref="Stream.Flush"/> method so that no action is performed.
@@ -114,7 +104,6 @@ public class SegmentedStream : Stream
     public override int Read(byte[] buffer, int offset, int count)
         => Read(new Span<byte>(buffer ?? throw new ArgumentNullException(nameof(buffer)), offset, count));
 
-#if NET5_0_OR_GREATER
     /// <summary>
     /// Reads data from the stream and stores it to a span of bytes in memory.
     /// </summary>
@@ -126,9 +115,9 @@ public class SegmentedStream : Stream
     /// </returns>
     /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
-    public override
-#else
-    private
+    public
+#if NETCOREAPP2_1_OR_GREATER
+    override
 #endif
     int Read(Span<byte> buffer)
     {
@@ -163,28 +152,64 @@ public class SegmentedStream : Stream
     /// checking for cancellation requests.
     /// </summary>
     /// <param name="buffer">The buffer to write the data into.</param>
-    /// <param name="offset"></param>
-    /// <param name="count"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="offset">
+    /// The byte offset in <paramref name="buffer"/> at which to begin writing data from the stream.
+    /// </param>
+    /// <param name="count">The maximum number of bytes to read.</param>
+    /// <param name="cancellationToken">
+    /// The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous read operation.
+    /// The value of the <see cref="Task{TResult}.Result"/> parameter contains the total number of bytes read
+    /// into <paramref name="buffer"/>. The result value can be less than the number of bytes requested if the number
+    /// of bytes currently available is less than the requested number, or it can be <c>0</c> (zero)
+    /// if the end of the stream has been reached.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// The sum of <paramref name="count"/> and <paramref name="count"/> is larger than the buffer length.
+    /// </exception>
+    /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="offset"/> or <paramref name="count"/> is negative.
+    /// </exception>
+    /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
+    /// <exception cref="OperationCanceledException">
+    /// The <paramref name="cancellationToken"/> requested cancellation.
+    /// </exception>
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(Read(buffer, offset, count));
     }
 
-#if NET5_0_OR_GREATER
     /// <summary>
-    /// 
+    /// Asynchronously reads a sequence of bytes from the current stream,
+    /// advances the position within the stream by the number of bytes read,
+    /// and monitors cancellation requests.
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    /// <param name="buffer">The region of memory to write the data into.</param>
+    /// <param name="cancellationToken">
+    /// The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous read operation.
+    /// The value of its <see cref="Task{TResult}.Result"/> property contains the total number of bytes read
+    /// into the buffer. The result value can be less than the number of bytes allocated in the buffer if that many
+    /// bytes are not currently available, or it can be <c>0</c> (zero) if the end of the stream has been reached.
+    /// </returns>
+    /// <exception cref="OperationCanceledException">
+    /// The <paramref name="cancellationToken"/> requested cancellation.
+    /// </exception>
+    public
+#if NETCOREAPP2_1_OR_GREATER
+    override
+#endif
+    ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         => cancellationToken.IsCancellationRequested
             ? ValueTask.FromCanceled<int>(cancellationToken)
             : base.ReadAsync(buffer, cancellationToken);
-#endif
+
 
     /// <summary>
     /// Reads a byte from the stream and advances the position within the stream by one byte,
@@ -195,10 +220,13 @@ public class SegmentedStream : Stream
     /// </returns>
     /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
-    public override unsafe int ReadByte()
+    public override int ReadByte()
     {
-        byte b;
-        return Read(new Span<byte>(&b, 1)) == 0 ? -1 : b;
+        unsafe
+        {
+            byte b;
+            return Read(new Span<byte>(&b, 1)) == 0 ? -1 : b;
+        }
     }
 
     /// <summary>

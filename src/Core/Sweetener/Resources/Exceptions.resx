@@ -141,7 +141,4 @@
   <data name="MissingOptionalValueMessage" xml:space="preserve">
     <value>Optional object must have a value.</value>
   </data>
-  <data name="ReadNullArray" xml:space="preserve">
-    <value>Cannot read null byte array.</value>
-  </data>
 </root>
