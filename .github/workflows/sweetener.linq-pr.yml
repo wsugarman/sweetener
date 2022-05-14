@@ -28,13 +28,13 @@ jobs:
         with:
           project: Sweetener.Linq
           solution: Core
-          resultsDirectory: ${{ runner.temp }}/TestResults
+          resultsDirectory: ${{ runner.temp }}/TestResults/
 
       - name: Codecov
         uses: codecov/codecov-action@v3.1.0
         with:
           files: ./*/coverage.cobertura.xml
-          directory: ${{ runner.temp }}/TestResults
+          directory: ${{ runner.temp }}/TestResults/
           flags: Sweetener.Linq
           fail_ci_if_error: true
 
