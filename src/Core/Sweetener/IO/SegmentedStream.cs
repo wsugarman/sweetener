@@ -13,24 +13,33 @@ namespace Sweetener.IO;
 /// <summary>
 /// Provides a unified stream over a sequence of byte segments.
 /// </summary>
-public class SegmentedStream : Stream
+public sealed class SegmentedStream : Stream
 {
     /// <summary>
     /// Gets a value indicating whether the current stream supports reading.
     /// </summary>
-    /// <value><see langword="true"/> if the stream supports reading; otherwise, <see langword="false"/>.</value>
-    public override bool CanRead => true;
+    /// <value>
+    /// <see langword="true"/> if the stream supports reading and has not been closed;
+    /// otherwise, <see langword="false"/>.
+    /// </value>
+    public override bool CanRead => !_isClosed;
 
     /// <summary>
     /// Gets a value indicating whether the current stream supports seeking.
     /// </summary>
-    /// <value><see langword="true"/> if the stream supports seeking; otherwise, <see langword="false"/>.</value>
+    /// <value>
+    /// <see langword="true"/> if the stream supports seeking and has not been closed;
+    /// otherwise, <see langword="false"/>.
+    /// </value>
     public override bool CanSeek => false;
 
     /// <summary>
     /// Gets a value indicating whether the current stream supports writing.
     /// </summary>
-    /// <value><see langword="true"/> if the stream supports writing; otherwise, <see langword="false"/>.</value>
+    /// <value>
+    /// <see langword="true"/> if the stream supports writing and has not been closed;
+    /// otherwise, <see langword="false"/>.
+    /// </value>
     public override bool CanWrite => false;
 
     /// <summary>
@@ -53,8 +62,19 @@ public class SegmentedStream : Stream
         set => throw new NotSupportedException();
     }
 
+    private bool _isClosed;
     private int _currentIndex;
     private readonly IEnumerator<ReadOnlyMemory<byte>> _segments;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SegmentedStream"/> class
+    /// based on the specified sequence of byte arrays.
+    /// </summary>
+    /// <param name="buffers">The sequence of byte arrays to be read as a single logical stream.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="buffers"/> is <see langword="null"/>.</exception>
+    public SegmentedStream(IEnumerable<byte[]?> buffers)
+        : this(buffers?.Select(x => new ReadOnlyMemory<byte>(x))!)
+    { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SegmentedStream"/> class
@@ -66,6 +86,22 @@ public class SegmentedStream : Stream
     /// <exception cref="ArgumentNullException"><paramref name="segments"/> is <see langword="null"/>.</exception>
     public SegmentedStream(IEnumerable<ReadOnlyMemory<byte>> segments)
         => _segments = segments?.GetEnumerator() ?? throw new ArgumentNullException(nameof(segments));
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="SegmentedStream"/> and
+    /// optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">
+    /// <see langword="true"/> to release both managed and unmanaged resources;
+    /// <see langword="false"/> to release only unmanaged resources.
+    /// </param>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            _isClosed = true;
+
+        base.Dispose(disposing);
+    }
 
     /// <summary>
     /// Overrides the <see cref="Stream.Flush"/> method so that no action is performed.
@@ -92,12 +128,11 @@ public class SegmentedStream : Stream
     /// if that number of bytes are not currently available, or zero if the end of the stream is reached
     /// before any bytes are read.
     /// </returns>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="offset"/> subtracted from the buffer length is less than <paramref name="count"/>.
-    /// </exception>
     /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="offset"/> or <paramref name="offset"/> is negative.
+    /// <para><paramref name="offset"/> or <paramref name="count"/> is negative.</para>
+    /// <para>-or-</para>
+    /// <para><paramref name="offset"/> subtracted from the buffer length is less than <paramref name="count"/>.</para>
     /// </exception>
     /// <exception cref="InvalidOperationException">One of the underlying segments is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
@@ -121,11 +156,13 @@ public class SegmentedStream : Stream
 #endif
     int Read(Span<byte> buffer)
     {
+        EnsureOpen();
+
         int requested = buffer.Length, remaining = buffer.Length;
         while (remaining > 0)
         {
             // If we're at the end of the current segment, check if we can read the next one
-            if (_segments.Current.Length - _currentIndex == 0)
+            if (_segments.Current.Length - _currentIndex <= 0)
             {
                 if (!_segments.MoveNext())
                     break;
@@ -178,11 +215,11 @@ public class SegmentedStream : Stream
     /// The <paramref name="cancellationToken"/> requested cancellation.
     /// </exception>
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(Read(buffer, offset, count));
-    }
+        => cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled<int>(cancellationToken)
+            : Task.FromResult(Read(buffer, offset, count));
 
+#if NETCOREAPP2_1_OR_GREATER
     /// <summary>
     /// Asynchronously reads a sequence of bytes from the current stream,
     /// advances the position within the stream by the number of bytes read,
@@ -201,14 +238,11 @@ public class SegmentedStream : Stream
     /// <exception cref="OperationCanceledException">
     /// The <paramref name="cancellationToken"/> requested cancellation.
     /// </exception>
-    public
-#if NETCOREAPP2_1_OR_GREATER
-    override
-#endif
-    ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         => cancellationToken.IsCancellationRequested
             ? ValueTask.FromCanceled<int>(cancellationToken)
             : base.ReadAsync(buffer, cancellationToken);
+#endif
 
 
     /// <summary>
@@ -259,4 +293,10 @@ public class SegmentedStream : Stream
     /// <exception cref="NotSupportedException">Any use of this method.</exception>
     public override void Write(byte[] buffer, int offset, int count)
         => throw new NotSupportedException();
+
+    private void EnsureOpen()
+    {
+        if (_isClosed)
+            throw new ObjectDisposedException(nameof(SegmentedStream));
+    }
 }
