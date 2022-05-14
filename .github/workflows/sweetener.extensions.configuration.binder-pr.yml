@@ -30,11 +30,13 @@ jobs:
           solution: Extensions
           resultsDirectory: ${{ runner.temp }}/TestResults
 
-      - name: Code Coverage
-        uses: ./.github/actions/check-code-coverage
+      - name: Codecov
+        uses: codecov/codecov-action@v3.1.0
         with:
-          reportPath: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
-          flag: Configuration.Binder
+          files: ./*/coverage.cobertura.xml
+          directory: ${{ runner.temp }}/TestResults
+          flags: Configuration.Binder
+          fail_ci_if_error: true
 
   package:
     name: Package
