@@ -180,11 +180,11 @@ partial class Collection
             _ordered = ordered;
         }
 
-            public IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
-                => new OrderedCollection<TElement>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
+        public IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
+            => new OrderedCollection<TElement>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
 
-            public IOrderedEnumerable<TElement> CreateOrderedEnumerable<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
-                => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);
+        public IOrderedEnumerable<TElement> CreateOrderedEnumerable<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
+            => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);
 
         public IEnumerator<TElement> GetEnumerator()
             => _ordered.GetEnumerator();
