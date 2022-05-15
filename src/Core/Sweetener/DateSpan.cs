@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Sweetener;
@@ -414,7 +415,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// </item>
     /// </list>
     /// </returns>
-    public int CompareTo(object obj)
+    public int CompareTo(object? obj)
     {
         if (obj is null)
             return 1;
@@ -513,7 +514,7 @@ public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable
     /// <see langword="true"/> if <paramref name="obj"/> is an instance of <see cref="DateSpan"/> and
     /// equals the value of this instance; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool Equals(object obj)
+    public override bool Equals([NotNullWhen(true)] object? obj)
         => obj is DateSpan other && Equals(other);
 
     /// <summary>

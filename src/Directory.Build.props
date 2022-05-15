@@ -33,8 +33,10 @@
 
   <!-- Support for new .NET/C# Features in .NET Standard 2.0 -->
   <ItemGroup>
+    <Compile Include="$(SharedDirectory)Index.cs" Visible="false" />
     <Compile Include="$(SharedDirectory)IsExternalInit.cs" Visible="false" />
     <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
+    <Compile Include="$(SharedDirectory)Range.cs" Visible="false" />
   </ItemGroup>
 
   <!-- Tools -->
@@ -69,7 +71,7 @@
       <PropertyGroup>
         <IsPackable>false</IsPackable>
         <PublicSign>true</PublicSign>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
       </PropertyGroup>
 
       <!-- Test Framework Packages -->
@@ -99,7 +101,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
       </PropertyGroup>
 
       <!-- NuGet metadata -->

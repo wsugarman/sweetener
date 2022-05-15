@@ -25,13 +25,13 @@ internal static class TaskExtensions
                     switch (t.Status)
                     {
                         case TaskStatus.RanToCompletion:
-                            return Task.FromResult(resultSelector((TState)obj));
+                            return Task.FromResult(resultSelector((TState)obj!));
                         case TaskStatus.Canceled:
                             return ThrowIfCancellationRequested<TResult>(t);
                         default:
-                                // Preserve all of the AggregateException's errors!
-                                TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
-                            tcs.SetException(t.Exception.InnerExceptions);
+                            // Preserve all of the AggregateException's errors!
+                            TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
+                            tcs.SetException(t.Exception!.InnerExceptions);
                             return tcs.Task;
                     }
                 },

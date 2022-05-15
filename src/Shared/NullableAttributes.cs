@@ -1,4 +1,4 @@
-// Copyright © William Sugarman.
+// Copyright Â© William Sugarman.
 // Licensed under the MIT License.
 
 // This file defines the attributes used to describe an API within a nullable context. While these types are defined

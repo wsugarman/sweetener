@@ -474,7 +474,7 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
     /// </item>
     /// </list>
     /// </returns>
-    public int CompareTo(object obj)
+    public int CompareTo(object? obj)
     {
         if (obj is null)
             return 1;
@@ -565,7 +565,7 @@ public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>
     /// <see langword="true"/> if <paramref name="obj"/> is an instance of <see cref="DateSpanOffset"/> and
     /// equals the value of this instance; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool Equals(object obj)
+    public override bool Equals([NotNullWhen(true)] object? obj)
         => obj is DateSpanOffset other && Equals(other);
 
     /// <summary>

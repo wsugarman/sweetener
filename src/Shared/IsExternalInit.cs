@@ -1,4 +1,4 @@
-// Copyright © William Sugarman.
+// Copyright Â© William Sugarman.
 // Licensed under the MIT License.
 
 // This file defines the IsExternalInit static class used to implement init-only properties.
@@ -9,9 +9,11 @@
 #if NETSTANDARD2_0
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.Runtime.CompilerServices;
 
+[ExcludeFromCodeCoverage]
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal static class IsExternalInit
 { }

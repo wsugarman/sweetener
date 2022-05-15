@@ -18,8 +18,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup
-      uses: actions/setup-dotnet@v1.9.0
+    - name: Setup SDK
+      uses: actions/setup-dotnet@v2
+
+    - name: Setup Previous LTS SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '3.1.x'
 
     - name: Build
       shell: bash
@@ -41,3 +46,9 @@ runs:
           --collect "XPlat Code Coverage" \
           -s "$GITHUB_WORKSPACE/src/CodeCoverage.runsettings" \
           -v normal -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=[${{ inputs.project }}]*
+
+    - name: Upload Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: Tests
+        path: ${{ inputs.resultsDirectory }}

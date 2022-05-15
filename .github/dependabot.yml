@@ -9,7 +9,7 @@ updates:
     open-pull-requests-limit: 10
 
   - package-ecosystem: "nuget"
-    directory: "/src"
+    directory: "/src/Core"
     schedule:
       interval: "daily"
       time: "09:00"

@@ -15,8 +15,6 @@ using Sweetener.Extensions.Configuration.Memory;
 
 namespace Sweetener.Extensions.Configuration.Test.Memory;
 
-#nullable disable
-
 [TestClass]
 public sealed class MemoryConfigurationTest : IDisposable
 {
@@ -44,22 +42,22 @@ public sealed class MemoryConfigurationTest : IDisposable
             new MemoryConfigurationProvider(
                 new MemoryConfigurationSource
                 {
-                    InitialData = new KeyValuePair<string, string>[]
+                    InitialData = new KeyValuePair<string, string?>[]
                     {
-                        KeyValuePair.Create("Key1"                          , "Value1"    ),
-                        KeyValuePair.Create("Key2"                          , "Value2"    ),
-                        KeyValuePair.Create("Key3"                          , (string)null),
-                        KeyValuePair.Create("Section1:Key1"                 , "Value3"    ),
-                        KeyValuePair.Create("Section1:Key2"                 , "Value4"    ),
-                        KeyValuePair.Create("Section1:Key3"                 , (string)null),
-                        KeyValuePair.Create("Section1:Section2:Key5"        , "Value5"    ),
-                        KeyValuePair.Create("Section:Key1"                  , "Value1"    ),
-                        KeyValuePair.Create("Section:Key2"                  , "Value2"    ),
-                        KeyValuePair.Create("Section:Key3"                  , (string)null),
-                        KeyValuePair.Create("Section:Section1:Key1"         , "Value3"    ),
-                        KeyValuePair.Create("Section:Section1:Key2"         , "Value4"    ),
-                        KeyValuePair.Create("Section:Section1:Key3"         , (string)null),
-                        KeyValuePair.Create("Section:Section1:Section2:Key5", "Value5"    ),
+                        new KeyValuePair<string, string?>("Key1"                          , "Value1"),
+                        new KeyValuePair<string, string?>("Key2"                          , "Value2"),
+                        new KeyValuePair<string, string?>("Key3"                          , null    ),
+                        new KeyValuePair<string, string?>("Section1:Key1"                 , "Value3"),
+                        new KeyValuePair<string, string?>("Section1:Key2"                 , "Value4"),
+                        new KeyValuePair<string, string?>("Section1:Key3"                 , null    ),
+                        new KeyValuePair<string, string?>("Section1:Section2:Key5"        , "Value5"),
+                        new KeyValuePair<string, string?>("Section:Key1"                  , "Value1"),
+                        new KeyValuePair<string, string?>("Section:Key2"                  , "Value2"),
+                        new KeyValuePair<string, string?>("Section:Key3"                  , null    ),
+                        new KeyValuePair<string, string?>("Section:Section1:Key1"         , "Value3"),
+                        new KeyValuePair<string, string?>("Section:Section1:Key2"         , "Value4"),
+                        new KeyValuePair<string, string?>("Section:Section1:Key3"         , null    ),
+                        new KeyValuePair<string, string?>("Section:Section1:Section2:Key5", "Value5"),
                     },
                 })
         });
@@ -67,10 +65,10 @@ public sealed class MemoryConfigurationTest : IDisposable
     [TestMethod]
     public void Ctor()
     {
-        Assert.ThrowsException<ArgumentNullException>(() => new MemoryConfiguration(null));
+        Assert.ThrowsException<ArgumentNullException>(() => new MemoryConfiguration(null!));
 
         var alternative = new MemoryConfiguration(
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { "Key1"                          , "Value1" },
                 { "Key2"                          , "Value2" },
@@ -185,7 +183,7 @@ public sealed class MemoryConfigurationTest : IDisposable
             AssertSection(expectedChildren[i], actualChildren[i]);
     }
 
-    private void GetSection(Func<IConfiguration, IConfiguration> getConfig, string path = null)
+    private void GetSection(Func<IConfiguration, IConfiguration> getConfig, string? path = null)
     {
         IConfiguration config = getConfig(_config);
 
@@ -259,7 +257,7 @@ public sealed class MemoryConfigurationTest : IDisposable
     private static void AssertSection(IConfigurationSection expected, IConfigurationSection actual)
         => AssertSection(expected.Key, expected.Value, expected.Path, expected.GetChildren().Count(), actual);
 
-    private static void AssertSection(string key, string value, string path, int children, IConfigurationSection actual)
+    private static void AssertSection(string key, string? value, string path, int children, IConfigurationSection actual)
     {
         Assert.AreEqual(key     , actual.Key  );
         Assert.AreEqual(value   , actual.Value);
@@ -269,7 +267,7 @@ public sealed class MemoryConfigurationTest : IDisposable
 
     private static IEnumerable<T> Enumerate<T>(IEnumerable source)
     {
-        foreach (object obj in source)
-            yield return (T)obj;
+        foreach (object? obj in source)
+            yield return (T)obj!;
     }
 }

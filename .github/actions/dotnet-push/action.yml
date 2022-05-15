@@ -9,10 +9,10 @@ runs:
   using: composite
   steps:
     - name: Setup
-      uses: actions/setup-dotnet@v1.9.0
+      uses: actions/setup-dotnet@v2
 
     - name: Download Package
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: Package
         path: ${{ runner.temp }}/downloads/package

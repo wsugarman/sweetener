@@ -27,8 +27,13 @@ jobs:
       with:
         languages: 'csharp'
 
-    - name: Setup
+    - name: Setup SDK
       uses: actions/setup-dotnet@v2
+
+    - name: Setup Previous LTS SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '3.1.x'
 
     - name: Build Sweetener.sln
       run: dotnet build src/Core/Sweetener.sln -c Release -p:ContinuousIntegrationBuild=true -warnaserror
