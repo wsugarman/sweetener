@@ -9,12 +9,12 @@
 #if NETSTANDARD2_0
 
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace System;
 
+[ExcludeFromCodeCoverage]
 [EditorBrowsable(EditorBrowsableState.Never)]
 [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types"      , Justification = "BCL does not overwrite operator.")]
 [SuppressMessage("Usage"      , "CA2231:Overload operator equals on overriding value type Equals", Justification = "BCL does not overwrite operator.")]
