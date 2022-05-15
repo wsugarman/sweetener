@@ -2,6 +2,7 @@
 
 # Sweetener
 [![GitHub License](https://img.shields.io/github/license/wsugarman/Sweetener?label=License)](https://github.com/wsugarman/Sweetener/blob/main/LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwsugarman%2FSweetener.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwsugarman%2FSweetener?ref=badge_shield)
 
 You can learn about each of these libraries [here](https://wsugarman.github.io/Sweetener).
 
@@ -27,3 +28,6 @@ These libraries are meant to augment the .NET extension packages, like `Microsof
 The Sweetener libraries are licensed under the [MIT](https://github.com/wsugarman/Sweetener/blob/main/LICENSE)
 license. The coffee cup and sugar icon was created by [Kieu Thi Kim Cuong](https://thenounproject.com/kieukimcuong/)
 and is licensed royalty-free through [The Noun Project](https://thenounproject.com/).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwsugarman%2FSweetener.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwsugarman%2FSweetener?ref=badge_large)
