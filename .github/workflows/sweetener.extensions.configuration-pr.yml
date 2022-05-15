@@ -33,7 +33,7 @@ jobs:
       - name: Codecov
         uses: codecov/codecov-action@v3.1.0
         with:
-          files: ${{ runner.temp }}/TestResults/*/coverage.cobertura.xml
+          directory: ${{ runner.temp }}/TestResults/
           flags: Configuration
           fail_ci_if_error: true
 
