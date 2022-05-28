@@ -65,7 +65,10 @@ public class BinaryComparerTest
                 using Stream? xStream = x != null ? new MemoryStream(x) : null;
                 using Stream? yStream = y != null ? new MemoryStream(y) : null;
 
-                return BinaryComparer.Instance.Compare(xStream, yStream);
+                if (ReferenceEquals(x, y))
+                    return BinaryComparer.Instance.Compare(xStream, xStream);
+                else
+                    return BinaryComparer.Instance.Compare(xStream, yStream);
             });
 
     [TestMethod]
@@ -109,7 +112,7 @@ public class BinaryComparerTest
 
     [TestMethod]
     public void Equals_ReadOnlySpan_x86()
-        => EqualsWordWise(
+        => Equals(
             (x, y) =>
             {
                 unsafe
@@ -117,14 +120,16 @@ public class BinaryComparerTest
                     fixed (byte* xPtr = x)
                     fixed (byte* yPtr = y)
                     {
-                        return BinaryComparer.Equals((uint*)xPtr, (uint*)yPtr, x.Length);
+                        return BinaryComparer.Equals((uint*)xPtr, (uint*)yPtr, x!.Length);
                     }
                 }
-            });
+            },
+            skipNullCase: true,
+            skipUnequalLength: true);
 
     [TestMethod]
     public void Equals_ReadOnlySpan_x64()
-        => EqualsWordWise(
+        => Equals(
             (x, y) =>
             {
                 unsafe
@@ -132,18 +137,68 @@ public class BinaryComparerTest
                     fixed (byte* xPtr = x)
                     fixed (byte* yPtr = y)
                     {
-                        return BinaryComparer.Equals((ulong*)xPtr, (ulong*)yPtr, x.Length);
+                        return BinaryComparer.Equals((ulong*)xPtr, (ulong*)yPtr, x!.Length);
                     }
                 }
+            },
+            skipNullCase: true,
+            skipUnequalLength: true);
+
+    [TestMethod]
+    public void Equals_Stream()
+        => Equals(
+            (x, y) =>
+            {
+                using Stream? xStream = x != null ? new MemoryStream(x) : null;
+                using Stream? yStream = y != null ? new MemoryStream(y) : null;
+
+                if (ReferenceEquals(x, y))
+                    return BinaryComparer.Instance.Equals(xStream, xStream);
+                else
+                    return BinaryComparer.Instance.Equals(xStream, yStream);
             });
 
     [TestMethod]
+    public void Equals_Stream_x32()
+        => Equals(
+            (x, y) =>
+            {
+                using Stream xStream = new MemoryStream(x!);
+                using Stream yStream = new MemoryStream(y!);
+
+                return BinaryComparer.Equals32(xStream, yStream);
+            },
+            skipNullCase: true);
+
+    [TestMethod]
+    public void Equals_Stream_x64()
+        => Equals(
+            (x, y) =>
+            {
+                using Stream xStream = new MemoryStream(x!);
+                using Stream yStream = new MemoryStream(y!);
+
+                return BinaryComparer.Equals64(xStream, yStream);
+            },
+            skipNullCase: true);
+
+    [TestMethod]
     public void GetHashCode_Array()
-        => Equals((x, y) => BinaryComparer.Instance.GetHashCode(x) == BinaryComparer.Instance.GetHashCode(y));
+        => Equals((x, y) => BinaryComparer.Instance.GetHashCode(x!) == BinaryComparer.Instance.GetHashCode(y!));
 
     [TestMethod]
     public void GetHashCode_ReadOnlySpan()
         => Equals((x, y) => BinaryComparer.GetHashCode(x) == BinaryComparer.GetHashCode(y), skipNullCase: true);
+
+    [TestMethod]
+    public void GetHashCode_Stream()
+        => Equals((x, y) =>
+        {
+            using Stream? xStream = x != null ? new MemoryStream(x) : null;
+            using Stream? yStream = y != null ? new MemoryStream(y) : null;
+
+            return BinaryComparer.Instance.GetHashCode(xStream!) == BinaryComparer.Instance.GetHashCode(yStream!);
+        });
 
     private static void Compare(Func<byte[]?, byte[]?, int> compare, bool skipNullCase = false)
     {
@@ -196,6 +251,7 @@ public class BinaryComparerTest
         Assert.IsTrue(compare(Array.Empty<byte>(), aligned1) < 0); // Different length (empty)
 
         // Equal
+        Assert.AreEqual(0, compare(aligned1   , aligned1                )); // Same reference
         Assert.AreEqual(0, compare(aligned1   , (byte[])aligned1.Clone())); // Aligned
         Assert.AreEqual(0, compare(extra1     , (byte[])extra1  .Clone())); // Unaligned
         Assert.AreEqual(0, compare(new byte[0], new byte[0]             )); // Empty
@@ -207,25 +263,8 @@ public class BinaryComparerTest
         Assert.IsTrue(compare(aligned1, Array.Empty<byte>()) > 0); // Different length (empty)
     }
 
-    private static void Equals(Func<byte[]?, byte[]?, bool> equals, bool skipNullCase = false)
-    {
-        // Null + Empty
-        if (!skipNullCase)
-        {
-            Assert.IsTrue(equals(null, null));
-
-            Assert.IsFalse(equals(null, Array.Empty<byte>()));
-            Assert.IsFalse(equals(Array.Empty<byte>(), null));
-        }
-
-        // Different lengths
-        Assert.IsFalse(equals(new byte[] { 1, 2, 3 }, new byte[] { 4, 5 }   ));
-        Assert.IsFalse(equals(new byte[] { 4, 5 }   , new byte[] { 1, 2, 3 }));
-
-        EqualsWordWise(equals);
-    }
-
-    private static void EqualsWordWise(Func<byte[], byte[], bool> equals)
+    [SuppressMessage("Performance", "CA1825:Avoid zero-length array allocations", Justification = "Avoid reference equality.")]
+    private static void Equals(Func<byte[]?, byte[]?, bool> equals, bool skipNullCase = false, bool skipUnequalLength = false)
     {
         byte[] aligned1 = new byte[]
         {
@@ -254,14 +293,35 @@ public class BinaryComparerTest
             24, 35, 26
         };
 
+        // Null + Empty
+        if (!skipNullCase)
+        {
+            Assert.IsTrue(equals(null, null));
+
+            Assert.IsFalse(equals(null, Array.Empty<byte>()));
+            Assert.IsFalse(equals(Array.Empty<byte>(), null));
+        }
+
         // Equal
+        Assert.IsTrue(equals(aligned1                , aligned1                ));
         Assert.IsTrue(equals(aligned1                , (byte[])aligned1.Clone()));
         Assert.IsTrue(equals((byte[])aligned1.Clone(), aligned1                ));
 
         Assert.IsTrue(equals(extra1                , (byte[])extra1.Clone()));
         Assert.IsTrue(equals((byte[])extra1.Clone(), extra1                ));
 
+        Assert.IsTrue(equals(new byte[0], new byte[0]));
+
         // Not Equal
+        if (!skipUnequalLength)
+        {
+            Assert.IsFalse(equals(aligned1           , Array.Empty<byte>()));
+            Assert.IsFalse(equals(Array.Empty<byte>(), aligned1           ));
+
+            Assert.IsFalse(equals(aligned1, extra1));
+            Assert.IsFalse(equals(aligned2, extra1));
+        }
+
         Assert.IsFalse(equals(aligned1, aligned2));
         Assert.IsFalse(equals(aligned2, aligned1));
 
