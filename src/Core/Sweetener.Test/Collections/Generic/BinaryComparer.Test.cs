@@ -14,14 +14,7 @@ public class BinaryComparerTest
 {
     [TestMethod]
     public void Compare_Array()
-    {
-        // Same reference
-        byte[] a = new byte[] { 0, 0, 0, 0, 0 };
-        Assert.AreEqual(0, BinaryComparer.Instance.Compare(a, a));
-
-        // Other test cases
-        Compare(BinaryComparer.Instance.Compare);
-    }
+        => Compare(BinaryComparer.Instance.Compare);
 
     [TestMethod]
     public void Compare_ReadOnlySpan()
@@ -37,10 +30,11 @@ public class BinaryComparerTest
                     fixed (byte* xPtr = x)
                     fixed (byte* yPtr = y)
                     {
-                        return BinaryComparer.Compare((uint*)xPtr, (uint*)yPtr, x.Length, y.Length);
+                        return BinaryComparer.Compare((uint*)xPtr, (uint*)yPtr, x!.Length, y!.Length);
                     }
                 }
-            });
+            },
+            skipNullCase: true);
 
     [TestMethod]
     public void Compare_ReadOnlySpan_x64()
@@ -52,10 +46,11 @@ public class BinaryComparerTest
                     fixed (byte* xPtr = x)
                     fixed (byte* yPtr = y)
                     {
-                        return BinaryComparer.Compare((ulong*)xPtr, (ulong*)yPtr, x.Length, y.Length);
+                        return BinaryComparer.Compare((ulong*)xPtr, (ulong*)yPtr, x!.Length, y!.Length);
                     }
                 }
-            });
+            },
+            skipNullCase: true);
 
     [TestMethod]
     public void Compare_Stream()
@@ -200,22 +195,8 @@ public class BinaryComparerTest
             return BinaryComparer.Instance.GetHashCode(xStream!) == BinaryComparer.Instance.GetHashCode(yStream!);
         });
 
-    private static void Compare(Func<byte[]?, byte[]?, int> compare, bool skipNullCase = false)
-    {
-        // Null + Empty
-        if (!skipNullCase)
-        {
-            Assert.AreEqual(0, compare(null, null));
-
-            Assert.IsTrue(compare(null, Array.Empty<byte>()) < 0);
-            Assert.IsTrue(compare(Array.Empty<byte>(), null) > 0);
-        }
-
-        Compare(compare);
-    }
-
     [SuppressMessage("Performance", "CA1825:Avoid zero-length array allocations", Justification = "Avoid reference equality.")]
-    private static void Compare(Func<byte[], byte[], int> compare)
+    private static void Compare(Func<byte[]?, byte[]?, int> compare, bool skipNullCase = false)
     {
         byte[] aligned1 = new byte[]
         {
@@ -243,6 +224,15 @@ public class BinaryComparerTest
             16, 17, 18, 19, 20, 21, 22, 23,
             24, 35, 26
         };
+
+        // Null + Empty
+        if (!skipNullCase)
+        {
+            Assert.AreEqual(0, compare(null, null));
+
+            Assert.IsTrue(compare(null, Array.Empty<byte>()) < 0);
+            Assert.IsTrue(compare(Array.Empty<byte>(), null) > 0);
+        }
 
         // Less Than
         Assert.IsTrue(compare(aligned1           , aligned2) < 0); // Same length
