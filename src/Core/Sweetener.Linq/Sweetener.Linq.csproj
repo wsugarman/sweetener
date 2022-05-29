@@ -17,4 +17,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Sweetener\Sweetener.csproj" />
+  </ItemGroup>
+
 </Project>
