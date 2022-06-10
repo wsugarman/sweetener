@@ -88,7 +88,7 @@ jobs:
           apiKey: ${{ secrets.NUGET_API_KEY }}
 
       - name: Create release
-        uses: ./.github/actions/gh-release
+        uses: ./.github/actions/github-release
         with:
           project: Sweetener
           packageDirectory: ${{ runner.temp }}/package

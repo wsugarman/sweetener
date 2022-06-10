@@ -14,15 +14,15 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Determine Version
+    - name: Parse Version
       id: package
       shell: pwsh
       run: |
-        ./.github/actions/gh-release/scripts/ParseVersion.ps1 `
+        ./.github/actions/github-release/scripts/ParseVersion.ps1 `
           -ProjectName '${{ inputs.project }}' `
           -PackageDirectory '${{ inputs.packageDirectory }}'
 
-    - name: Check for Release
+    - name: Check Existing Release
       id: release
       shell: pwsh
       run: |
@@ -36,15 +36,15 @@ runs:
       shell: pwsh
       run: |
         git tag -s -m '${{ inputs.project }} Version ${{ steps.package.outputs.version }}' `
-          '${{ steps.package.outputs.tag }}' `
-          '${{ github.sha }}'
+          ${{ steps.package.outputs.tag }} `
+          ${{ github.sha }}
 
     - name: Create Release
       if: ${{ steps.release.outputs.exists == 'false' }}
       working-directory: ${{ inputs.packageDirectory }}
       shell: pwsh
       run: |
-        gh release create '${{ steps.package.outputs.tag }}' '${{ steps.package.outputs.name }}' ${{ steps.package.outputs.prerelease }} `
+        gh release create ${{ steps.package.outputs.tag }} '${{ steps.package.outputs.name }}' ${{ steps.package.outputs.prerelease }} `
           --title '${{ inputs.project }} ${{ steps.package.outputs.version }}' `
           --draft
       env:
