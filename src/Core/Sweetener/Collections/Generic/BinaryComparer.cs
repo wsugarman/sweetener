@@ -83,6 +83,67 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
     }
 
     /// <summary>
+    /// Compares two regions of memory and returns a value indicating whether one is less than, equal to,
+    /// or greater than the other.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Regions are first compared by their byte values, starting with first index, followed by their respective
+    /// lengths such that shorter arrays are considered smaller values.
+    /// </para>
+    /// <para>
+    /// Be careful of implicit type conversions. For example, <see cref="byte"/>[] can be implicitly cast to
+    /// <see cref="ReadOnlySpan{T}"/>. The <see cref="Compare(byte[], byte[])"/> method will return a
+    /// non-zero result given both a <see langword="null"/> value and an empty array, but when cast to
+    /// <see cref="ReadOnlySpan{T}"/> the <see cref="Compare(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> method
+    /// will return <c>0</c> instead.
+    /// </para>
+    /// </remarks>
+    /// <param name="x">The first region to compare.</param>
+    /// <param name="y">The second region to compare.</param>
+    /// <returns>
+    /// A signed integer that indicates the relative values of <paramref name="x"/> and <paramref name="y"/>,
+    /// as shown in the following table.
+    /// <list type="table">
+    /// <listheader>
+    /// <term>Return Value</term>
+    /// <description>Description</description>
+    /// </listheader>
+    /// <item>
+    /// <term>Less than zero</term>
+    /// <description>
+    /// <paramref name="x"/> is less than <paramref name="y"/>.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <term>Zero</term>
+    /// <description>
+    /// <paramref name="x"/> is equal to <paramref name="y"/>.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <term>Greater than zero</term>
+    /// <description>
+    /// <paramref name="x"/> is greater than <paramref name="y"/>.
+    /// </description>
+    /// </item>
+    /// </list>
+    /// </returns>
+    public int Compare(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
+    {
+        unsafe
+        {
+            fixed (byte* xPtr = x)
+            fixed (byte* yPtr = y)
+            {
+                return IntPtr.Size == sizeof(uint)
+                    ? Compare((uint*)xPtr, (uint*)yPtr, x.Length, y.Length)
+                    : Compare((ulong*)xPtr, (ulong*)yPtr, x.Length, y.Length);
+            }
+        }
+    }
+
+    /// <summary>
     /// Compares two streams and returns a value indicating whether one is less than, equal to, or greater than the other.
     /// </summary>
     /// <remarks>
@@ -156,6 +217,43 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
     }
 
     /// <summary>
+    /// Determines whether the specified regions of memory are equal.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Be careful of implicit type conversions.
+    /// </para>
+    /// <para>For example, <see cref="byte"/>[] can be implicitly cast to
+    /// <see cref="ReadOnlySpan{T}"/>. The <see cref="Equals(byte[], byte[])"/> method will return
+    /// <see langword="false"/> given both a <see langword="null"/> value and an empty array, but when cast to
+    /// <see cref="ReadOnlySpan{T}"/> the <see cref="Equals(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> method
+    /// will return <see langword="true"/> instead.
+    /// </para>
+    /// </remarks>
+    /// <param name="x">The first region to compare.</param>
+    /// <param name="y">The second region to compare.</param>
+    /// <returns>
+    /// <see langword="true"/> if the specified regions are of equal length
+    /// and contain the same byte values in the same order; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool Equals(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
+    {
+        if (x.Length != y.Length)
+            return false;
+
+        unsafe
+        {
+            fixed (byte* xPtr = x)
+            fixed (byte* yPtr = y)
+            {
+                return IntPtr.Size == sizeof(uint)
+                    ? Equals((uint*)xPtr, (uint*)yPtr, x.Length)
+                    : Equals((ulong*)xPtr, (ulong*)yPtr, x.Length);
+            }
+        }
+    }
+
+    /// <summary>
     /// Determines whether the specified streams are equal.
     /// </summary>
     /// <param name="x">The first stream to compare.</param>
@@ -189,6 +287,33 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 #endif
         => obj is null ? 0 : GetHashCode(new ReadOnlySpan<byte>(obj));
 
+
+    /// <summary>
+    /// Returns a hash code for the specified region of memory.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Be careful of implicit type conversions.
+    /// </para>
+    /// <para>For example, <see cref="byte"/>[] can be implicitly cast to
+    /// <see cref="ReadOnlySpan{T}"/>. The <see cref="GetHashCode(byte[])"/> method will return different values
+    /// for <see langword="null"/> values and empty arrays, but when cast to <see cref="ReadOnlySpan{T}"/>
+    /// the <see cref="GetHashCode(ReadOnlySpan{byte})"/> method will return equivalent values.
+    /// </para>
+    /// </remarks>
+    /// <param name="obj">The region for which a hash code is to be returned.</param>
+    /// <returns>A hash code for the specified region.</returns>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ReadOnlySpan<T> cannot be used as type argument.")]
+    public int GetHashCode(ReadOnlySpan<byte> obj)
+    {
+        unsafe
+        {
+            int hash;
+            XxHash32.Hash(obj, new Span<byte>(&hash, 4));
+            return hash;
+        }
+    }
+
     /// <summary>
     /// Returns a hash code for the specified stream.
     /// </summary>
@@ -211,129 +336,6 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
         {
             int hash;
             algo.GetCurrentHash(new Span<byte>(&hash, 4));
-            return hash;
-        }
-    }
-
-    /// <summary>
-    /// Compares two regions of memory and returns a value indicating whether one is less than, equal to,
-    /// or greater than the other.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Regions are first compared by their byte values, starting with first index, followed by their respective
-    /// lengths such that shorter arrays are considered smaller values.
-    /// </para>
-    /// <para>
-    /// Be careful of implicit type conversions. For example, <see cref="byte"/>[] can be implicitly cast to
-    /// <see cref="ReadOnlySpan{T}"/>. The <see cref="Compare(byte[], byte[])"/> method will return a
-    /// non-zero result given both a <see langword="null"/> value and an empty array, but when cast to
-    /// <see cref="ReadOnlySpan{T}"/> the <see cref="Compare(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> method
-    /// will return <c>0</c> instead.
-    /// </para>
-    /// </remarks>
-    /// <param name="x">The first region to compare.</param>
-    /// <param name="y">The second region to compare.</param>
-    /// <returns>
-    /// A signed integer that indicates the relative values of <paramref name="x"/> and <paramref name="y"/>,
-    /// as shown in the following table.
-    /// <list type="table">
-    /// <listheader>
-    /// <term>Return Value</term>
-    /// <description>Description</description>
-    /// </listheader>
-    /// <item>
-    /// <term>Less than zero</term>
-    /// <description>
-    /// <paramref name="x"/> is less than <paramref name="y"/>.
-    /// </description>
-    /// </item>
-    /// <item>
-    /// <term>Zero</term>
-    /// <description>
-    /// <paramref name="x"/> is equal to <paramref name="y"/>.
-    /// </description>
-    /// </item>
-    /// <item>
-    /// <term>Greater than zero</term>
-    /// <description>
-    /// <paramref name="x"/> is greater than <paramref name="y"/>.
-    /// </description>
-    /// </item>
-    /// </list>
-    /// </returns>
-    public static int Compare(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
-    {
-        unsafe
-        {
-            fixed (byte* xPtr = x)
-            fixed (byte* yPtr = y)
-            {
-                return IntPtr.Size == sizeof(uint)
-                    ? Compare((uint*)xPtr, (uint*)yPtr, x.Length, y.Length)
-                    : Compare((ulong*)xPtr, (ulong*)yPtr, x.Length, y.Length);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Determines whether the specified regions of memory are equal.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Be careful of implicit type conversions.
-    /// </para>
-    /// <para>For example, <see cref="byte"/>[] can be implicitly cast to
-    /// <see cref="ReadOnlySpan{T}"/>. The <see cref="Equals(byte[], byte[])"/> method will return
-    /// <see langword="false"/> given both a <see langword="null"/> value and an empty array, but when cast to
-    /// <see cref="ReadOnlySpan{T}"/> the <see cref="Equals(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> method
-    /// will return <see langword="true"/> instead.
-    /// </para>
-    /// </remarks>
-    /// <param name="x">The first region to compare.</param>
-    /// <param name="y">The second region to compare.</param>
-    /// <returns>
-    /// <see langword="true"/> if the specified regions are of equal length
-    /// and contain the same byte values in the same order; otherwise, <see langword="false"/>.
-    /// </returns>
-    public static bool Equals(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
-    {
-        if (x.Length != y.Length)
-            return false;
-
-        unsafe
-        {
-            fixed (byte* xPtr = x)
-            fixed (byte* yPtr = y)
-            {
-                return IntPtr.Size == sizeof(uint)
-                    ? Equals((uint*)xPtr, (uint*)yPtr, x.Length)
-                    : Equals((ulong*)xPtr, (ulong*)yPtr, x.Length);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Returns a hash code for the specified region of memory.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Be careful of implicit type conversions.
-    /// </para>
-    /// <para>For example, <see cref="byte"/>[] can be implicitly cast to
-    /// <see cref="ReadOnlySpan{T}"/>. The <see cref="GetHashCode(byte[])"/> method will return different values
-    /// for <see langword="null"/> values and empty arrays, but when cast to <see cref="ReadOnlySpan{T}"/>
-    /// the <see cref="GetHashCode(ReadOnlySpan{byte})"/> method will return equivalent values.
-    /// </para>
-    /// </remarks>
-    /// <param name="obj">The region for which a hash code is to be returned.</param>
-    /// <returns>A hash code for the specified region.</returns>
-    public static int GetHashCode(ReadOnlySpan<byte> obj)
-    {
-        unsafe
-        {
-            int hash;
-            XxHash32.Hash(obj, new Span<byte>(&hash, 4));
             return hash;
         }
     }
