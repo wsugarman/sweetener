@@ -1,21 +1,26 @@
-export default async ({github, context, release}) => {
+export default async function createRelease({ github, context, release }) {
   const tag = await github.rest.git.getRef({
     owner: context.repo.owner,
     repo: context.repo.repo,
     ref: `tags/${release.tag}`
-  })
+  });
 
   // If the tag already exists, exit prematurely
   if (tag) {
-    console.log(`Tag ${release.tag} already exists`)
-    return
+    console.log(`Tag ${release.tag} already exists`);
+    return;
+  }
+  else
+  {
+    console.log(`Tag ${release.tag} does not exist`);
   }
 
+  /*
   const commit = await github.rest.git.getCommit({
     owner: context.repo.owner,
     repo: context.repo.repo,
     commit_sha: context.sha
-  })
+  });
 
   await github.rest.git.createTag({
     owner: context.repo.owner,
@@ -25,14 +30,14 @@ export default async ({github, context, release}) => {
     object: context.sha,
     type: 'commit',
     tagger: commit.author
-  })
+  });
 
   await github.rest.git.createRef({
     owner: context.repo.owner,
     repo: context.repo.repo,
     ref: `refs/tags/${release.tag}`,
     sha: context.sha
-  })
+  });
 
   await github.rest.repos.createRelease({
     owner: context.repo.owner,
@@ -40,5 +45,6 @@ export default async ({github, context, release}) => {
     tag_name: release.tag,
     prerelease: release.prerelease,
     draft: true
-  })
+  });
+  */
 }

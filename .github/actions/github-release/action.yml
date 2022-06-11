@@ -26,7 +26,7 @@ runs:
       uses: actions/github-script@v6
       with:
         script: |
-          const createRelease = require('./.github/actions/github-release/scripts/CreateRelease.js')
+          import createRelease from './.github/actions/github-release/scripts/CreateRelease.mjs';
           await createRelease({
               github: github,
               context: context,
@@ -36,4 +36,4 @@ runs:
                 tag: '${{ steps.package.outputs.tag }}',
                 prerelease: ${{ steps.package.outputs.prerelease }}
               }
-            })
+            });
