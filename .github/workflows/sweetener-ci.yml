@@ -86,3 +86,10 @@ jobs:
         uses: ./.github/actions/dotnet-push
         with:
           apiKey: ${{ secrets.NUGET_API_KEY }}
+          downloadDirectory: ${{ runner.temp }}/downloads/package
+
+      - name: Create Release
+        uses: ./.github/actions/github-release
+        with:
+          project: Sweetener
+          packageDirectory: ${{ runner.temp }}/downloads/package

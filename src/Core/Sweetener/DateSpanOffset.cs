@@ -12,7 +12,7 @@ namespace Sweetener;
 /// relative to Coordinated Universal Time (UTC).
 /// </summary>
 [Serializable]
-public readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>, IEquatable<DateSpanOffset> //, IFormattable
+internal readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffset>, IEquatable<DateSpanOffset> //, IFormattable
 {
     /// <summary>
     /// Gets the instant in time that starts the interval represented by this instance.

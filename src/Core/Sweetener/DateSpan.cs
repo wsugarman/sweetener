@@ -11,7 +11,7 @@ namespace Sweetener;
 /// Represents an interval between two instants in time, each expressed as a date and time of day.
 /// </summary>
 [Serializable]
-public readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan> //, IFormattable
+internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatable<DateSpan> //, IFormattable
 {
     /// <summary>
     /// Gets the instant in time that starts the interval represented by this instance.

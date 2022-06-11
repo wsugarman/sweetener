@@ -1,0 +1,36 @@
+name: github release
+description: Creates a GitHub release for a NuGet package
+inputs:
+  project:
+    description: The name of the component
+    required: true
+  packageDirectory:
+    description: The directory containing the NuGet package
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Parse Version
+      id: package
+      shell: pwsh
+      run: |
+        ./.github/actions/github-release/scripts/ParseVersion.ps1 `
+          -ProjectName '${{ inputs.project }}' `
+          -PackageDirectory '${{ inputs.packageDirectory }}'
+
+    - name: Create Release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { default: createRelease } = await import('${{ github.workspace }}/.github/actions/github-release/scripts/CreateRelease.mjs');
+          await createRelease({
+              github: github,
+              context: context,
+              release: {
+                project: '${{ inputs.project }}',
+                version: '${{ steps.package.outputs.version }}',
+                tag: '${{ steps.package.outputs.tag }}',
+                prerelease: ${{ steps.package.outputs.prerelease }}
+              }
+            });

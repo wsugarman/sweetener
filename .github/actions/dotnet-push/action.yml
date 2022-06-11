@@ -4,6 +4,10 @@ inputs:
   apiKey:
     description: API Key for NuGet.org
     required: true
+  downloadDirectory:
+    description: The directory where the package is downloaded
+    required: false
+    default: ${{ runner.temp }}/downloads/package
 
 runs:
   using: composite
@@ -15,12 +19,13 @@ runs:
       uses: actions/download-artifact@v3
       with:
         name: Package
-        path: ${{ runner.temp }}/downloads/package
+        path: ${{ inputs.downloadDirectory }}
 
     - name: dotnet nuget push
       shell: bash
+      working-directory:  ${{ inputs.downloadDirectory }}
       run: |
-        dotnet nuget push "${{ runner.temp }}/downloads/package/*.nupkg" \
+        dotnet nuget push "*.nupkg" \
           --source "https://api.nuget.org/v3/index.json" \
           --api-key "${{ inputs.apiKey }}" \
           --skip-duplicate
