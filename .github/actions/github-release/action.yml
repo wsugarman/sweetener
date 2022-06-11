@@ -22,7 +22,7 @@ runs:
           -ProjectName '${{ inputs.project }}' `
           -PackageDirectory '${{ inputs.packageDirectory }}'
 
-    - name: Check Existing Release
+    - name: Check Exists
       id: release
       shell: pwsh
       run: |
@@ -38,6 +38,7 @@ runs:
         git tag -s -m '${{ inputs.project }} Version ${{ steps.package.outputs.version }}' `
           ${{ steps.package.outputs.tag }} `
           ${{ github.sha }}
+        git push origin ${{ steps.package.outputs.tag }}
 
     - name: Create Release
       if: ${{ steps.release.outputs.exists == 'false' }}
