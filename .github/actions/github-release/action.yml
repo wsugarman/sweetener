@@ -23,7 +23,7 @@ runs:
           -PackageDirectory '${{ inputs.packageDirectory }}'
 
     - name: Create Release
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       with:
         script: |
           const createRelease = require('./.github/actions/github-release/scripts/CreateRelease.js')
