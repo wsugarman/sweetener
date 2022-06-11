@@ -22,33 +22,18 @@ runs:
           -ProjectName '${{ inputs.project }}' `
           -PackageDirectory '${{ inputs.packageDirectory }}'
 
-    - name: Check Exists
-      id: release
-      shell: pwsh
-      continue-on-error: true
-      run: |
-        gh release view '${{ steps.package.outputs.tag }}' | Out-Null
-        Write-Host "::set-output name=exists::$($?)"
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
-
-    - name: Tag
-      if: ${{ steps.release.outputs.exists == 'false' }}
-      shell: pwsh
-      run: |
-        ./.github/actions/github-release/scripts/TagRelease.ps1 `
-          -ProjectName '${{ inputs.project }}' `
-          -Version '${{ steps.package.outputs.version }}' `
-          -Tag '${{ steps.package.outputs.tag }}' `
-          -CommitSha '${{ github.sha }}'
-
     - name: Create Release
-      if: ${{ steps.release.outputs.exists == 'false' }}
-      working-directory: ${{ inputs.packageDirectory }}
-      shell: bash
-      run: |
-        gh release create ${{ steps.package.outputs.tag }} ${{ steps.package.outputs.name }} ${{ steps.package.outputs.prerelease }} \
-          --title "${{ inputs.project }} ${{ steps.package.outputs.version }}" \
-          --draft
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const createRelease = require('./.github/actions/github-release/scripts/CreateRelease.js')
+          await createRelease({
+              github: github,
+              context: context,
+              release: {
+                project: '${{ inputs.project }}',
+                version: '${{ steps.package.outputs.version }}',
+                tag: '${{ steps.package.outputs.tag }}',
+                prerelease: ${{ steps.package.outputs.prerelease }}
+              }
+            })

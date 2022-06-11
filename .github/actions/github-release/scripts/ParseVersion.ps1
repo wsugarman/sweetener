@@ -36,7 +36,11 @@ if (!$isValid)
 $packageVersion = $Matches.Version
 if ($Matches.Suffix)
 {
-    $prerelease = '--prerelease'
+    $prerelease = 'true'
+}
+else
+{
+    $prerelease = 'false'
 }
 
 Write-Host "::set-output name=name::$packageName"
