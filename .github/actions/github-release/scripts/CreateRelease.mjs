@@ -1,3 +1,5 @@
+const fs = await import('node:fs')
+
 export default async function createRelease({ github, context, release }) {
   try {
     // Try to get the tag
@@ -43,11 +45,24 @@ export default async function createRelease({ github, context, release }) {
     sha: context.sha
   });
 
-  await github.rest.repos.createRelease({
+  const newRelease = await github.rest.repos.createRelease({
     owner: context.repo.owner,
     repo: context.repo.repo,
     tag_name: release.tag,
+    name: `${release.project} ${release.version}`,
     prerelease: release.prerelease,
     draft: true
+  });
+
+  await github.rest.repos.uploadReleaseAsset({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    release_id: newRelease.id,
+    name: release.name,
+    data: fs.readFileSync(release.fullName),
+    headers: {
+      'content-type': contentType,
+      'content-length': fs.statSync(release.fullName).size,
+    },
   });
 }

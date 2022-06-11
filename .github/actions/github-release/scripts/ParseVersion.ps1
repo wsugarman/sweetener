@@ -27,6 +27,7 @@ if ($packages.Length -gt 1)
 
 # Use Regex to parse out version based on our own naming conventions
 $packageName = $packages[0].Name
+$packageFullName = $packages[0].FullName
 $isValid = $packageName -match $ProjectName.Replace(".", "\.") + "\.(?<Version>\d+\.\d+\.\d+(?<Suffix>-[a-zA-Z]+\.\d+)?)\.nupkg"
 if (!$isValid)
 {
@@ -44,6 +45,7 @@ else
 }
 
 Write-Host "::set-output name=name::$packageName"
+Write-Host "::set-output name=fullName::$packageFullName"
 Write-Host "::set-output name=version::$packageVersion"
 Write-Host "::set-output name=prerelease::$prerelease"
 Write-Host "::set-output name=tag::$($ProjectName)_$($packageVersion)"
