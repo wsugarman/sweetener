@@ -21,14 +21,14 @@ param
 Set-PSDebug -Off
 $ErrorActionPreference = "Stop"
 
-# Determine who committed this release
+# Determine who committed this change
 $username = git log -n 1 --pretty=format:%an $CommitSha
 $email = git log -n 1 --pretty=format:%ae $CommitSha
 
-# Update the config to reflect this user
+# Update the config to reflect the above user
 & git config user.name "$username"
 & git config user.email "$email"
 
-# Create the tag
+# Create the tag and push it
 & git tag -s -m "$ProjectName Version $Version" $Tag $CommitSha
 & git push origin $Tag
