@@ -67,7 +67,7 @@ public sealed class MemoryConfigurationTest : IDisposable
     {
         Assert.ThrowsException<ArgumentNullException>(() => new MemoryConfiguration(null!));
 
-        var alternative = new MemoryConfiguration(
+        MemoryConfiguration alternative = new MemoryConfiguration(
             new Dictionary<string, string?>
             {
                 { "Key1"                          , "Value1" },
@@ -241,7 +241,7 @@ public sealed class MemoryConfigurationTest : IDisposable
 
     private static void GetReloadToken(Func<MemoryConfiguration, IChangeToken> getToken)
     {
-        var config = new MemoryConfiguration();
+        MemoryConfiguration config = new MemoryConfiguration();
         IChangeToken token = getToken(config);
         token.RegisterChangeCallback(_ => Assert.Fail(), null);
 

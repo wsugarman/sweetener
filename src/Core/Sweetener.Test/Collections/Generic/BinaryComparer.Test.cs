@@ -18,7 +18,9 @@ public class BinaryComparerTest
 
     [TestMethod]
     public void Compare_ReadOnlySpan()
-        => Compare((x, y) => BinaryComparer.Compare(x, y), skipNullCase: true);
+        => Compare(
+            (x, y) => BinaryComparer.Instance.Compare(new ReadOnlySpan<byte>(x), new ReadOnlySpan<byte>(y)),
+            skipNullCase: true);
 
     [TestMethod]
     public void Compare_ReadOnlySpan_x86()
@@ -103,7 +105,9 @@ public class BinaryComparerTest
 
     [TestMethod]
     public void Equals_ReadOnlySpan()
-        => Equals((x, y) => BinaryComparer.Equals(x, y), skipNullCase: true);
+        => Equals(
+            (x, y) => BinaryComparer.Instance.Equals(new ReadOnlySpan<byte>(x), new ReadOnlySpan<byte>(y)),
+            skipNullCase: true);
 
     [TestMethod]
     public void Equals_ReadOnlySpan_x86()
@@ -183,7 +187,10 @@ public class BinaryComparerTest
 
     [TestMethod]
     public void GetHashCode_ReadOnlySpan()
-        => Equals((x, y) => BinaryComparer.GetHashCode(x) == BinaryComparer.GetHashCode(y), skipNullCase: true);
+        => Equals(
+            (x, y) =>
+                BinaryComparer.Instance.GetHashCode(new ReadOnlySpan<byte>(x)) == BinaryComparer.Instance.GetHashCode(new ReadOnlySpan<byte>(y)),
+            skipNullCase: true);
 
     [TestMethod]
     public void GetHashCode_Stream()
