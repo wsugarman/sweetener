@@ -52,25 +52,3 @@ jobs:
           solution: Core
           buildConfiguration: Release
           pullRequestNumber: ${{ github.event.pull_request.number }}
-
-  push-test:
-    name: Push (Test)
-    needs: package
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Download Package
-        uses: actions/download-artifact@v3
-        with:
-          name: Package
-          path: ${{ runner.temp }}/downloads/package
-
-      - name: Create Release
-        uses: ./.github/actions/github-release
-        with:
-          project: Sweetener
-          packageDirectory: ${{ runner.temp }}/downloads/package
-          token: ${{ secrets.GITHUB_TOKEN }}
