@@ -26,7 +26,7 @@ runs:
       uses: actions/github-script@v6
       with:
         script: |
-          import createRelease from './.github/actions/github-release/scripts/CreateRelease.mjs';
+          const { default: createRelease } = await import('${{ github.workspace }}/.github/actions/github-release/scripts/CreateRelease.mjs');
           await createRelease({
               github: github,
               context: context,
