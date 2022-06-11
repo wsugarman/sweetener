@@ -25,6 +25,7 @@ runs:
     - name: Check Exists
       id: release
       shell: pwsh
+      continue-on-error: true
       run: |
         gh release view '${{ steps.package.outputs.tag }}' | Out-Null
         Write-Host "::set-output name=exists::$($?)"
