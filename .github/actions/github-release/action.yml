@@ -7,9 +7,6 @@ inputs:
   packageDirectory:
     description: The directory containing the NuGet package
     required: true
-  token:
-    description: The GitHub PAT token
-    required: true
 
 runs:
   using: composite

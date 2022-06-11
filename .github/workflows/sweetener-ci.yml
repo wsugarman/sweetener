@@ -93,4 +93,3 @@ jobs:
         with:
           project: Sweetener
           packageDirectory: ${{ runner.temp }}/downloads/package
-          token: ${{ secrets.GITHUB_TOKEN }}

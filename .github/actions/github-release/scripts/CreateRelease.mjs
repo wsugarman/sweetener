@@ -1,5 +1,4 @@
 export default async function createRelease({ github, context, release }) {
-
   try {
     // Try to get the tag
     await github.rest.git.getRef({
@@ -21,7 +20,6 @@ export default async function createRelease({ github, context, release }) {
     }
   }
 
-  /*
   const commit = await github.rest.git.getCommit({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -52,5 +50,4 @@ export default async function createRelease({ github, context, release }) {
     prerelease: release.prerelease,
     draft: true
   });
-  */
 }
