@@ -11,13 +11,13 @@ export default async function createRelease({ github, context, release }) {
     console.log(`Tag ${release.tag} already exists`);
     return;
   }
-  catch (httpEx) {
+  catch (httpError) {
     // A missing tag will throw a 404
-    if (httpEx.status && httpEx.status == 404) {
+    if (httpError.status == 404) {
       console.log(`Tag ${release.tag} does not exist`);
     }
     else {
-      throw httpEx;
+      throw httpError;
     }
   }
 
