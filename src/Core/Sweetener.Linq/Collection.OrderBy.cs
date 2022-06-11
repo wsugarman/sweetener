@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Sweetener.Linq;
@@ -167,9 +168,12 @@ partial class Collection
         return source.CreateOrderedCollection(keySelector, comparer ?? Comparer<TKey>.Default, descending: true);
     }
 
-    private sealed class OrderedCollection<TElement> : IOrderedReadOnlyCollection<TElement>
+    private sealed class OrderedCollection<TElement> : ICollection<TElement>, IOrderedReadOnlyCollection<TElement>
     {
         public int Count => _source.Count;
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.IsReadOnly => true;
 
         private readonly IReadOnlyCollection<TElement> _source;
         private readonly IOrderedEnumerable<TElement> _ordered;
@@ -191,5 +195,25 @@ partial class Collection
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Add(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Clear()
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Contains(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Remove(TElement item)
+            => throw new NotSupportedException();
     }
 }

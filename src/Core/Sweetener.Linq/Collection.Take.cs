@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Sweetener.Linq;
@@ -24,11 +25,27 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Take<TSource>(this IReadOnlyCollection<TSource> source, int count)
         => new TakeCollection<TSource>(source, Enumerable.Take(source, count), count);
 
-    // TODO: Implement TakeLast when moving to .NET Core
+#if NETCOREAPP2_0_OR_GREATER
+    /// <summary>
+    /// Returns a new collection that contains the last <paramref name="count"/> elements from <paramref name="source"/>.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the elements in the collection.</typeparam>
+    /// <param name="source">A collection instance.</param>
+    /// <param name="count">The number of elements to take from the end of the collection.</param>
+    /// <returns>
+    /// A new collection that contains the last <paramref name="count"/> elements from <paramref name="source"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    public static IReadOnlyCollection<TSource> TakeLast<TSource>(this IReadOnlyCollection<TSource> source, int count)
+        => new TakeCollection<TSource>(source, Enumerable.TakeLast(source, count), count);
+#endif
 
-    private sealed class TakeCollection<TElement> : IReadOnlyCollection<TElement>
+    private sealed class TakeCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
     {
         public int Count => Math.Min(_source.Count, _count);
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.IsReadOnly => true;
 
         private readonly IReadOnlyCollection<TElement> _source;
         private readonly IEnumerable<TElement> _transformation;
@@ -46,5 +63,25 @@ static partial class Collection
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Add(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Clear()
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Contains(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Remove(TElement item)
+            => throw new NotSupportedException();
     }
 }

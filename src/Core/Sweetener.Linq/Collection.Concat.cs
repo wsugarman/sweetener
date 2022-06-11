@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Sweetener.Linq;
@@ -25,23 +26,46 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Concat<TSource>(this IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
         => new ConcatenatedCollection<TSource>(first, second);
 
-    private sealed class ConcatenatedCollection<TSource> : IReadOnlyCollection<TSource>
+    private sealed class ConcatenatedCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
     {
         public int Count => _first.Count + _second.Count;
 
-        private readonly IReadOnlyCollection<TSource> _first;
-        private readonly IReadOnlyCollection<TSource> _second;
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.IsReadOnly => true;
 
-        public ConcatenatedCollection(IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
+        private readonly IReadOnlyCollection<TElement> _first;
+        private readonly IReadOnlyCollection<TElement> _second;
+
+        public ConcatenatedCollection(IReadOnlyCollection<TElement> first, IReadOnlyCollection<TElement> second)
         {
             _first  = first  ?? throw new ArgumentNullException(nameof(first));
             _second = second ?? throw new ArgumentNullException(nameof(second));
         }
 
-        public IEnumerator<TSource> GetEnumerator()
+        public IEnumerator<TElement> GetEnumerator()
             => Enumerable.Concat(_first, _second).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Add(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Clear()
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Contains(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Remove(TElement item)
+            => throw new NotSupportedException();
     }
 }

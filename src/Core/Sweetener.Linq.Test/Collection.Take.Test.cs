@@ -33,4 +33,30 @@ partial class CollectionTest
         Assert.AreEqual(2, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 1, 2);
     }
+
+#if NET6_0_OR_GREATER
+    [TestMethod]
+    public void TakeLast()
+    {
+        // Invalid source
+        Assert.ThrowsException<ArgumentNullException>(() => Collection.TakeLast<long>(null!, 1));
+
+        IReadOnlyCollection<long> actual;
+        List<long> source = new List<long> { 1 };
+
+        // Empty
+        actual = source.TakeLast(-3);
+        Assert.AreEqual(0, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(Array.Empty<long>(), actual);
+
+        // Lazily evaluate the take and its resulting count
+        actual = source.TakeLast(2);
+        Assert.AreEqual(1, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, 1);
+
+        source.AddRange(new long[] { 2, 3, 4, 5 });
+        Assert.AreEqual(2, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, 4, 5);
+    }
+#endif
 }

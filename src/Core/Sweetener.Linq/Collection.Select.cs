@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Sweetener.Linq;
@@ -47,9 +48,12 @@ partial class Collection
     public static IReadOnlyCollection<TResult> Select<TSource, TResult>(this IReadOnlyCollection<TSource> source, Func<TSource, int, TResult> selector)
         => new SelectCollection<TSource, TResult>(source, Enumerable.Select(source, selector));
 
-    private sealed class SelectCollection<TSource, TResult> : IReadOnlyCollection<TResult>
+    private sealed class SelectCollection<TSource, TResult> : ICollection<TResult>, IReadOnlyCollection<TResult>
     {
         public int Count => _source.Count;
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TResult>.IsReadOnly => true;
 
         private readonly IReadOnlyCollection<TSource> _source;
         private readonly IEnumerable<TResult> _projection;
@@ -65,5 +69,25 @@ partial class Collection
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TResult>.Add(TResult item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TResult>.Clear()
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TResult>.Contains(TResult item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TResult>.CopyTo(TResult[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TResult>.Remove(TResult item)
+            => throw new NotSupportedException();
     }
 }

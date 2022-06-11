@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Sweetener.Linq;
@@ -32,9 +33,12 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Prepend<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
         => new AdditionalCollection<TSource>(source, Enumerable.Prepend(source, element));
 
-    private sealed class AdditionalCollection<TElement> : IReadOnlyCollection<TElement>
+    private sealed class AdditionalCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
     {
         public int Count => _source.Count + 1;
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.IsReadOnly => true;
 
         private readonly IReadOnlyCollection<TElement> _source;
         private readonly IEnumerable<TElement> _transformation;
@@ -50,5 +54,25 @@ static partial class Collection
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Add(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.Clear()
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Contains(TElement item)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        [ExcludeFromCodeCoverage]
+        bool ICollection<TElement>.Remove(TElement item)
+            => throw new NotSupportedException();
     }
 }
