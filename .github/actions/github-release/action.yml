@@ -34,12 +34,13 @@ runs:
 
     - name: Tag
       if: ${{ steps.release.outputs.exists == 'false' }}
-      shell: bash
+      shell: pwsh
       run: |
-        git tag -s -m "${{ inputs.project }} Version ${{ steps.package.outputs.version }}" \
-          ${{ steps.package.outputs.tag }} \
-          ${{ github.sha }}
-        git push origin ${{ steps.package.outputs.tag }}
+        ./.github/actions/github-release/scripts/TagRelease.ps1 `
+          -ProjectName '${{ inputs.project }}' `
+          -Version '${{ steps.package.outputs.version }}' `
+          -Tag '${{ steps.package.outputs.tag }}' `
+          -CommitSha '${{ github.sha }}'
 
     - name: Create Release
       if: ${{ steps.release.outputs.exists == 'false' }}
