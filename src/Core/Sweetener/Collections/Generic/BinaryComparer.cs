@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Hashing;
-using System.Runtime.InteropServices;
 
 namespace Sweetener.Collections.Generic;
 
@@ -16,8 +15,8 @@ namespace Sweetener.Collections.Generic;
 /// </summary>
 /// <remarks>
 /// <see cref="ReadOnlySpan{T}"/> is a ref struct and cannot be used as a type argument for
-/// <see cref="IComparer{T}"/> and <see cref="IEqualityComparer{T}"/>. Instead, the comparer exposes
-/// <see langword="static"/> methods for operating upon <see cref="ReadOnlySpan{T}"/> structures.
+/// <see cref="IComparer{T}"/> and <see cref="IEqualityComparer{T}"/>. However, equivalent methods
+/// are available without the interface implementation such as <see cref="Equals(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/>.
 /// </remarks>
 public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqualityComparer<byte[]>, IEqualityComparer<Stream>
 {

@@ -39,7 +39,6 @@ if ($Matches.Suffix)
     $prerelease = '--prerelease'
 }
 
-
 Write-Host "::set-output name=name::$packageName"
 Write-Host "::set-output name=version::$packageVersion"
 Write-Host "::set-output name=prerelease::$prerelease"
