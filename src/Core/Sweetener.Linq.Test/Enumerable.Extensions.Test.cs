@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Sweetener.Test.Linq;
 
 namespace Sweetener.Linq.Test;
 
@@ -19,28 +20,17 @@ public class EnumerableExtensionsTest
         Assert.ThrowsException<ArgumentNullException>(() => EnumerableExtensions.SelectWhere(Array.Empty<string>(), (TryFunc<string, double>)null!));
 
         // Single Transform
-        List<int> numbers = new string?[] { "1", "2", "foo", "3", "four", "4", "5", null }
-            .SelectWhere<string?, int>(int.TryParse)
-            .ToList();
+        IEnumerable<int> numbers = new string?[] { "1", "2", "foo", "3", "four", "4", "5", null }
+            .SelectWhere<string?, int>(int.TryParse);
 
-        Assert.AreEqual(5, numbers.Count);
-
-        Assert.AreEqual(1, numbers[0]);
-        Assert.AreEqual(2, numbers[1]);
-        Assert.AreEqual(3, numbers[2]);
-        Assert.AreEqual(4, numbers[3]);
-        Assert.AreEqual(5, numbers[4]);
+        CodeCoverageAssert.AreSequencesEqual(numbers, 1, 2, 3, 4, 5);
 
         // Multiple transformations
-        List<long> moreNumbers = new string?[] { "1", "2", "foo", "3", "four", "4", "5", null }
+        IEnumerable<long> moreNumbers = new string?[] { "1", "2", "foo", "3", "four", "4", "5", null }
             .SelectWhere<string?, int>(int.TryParse)
-            .SelectWhere<int, long>(TryDouble)
-            .ToList();
+            .SelectWhere<int, long>(TryDouble);
 
-        Assert.AreEqual(2, moreNumbers.Count);
-
-        Assert.AreEqual(4, moreNumbers[0]);
-        Assert.AreEqual(8, moreNumbers[1]);
+        CodeCoverageAssert.AreSequencesEqual(moreNumbers, 4, 8);
 
         static bool TryDouble(int n, out long value)
         {
@@ -61,28 +51,18 @@ public class EnumerableExtensionsTest
         Assert.ThrowsException<ArgumentNullException>(() => EnumerableExtensions.SelectWhere<string, double>(null!, TryParse));
         Assert.ThrowsException<ArgumentNullException>(() => EnumerableExtensions.SelectWhere(Array.Empty<string>(), (TryFunc<string, int, TimeSpan>)null!));
 
-        List<double> numbers = new string?[] { "1.1", "2.2", "foo", "3.3", "four", "4.4", "5.5", null }
+        // Single Transform
+        IEnumerable<double> numbers = new string?[] { "1.1", "2.2", "foo", "3.3", "four", "4.4", "5.5", null }
+            .SelectWhere<string?, double>(TryParse);
+
+        CodeCoverageAssert.AreSequencesEqual(numbers, 0.0d, 2.2d, 9.9d, 22.0d, 33.0d);
+
+        // Multiple transformations
+        IEnumerable<int> moreNumbers = new string?[] { "1.1", "2.2", "foo", "3.3", "four", "4.4", "5.5", null }
             .SelectWhere<string?, double>(TryParse)
-            .ToList();
+            .SelectWhere<double, int>(TryGetInteger);
 
-        Assert.AreEqual(5, numbers.Count);
-
-        Assert.AreEqual( 0.0d, numbers[0]);
-        Assert.AreEqual( 2.2d, numbers[1]);
-        Assert.AreEqual( 9.9d, numbers[2]);
-        Assert.AreEqual(22.0d, numbers[3]);
-        Assert.AreEqual(33.0d, numbers[4]);
-
-        List<int> moreNumbers = new string?[] { "1.1", "2.2", "foo", "3.3", "four", "4.4", "5.5", null }
-            .SelectWhere<string?, double>(TryParse)
-            .SelectWhere<double, int>(TryGetInteger)
-            .ToList();
-
-        Assert.AreEqual(3, moreNumbers.Count);
-
-        Assert.AreEqual( 0, moreNumbers[0]);
-        Assert.AreEqual(25, moreNumbers[1]);
-        Assert.AreEqual(37, moreNumbers[2]);
+        CodeCoverageAssert.AreSequencesEqual(moreNumbers, 0, 25, 37);
 
         static bool TryParse(string? s, int i, out double value)
         {

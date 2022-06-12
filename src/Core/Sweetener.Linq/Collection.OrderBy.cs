@@ -168,52 +168,19 @@ partial class Collection
         return source.CreateOrderedCollection(keySelector, comparer ?? Comparer<TKey>.Default, descending: true);
     }
 
-    private sealed class OrderedCollection<TElement> : ICollection<TElement>, IOrderedReadOnlyCollection<TElement>
+    private sealed class OrderedCollection<TElement> : DecoratorCollection<TElement>, IOrderedReadOnlyCollection<TElement>
     {
         public int Count => _source.Count;
 
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.IsReadOnly => true;
-
-        private readonly IReadOnlyCollection<TElement> _source;
-        private readonly IOrderedEnumerable<TElement> _ordered;
 
         public OrderedCollection(IReadOnlyCollection<TElement> source, IOrderedEnumerable<TElement> ordered)
-        {
-            _source  = source;
-            _ordered = ordered;
-        }
+            : base(source, ordered)
+        { }
 
         public IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
             => new OrderedCollection<TElement>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
 
         public IOrderedEnumerable<TElement> CreateOrderedEnumerable<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
             => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);
-
-        public IEnumerator<TElement> GetEnumerator()
-            => _ordered.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Add(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Clear()
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Contains(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Remove(TElement item)
-            => throw new NotSupportedException();
     }
 }

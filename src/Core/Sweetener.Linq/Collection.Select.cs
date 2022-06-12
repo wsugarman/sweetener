@@ -48,7 +48,7 @@ partial class Collection
     public static IReadOnlyCollection<TResult> Select<TSource, TResult>(this IReadOnlyCollection<TSource> source, Func<TSource, int, TResult> selector)
         => new SelectCollection<TSource, TResult>(source, Enumerable.Select(source, selector));
 
-    private sealed class SelectCollection<TSource, TResult> : ICollection<TResult>, IReadOnlyCollection<TResult>
+    private sealed class SelectCollection<TSource, TResult> : ICollection<TResult>, DecoratorCollection<TSource>, IReadOnlyCollection<TResult>
     {
         public int Count => _source.Count;
 
@@ -66,6 +66,9 @@ partial class Collection
 
         public IEnumerator<TResult> GetEnumerator()
             => _projection.GetEnumerator();
+
+        public IReadOnlyCollection<TResult2> Select<TResult2>(Func<TResult, TResult2> selector)
+            => new SelectCollection<TSource, TResult2>(_source, _projection.Select(selector));
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
@@ -89,5 +92,7 @@ partial class Collection
         [ExcludeFromCodeCoverage]
         bool ICollection<TResult>.Remove(TResult item)
             => throw new NotSupportedException();
+
+        IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator() => throw new NotImplementedException();
     }
 }

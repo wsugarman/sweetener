@@ -20,7 +20,11 @@ static partial class Collection
     /// <returns>A new collection that ends with <paramref name="element"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Append<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
-        => new AdditionalCollection<TSource>(source, Enumerable.Append(source, element));
+        => new AdditionalCollection<TSource>(
+            source,
+            Enumerable.Append(
+                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+                element));
 
     /// <summary>
     /// Adds a value to the beginning of the collection.
@@ -31,48 +35,18 @@ static partial class Collection
     /// <returns>A new collection that begins with <paramref name="element"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Prepend<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
-        => new AdditionalCollection<TSource>(source, Enumerable.Prepend(source, element));
+        => new AdditionalCollection<TSource>(
+            source,
+            Enumerable.Prepend(
+                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+                element));
 
-    private sealed class AdditionalCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
+    private sealed class AdditionalCollection<TElement> : MutableDecoratorCollection<TElement>
     {
-        public int Count => _source.Count + 1;
+        public override int Count => Source.Count + 1;
 
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.IsReadOnly => true;
-
-        private readonly IReadOnlyCollection<TElement> _source;
-        private readonly IEnumerable<TElement> _transformation;
-
-        public AdditionalCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation)
-        {
-            _source         = source;
-            _transformation = transformation;
-        }
-
-        public IEnumerator<TElement> GetEnumerator()
-            => _transformation.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Add(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Clear()
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Contains(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Remove(TElement item)
-            => throw new NotSupportedException();
+        public AdditionalCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> results)
+            : base(source, results)
+        { }
     }
 }

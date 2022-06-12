@@ -11,27 +11,23 @@ namespace Sweetener.Linq;
 /// <summary>
 /// Provides a set of <see langword="static"/> methods for transforming collections.
 /// </summary>
-[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "Collection class is meant to parallel Enumerable. ")]
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "Collection class is meant to parallel Enumerable.")]
 public static partial class Collection
 {
-    private sealed class EnumerableCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
+    private abstract class DecoratorCollection<TElement> : ICollection<TElement>, IEnumerable<TElement>, IReadOnlyCollection<TElement>
     {
-        public int Count => _source.Count;
+        public abstract int Count { get; }
+
+        public IEnumerable<TElement> Elements { get; }
 
         [ExcludeFromCodeCoverage]
         bool ICollection<TElement>.IsReadOnly => true;
 
-        private readonly IReadOnlyCollection<TElement> _source;
-        private readonly IEnumerable<TElement> _transformation;
-
-        public EnumerableCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation)
-        {
-            _source         = source;
-            _transformation = transformation;
-        }
+        protected DecoratorCollection(IEnumerable<TElement> elements)
+            => Elements = elements;
 
         public IEnumerator<TElement> GetEnumerator()
-            => _transformation.GetEnumerator();
+            => Elements.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
@@ -57,45 +53,34 @@ public static partial class Collection
             => throw new NotSupportedException();
     }
 
-    private sealed class ReadOnlyCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
+    private class MutableDecoratorCollection<TElement> : DecoratorCollection<TElement>
     {
-        public int Count { get; }
+        public override int Count => Source.Count;
 
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.IsReadOnly => true;
+        protected IReadOnlyCollection<TElement> Source { get; }
 
-        private readonly IEnumerable<TElement> _elements;
+        public MutableDecoratorCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> result)
+            : base(result)
+            => Source = source;
+    }
 
-        public ReadOnlyCollection(IEnumerable<TElement> elements, int count)
-        {
-            Count     = count;
-            _elements = elements;
-        }
+    private class MutableProjectionDecoratorCollection<TSource, TResult> : DecoratorCollection<TResult>
+    {
+        public override int Count => Source.Count;
 
-        public IEnumerator<TElement> GetEnumerator()
-            => _elements.GetEnumerator();
+        protected IReadOnlyCollection<TSource> Source { get; }
 
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        public MutableProjectionDecoratorCollection(IReadOnlyCollection<TSource> source, IEnumerable<TResult> result)
+            : base(result)
+            => Source = source;
+    }
 
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Add(TElement item)
-            => throw new NotSupportedException();
+    private sealed class ImmutableDecoratorCollection<TElement> : DecoratorCollection<TElement>
+    {
+        public override int Count { get; }
 
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Clear()
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Contains(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Remove(TElement item)
-            => throw new NotSupportedException();
+        public ImmutableDecoratorCollection(IEnumerable<TElement> elements, int count)
+            : base(elements)
+            => Count = count;
     }
 }
