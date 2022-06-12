@@ -23,14 +23,21 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Concat<TSource>(this IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
         => new ConcatenatedCollection<TSource>(first, second);
 
-    private sealed class ConcatenatedCollection<T> : MutableDecoratorCollection<T>
+    private sealed class ConcatenatedCollection<T> : DecoratorCollection<T>
     {
-        public override int Count => Source.Count + _source2.Count;
+        public override int Count => Source1.Count + Source2.Count;
 
-        private readonly IReadOnlyCollection<T> _source2;
+        public override IEnumerable<T> Enumerable { get; }
+
+        public IReadOnlyCollection<T> Source1 { get; }
+
+        public IReadOnlyCollection<T> Source2 { get; }
 
         public ConcatenatedCollection(IReadOnlyCollection<T> first, IReadOnlyCollection<T> second)
-            : base(first, Enumerable.Concat(first, second))
-            => _source2 = second;
+        {
+            Enumerable = Collection.EnumerableDecorator.Concat(first, second);
+            Source1 = first;
+            Source2 = second;
+        }
     }
 }

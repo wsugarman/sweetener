@@ -18,5 +18,5 @@ static partial class Collection
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Reverse<TSource>(this IReadOnlyCollection<TSource> source)
-        => new MutableDecoratorCollection<TSource>(source, Enumerable.Reverse(source));
+        => new FixedDecoratorTransformationCollection<TSource>(source, EnumerableDecorator.Reverse(source));
 }

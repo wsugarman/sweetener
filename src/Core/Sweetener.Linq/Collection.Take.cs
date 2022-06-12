@@ -20,7 +20,7 @@ static partial class Collection
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Take<TSource>(this IReadOnlyCollection<TSource> source, int count)
-        => new TakeCollection<TSource>(source, Enumerable.Take(source, count), count);
+        => new TakeCollection<TSource>(source, EnumerableDecorator.Take(source, count), count);
 
 #if NETCOREAPP2_0_OR_GREATER
     /// <summary>
@@ -34,10 +34,10 @@ static partial class Collection
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> TakeLast<TSource>(this IReadOnlyCollection<TSource> source, int count)
-        => new TakeCollection<TSource>(source, Enumerable.TakeLast(source, count), count);
+        => new TakeCollection<TSource>(source, EnumerableDecorator.TakeLast(source, count), count);
 #endif
 
-    private sealed class TakeCollection<T> : MutableDecoratorCollection<T>
+    private sealed class TakeCollection<T> : DecoratorTransformationCollection<T>
     {
         public override int Count => Math.Min(Source.Count, _take);
 

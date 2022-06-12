@@ -3,76 +3,80 @@
 
 using System;
 using System.Collections.Generic;
-using LinqEnumerable = System.Linq.Enumerable;
+using System.Linq;
 
 namespace Sweetener.Linq;
 
 static partial class Collection
 {
     // The Enumerable class provides optimized calls to the BCL's corresponding methods
-    private static class Enumerable
+    private static class EnumerableDecorator
     {
         public static IEnumerable<TSource> Append<TSource>(IReadOnlyCollection<TSource> source, TSource element)
-            => LinqEnumerable.Append(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
-                element);
+            => source is DecoratorCollection<TSource> decorator ? Append(decorator, element) : Enumerable.Append(source, element);
+
+        public static IEnumerable<TSource> Append<TSource>(DecoratorCollection<TSource> source, TSource element)
+            => Enumerable.Append(source.Enumerable, element);
 
         public static IEnumerable<TSource> Concat<TSource>(IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
-            => LinqEnumerable.Concat(
-                first  is DecoratorCollection<TSource> d1 ? d1.Elements : first,
-                second is DecoratorCollection<TSource> d2 ? d2.Elements : second);
+            => Enumerable.Concat(
+                first  is DecoratorCollection<TSource> d1 ? d1.Enumerable : first,
+                second is DecoratorCollection<TSource> d2 ? d2.Enumerable : second);
 
         public static System.Linq.IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-            => LinqEnumerable.OrderBy(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+            => Enumerable.OrderBy(
+                source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source,
                 keySelector,
                 comparer);
 
         public static System.Linq.IOrderedEnumerable<TSource> OrderByDescending<TSource, TKey>(IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-            => LinqEnumerable.OrderByDescending(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+            => Enumerable.OrderByDescending(
+                source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source,
                 keySelector,
                 comparer);
 
         public static IEnumerable<TSource> Prepend<TSource>(IReadOnlyCollection<TSource> source, TSource element)
-            => LinqEnumerable.Prepend(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
-                element);
+            => source is DecoratorCollection<TSource> decorator ? Prepend(decorator, element) : Enumerable.Prepend(source, element);
+
+        public static IEnumerable<TSource> Prepend<TSource>(DecoratorCollection<TSource> source, TSource element)
+            => Enumerable.Prepend(source.Enumerable, element);
 
         public static IEnumerable<TSource> Reverse<TSource>(IReadOnlyCollection<TSource> source)
-            => LinqEnumerable.Reverse(source is DecoratorCollection<TSource> decorator ? decorator.Elements : source);
+            => Enumerable.Reverse(source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source);
 
         public static IEnumerable<TResult> Select<TSource, TResult>(IReadOnlyCollection<TSource> source, Func<TSource, TResult> selector)
-            => LinqEnumerable.Select(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
-                selector);
+            => source is DecoratorCollection<TSource> decorator ? Select(decorator, selector) : Enumerable.Select(source, selector);
+
+        public static IEnumerable<TResult> Select<TSource, TResult>(DecoratorCollection<TSource> source, Func<TSource, TResult> selector)
+            => Enumerable.Select(source.Enumerable, selector);
 
         public static IEnumerable<TResult> Select<TSource, TResult>(IReadOnlyCollection<TSource> source, Func<TSource, int, TResult> selector)
-            => LinqEnumerable.Select(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
-                selector);
+            => source is DecoratorCollection<TSource> decorator ? Select(decorator, selector) : Enumerable.Select(source, selector);
+
+        public static IEnumerable<TResult> Select<TSource, TResult>(DecoratorCollection<TSource> source, Func<TSource, int, TResult> selector)
+            => Enumerable.Select(source.Enumerable, selector);
 
         public static IEnumerable<TSource> Skip<TSource>(IReadOnlyCollection<TSource> source, int count)
-            => LinqEnumerable.Skip(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+            => Enumerable.Skip(
+                source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source,
                 count);
 
 #if NETCOREAPP2_0_OR_GREATER
         public static IEnumerable<TSource> SkipLast<TSource>(IReadOnlyCollection<TSource> source, int count)
-            => LinqEnumerable.SkipLast(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+            => Enumerable.SkipLast(
+                source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source,
                 count);
 #endif
 
         public static IEnumerable<TSource> Take<TSource>(IReadOnlyCollection<TSource> source, int count)
-            => LinqEnumerable.Take(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+            => Enumerable.Take(
+                source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source,
                 count);
 
 #if NETCOREAPP2_0_OR_GREATER
         public static IEnumerable<TSource> TakeLast<TSource>(IReadOnlyCollection<TSource> source, int count)
-            => LinqEnumerable.TakeLast(
-                source is DecoratorCollection<TSource> decorator ? decorator.Elements : source,
+            => Enumerable.TakeLast(
+                source is DecoratorCollection<TSource> decorator ? decorator.Enumerable : source,
                 count);
 #endif
     }

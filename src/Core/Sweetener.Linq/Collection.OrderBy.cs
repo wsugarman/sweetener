@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -39,7 +40,7 @@ partial class Collection
     /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
     /// </exception>
     public static IOrderedReadOnlyCollection<TSource> OrderBy<TSource, TKey>(this IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-        => new OrderedCollection<TSource>(source, Enumerable.OrderBy(source, keySelector, comparer));
+        => new OrderedCollection<TSource>(source, EnumerableDecorator.OrderBy(source, keySelector, comparer));
 
     /// <summary>
     /// Sorts the elements of a collection in descending order according to a key.
@@ -74,7 +75,7 @@ partial class Collection
     /// <paramref name="source"/> or <paramref name="keySelector"/> <see langword="null"/>.
     /// </exception>
     public static IOrderedReadOnlyCollection<TSource> OrderByDescending<TSource, TKey>(this IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)
-        => new OrderedCollection<TSource>(source, Enumerable.OrderByDescending(source, keySelector, comparer));
+        => new OrderedCollection<TSource>(source, EnumerableDecorator.OrderByDescending(source, keySelector, comparer));
 
     /// <summary>
     /// Performs a subsequent ordering of the elements in a collection in ascending order according to a key.
@@ -169,12 +170,12 @@ partial class Collection
     {
         public override int Count => _source.Count;
 
-        public override IEnumerable<T> Elements => _ordered;
+        public override IEnumerable<T> Enumerable => _ordered;
 
         private readonly IReadOnlyCollection<T> _source;
         private readonly System.Linq.IOrderedEnumerable<T> _ordered;
 
-        public OrderedCollection(IReadOnlyCollection<T> source, System.Linq.IOrderedEnumerable<T> ordered)
+        public OrderedCollection(IReadOnlyCollection<T> source, IOrderedEnumerable<T> ordered)
         {
             _ordered = ordered;
             _source  = source;
@@ -183,7 +184,7 @@ partial class Collection
         public IOrderedReadOnlyCollection<T> CreateOrderedCollection<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
             => new OrderedCollection<T>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
 
-        System.Linq.IOrderedEnumerable<T> System.Linq.IOrderedEnumerable<T>.CreateOrderedEnumerable<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
+        IOrderedEnumerable<T> IOrderedEnumerable<T>.CreateOrderedEnumerable<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
             => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);
     }
 }

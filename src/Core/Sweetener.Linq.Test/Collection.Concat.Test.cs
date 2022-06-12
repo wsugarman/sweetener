@@ -29,5 +29,14 @@ partial class CollectionTest
         second.Add(5);
         Assert.AreEqual(6, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 0, 1, 2, 3, 4, 5);
+
+        // Concatenate a decorator
+        IReadOnlyCollection<int> back = actual.Concat(new int[] { 6, 7, 8 });
+        Assert.AreEqual(9, back.Count);
+        CodeCoverageAssert.AreSequencesEqual(back, 0, 1, 2, 3, 4, 5, 6, 7, 8);
+
+        IReadOnlyCollection<int> front = new int[] { -3, -2, -1 }.Concat(actual);
+        Assert.AreEqual(9, front.Count);
+        CodeCoverageAssert.AreSequencesEqual(front, -3, -2, -1, 0, 1, 2, 3, 4, 5);
     }
 }

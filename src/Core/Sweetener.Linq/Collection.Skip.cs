@@ -20,7 +20,7 @@ static partial class Collection
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Skip<TSource>(this IReadOnlyCollection<TSource> source, int count)
-        => new SkipCollection<TSource>(source, Enumerable.Skip(source, count), count);
+        => new SkipCollection<TSource>(source, EnumerableDecorator.Skip(source, count), count);
 
 #if NETCOREAPP2_0_OR_GREATER
     /// <summary>
@@ -36,10 +36,10 @@ static partial class Collection
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> SkipLast<TSource>(this IReadOnlyCollection<TSource> source, int count)
-        => new SkipCollection<TSource>(source, Enumerable.SkipLast(source, count), count);
+        => new SkipCollection<TSource>(source, EnumerableDecorator.SkipLast(source, count), count);
 #endif
 
-    private sealed class SkipCollection<T> : MutableDecoratorCollection<T>
+    private sealed class SkipCollection<T> : DecoratorTransformationCollection<T>
     {
         public override int Count => Math.Max(0, Source.Count - _skip);
 

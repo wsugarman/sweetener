@@ -32,6 +32,11 @@ partial class CollectionTest
         source.AddRange(new long[] { 2, 3, 4, 5 });
         Assert.AreEqual(2, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 1, 2);
+
+        // Evaluate the take for decorator
+        IReadOnlyCollection<int> numbers = Collection.Range(1, 5).Take(2);
+        Assert.AreEqual(2, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, 1, 2);
     }
 
 #if NET6_0_OR_GREATER
@@ -57,6 +62,11 @@ partial class CollectionTest
         source.AddRange(new long[] { 2, 3, 4, 5 });
         Assert.AreEqual(2, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 4, 5);
+
+        // Evaluate the take for decorator
+        IReadOnlyCollection<int> numbers = Collection.Range(1, 5).TakeLast(2);
+        Assert.AreEqual(2, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, 4, 5);
     }
 #endif
 }

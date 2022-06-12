@@ -26,5 +26,10 @@ partial class CollectionTest
         source.Add(2);
         Assert.AreEqual(5, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 2, 1, 0, -1, -2);
+
+        // Reverse a decorator
+        IReadOnlyCollection<int> numbers = Collection.Range(1, 5).Reverse();
+        Assert.AreEqual(5, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, 5, 4, 3, 2, 1);
     }
 }

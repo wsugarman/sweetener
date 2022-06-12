@@ -23,7 +23,9 @@ partial class Collection
     /// <paramref name="source"/> or <paramref name="selector"/> is <see langword="null"/>.
     /// </exception>
     public static IReadOnlyCollection<TResult> Select<TSource, TResult>(this IReadOnlyCollection<TSource> source, Func<TSource, TResult> selector)
-        => new MutableProjectionDecoratorCollection<TSource, TResult>(source, Enumerable.Select(source, selector));
+        => source is IProjectable<TSource> transformation
+            ? transformation.Select(selector)
+            : new FixedDecoratorTransformationCollection<TSource, TResult>(source, EnumerableDecorator.Select(source, selector));
 
     /// <summary>
     /// Projects each element of a collection into a new form by incorporating the element's index.
@@ -43,5 +45,7 @@ partial class Collection
     /// <paramref name="source"/> or <paramref name="selector"/> is <see langword="null"/>.
     /// </exception>
     public static IReadOnlyCollection<TResult> Select<TSource, TResult>(this IReadOnlyCollection<TSource> source, Func<TSource, int, TResult> selector)
-        => new MutableProjectionDecoratorCollection<TSource, TResult>(source, Enumerable.Select(source, selector));
+        => source is IProjectable<TSource> transformation
+            ? transformation.Select(selector)
+            : new FixedDecoratorTransformationCollection<TSource, TResult>(source, EnumerableDecorator.Select(source, selector));
 }

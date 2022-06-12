@@ -17,7 +17,9 @@ static partial class Collection
     /// <returns>A new collection that ends with <paramref name="element"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Append<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
-        => new AdditionalCollection<TSource>(source, Enumerable.Append(source, element));
+        => source is AdditionalCollection<TSource> decorator
+            ? new AdditionalCollection<TSource>(decorator, EnumerableDecorator.Append(decorator, element))
+            : new AdditionalCollection<TSource>(source   , EnumerableDecorator.Append(source   , element));
 
     /// <summary>
     /// Adds a value to the beginning of the collection.
@@ -28,14 +30,26 @@ static partial class Collection
     /// <returns>A new collection that begins with <paramref name="element"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Prepend<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
-        => new AdditionalCollection<TSource>(source, Enumerable.Prepend(source, element));
+        => source is AdditionalCollection<TSource> decorator
+            ? new AdditionalCollection<TSource>(decorator, EnumerableDecorator.Prepend(decorator, element))
+            : new AdditionalCollection<TSource>(source   , EnumerableDecorator.Prepend(source   , element));
 
-    private sealed class AdditionalCollection<TElement> : MutableDecoratorCollection<TElement>
+    private sealed class AdditionalCollection<T> : DecoratorTransformationCollection<T>
     {
-        public override int Count => Source.Count + 1;
+        public override int Count => Source.Count + _extraCount;
 
-        public AdditionalCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> results)
-            : base(source, results)
+        private readonly int _extraCount;
+
+        public AdditionalCollection(IReadOnlyCollection<T> source, IEnumerable<T> results)
+            : this(source, results, 1)
         { }
+
+        public AdditionalCollection(AdditionalCollection<T> source, IEnumerable<T> results)
+            : this(source.Source, results, source._extraCount + 1)
+        { }
+
+        private AdditionalCollection(IReadOnlyCollection<T> source, IEnumerable<T> results, int extraCount)
+            : base(source, results)
+            => _extraCount = extraCount;
     }
 }
