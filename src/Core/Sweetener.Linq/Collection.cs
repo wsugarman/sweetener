@@ -77,24 +77,22 @@ public static partial class Collection
         }
     }
 
-    private class DecoratorTransformationCollection<TSource, TResult> : DecoratorCollection<TResult>
+    private abstract class DecoratorTransformationCollection<TSource, TResult> : DecoratorCollection<TResult>
     {
-        public override int Count => Source.Count;
-
         public sealed override IEnumerable<TResult> Enumerable { get; }
 
         public IReadOnlyCollection<TSource> Source { get; }
 
-        public DecoratorTransformationCollection(IReadOnlyCollection<TSource> source, IEnumerable<TResult> result)
+        protected DecoratorTransformationCollection(IReadOnlyCollection<TSource> source, IEnumerable<TResult> result)
         {
             Enumerable = result;
             Source   = source;
         }
     }
 
-    private class DecoratorTransformationCollection<T> : DecoratorTransformationCollection<T, T>
+    private abstract class DecoratorTransformationCollection<T> : DecoratorTransformationCollection<T, T>
     {
-        public DecoratorTransformationCollection(IReadOnlyCollection<T> source, IEnumerable<T> result)
+        protected DecoratorTransformationCollection(IReadOnlyCollection<T> source, IEnumerable<T> result)
             : base(source, result)
         { }
     }
