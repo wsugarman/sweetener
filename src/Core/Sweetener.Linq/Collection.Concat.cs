@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -25,23 +23,21 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Concat<TSource>(this IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
         => new ConcatenatedCollection<TSource>(first, second);
 
-    private sealed class ConcatenatedCollection<TSource> : IReadOnlyCollection<TSource>
+    private sealed class ConcatenatedCollection<T> : DecoratorCollection<T>
     {
-        public int Count => _first.Count + _second.Count;
+        public override int Count => Source1.Count + Source2.Count;
 
-        private readonly IReadOnlyCollection<TSource> _first;
-        private readonly IReadOnlyCollection<TSource> _second;
+        public override IEnumerable<T> Enumerable { get; }
 
-        public ConcatenatedCollection(IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
+        public IReadOnlyCollection<T> Source1 { get; }
+
+        public IReadOnlyCollection<T> Source2 { get; }
+
+        public ConcatenatedCollection(IReadOnlyCollection<T> first, IReadOnlyCollection<T> second)
         {
-            _first  = first  ?? throw new ArgumentNullException(nameof(first));
-            _second = second ?? throw new ArgumentNullException(nameof(second));
+            Enumerable = Collection.EnumerableDecorator.Concat(first, second);
+            Source1 = first;
+            Source2 = second;
         }
-
-        public IEnumerator<TSource> GetEnumerator()
-            => Enumerable.Concat(_first, _second).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
     }
 }
