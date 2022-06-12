@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -168,19 +165,25 @@ partial class Collection
         return source.CreateOrderedCollection(keySelector, comparer ?? Comparer<TKey>.Default, descending: true);
     }
 
-    private sealed class OrderedCollection<TElement> : DecoratorCollection<TElement>, IOrderedReadOnlyCollection<TElement>
+    private sealed class OrderedCollection<T> : DecoratorCollection<T>, IOrderedReadOnlyCollection<T>
     {
-        public int Count => _source.Count;
+        public override int Count => _source.Count;
 
+        public override IEnumerable<T> Elements => _ordered;
 
-        public OrderedCollection(IReadOnlyCollection<TElement> source, IOrderedEnumerable<TElement> ordered)
-            : base(source, ordered)
-        { }
+        private readonly IReadOnlyCollection<T> _source;
+        private readonly System.Linq.IOrderedEnumerable<T> _ordered;
 
-        public IOrderedReadOnlyCollection<TElement> CreateOrderedCollection<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
-            => new OrderedCollection<TElement>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
+        public OrderedCollection(IReadOnlyCollection<T> source, System.Linq.IOrderedEnumerable<T> ordered)
+        {
+            _ordered = ordered;
+            _source  = source;
+        }
 
-        public IOrderedEnumerable<TElement> CreateOrderedEnumerable<TKey>(Func<TElement, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
+        public IOrderedReadOnlyCollection<T> CreateOrderedCollection<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
+            => new OrderedCollection<T>(_source, _ordered.CreateOrderedEnumerable(keySelector, comparer, descending));
+
+        System.Linq.IOrderedEnumerable<T> System.Linq.IOrderedEnumerable<T>.CreateOrderedEnumerable<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
             => _ordered.CreateOrderedEnumerable(keySelector, comparer, descending);
     }
 }

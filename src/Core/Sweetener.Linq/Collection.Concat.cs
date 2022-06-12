@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -26,18 +23,14 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Concat<TSource>(this IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
         => new ConcatenatedCollection<TSource>(first, second);
 
-    private sealed class ConcatenatedCollection<TElement> : DecoratorCollection<TElement>
+    private sealed class ConcatenatedCollection<T> : MutableDecoratorCollection<T>
     {
-        public override int Count => _first.Count + _second.Count;
+        public override int Count => Source.Count + _source2.Count;
 
-        private readonly IReadOnlyCollection<TElement> _first;
-        private readonly IReadOnlyCollection<TElement> _second;
+        private readonly IReadOnlyCollection<T> _source2;
 
-        public ConcatenatedCollection(IReadOnlyCollection<TElement> first, IReadOnlyCollection<TElement> second)
-            : base(Enumerable.Concat(first, second))
-        {
-            _first  = first  ?? throw new ArgumentNullException(nameof(first));
-            _second = second ?? throw new ArgumentNullException(nameof(second));
-        }
+        public ConcatenatedCollection(IReadOnlyCollection<T> first, IReadOnlyCollection<T> second)
+            : base(first, Enumerable.Concat(first, second))
+            => _source2 = second;
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -19,5 +18,5 @@ static partial class Collection
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Reverse<TSource>(this IReadOnlyCollection<TSource> source)
-        => new EnumerableCollection<TSource>(source, Enumerable.Reverse(source));
+        => new MutableDecoratorCollection<TSource>(source, Enumerable.Reverse(source));
 }

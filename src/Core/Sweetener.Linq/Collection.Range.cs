@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -23,5 +22,5 @@ static partial class Collection
     /// <para><paramref name="start"/> + <paramref name="count"/> -1 is larger than <see cref="int.MaxValue"/>.</para>
     /// </exception>
     public static IReadOnlyCollection<int> Range(int start, int count)
-        => count == 0 ? Array.Empty<int>() : new ImmutableDecoratorCollection<int>(Enumerable.Range(start, count), count);
+        => count == 0 ? Array.Empty<int>() : new ImmutableDecoratorCollection<int>(System.Linq.Enumerable.Range(start, count), count);
 }

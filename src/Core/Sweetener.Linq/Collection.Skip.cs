@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -42,48 +39,14 @@ static partial class Collection
         => new SkipCollection<TSource>(source, Enumerable.SkipLast(source, count), count);
 #endif
 
-    private sealed class SkipCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
+    private sealed class SkipCollection<T> : MutableDecoratorCollection<T>
     {
-        public int Count => Math.Max(0, _source.Count - _skip);
+        public override int Count => Math.Max(0, Source.Count - _skip);
 
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.IsReadOnly => true;
-
-        private readonly IReadOnlyCollection<TElement> _source;
-        private readonly IEnumerable<TElement> _transformation;
         private readonly int _skip;
 
-        public SkipCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation, int skip)
-        {
-            _source         = source;
-            _transformation = transformation;
-            _skip           = skip <= 0 ? 0 : skip;
-        }
-
-        public IEnumerator<TElement> GetEnumerator()
-            => _transformation.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Add(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Clear()
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Contains(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Remove(TElement item)
-            => throw new NotSupportedException();
+        public SkipCollection(IReadOnlyCollection<T> source, IEnumerable<T> transformation, int skip)
+            : base(source, transformation)
+            => _skip = skip <= 0 ? 0 : skip;
     }
 }

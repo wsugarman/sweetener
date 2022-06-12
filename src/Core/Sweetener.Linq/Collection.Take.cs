@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -40,48 +37,14 @@ static partial class Collection
         => new TakeCollection<TSource>(source, Enumerable.TakeLast(source, count), count);
 #endif
 
-    private sealed class TakeCollection<TElement> : ICollection<TElement>, IReadOnlyCollection<TElement>
+    private sealed class TakeCollection<T> : MutableDecoratorCollection<T>
     {
-        public int Count => Math.Min(_source.Count, _count);
+        public override int Count => Math.Min(Source.Count, _take);
 
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.IsReadOnly => true;
+        private readonly int _take;
 
-        private readonly IReadOnlyCollection<TElement> _source;
-        private readonly IEnumerable<TElement> _transformation;
-        private readonly int _count;
-
-        public TakeCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation, int count)
-        {
-            _source         = source;
-            _transformation = transformation;
-            _count          = count <= 0 ? 0 : count;
-        }
-
-        public IEnumerator<TElement> GetEnumerator()
-            => _transformation.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Add(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Clear()
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Contains(TElement item)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
-            => throw new NotSupportedException();
-
-        [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Remove(TElement item)
-            => throw new NotSupportedException();
+        public TakeCollection(IReadOnlyCollection<T> source, IEnumerable<T> transformation, int count)
+            : base(source, transformation)
+            => _take = count <= 0 ? 0 : count;
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -18,5 +17,5 @@ static partial class Collection
     /// <returns>An <see cref="IReadOnlyCollection{T}"/> that contains a repeated value.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is less than 0.</exception>
     public static IReadOnlyCollection<TResult> Repeat<TResult>(TResult element, int count)
-        => count == 0 ? Array.Empty<TResult>() : new ImmutableDecoratorCollection<TResult>(Enumerable.Repeat(element, count), count);
+        => count == 0 ? Array.Empty<TResult>() : new ImmutableDecoratorCollection<TResult>(System.Linq.Enumerable.Repeat(element, count), count);
 }

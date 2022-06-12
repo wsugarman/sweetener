@@ -14,73 +14,82 @@ namespace Sweetener.Linq;
 [SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "Collection class is meant to parallel Enumerable.")]
 public static partial class Collection
 {
-    private abstract class DecoratorCollection<TElement> : ICollection<TElement>, IEnumerable<TElement>, IReadOnlyCollection<TElement>
+    private abstract class DecoratorCollection<T> : ICollection<T>, IEnumerable<T>, IReadOnlyCollection<T>
     {
         public abstract int Count { get; }
 
-        public IEnumerable<TElement> Elements { get; }
+        public abstract IEnumerable<T> Elements { get; }
 
         [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.IsReadOnly => true;
+        bool ICollection<T>.IsReadOnly => true;
 
-        protected DecoratorCollection(IEnumerable<TElement> elements)
-            => Elements = elements;
-
-        public IEnumerator<TElement> GetEnumerator()
+        public IEnumerator<T> GetEnumerator()
             => Elements.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
 
         [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Add(TElement item)
+        void ICollection<T>.Add(T item)
             => throw new NotSupportedException();
 
         [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.Clear()
+        void ICollection<T>.Clear()
             => throw new NotSupportedException();
 
         [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Contains(TElement item)
+        bool ICollection<T>.Contains(T item)
             => throw new NotSupportedException();
 
         [ExcludeFromCodeCoverage]
-        void ICollection<TElement>.CopyTo(TElement[] array, int arrayIndex)
+        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
             => throw new NotSupportedException();
 
         [ExcludeFromCodeCoverage]
-        bool ICollection<TElement>.Remove(TElement item)
+        bool ICollection<T>.Remove(T item)
             => throw new NotSupportedException();
     }
 
-    private class MutableDecoratorCollection<TElement> : DecoratorCollection<TElement>
+    private class MutableDecoratorCollection<T> : DecoratorCollection<T>
     {
         public override int Count => Source.Count;
 
-        protected IReadOnlyCollection<TElement> Source { get; }
+        public override IEnumerable<T> Elements { get; }
 
-        public MutableDecoratorCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> result)
-            : base(result)
-            => Source = source;
+        protected IReadOnlyCollection<T> Source { get; }
+
+        public MutableDecoratorCollection(IReadOnlyCollection<T> source, IEnumerable<T> result)
+        {
+            Elements = result;
+            Source   = source;
+        }
     }
 
     private class MutableProjectionDecoratorCollection<TSource, TResult> : DecoratorCollection<TResult>
     {
         public override int Count => Source.Count;
 
+        public override IEnumerable<TResult> Elements { get; }
+
         protected IReadOnlyCollection<TSource> Source { get; }
 
         public MutableProjectionDecoratorCollection(IReadOnlyCollection<TSource> source, IEnumerable<TResult> result)
-            : base(result)
-            => Source = source;
+        {
+            Elements = result;
+            Source   = source;
+        }
     }
 
-    private sealed class ImmutableDecoratorCollection<TElement> : DecoratorCollection<TElement>
+    private sealed class ImmutableDecoratorCollection<T> : DecoratorCollection<T>
     {
         public override int Count { get; }
 
-        public ImmutableDecoratorCollection(IEnumerable<TElement> elements, int count)
-            : base(elements)
-            => Count = count;
+        public override IEnumerable<T> Elements { get; }
+
+        public ImmutableDecoratorCollection(IEnumerable<T> elements, int count)
+        {
+            Count    = count;
+            Elements = elements;
+        }
     }
 }
