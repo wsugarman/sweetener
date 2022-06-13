@@ -66,8 +66,8 @@ export default async function createRelease({ github, context, release }) {
   await github.rest.repos.uploadReleaseAsset({
     owner: context.repo.owner,
     repo: context.repo.repo,
-    release_id: newRelease.id,
-    name: zipPath,
+    release_id: newRelease.data.id,
+    name: `${name}.zip`,
     data: fs.readFileSync(zipPath),
     headers: {
       'content-type': 'application/zip',
