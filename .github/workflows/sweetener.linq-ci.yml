@@ -77,6 +77,8 @@ jobs:
     name: Push
     needs: package
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
