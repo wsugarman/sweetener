@@ -16,7 +16,7 @@ These libraries extend the Base Class Libraries (BCLs).
 | [![Sweetener.Linq Build](https://github.com/wsugarman/sweetener/actions/workflows/sweetener.linq-ci.yml/badge.svg)](https://github.com/wsugarman/sweetener/actions/workflows/sweetener.linq-ci.yml) | [![Sweetener.Linq Code Coverage](https://codecov.io/gh/wsugarman/sweetener/branch/main/graph/badge.svg?flag=Sweetener.Linq)](https://codecov.io/gh/wsugarman/sweetener) | [![Sweetener.Linq NuGet Package](https://img.shields.io/nuget/vpre/Sweetener.Linq?label=NuGet&logo=NuGet)](https://www.nuget.org/packages/Sweetener.Linq/) |
 
 ### Extensions
-These libraries extend the .NET extension packages, like `Microsoft.Extensions.Configuration`.
+These libraries further extend the .NET extension packages, like `Microsoft.Extensions.Configuration`.
 | Build | Coverage | NuGet |
 | :---- | :------- | :---- |
 | [![Sweetener.Extensions.Configuration Build](https://github.com/wsugarman/sweetener/actions/workflows/sweetener.extensions.configuration-ci.yml/badge.svg)](https://github.com/wsugarman/sweetener/actions/workflows/sweetener.extensions.configuration-ci.yml) | [![Sweetener.Extensions.Configuration Code Coverage](https://codecov.io/gh/wsugarman/sweetener/branch/main/graph/badge.svg?flag=Configuration)](https://codecov.io/gh/wsugarman/sweetener) | [![Sweetener.Extensions.Configuration NuGet Package](https://img.shields.io/nuget/vpre/Sweetener.Extensions.Configuration?label=NuGet&logo=NuGet)](https://www.nuget.org/packages/Sweetener.Extensions.Configuration/) |
