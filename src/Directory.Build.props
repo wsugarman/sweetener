@@ -110,7 +110,7 @@
         <Authors>William Sugarman</Authors>
         <PackageIcon>Sweetener.png</PackageIcon>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageReleaseNotes>https://wsugarman.github.io/Sweetener/Release-Notes/$(MSBuildProjectName)</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/wsugarman/sweetener/releases/tag/$(MSBuildProjectName)_$(PackageVersion)</PackageReleaseNotes>
         <MinClientVersion>4.9.0</MinClientVersion>
       </PropertyGroup>
 

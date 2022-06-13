@@ -1,3 +1,7 @@
+const cp = await import('node:child_process');
+const fs = await import('node:fs');
+const path = await import('node:path');
+
 export default async function createRelease({ github, context, release }) {
   try {
     // Try to get the tag
@@ -20,6 +24,7 @@ export default async function createRelease({ github, context, release }) {
     }
   }
 
+  // Create the tag for the release
   const commit = await github.rest.git.getCommit({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -43,11 +48,30 @@ export default async function createRelease({ github, context, release }) {
     sha: context.sha
   });
 
-  await github.rest.repos.createRelease({
+  // Create the release
+  const name = path.basename(release.folder);
+  const zipPath = path.join(release.folder, '..', `${name}.zip`);
+  const zipOutput = cp.execSync(`zip -r ../${name}.zip .`, { cwd: release.folder, encoding: 'utf8' });
+  process.stdout.write(zipOutput);
+
+  const newRelease = await github.rest.repos.createRelease({
     owner: context.repo.owner,
     repo: context.repo.repo,
     tag_name: release.tag,
+    name: `${release.project} ${release.version}`,
     prerelease: release.prerelease,
     draft: true
+  });
+
+  await github.rest.repos.uploadReleaseAsset({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    release_id: newRelease.id,
+    name: zipPath,
+    data: fs.readFileSync(zipPath),
+    headers: {
+      'content-type': 'application/zip',
+      'content-length': fs.statSync(zipPath).size,
+    }
   });
 }
