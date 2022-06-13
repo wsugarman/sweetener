@@ -91,5 +91,5 @@ jobs:
       - name: Create Release
         uses: ./.github/actions/github-release
         with:
-          project: Sweetener
+          project: Sweetener.Linq
           packageDirectory: ${{ runner.temp }}/downloads/Package
