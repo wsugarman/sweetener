@@ -7,7 +7,7 @@ inputs:
   downloadDirectory:
     description: The directory where the package is downloaded
     required: false
-    default: ${{ runner.temp }}/downloads/package
+    default: ${{ runner.temp }}/downloads/Package
 
 runs:
   using: composite
