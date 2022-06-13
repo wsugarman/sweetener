@@ -29,10 +29,9 @@ runs:
               context: context,
               release: {
                 project: '${{ inputs.project }}',
-                name: '${{ steps.package.outputs.name }}',
-                fullName: '${{ steps.package.outputs.fullName }}',
                 version: '${{ steps.package.outputs.version }}',
                 tag: '${{ steps.package.outputs.tag }}',
-                prerelease: ${{ steps.package.outputs.prerelease }}
+                prerelease: ${{ steps.package.outputs.prerelease }},
+                folder: '${{ inputs.packageDirectory }}'
               }
             });
