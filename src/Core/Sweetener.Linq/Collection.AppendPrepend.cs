@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Sweetener.Linq;
 
@@ -19,7 +17,9 @@ static partial class Collection
     /// <returns>A new collection that ends with <paramref name="element"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Append<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
-        => new AdditionalCollection<TSource>(source, Enumerable.Append(source, element));
+        => source is AdditionalCollection<TSource> decorator
+            ? new AdditionalCollection<TSource>(decorator, EnumerableDecorator.Append(decorator, element))
+            : new AdditionalCollection<TSource>(source   , EnumerableDecorator.Append(source   , element));
 
     /// <summary>
     /// Adds a value to the beginning of the collection.
@@ -30,25 +30,26 @@ static partial class Collection
     /// <returns>A new collection that begins with <paramref name="element"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IReadOnlyCollection<TSource> Prepend<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
-        => new AdditionalCollection<TSource>(source, Enumerable.Prepend(source, element));
+        => source is AdditionalCollection<TSource> decorator
+            ? new AdditionalCollection<TSource>(decorator, EnumerableDecorator.Prepend(decorator, element))
+            : new AdditionalCollection<TSource>(source   , EnumerableDecorator.Prepend(source   , element));
 
-    private sealed class AdditionalCollection<TElement> : IReadOnlyCollection<TElement>
+    private sealed class AdditionalCollection<T> : DecoratorTransformationCollection<T>
     {
-        public int Count => _source.Count + 1;
+        public override int Count => Source.Count + _extraCount;
 
-        private readonly IReadOnlyCollection<TElement> _source;
-        private readonly IEnumerable<TElement> _transformation;
+        private readonly int _extraCount;
 
-        public AdditionalCollection(IReadOnlyCollection<TElement> source, IEnumerable<TElement> transformation)
-        {
-            _source         = source;
-            _transformation = transformation;
-        }
+        public AdditionalCollection(IReadOnlyCollection<T> source, IEnumerable<T> results)
+            : this(source, results, 1)
+        { }
 
-        public IEnumerator<TElement> GetEnumerator()
-            => _transformation.GetEnumerator();
+        public AdditionalCollection(AdditionalCollection<T> source, IEnumerable<T> results)
+            : this(source.Source, results, source._extraCount + 1)
+        { }
 
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        private AdditionalCollection(IReadOnlyCollection<T> source, IEnumerable<T> results, int extraCount)
+            : base(source, results)
+            => _extraCount = extraCount;
     }
 }

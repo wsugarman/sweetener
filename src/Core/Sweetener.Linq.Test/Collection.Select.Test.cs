@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Sweetener.Linq;
 
@@ -27,6 +28,16 @@ partial class CollectionTest
         source.Add(5);
         Assert.AreEqual(5, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 2, 4, 6, 8, 10);
+
+        // Multiple projections
+        IReadOnlyCollection<double> composite = actual.Select(x => TimeSpan.FromSeconds(x).TotalMilliseconds);
+        Assert.AreEqual(5, composite.Count);
+        CodeCoverageAssert.AreSequencesEqual(composite, 2000d, 4000d, 6000d, 8000d, 10000d);
+
+        // Select on a decorator
+        IReadOnlyCollection<string> numbers = Collection.Range(1, 5).Select(x => x.ToString(CultureInfo.InvariantCulture));
+        Assert.AreEqual(5, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, "1", "2", "3", "4", "5");
     }
 
     [TestMethod]
@@ -46,5 +57,15 @@ partial class CollectionTest
         source.Add(5);
         Assert.AreEqual(5, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, 2, 5, 8, 11, 14);
+
+        // Multiple projections
+        IReadOnlyCollection<string> composite = actual.Select((x, i) => string.Join("", Collection.Repeat(x.ToString(CultureInfo.InvariantCulture), i)));
+        Assert.AreEqual(5, composite.Count);
+        CodeCoverageAssert.AreSequencesEqual(composite, "", "5", "88", "111111", "14141414");
+
+        // Select on a decorator
+        IReadOnlyCollection<string> numbers = Collection.Range(1, 5).Select((x, i) => (x + i).ToString(CultureInfo.InvariantCulture));
+        Assert.AreEqual(5, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, "1", "3", "5", "7", "9");
     }
 }

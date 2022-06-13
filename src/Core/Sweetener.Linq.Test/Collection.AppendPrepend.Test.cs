@@ -25,6 +25,21 @@ partial class CollectionTest
         source.Add("hello");
         Assert.AreEqual(2, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, "hello", "world");
+
+        // Append additional element
+        actual = actual.Append("!");
+        Assert.AreEqual(3, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, "hello", "world", "!");
+
+        // Prepend element
+        actual = actual.Prepend("why");
+        Assert.AreEqual(4, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, "why", "hello", "world", "!");
+
+        // Append to decorator
+        IReadOnlyCollection<int> numbers = Collection.Range(1, 4).Append(5);
+        Assert.AreEqual(5, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, 1, 2, 3, 4, 5);
     }
 
     [TestMethod]
@@ -42,5 +57,20 @@ partial class CollectionTest
         source.Add("world");
         Assert.AreEqual(2, actual.Count);
         CodeCoverageAssert.AreSequencesEqual(actual, "hello", "world");
+
+        // Prepend additional element
+        actual = actual.Prepend("why");
+        Assert.AreEqual(3, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, "why", "hello", "world");
+
+        // Append element
+        actual = actual.Append("!");
+        Assert.AreEqual(4, actual.Count);
+        CodeCoverageAssert.AreSequencesEqual(actual, "why", "hello", "world", "!");
+
+        // Prepend to decorator
+        IReadOnlyCollection<int> numbers = Collection.Range(2, 4).Prepend(1);
+        Assert.AreEqual(5, numbers.Count);
+        CodeCoverageAssert.AreSequencesEqual(numbers, 1, 2, 3, 4, 5);
     }
 }
