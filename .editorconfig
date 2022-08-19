@@ -7,9 +7,15 @@ root = true
 # A newline ending every file
 # Use 4 spaces as indentation
 [*]
-insert_final_newline = true
-indent_style         = space
-indent_size          = 4
+charset                  = utf-8
+insert_final_newline     = true
+indent_style             = space
+indent_size              = 4
+trim_trailing_whitespace = true
+
+# Generated code
+[*.g.cs]
+generated_code = true
 
 # C# Files
 [*.cs]
@@ -21,15 +27,11 @@ file_header_template = Copyright © William Sugarman.\nLicensed under the MIT Li
 generated_file_header_template = This file is auto-generated.\nIt cannot be modified.
 
 # Xml project files
-[*.{csproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
-indent_size = 2
-
-# Xml build files
-[*.builds]
+[*.csproj]
 indent_size = 2
 
 # Xml files
-[*.{xml,stylecop,resx,ruleset}]
+[*.{xml,resx}]
 indent_size = 2
 
 # Xml config files
@@ -47,5 +49,6 @@ indent_size = 2
 # Shell scripts
 [*.sh]
 end_of_line = lf
+
 [*.{cmd,bat}]
 end_of_line = crlf

@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+#if !NETCOREAPP2_1_OR_GREATER
 using System.Buffers;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
