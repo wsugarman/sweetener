@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.31911.260
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C72913EB-76D6-4823-9432-128EE553BB0B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{B81BC75E-0A72-452C-AA8E-12435AEFEC73}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.editorconfig = ..\..\.editorconfig
 		..\..\.globalconfig = ..\..\.globalconfig
@@ -11,14 +11,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C72913
 		..\Directory.Build.props = ..\Directory.Build.props
 		..\Directory.Build.targets = ..\Directory.Build.targets
 		..\Directory.Packages.props = ..\Directory.Packages.props
-		..\Shared\GlobalTestSuppressions.cs = ..\Shared\GlobalTestSuppressions.cs
+		..\..\global.json = ..\..\global.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{C72913EB-76D6-4823-9432-128EE553BB0B}"
+	ProjectSection(SolutionItems) = preProject
+		..\Common\Index.cs = ..\Common\Index.cs
+		..\Common\IsExternalInit.cs = ..\Common\IsExternalInit.cs
+		..\Common\NullableAttributes.cs = ..\Common\NullableAttributes.cs
+		..\Common\Range.cs = ..\Common\Range.cs
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration", "Sweetener.Extensions.Configuration\Sweetener.Extensions.Configuration.csproj", "{DCD7C6F3-687E-4BE5-9CAB-004EF18BE551}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Extensions.Configuration.Test", "Sweetener.Extensions.Configuration.Test\Sweetener.Extensions.Configuration.Test.csproj", "{F192C036-0CF2-446A-8DE4-9A7C216ED66F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration", "..\Shared\Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj", "{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration", "..\Tools\Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj", "{0CF2675B-2C50-443B-B244-4946A6A75F36}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B0DD5FFB-AF51-45F8-AB59-5E24DF39C7BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,13 +44,16 @@ Global
 		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F192C036-0CF2-446A-8DE4-9A7C216ED66F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BFDB2D62-35E3-4B79-97ED-66F8F3180FC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CF2675B-2C50-443B-B244-4946A6A75F36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CF2675B-2C50-443B-B244-4946A6A75F36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CF2675B-2C50-443B-B244-4946A6A75F36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CF2675B-2C50-443B-B244-4946A6A75F36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0CF2675B-2C50-443B-B244-4946A6A75F36} = {B0DD5FFB-AF51-45F8-AB59-5E24DF39C7BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E7F771AD-ECD5-4455-AAA0-8EE62E85F5B4}
