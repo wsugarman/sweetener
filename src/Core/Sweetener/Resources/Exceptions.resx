@@ -150,4 +150,7 @@
   <data name="StreamWriteNotSupportedMessage" xml:space="preserve">
     <value>Stream does not support writing.</value>
   </data>
+  <data name="ValueNotCreatedMessage" xml:space="preserve">
+    <value>Value is not created.</value>
+  </data>
 </root>

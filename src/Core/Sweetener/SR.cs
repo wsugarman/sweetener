@@ -30,6 +30,7 @@ internal static class SR
 
     public static string StreamWriteNotSupportedMessage => ExceptionResourceManager.GetString(nameof(StreamWriteNotSupportedMessage), CultureInfo.CurrentUICulture)!;
 
+    public static string ValueNotCreatedMessage => ExceptionResourceManager.GetString(nameof(ValueNotCreatedMessage), CultureInfo.CurrentUICulture)!;
 
     private static readonly ResourceManager ExceptionResourceManager = new ResourceManager("Sweetener.Resources.Exceptions", typeof(SR).Assembly);
 
