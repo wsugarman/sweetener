@@ -2,21 +2,21 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Sweetener.Threading;
 
 namespace Sweetener;
 
 /// <summary>
 /// Provides support for asychronous lazy initialization.
 /// </summary>
+[DebuggerTypeProxy(typeof(AsyncLazyDebugView<>))]
+[DebuggerDisplay("ThreadSafetyMode={Mode}, IsValueCreated={IsValueCreated}, IsValueFaulted={IsValueFaulted}, Value={ValueForDebugDisplay}")]
 public sealed class AsyncLazy<T> : IDisposable
 {
-    private volatile Task<T>? _valueTask;
-    private readonly AsyncFunc<CancellationToken, T> _valueFactory;
-    private readonly LazyThreadSafetyMode _mode;
-    private readonly SemaphoreSlim? _semaphore;
-
     /// <summary>
     /// Gets a value that indicates whether a value has been created for this <see cref="AsyncLazy{T}"/> instance.
     /// </summary>
@@ -28,10 +28,57 @@ public sealed class AsyncLazy<T> : IDisposable
     {
         get
         {
-            Task<T>? task = _valueTask;
-            return task != null && task.IsCompleted;
+            Task<T>? valueTask = _valueTask;
+            return valueTask != null
+#if NETCOREAPP2_0_OR_GREATER
+                && valueTask.IsCompletedSuccessfully;
+#else
+                && valueTask.Status == TaskStatus.RanToCompletion;
+#endif
         }
     }
+
+    internal bool IsValueFaulted
+    {
+        get
+        {
+            Task<T>? valueTask = _valueTask;
+            return valueTask != null && valueTask.IsFaulted;
+        }
+    }
+
+    internal AsyncLazyThreadSafetyMode Mode { get; }
+
+    internal T? ValueForDebugDisplay
+    {
+        get
+        {
+            Task<T>? valueTask = _valueTask;
+            return valueTask != null
+#if NETCOREAPP2_0_OR_GREATER
+                && valueTask.IsCompletedSuccessfully
+#else
+                && valueTask.Status == TaskStatus.RanToCompletion
+#endif
+                ? valueTask.Result : default;
+        }
+    }
+
+    private AsyncFunc<CancellationToken, T> ValueFactory
+    {
+        get
+        {
+            AsyncFunc<CancellationToken, T>? valueFactory = _valueFactory;
+            if (valueFactory is null)
+                throw new ObjectDisposedException(typeof(AsyncLazy<T>).FullName);
+
+            return valueFactory;
+        }
+    }
+
+    private volatile Task<T>? _valueTask;
+    private AsyncFunc<CancellationToken, T>? _valueFactory;
+    private readonly SemaphoreSlim? _semaphore;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class.
@@ -40,7 +87,7 @@ public sealed class AsyncLazy<T> : IDisposable
     /// <param name="valueFactory">The delegate that is invoked to produce the lazily initialized value when it is needed.</param>
     /// <exception cref="ArgumentNullException"><paramref name="valueFactory"/> is <see langword="null"/>.</exception>
     public AsyncLazy(AsyncFunc<CancellationToken, T> valueFactory)
-        : this(valueFactory, LazyThreadSafetyMode.ExecutionAndPublication)
+        : this(valueFactory, AsyncLazyThreadSafetyMode.ExecutionAndPublication)
     { }
 
     /// <summary>
@@ -54,7 +101,7 @@ public sealed class AsyncLazy<T> : IDisposable
     /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="valueFactory"/> is <see langword="null"/>.</exception>
     public AsyncLazy(AsyncFunc<CancellationToken, T> valueFactory, bool isThreadSafe)
-        : this(valueFactory, isThreadSafe ? LazyThreadSafetyMode.ExecutionAndPublication : LazyThreadSafetyMode.None)
+        : this(valueFactory, isThreadSafe ? AsyncLazyThreadSafetyMode.ExecutionAndPublication : AsyncLazyThreadSafetyMode.None)
     { }
 
     /// <summary>
@@ -65,17 +112,27 @@ public sealed class AsyncLazy<T> : IDisposable
     /// <param name="mode">One of the enumeration values that specifies the thread safety mode.</param>
     /// <exception cref="ArgumentNullException"><paramref name="valueFactory"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="mode"/> contains an invalid value.</exception>
-    public AsyncLazy(AsyncFunc<CancellationToken, T> valueFactory, LazyThreadSafetyMode mode)
+    public AsyncLazy(AsyncFunc<CancellationToken, T> valueFactory, AsyncLazyThreadSafetyMode mode)
     {
         if (valueFactory is null)
             throw new ArgumentNullException(nameof(valueFactory));
 
-        if (!Enum.IsDefined(typeof(LazyThreadSafetyMode), mode))
+        if (!Enum.IsDefined(typeof(AsyncLazyThreadSafetyMode), mode))
             throw new ArgumentOutOfRangeException(nameof(mode));
 
+        Mode = mode;
         _valueFactory = valueFactory;
-        _mode = mode;
-        _semaphore = mode != LazyThreadSafetyMode.None ? new SemaphoreSlim(1, 1) : null;
+        _semaphore = mode == AsyncLazyThreadSafetyMode.ExecutionAndPublication ? new SemaphoreSlim(1, 1) : null;
+    }
+
+    /// <summary>
+    /// Releases all resources used by the current instance of the <see cref="AsyncLazy{T}"/> class.
+    /// </summary>
+    public void Dispose()
+    {
+        _semaphore?.Dispose();
+        _valueFactory = null;
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
@@ -102,36 +159,45 @@ public sealed class AsyncLazy<T> : IDisposable
         if (_valueTask is not null)
             return _valueTask;
 
-        return _mode switch
+        return Mode switch
         {
-            LazyThreadSafetyMode.None => ExecuteAndPublishAsync(cancellationToken),
-            LazyThreadSafetyMode.PublicationOnly => ExecuteAndPublishThreadSafeAsync(cancellationToken),
-            _ => ExecuteThreadSafeAndPublishAsync(cancellationToken),
+            AsyncLazyThreadSafetyMode.None => ExecuteAndPublishAsync(cancellationToken),
+            AsyncLazyThreadSafetyMode.PublicationOnly => ExecuteAndOnlyPublishThreadSafeAsync(cancellationToken),
+            _ => ExecuteAndPublishThreadSafeAsync(cancellationToken),
         };
     }
 
     /// <summary>
-    /// Releases all resources used by the current instance of the <see cref="AsyncLazy{T}"/> class.
+    /// Creates and returns a string representation of this instance.
     /// </summary>
-    public void Dispose()
+    /// <returns>The result of calling <see cref="object.ToString"/> on the lazily evaluated value.</returns>
+    /// <exception cref="NullReferenceException">The lazily evaluated value is <see langword="null"/>.</exception>
+    public override string? ToString()
     {
-        _semaphore?.Dispose();
-        GC.SuppressFinalize(this);
+        Task<T>? valueTask = _valueTask;
+        return valueTask != null
+#if NETCOREAPP2_0_OR_GREATER
+                && valueTask.IsCompletedSuccessfully
+#else
+                && valueTask.Status == TaskStatus.RanToCompletion
+#endif
+                ? valueTask.Result!.ToString() : SR.ValueNotCreatedMessage;
     }
 
-    private Task<T> ExecuteAndPublishAsync(CancellationToken cancellationToken = default)
+    private Task<T> ExecuteAndPublishAsync(CancellationToken cancellationToken)
     {
-        Task<T> valueTask = _valueFactory(cancellationToken);
-        _valueTask = valueTask;
-        return valueTask;
+        _valueTask = ValueFactory.Invoke(cancellationToken);
+        return _valueTask; // The field is returned instead of the result of the factory to emulate Lazy<T>
     }
 
-    private async Task<T> ExecuteThreadSafeAndPublishAsync(CancellationToken cancellationToken = default)
+    private async Task<T> ExecuteAndPublishThreadSafeAsync(CancellationToken cancellationToken)
     {
+        AsyncFunc<CancellationToken, T> valueFactory = ValueFactory;
+
         await _semaphore!.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            _valueTask ??= _valueFactory(cancellationToken);
+            _valueTask ??= valueFactory(cancellationToken);
         }
         finally
         {
@@ -141,20 +207,28 @@ public sealed class AsyncLazy<T> : IDisposable
         return await _valueTask.ConfigureAwait(false);
     }
 
-    private async Task<T> ExecuteAndPublishThreadSafeAsync(CancellationToken cancellationToken = default)
+    [SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "The _valueTask field is guaranteed to be complete.")]
+    private async Task<T> ExecuteAndOnlyPublishThreadSafeAsync(CancellationToken cancellationToken)
     {
-        Task<T> valueTask = _valueFactory(cancellationToken);
+        Task<T> valueTask = ValueFactory.Invoke(cancellationToken);
         T result = await valueTask.ConfigureAwait(false);
 
-        await _semaphore!.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            _valueTask ??= valueTask;
-            return result;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        return Interlocked.CompareExchange(ref _valueTask, valueTask, null) is null ? result : _valueTask.Result;
     }
+}
+
+internal sealed class AsyncLazyDebugView<T>
+{
+    public bool IsValueCreated => _asyncLazy.IsValueCreated;
+
+    public T? Value => _asyncLazy.ValueForDebugDisplay;
+
+    public AsyncLazyThreadSafetyMode Mode => _asyncLazy.Mode;
+
+    public bool IsValueFaulted => _asyncLazy.IsValueFaulted;
+
+    private readonly AsyncLazy<T> _asyncLazy;
+
+    public AsyncLazyDebugView(AsyncLazy<T> lazy)
+        => _asyncLazy = lazy;
 }
