@@ -38,6 +38,7 @@ public class AsyncLazyTest
     public async Task Ctor_ValueFactory_Mode()
     {
         Assert.ThrowsException<ArgumentNullException>(() => new AsyncLazy<object>(null!, AsyncLazyThreadSafetyMode.None));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncLazy<object>(t => Task.FromResult<object>(null!), (AsyncLazyThreadSafetyMode)42));
 
         using AsyncLazy<int> lazy = new AsyncLazy<int>(t => Task.FromResult(3), AsyncLazyThreadSafetyMode.PublicationOnly);
         Assert.AreEqual(AsyncLazyThreadSafetyMode.PublicationOnly, lazy.Mode);
