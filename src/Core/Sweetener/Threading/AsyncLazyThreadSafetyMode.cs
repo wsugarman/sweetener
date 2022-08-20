@@ -1,6 +1,8 @@
 // Copyright © William Sugarman.
 // Licensed under the MIT License.
 
+using System;
+
 namespace Sweetener.Threading;
 
 /// <summary>
@@ -12,10 +14,15 @@ public enum AsyncLazyThreadSafetyMode
     /// The <see cref="AsyncLazy{T}"/> instance is not thread safe; if the instance is accessed from multiple threads,
     /// its behavior is undefined. Use this mode only when high performance is crucial and the
     /// <see cref="AsyncLazy{T}"/> instance is guaranteed never to be initialized from more than one thread.
-    /// If the initialization method throws an exception (or fails to handle an exception) the first time you call
-    /// the <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method, then the exception
+    /// If the initialization method throws any exception (or fails to handle any exception) besides
+    /// <see cref="OperationCanceledException"/> the first time you call the
+    /// <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method, then the exception
     /// is cached and thrown again on subsequent calls to the
-    /// the <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method.
+    /// <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method.
+    /// <see cref="OperationCanceledException"/> is never cached. Instead the value of the
+    /// <see cref="AsyncLazy{T}.IsValueCreated"/> property remains <see langword="false"/>, and subsequent calls to the
+    /// <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method, either by the thread
+    /// where the exception was thrown or by other threads, cause the initialization method to run again.
     /// </summary>
     None,
 
@@ -40,10 +47,15 @@ public enum AsyncLazyThreadSafetyMode
     /// in a thread-safe manner. Effectively, the initialization method is executed in a thread-safe manner.
     /// Publication of the initialized value is also thread-safe in the sense that only one value may be published and
     /// used by all threads. If the initialization method uses locks internally, deadlocks can occur. If the
-    /// initialization method throws an exception (or fails to handle an exception) the first time you call the
+    /// initialization method throws any exception (or fails to handle any exception) besides
+    /// <see cref="OperationCanceledException"/> the first time you call the
     /// <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method, then the exception is
     /// cached and thrown again on subsequent calls to the
     /// <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method.
+    /// <see cref="OperationCanceledException"/> is never cached. Instead the value of the
+    /// <see cref="AsyncLazy{T}.IsValueCreated"/> property remains <see langword="false"/>, and subsequent calls to the
+    /// <see cref="AsyncLazy{T}.GetValueAsync(System.Threading.CancellationToken)"/> method, either by the thread
+    /// where the exception was thrown or by other threads, cause the initialization method to run again.
     /// </summary>
     ExecutionAndPublication,
 }

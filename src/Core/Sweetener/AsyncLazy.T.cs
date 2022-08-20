@@ -177,34 +177,69 @@ public sealed class AsyncLazy<T> : IDisposable
         Task<T>? valueTask = _valueTask;
         return valueTask != null
 #if NETCOREAPP2_0_OR_GREATER
-                && valueTask.IsCompletedSuccessfully
+            && valueTask.IsCompletedSuccessfully
 #else
-                && valueTask.Status == TaskStatus.RanToCompletion
+            && valueTask.Status == TaskStatus.RanToCompletion
 #endif
-                ? valueTask.Result!.ToString() : SR.ValueNotCreatedMessage;
+            ? valueTask.Result!.ToString() : SR.ValueNotCreatedMessage;
     }
 
-    private Task<T> ExecuteAndPublishAsync(CancellationToken cancellationToken)
+    // Note: It was a deliberate decision to not include the recursion detection exposed by the type
+    // System.Lazy<T> for LazyThreadSafetyMode.None and LazyThreadSafetyMode.ExecutionAndPublication.
+    // Unlike the locks employed by Lazy<T>, AsyncLazy<T> would require the use of some other synchronization
+    // primitive. Types like SemaphoreSlim, which are typically used in a similar capacity within asynchronous
+    // code, does not record thread metadata, and so the same thread cannot "wait" upon the same instance without
+    // incrementing the counter twice. Furthermore, the coordination of tasks and threads cannot be guaranteed.
+    // As such, this behavior does not appear to naturally translate to an asynchronous context.
+
+    private async Task<T> ExecuteAndPublishAsync(CancellationToken cancellationToken)
     {
-        _valueTask = ValueFactory.Invoke(cancellationToken);
-        return _valueTask; // The field is returned instead of the result of the factory to emulate Lazy<T>
+        Task<T>? valueTask = null;
+        AsyncFunc<CancellationToken, T> valueFactory = ValueFactory;
+
+        try
+        {
+            valueTask = valueFactory.Invoke(cancellationToken);
+            T result = await valueTask.ConfigureAwait(false);
+
+            _valueTask = valueTask;
+            return result;
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            _valueTask = valueTask ?? Task.FromException<T>(e);
+            throw;
+        }
     }
 
     private async Task<T> ExecuteAndPublishThreadSafeAsync(CancellationToken cancellationToken)
     {
+        Task<T>? valueTask = null;
         AsyncFunc<CancellationToken, T> valueFactory = ValueFactory;
 
         await _semaphore!.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            _valueTask ??= valueFactory(cancellationToken);
+            if (_valueTask is null)
+            {
+                valueTask = valueFactory.Invoke(cancellationToken);
+                T result = await valueTask.ConfigureAwait(false);
+
+                _valueTask = valueTask;
+                return result;
+            }
+
+            return await _valueTask.ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            _valueTask = valueTask ?? Task.FromException<T>(e);
+            throw;
         }
         finally
         {
             _semaphore.Release();
         }
-
-        return await _valueTask.ConfigureAwait(false);
     }
 
     [SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "The _valueTask field is guaranteed to be complete.")]
