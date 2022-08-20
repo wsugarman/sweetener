@@ -9,10 +9,11 @@ on:
     - global.json
     - NuGet.config
     - src/*
+    - src/Common/**
     - src/Core/*
     - src/Core/Sweetener.Linq/**
     - src/Core/Sweetener.Linq.Test/**
-    - src/Shared/**
+    - src/Tools/**
 
 jobs:
   test:

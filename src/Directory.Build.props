@@ -2,11 +2,12 @@
 
   <!-- Common Locations -->
   <PropertyGroup>
+    <CommonDirectory>$(MSBuildThisFileDirectory)Common\</CommonDirectory>
+    <CoreDirectory>$(MSBuildThisFileDirectory)Core\</CoreDirectory>
+    <ExtensionsDirectory>$(MSBuildThisFileDirectory)Extensions\</ExtensionsDirectory>
+    <ResourcesDirectory>$(MSBuildThisFileDirectory)Resources\</ResourcesDirectory>
     <SrcDirectory>$(MSBuildThisFileDirectory)</SrcDirectory>
-    <CoreDirectory>$(SrcDirectory)Core\</CoreDirectory>
-    <ExtensionsDirectory>$(SrcDirectory)Extensions\</ExtensionsDirectory>
-    <ResourcesDirectory>$(SrcDirectory)Resources\</ResourcesDirectory>
-    <SharedDirectory>$(SrcDirectory)Shared\</SharedDirectory>
+    <ToolsDirectory>$(MSBuildThisFileDirectory)Tools\</ToolsDirectory>
   </PropertyGroup>
 
   <!-- Common Assembly and Build Properties -->
@@ -25,18 +26,24 @@
     <WarningsAsErrors />
   </PropertyGroup>
 
+  <!-- Dynamic Assembly Info -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Resources.NeutralResourcesLanguage ">
+      <_Parameter1>en</_Parameter1>
+      <_Parameter1_TypeName>System.String</_Parameter1_TypeName>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <!-- Code Analyzers -->
   <PropertyGroup>
     <AnalysisLevel>latest-All</AnalysisLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <!-- Support for new .NET/C# Features in .NET Standard 2.0 -->
   <ItemGroup>
-    <Compile Include="$(SharedDirectory)Index.cs" Visible="false" />
-    <Compile Include="$(SharedDirectory)IsExternalInit.cs" Visible="false" />
-    <Compile Include="$(SharedDirectory)NullableAttributes.cs" Visible="false" />
-    <Compile Include="$(SharedDirectory)Range.cs" Visible="false" />
+    <Compile Include="$(CommonDirectory)*" Visible="false" />
   </ItemGroup>
 
   <!-- Tools -->
@@ -56,7 +63,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
       </PropertyGroup>
 
-      <!-- Not CLS Compliant -->
+      <!-- Dynamic Assembly Info -->
       <ItemGroup>
         <AssemblyAttribute Include="System.CLSCompliantAttribute ">
           <_Parameter1>false</_Parameter1>
@@ -70,9 +77,19 @@
       <!-- Unit Test Properties -->
       <PropertyGroup>
         <IsPackable>false</IsPackable>
+        <!-- CA1707: Identifiers should not contain underscores -->
+        <NoWarn>$(NoWarn);CA1707</NoWarn>
         <PublicSign>true</PublicSign>
         <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
       </PropertyGroup>
+
+      <!-- Dynamic Assembly Info -->
+      <ItemGroup>
+        <AssemblyAttribute Include="System.CLSCompliantAttribute ">
+          <_Parameter1>true</_Parameter1>
+          <_Parameter1_TypeName>System.Boolean</_Parameter1_TypeName>
+        </AssemblyAttribute>
+      </ItemGroup>
 
       <!-- Test Framework Packages -->
       <ItemGroup>
@@ -82,21 +99,16 @@
         <PackageReference Include="MSTest.TestFramework" />
       </ItemGroup>
 
-      <!-- Test File Analyzer Suppressions -->
-      <ItemGroup>
-        <Compile Include="$(SharedDirectory)GlobalTestSuppressions.cs" Visible="false" />
-      </ItemGroup>
-
     </When>
     <Otherwise>
 
-      <!-- Assembly and Build Properties -->
+      <!-- Assembly, Build, and Packing Properties -->
       <PropertyGroup>
         <DelaySign>true</DelaySign>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
-        <!-- NU5105: We're purposefully using SemVer 2.0 -->
+        <!-- NU5105: Package version contains components that may not be supported on NuGet clients older than v4.3 -->
         <NoWarn>$(NoWarn);NU5105</NoWarn>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -120,15 +132,12 @@
         <None Include="$(ResourcesDirectory)Sweetener.png" Pack="true" PackagePath="\" Visible="false" />
       </ItemGroup>
 
-      <!-- Static Assembly Info -->
-      <ItemGroup>
-        <Compile Include="$(SharedDirectory)AssemblyInfo.cs">
-          <Link>Properties\AssemblyInfo.cs</Link>
-        </Compile>
-      </ItemGroup>
-
       <!-- Dynamic Assembly Info -->
       <ItemGroup>
+        <AssemblyAttribute Include="System.CLSCompliantAttribute ">
+          <_Parameter1>true</_Parameter1>
+          <_Parameter1_TypeName>System.Boolean</_Parameter1_TypeName>
+        </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
           <_Parameter1>$(MSBuildProjectName).Test, PublicKey=002400000c8000001402000006020000002400005253413100100000010001007127af9e53dfa81f9909fa8c032ec685ce024339149defa44a2e2c93b831fafb8ee2edf2cd1181f4c45c4d2603819801275eb64ff834174fd5aa9d5f4527291ba1bee287cefac997b04a352264995c1752181d4e7ac914a5df0d5e15c068da2a3dd4f157c02ca0bf3ea43c23c35e879c733f84a64f5ef478192cbe514b2e09467626d2c44b878aa8d84ecc4129877f67384295689b108f48f99a3a063135ea4a3b257733bedc4fc3c7989b637414d7f0956be8813a9dbd3a20dd4c9477b191299a315cff14dec19dbe152f0ce28eaa4a1e812efa985b35e855540512e1feafe314f072e78df54711c5942b806f4138d9e3f5bc03285603517d964b714491310bd6a3010397bc5e71345f645a5218bc6eaccaa1cdc1dab857579ff8408ba40da69018f11d94d314331ff54c2a6bb2ca74c2da199358dc66a5c470f1dbf0c381b1d4591d911fa73c1ab2765340d4a0900a24bc541684aeba32975cf2039e6022f6712f00ae04438ff837738c1914c84d938a776a18e524d5b549dde76f8629c1c0c67669daf914d05f8835c8290d71d87379c7b654ebb08b0003aec77fbef706d3842654cfa7c4f1ee049a63efdcf1565e8027cbaebc6fec67925e1673d4ad2d152f03658d3f3a8a1d09a26796213b7bcd9a4ffbbc57b62f920f2e947a8e638cd89f03a03413a5994d0be643e28af44021062281dd80e9dff8343e33cc4d5539ab</_Parameter1>
           <_Parameter1_TypeName>System.String</_Parameter1_TypeName>

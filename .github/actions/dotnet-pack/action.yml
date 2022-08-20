@@ -51,7 +51,10 @@ runs:
       run: |
         dotnet build "./src/${{ inputs.solution }}/${{ inputs.project }}/${{ inputs.project }}.csproj" \
           -c "${{ inputs.buildConfiguration }}" \
-          "-p:ContinuousIntegrationBuild=true;AssemblyVersion=${{ steps.version.outputs.assembly }};FileVersion=${{ steps.version.outputs.file }};InformationalVersion=${{ steps.version.outputs.file }}" \
+          "-p:ContinuousIntegrationBuild=true" \
+          "-p:AssemblyVersion=${{ steps.version.outputs.assembly }}" \
+          "-p:FileVersion=${{ steps.version.outputs.file }}" \
+          "-p:InformationalVersion=${{ steps.version.outputs.file }}" \
           -warnaserror
 
     - name: Sign Assembly
@@ -70,7 +73,8 @@ runs:
       run: |
         dotnet pack "./src/${{ inputs.solution }}/${{ inputs.project }}/${{ inputs.project }}.csproj" \
           -c "${{ inputs.buildConfiguration }}" \
-          "-p:ContinuousIntegrationBuild=true;PackageVersion=${{ steps.version.outputs.package }}" \
+          "-p:ContinuousIntegrationBuild=true" \
+          "-p:PackageVersion=${{ steps.version.outputs.package }}" \
           --no-build \
           -o "${{ runner.temp }}/package"
 

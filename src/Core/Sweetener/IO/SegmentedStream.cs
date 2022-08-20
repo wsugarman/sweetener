@@ -197,7 +197,7 @@ public sealed class SegmentedStream : Stream
     /// </param>
     /// <returns>
     /// A task that represents the asynchronous read operation.
-    /// The value of the <see cref="Task{TResult}.Result"/> parameter contains the total number of bytes read
+    /// The value of the <see cref="Task{TResult}.Result"/> property contains the total number of bytes read
     /// into <paramref name="buffer"/>. The result value can be less than the number of bytes requested if the number
     /// of bytes currently available is less than the requested number, or it can be <c>0</c> (zero)
     /// if the end of the stream has been reached.

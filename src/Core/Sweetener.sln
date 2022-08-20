@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.31911.260
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BB6E7D2D-ABDF-4E1A-8AD4-7262ED7B020C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{D7165109-AF6C-410C-B30C-AD1B2C6B705C}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.editorconfig = ..\..\.editorconfig
 		..\..\.globalconfig = ..\..\.globalconfig
@@ -11,7 +11,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BB6E7D
 		..\Directory.Build.props = ..\Directory.Build.props
 		..\Directory.Build.targets = ..\Directory.Build.targets
 		..\Directory.Packages.props = ..\Directory.Packages.props
-		..\Shared\GlobalTestSuppressions.cs = ..\Shared\GlobalTestSuppressions.cs
+		..\..\global.json = ..\..\global.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BB6E7D2D-ABDF-4E1A-8AD4-7262ED7B020C}"
+	ProjectSection(SolutionItems) = preProject
+		..\Common\Index.cs = ..\Common\Index.cs
+		..\Common\IsExternalInit.cs = ..\Common\IsExternalInit.cs
+		..\Common\NullableAttributes.cs = ..\Common\NullableAttributes.cs
+		..\Common\Range.cs = ..\Common\Range.cs
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener", "Sweetener\Sweetener.csproj", "{0CAE764E-CB11-4B4B-A0D2-F340BCFF7711}"
@@ -20,9 +28,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Linq", "Sweetener
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Linq.Test", "Sweetener.Linq.Test\Sweetener.Linq.Test.csproj", "{A410C425-6B4F-4CE3-93A7-ED77964AC9C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration", "..\Shared\Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj", "{B957A41F-2B58-4037-A8C2-363FC5BD5EC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.SourceGeneration", "..\Tools\Sweetener.SourceGeneration\Sweetener.SourceGeneration.csproj", "{C4F6342F-2B23-4E88-88B3-68B55674BCB8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sweetener.Test", "Sweetener.Test\Sweetener.Test.csproj", "{A7F1B2E0-FBDC-4245-88DA-EEE8A8AECE9E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{CB7418F9-0224-4BF5-B2F0-F85E776B2C66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +52,10 @@ Global
 		{A410C425-6B4F-4CE3-93A7-ED77964AC9C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A410C425-6B4F-4CE3-93A7-ED77964AC9C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A410C425-6B4F-4CE3-93A7-ED77964AC9C6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B957A41F-2B58-4037-A8C2-363FC5BD5EC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B957A41F-2B58-4037-A8C2-363FC5BD5EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B957A41F-2B58-4037-A8C2-363FC5BD5EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B957A41F-2B58-4037-A8C2-363FC5BD5EC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4F6342F-2B23-4E88-88B3-68B55674BCB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4F6342F-2B23-4E88-88B3-68B55674BCB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4F6342F-2B23-4E88-88B3-68B55674BCB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4F6342F-2B23-4E88-88B3-68B55674BCB8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A7F1B2E0-FBDC-4245-88DA-EEE8A8AECE9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A7F1B2E0-FBDC-4245-88DA-EEE8A8AECE9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7F1B2E0-FBDC-4245-88DA-EEE8A8AECE9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,6 +63,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C4F6342F-2B23-4E88-88B3-68B55674BCB8} = {CB7418F9-0224-4BF5-B2F0-F85E776B2C66}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4604FD9D-6DEB-43A7-AA51-932827DA7AF9}
