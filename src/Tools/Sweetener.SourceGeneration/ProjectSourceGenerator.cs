@@ -1,10 +1,9 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -24,10 +23,8 @@ public sealed class ProjectSourceGenerator : ISourceGenerator
         foreach (SourceTemplate template in GetSourceTemplates(context))
         {
             using StringWriter buffer = new StringWriter();
-#pragma warning disable CA2000 // False positive
             using (IndentedTextWriter sourceWriter = new IndentedTextWriter(buffer, TabString))
                 template.Write(sourceWriter, options, context);
-#pragma warning restore CA2000
 
             context.AddSource(template.FileName, buffer.ToString());
         }
