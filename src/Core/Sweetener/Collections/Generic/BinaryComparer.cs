@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -132,14 +132,26 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
     /// </returns>
     public int Compare(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
     {
+        int xCount = x.Length;
+        int yCount = y.Length;
+
         unsafe
         {
-            fixed (byte* xPtr = x)
-            fixed (byte* yPtr = y)
+            fixed (byte* xFixed = x)
+            fixed (byte* yFixed = y)
             {
-                return IntPtr.Size == sizeof(uint)
-                    ? Compare((uint*)xPtr, (uint*)yPtr, x.Length, y.Length)
-                    : Compare((ulong*)xPtr, (ulong*)yPtr, x.Length, y.Length);
+                nuint* px = (nuint*)xFixed;
+                nuint* py = (nuint*)yFixed;
+
+                for (; xCount >= sizeof(nuint) && yCount >= sizeof(nuint); px++, py++, xCount -= sizeof(nuint), yCount -= sizeof(nuint))
+                {
+                    if (*px < *py)
+                        return -1;
+                    if (*px > *py)
+                        return 1;
+                }
+
+                return Compare((byte*)px, (byte*)py, xCount, yCount);
             }
         }
     }
@@ -193,7 +205,61 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
         else if (y is null)
             return 1;
 
-        return IntPtr.Size == sizeof(uint) ? Compare32(x, y) : Compare64(x, y);
+        unsafe
+        {
+#if NETCOREAPP2_1_OR_GREATER
+            nuint xWord;
+            nuint yWord;
+            Span<byte> xBuffer = new Span<byte>(&xWord, sizeof(nuint));
+            Span<byte> yBuffer = new Span<byte>(&yWord, sizeof(nuint));
+
+            int cmp;
+            int xCount;
+            int yCount;
+
+            do
+            {
+                xCount = FillBuffer(x, xBuffer);
+                yCount = FillBuffer(y, yBuffer);
+
+                if (xCount < sizeof(nuint) || yCount < sizeof(nuint))
+                    return Compare((byte*)&xWord, (byte*)&yWord, xCount, yCount);
+
+                cmp = xWord.CompareTo(yWord);
+            } while (cmp == 0);
+
+            return cmp;
+#else
+            byte[] xBuffer = ArrayPool<byte>.Shared.Rent(sizeof(nuint));
+            byte[] yBuffer = ArrayPool<byte>.Shared.Rent(sizeof(nuint));
+
+            try
+            {
+                fixed (byte* px = xBuffer)
+                fixed (byte* py = yBuffer)
+                {
+                    int xCount;
+                    int yCount;
+
+                    do
+                    {
+                        xCount = FillBuffer(x, xBuffer, sizeof(nuint));
+                        yCount = FillBuffer(y, yBuffer, sizeof(nuint));
+
+                        if (xCount < sizeof(nuint) || yCount < sizeof(nuint))
+                            return Compare(px, py, xCount, yCount);
+                    } while (*px == *py);
+
+                    return *px < *py ? -1 : 1;
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(xBuffer);
+                ArrayPool<byte>.Shared.Return(yBuffer);
+            }
+#endif
+        }
     }
 
     /// <summary>
@@ -244,12 +310,20 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
         unsafe
         {
-            fixed (byte* xPtr = x)
-            fixed (byte* yPtr = y)
+            fixed (byte* xFixed = x)
+            fixed (byte* yFixed = y)
             {
-                return IntPtr.Size == sizeof(uint)
-                    ? Equals((uint*)xPtr, (uint*)yPtr, x.Length)
-                    : Equals((ulong*)xPtr, (ulong*)yPtr, x.Length);
+                int count = x.Length;
+                nuint* px = (nuint*)xFixed;
+                nuint* py = (nuint*)yFixed;
+
+                for (; count >= sizeof(nuint); px++, py++, count -= sizeof(nuint))
+                {
+                    if (*px != *py)
+                        return false;
+                }
+
+                return Equals((byte*)px, (byte*)py, count);
             }
         }
     }
@@ -272,7 +346,58 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
         if (x is null || y is null)
             return false;
 
-        return IntPtr.Size == sizeof(uint) ? Equals32(x, y) : Equals64(x, y);
+        unsafe
+        {
+#if NETCOREAPP2_1_OR_GREATER
+            nuint xWord;
+            nuint yWord;
+            Span<byte> xBuffer = new Span<byte>(&xWord, sizeof(nuint));
+            Span<byte> yBuffer = new Span<byte>(&yWord, sizeof(nuint));
+
+            int xCount;
+            int yCount;
+
+            do
+            {
+                xCount = FillBuffer(x, xBuffer);
+                yCount = FillBuffer(y, yBuffer);
+
+                if (xCount < sizeof(nuint) || yCount < sizeof(nuint))
+                    return Equals((byte*)&xWord, (byte*)&yWord, xCount, yCount);
+            } while (xWord == yWord);
+
+            return false;
+#else
+            byte[] xBuffer = ArrayPool<byte>.Shared.Rent(sizeof(nuint));
+            byte[] yBuffer = ArrayPool<byte>.Shared.Rent(sizeof(nuint));
+
+            try
+            {
+                fixed (byte* px = xBuffer)
+                fixed (byte* py = yBuffer)
+                {
+                    int xCount;
+                    int yCount;
+
+                    do
+                    {
+                        xCount = FillBuffer(x, xBuffer, sizeof(nuint));
+                        yCount = FillBuffer(y, yBuffer, sizeof(nuint));
+
+                        if (xCount < sizeof(nuint) || yCount < sizeof(nuint))
+                            return Equals(px, py, xCount, yCount);
+                    } while (*(nuint*)px == *(nuint*)py);
+
+                    return false;
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(xBuffer);
+                ArrayPool<byte>.Shared.Return(yBuffer);
+            }
+#endif
+        }
     }
 
     /// <summary>
@@ -307,6 +432,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ReadOnlySpan<T> cannot be used as type argument.")]
     public int GetHashCode(ReadOnlySpan<byte> obj)
     {
+        // TODO: Should algo be based on architecture?
         unsafe
         {
             int hash;
@@ -341,347 +467,9 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
         }
     }
 
-    internal static unsafe int Compare(uint* x, uint* y, int xCount, int yCount)
-    {
-        int cmp = 0;
-        while (xCount >= sizeof(uint) && yCount >= sizeof(uint))
-        {
-            // Note: Parentheses left for clarity
-            cmp = (x++)->CompareTo(*(y++));
-            if (cmp != 0)
-                return cmp;
-
-            xCount -= sizeof(uint);
-            yCount -= sizeof(uint);
-        }
-
-        return Compare((byte*)x, (byte*)y, xCount, yCount);
-    }
-
-    internal static unsafe int Compare(ulong* x, ulong* y, int xCount, int yCount)
-    {
-        int cmp = 0;
-        while (xCount >= sizeof(ulong) && yCount >= sizeof(ulong))
-        {
-            // Note: Parentheses left for clarity
-            cmp = (x++)->CompareTo(*(y++));
-            if (cmp != 0)
-                return cmp;
-
-            xCount -= sizeof(ulong);
-            yCount -= sizeof(ulong);
-        }
-
-        return Compare((byte*)x, (byte*)y, xCount, yCount);
-    }
-
-#if NETCOREAPP2_1_OR_GREATER
-    internal static int Compare32(Stream x, Stream y)
-    {
-        unsafe
-        {
-            ulong xLong;
-            ulong yLong;
-            Span<byte> xBuffer = new Span<byte>(&xLong, 8);
-            Span<byte> yBuffer = new Span<byte>(&yLong, 8);
-
-            int cmp;
-            int xCount;
-            int yCount;
-
-            do
-            {
-                xCount = FillBuffer(x, xBuffer);
-                yCount = FillBuffer(y, yBuffer);
-
-                if (xCount < sizeof(ulong) || yCount < sizeof(ulong))
-                    break;
-
-                cmp = xLong.CompareTo(yLong);
-                if (cmp != 0)
-                    return cmp;
-            } while (true);
-
-            return Compare((byte*)&xLong, (byte*)&yLong, xCount, yCount);
-        }
-    }
-
-    internal static int Compare64(Stream x, Stream y)
-    {
-        unsafe
-        {
-            ulong xLong;
-            ulong yLong;
-            Span<byte> xBuffer = new Span<byte>(&xLong, 8);
-            Span<byte> yBuffer = new Span<byte>(&yLong, 8);
-
-            int cmp;
-            int xCount;
-            int yCount;
-
-            do
-            {
-                xCount = FillBuffer(x, xBuffer);
-                yCount = FillBuffer(y, yBuffer);
-
-                if (xCount < sizeof(ulong) || yCount < sizeof(ulong))
-                    break;
-
-                cmp = xLong.CompareTo(yLong);
-                if (cmp != 0)
-                    return cmp;
-            } while (true);
-
-            return Compare((byte*)&xLong, (byte*)&yLong, xCount, yCount);
-        }
-    }
-#else
-    internal static int Compare32(Stream x, Stream y)
-    {
-        unsafe
-        {
-            byte[] xBuffer = ArrayPool<byte>.Shared.Rent(sizeof(uint));
-            byte[] yBuffer = ArrayPool<byte>.Shared.Rent(sizeof(uint));
-
-            try
-            {
-                fixed (byte* xPtr = xBuffer)
-                fixed (byte* yPtr = yBuffer)
-                {
-                    int cmp;
-                    int xCount;
-                    int yCount;
-
-                    do
-                    {
-                        xCount = FillBuffer(x, xBuffer, sizeof(uint));
-                        yCount = FillBuffer(y, yBuffer, sizeof(uint));
-
-                        if (xCount < sizeof(uint) || yCount < sizeof(uint))
-                            break;
-
-                        cmp = ((uint*)xPtr)->CompareTo(*(uint*)yPtr);
-                        if (cmp != 0)
-                            return cmp;
-                    } while (true);
-
-                    return Compare(xPtr, yPtr, xCount, yCount);
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(xBuffer);
-                ArrayPool<byte>.Shared.Return(yBuffer);
-            }
-        }
-    }
-
-    internal static int Compare64(Stream x, Stream y)
-    {
-        unsafe
-        {
-            byte[] xBuffer = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
-            byte[] yBuffer = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
-
-            try
-            {
-                fixed (byte* xPtr = xBuffer)
-                fixed (byte* yPtr = yBuffer)
-                {
-                    int cmp;
-                    int xCount;
-                    int yCount;
-
-                    do
-                    {
-                        xCount = FillBuffer(x, xBuffer, sizeof(ulong));
-                        yCount = FillBuffer(y, yBuffer, sizeof(ulong));
-
-                        if (xCount < sizeof(ulong) || yCount < sizeof(ulong))
-                            break;
-
-                        cmp = ((ulong*)xPtr)->CompareTo(*(ulong*)yPtr);
-                        if (cmp != 0)
-                            return cmp;
-                    } while (true);
-
-                    return Compare(xPtr, yPtr, xCount, yCount);
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(xBuffer);
-                ArrayPool<byte>.Shared.Return(yBuffer);
-            }
-        }
-    }
-#endif
-
-    internal static unsafe bool Equals(uint* x, uint* y, int count)
-    {
-        while (count >= sizeof(uint))
-        {
-            // Note: Parentheses left for clarity
-            if (*(x++) != *(y++))
-                return false;
-
-            count -= sizeof(uint);
-        }
-
-        return Equals((byte*)x, (byte*)y, count);
-    }
-
-    internal static unsafe bool Equals(ulong* x, ulong* y, int count)
-    {
-        while (count >= sizeof(ulong))
-        {
-            // Note: Parentheses left for clarity
-            if (*(x++) != *(y++))
-                return false;
-
-            count -= sizeof(ulong);
-        }
-
-        return Equals((byte*)x, (byte*)y, count);
-    }
-
-#if NETCOREAPP2_1_OR_GREATER
-    internal static bool Equals32(Stream x, Stream y)
-    {
-        unsafe
-        {
-            ulong xLong;
-            ulong yLong;
-            Span<byte> xBuffer = new Span<byte>(&xLong, 8);
-            Span<byte> yBuffer = new Span<byte>(&yLong, 8);
-
-            int xCount;
-            int yCount;
-
-            do
-            {
-                xCount = FillBuffer(x, xBuffer);
-                yCount = FillBuffer(y, yBuffer);
-
-                if (xCount < sizeof(ulong) || yCount < sizeof(ulong))
-                    break;
-
-                if (xLong != yLong)
-                    return false;
-            } while (true);
-
-            return Equals((byte*)&xLong, (byte*)&yLong, xCount, yCount);
-        }
-    }
-
-    internal static bool Equals64(Stream x, Stream y)
-    {
-        unsafe
-        {
-            ulong xLong;
-            ulong yLong;
-            Span<byte> xBuffer = new Span<byte>(&xLong, 8);
-            Span<byte> yBuffer = new Span<byte>(&yLong, 8);
-
-            int xCount;
-            int yCount;
-
-            do
-            {
-                xCount = FillBuffer(x, xBuffer);
-                yCount = FillBuffer(y, yBuffer);
-
-                if (xCount < sizeof(ulong) || yCount < sizeof(ulong))
-                    break;
-
-                if (xLong != yLong)
-                    return false;
-            } while (true);
-
-            return Equals((byte*)&xLong, (byte*)&yLong, xCount, yCount);
-        }
-    }
-#else
-    internal static bool Equals32(Stream x, Stream y)
-    {
-        unsafe
-        {
-            byte[] xBuffer = ArrayPool<byte>.Shared.Rent(sizeof(uint));
-            byte[] yBuffer = ArrayPool<byte>.Shared.Rent(sizeof(uint));
-
-            try
-            {
-                fixed (byte* xPtr = xBuffer)
-                fixed (byte* yPtr = yBuffer)
-                {
-                    int xCount;
-                    int yCount;
-
-                    do
-                    {
-                        xCount = FillBuffer(x, xBuffer, sizeof(uint));
-                        yCount = FillBuffer(y, yBuffer, sizeof(uint));
-
-                        if (xCount < sizeof(uint) || yCount < sizeof(uint))
-                            break;
-
-                        if ((*(uint*)xPtr) != (*(uint*)yPtr))
-                            return false;
-                    } while (true);
-
-                    return Equals(xPtr, yPtr, xCount, yCount);
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(xBuffer);
-                ArrayPool<byte>.Shared.Return(yBuffer);
-            }
-        }
-    }
-
-    internal static bool Equals64(Stream x, Stream y)
-    {
-        unsafe
-        {
-            byte[] xBuffer = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
-            byte[] yBuffer = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
-
-            try
-            {
-                fixed (byte* xPtr = xBuffer)
-                fixed (byte* yPtr = yBuffer)
-                {
-                    int xCount;
-                    int yCount;
-
-                    do
-                    {
-                        xCount = FillBuffer(x, xBuffer, sizeof(ulong));
-                        yCount = FillBuffer(y, yBuffer, sizeof(ulong));
-
-                        if (xCount < sizeof(ulong) || yCount < sizeof(ulong))
-                            break;
-
-                        if ((*(uint*)xPtr) != (*(uint*)yPtr))
-                            return false;
-                    } while (true);
-
-                    return Equals(xPtr, yPtr, xCount, yCount);
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(xBuffer);
-                ArrayPool<byte>.Shared.Return(yBuffer);
-            }
-        }
-    }
-#endif
-
     private static unsafe int Compare(byte* x, byte* y, int xCount, int yCount)
     {
-        // TODO: Unroll loop for better performance as we know count will always be < 8
+        // TODO: Unroll loop for better performance as we know count will always be < sizeof(nuint)
         int cmp = 0;
         int minCount = xCount < yCount ? xCount : yCount;
         for (int i = 0; i < minCount; i++)
@@ -696,7 +484,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
     private static unsafe bool Equals(byte* x, byte* y, int count)
     {
-        // TODO: Unroll loop for better performance as we know count will always be < 8
+        // TODO: Unroll loop for better performance as we know count will always be < sizeof(nuint)
         for (int i = 0; i < count; i++)
         {
             if (*(x + i) != *(y + i))
@@ -708,7 +496,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
     private static unsafe bool Equals(byte* x, byte* y, int xCount, int yCount)
     {
-        // TODO: Unroll loop for better performance as we know count will always be < 8
+        // TODO: Unroll loop for better performance as we know count will always be < sizeof(nuint)
         int minCount = xCount < yCount ? xCount : yCount;
         for (int i = 0; i < minCount; i++)
         {
