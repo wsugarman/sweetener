@@ -212,6 +212,7 @@ public sealed class AsyncLazy<T> : IDisposable
         }
     }
 
+    [SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "The _valueTask field is guaranteed to be complete.")]
     private async Task<T> ExecuteAndPublishThreadSafeAsync(CancellationToken cancellationToken)
     {
         Task<T>? valueTask = null;
@@ -229,7 +230,7 @@ public sealed class AsyncLazy<T> : IDisposable
                 return result;
             }
 
-            return await _valueTask.ConfigureAwait(false);
+            return _valueTask.Result;
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {

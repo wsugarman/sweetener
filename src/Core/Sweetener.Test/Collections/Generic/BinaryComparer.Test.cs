@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -23,38 +23,6 @@ public class BinaryComparerTest
             skipNullCase: true);
 
     [TestMethod]
-    public void Compare_ReadOnlySpan_x86()
-        => Compare(
-            (x, y) =>
-            {
-                unsafe
-                {
-                    fixed (byte* xPtr = x)
-                    fixed (byte* yPtr = y)
-                    {
-                        return BinaryComparer.Compare((uint*)xPtr, (uint*)yPtr, x!.Length, y!.Length);
-                    }
-                }
-            },
-            skipNullCase: true);
-
-    [TestMethod]
-    public void Compare_ReadOnlySpan_x64()
-        => Compare(
-            (x, y) =>
-            {
-                unsafe
-                {
-                    fixed (byte* xPtr = x)
-                    fixed (byte* yPtr = y)
-                    {
-                        return BinaryComparer.Compare((ulong*)xPtr, (ulong*)yPtr, x!.Length, y!.Length);
-                    }
-                }
-            },
-            skipNullCase: true);
-
-    [TestMethod]
     public void Compare_Stream()
         => Compare(
             (x, y) =>
@@ -67,30 +35,6 @@ public class BinaryComparerTest
                 else
                     return BinaryComparer.Instance.Compare(xStream, yStream);
             });
-
-    [TestMethod]
-    public void Compare_Stream_x32()
-        => Compare(
-            (x, y) =>
-            {
-                using Stream xStream = new MemoryStream(x!);
-                using Stream yStream = new MemoryStream(y!);
-
-                return BinaryComparer.Compare32(xStream, yStream);
-            },
-            skipNullCase: true);
-
-    [TestMethod]
-    public void Compare_Stream_x64()
-        => Compare(
-            (x, y) =>
-            {
-                using Stream xStream = new MemoryStream(x!);
-                using Stream yStream = new MemoryStream(y!);
-
-                return BinaryComparer.Compare64(xStream, yStream);
-            },
-            skipNullCase: true);
 
     [TestMethod]
     public void Equals_Array()
@@ -110,40 +54,6 @@ public class BinaryComparerTest
             skipNullCase: true);
 
     [TestMethod]
-    public void Equals_ReadOnlySpan_x86()
-        => Equals(
-            (x, y) =>
-            {
-                unsafe
-                {
-                    fixed (byte* xPtr = x)
-                    fixed (byte* yPtr = y)
-                    {
-                        return BinaryComparer.Equals((uint*)xPtr, (uint*)yPtr, x!.Length);
-                    }
-                }
-            },
-            skipNullCase: true,
-            skipUnequalLength: true);
-
-    [TestMethod]
-    public void Equals_ReadOnlySpan_x64()
-        => Equals(
-            (x, y) =>
-            {
-                unsafe
-                {
-                    fixed (byte* xPtr = x)
-                    fixed (byte* yPtr = y)
-                    {
-                        return BinaryComparer.Equals((ulong*)xPtr, (ulong*)yPtr, x!.Length);
-                    }
-                }
-            },
-            skipNullCase: true,
-            skipUnequalLength: true);
-
-    [TestMethod]
     public void Equals_Stream()
         => Equals(
             (x, y) =>
@@ -156,30 +66,6 @@ public class BinaryComparerTest
                 else
                     return BinaryComparer.Instance.Equals(xStream, yStream);
             });
-
-    [TestMethod]
-    public void Equals_Stream_x32()
-        => Equals(
-            (x, y) =>
-            {
-                using Stream xStream = new MemoryStream(x!);
-                using Stream yStream = new MemoryStream(y!);
-
-                return BinaryComparer.Equals32(xStream, yStream);
-            },
-            skipNullCase: true);
-
-    [TestMethod]
-    public void Equals_Stream_x64()
-        => Equals(
-            (x, y) =>
-            {
-                using Stream xStream = new MemoryStream(x!);
-                using Stream yStream = new MemoryStream(y!);
-
-                return BinaryComparer.Equals64(xStream, yStream);
-            },
-            skipNullCase: true);
 
     [TestMethod]
     public void GetHashCode_Array()
@@ -261,7 +147,7 @@ public class BinaryComparerTest
     }
 
     [SuppressMessage("Performance", "CA1825:Avoid zero-length array allocations", Justification = "Avoid reference equality.")]
-    private static void Equals(Func<byte[]?, byte[]?, bool> equals, bool skipNullCase = false, bool skipUnequalLength = false)
+    private static void Equals(Func<byte[]?, byte[]?, bool> equals, bool skipNullCase = false)
     {
         byte[] aligned1 = new byte[]
         {
@@ -310,14 +196,11 @@ public class BinaryComparerTest
         Assert.IsTrue(equals(new byte[0], new byte[0]));
 
         // Not Equal
-        if (!skipUnequalLength)
-        {
-            Assert.IsFalse(equals(aligned1           , Array.Empty<byte>()));
-            Assert.IsFalse(equals(Array.Empty<byte>(), aligned1           ));
+        Assert.IsFalse(equals(aligned1           , Array.Empty<byte>()));
+        Assert.IsFalse(equals(Array.Empty<byte>(), aligned1           ));
 
-            Assert.IsFalse(equals(aligned1, extra1));
-            Assert.IsFalse(equals(aligned2, extra1));
-        }
+        Assert.IsFalse(equals(aligned1, extra1));
+        Assert.IsFalse(equals(aligned2, extra1));
 
         Assert.IsFalse(equals(aligned1, aligned2));
         Assert.IsFalse(equals(aligned2, aligned1));
