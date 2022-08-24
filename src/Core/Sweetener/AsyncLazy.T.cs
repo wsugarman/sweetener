@@ -186,11 +186,12 @@ public sealed class AsyncLazy<T> : IDisposable
 
     // Note: It was a deliberate decision to not include the recursion detection exposed by the type
     // System.Lazy<T> for LazyThreadSafetyMode.None and LazyThreadSafetyMode.ExecutionAndPublication.
-    // Unlike the locks employed by Lazy<T>, AsyncLazy<T> would require the use of some other synchronization
+    // Like the locks employed by Lazy<T>, AsyncLazy<T> requires the use of some synchronization
     // primitive. Types like SemaphoreSlim, which are typically used in a similar capacity within asynchronous
-    // code, does not record thread metadata, and so the same thread cannot "wait" upon the same instance without
-    // incrementing the counter twice. Furthermore, the coordination of tasks and threads cannot be guaranteed.
-    // As such, this behavior does not appear to naturally translate to an asynchronous context.
+    // code, do not record thread metadata, and so the same thread cannot "wait" upon the same semaphore instance
+    // without incrementing the counter twice. Furthermore, the coordination of tasks and threads should not be
+    // guaranteed in the library. As such, this behavior does not appear to naturally translate to an
+    // asynchronous context.
 
     private async Task<T> ExecuteAndPublishAsync(CancellationToken cancellationToken)
     {
