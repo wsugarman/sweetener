@@ -145,7 +145,6 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
                 for (; xCount >= sizeof(nuint) && yCount >= sizeof(nuint); px++, py++, xCount -= sizeof(nuint), yCount -= sizeof(nuint))
                 {
-                    // Note: Parentheses left for clarity
                     if (*px < *py)
                         return -1;
                     if (*px > *py)
@@ -211,8 +210,8 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 #if NETCOREAPP2_1_OR_GREATER
             nuint xWord;
             nuint yWord;
-            Span<byte> xBuffer = new Span<byte>(&xWord, 8);
-            Span<byte> yBuffer = new Span<byte>(&yWord, 8);
+            Span<byte> xBuffer = new Span<byte>(&xWord, sizeof(nuint));
+            Span<byte> yBuffer = new Span<byte>(&yWord, sizeof(nuint));
 
             int cmp;
             int xCount;
@@ -352,8 +351,8 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 #if NETCOREAPP2_1_OR_GREATER
             nuint xWord;
             nuint yWord;
-            Span<byte> xBuffer = new Span<byte>(&xWord, 8);
-            Span<byte> yBuffer = new Span<byte>(&yWord, 8);
+            Span<byte> xBuffer = new Span<byte>(&xWord, sizeof(nuint));
+            Span<byte> yBuffer = new Span<byte>(&yWord, sizeof(nuint));
 
             int xCount;
             int yCount;
@@ -433,6 +432,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ReadOnlySpan<T> cannot be used as type argument.")]
     public int GetHashCode(ReadOnlySpan<byte> obj)
     {
+        // TODO: Should algo be based on architecture?
         unsafe
         {
             int hash;
@@ -469,7 +469,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
     private static unsafe int Compare(byte* x, byte* y, int xCount, int yCount)
     {
-        // TODO: Unroll loop for better performance as we know count will always be < 8
+        // TODO: Unroll loop for better performance as we know count will always be < sizeof(nuint)
         int cmp = 0;
         int minCount = xCount < yCount ? xCount : yCount;
         for (int i = 0; i < minCount; i++)
@@ -484,7 +484,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
     private static unsafe bool Equals(byte* x, byte* y, int count)
     {
-        // TODO: Unroll loop for better performance as we know count will always be < 8
+        // TODO: Unroll loop for better performance as we know count will always be < sizeof(nuint)
         for (int i = 0; i < count; i++)
         {
             if (*(x + i) != *(y + i))
@@ -496,7 +496,7 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
 
     private static unsafe bool Equals(byte* x, byte* y, int xCount, int yCount)
     {
-        // TODO: Unroll loop for better performance as we know count will always be < 8
+        // TODO: Unroll loop for better performance as we know count will always be < sizeof(nuint)
         int minCount = xCount < yCount ? xCount : yCount;
         for (int i = 0; i < minCount; i++)
         {
