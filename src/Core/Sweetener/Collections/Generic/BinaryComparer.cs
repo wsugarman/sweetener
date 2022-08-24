@@ -143,16 +143,13 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
                 nuint* px = (nuint*)xFixed;
                 nuint* py = (nuint*)yFixed;
 
-                for (; xCount >= sizeof(nuint) && yCount >= sizeof(nuint); px++, py++)
+                for (; xCount >= sizeof(nuint) && yCount >= sizeof(nuint); px++, py++, xCount -= sizeof(nuint), yCount -= sizeof(nuint))
                 {
                     // Note: Parentheses left for clarity
                     if (*px < *py)
                         return -1;
                     if (*px > *py)
                         return 1;
-
-                    xCount -= sizeof(nuint);
-                    yCount -= sizeof(nuint);
                 }
 
                 return Compare((byte*)px, (byte*)py, xCount, yCount);
@@ -321,10 +318,9 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
                 nuint* px = (nuint*)xFixed;
                 nuint* py = (nuint*)yFixed;
 
-                for (; count >= sizeof(nuint); count -= sizeof(nuint))
+                for (; count >= sizeof(nuint); px++, py++, count -= sizeof(nuint))
                 {
-                    // Note: Parentheses left for clarity
-                    if (*(px++) != *(py++))
+                    if (*px != *py)
                         return false;
                 }
 
