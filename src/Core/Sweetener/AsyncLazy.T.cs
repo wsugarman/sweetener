@@ -55,7 +55,7 @@ public sealed class AsyncLazy<T> : IDisposable
         get
         {
             Task<T>? valueTask = _valueTask;
-            return valueTask != null
+            return valueTask is not null
                 && !ReferenceEquals(valueTask, DisposedTask)
 #if NETCOREAPP2_0_OR_GREATER
                 && valueTask.IsCompletedSuccessfully
@@ -185,7 +185,7 @@ public sealed class AsyncLazy<T> : IDisposable
     public override string? ToString()
     {
         Task<T>? valueTask = _valueTask;
-        return valueTask != null
+        return valueTask is not null
 #if NETCOREAPP2_0_OR_GREATER
             && valueTask.IsCompletedSuccessfully
 #else

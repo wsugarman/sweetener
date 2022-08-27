@@ -29,8 +29,8 @@ public class BinaryComparerTest
         => Compare(
             (x, y) =>
             {
-                using Stream? xStream = x != null ? new IncompleteReadStream(x) : null;
-                using Stream? yStream = y != null ? new IncompleteReadStream(y) : null;
+                using Stream? xStream = x is not null ? new IncompleteReadStream(x) : null;
+                using Stream? yStream = y is not null ? new IncompleteReadStream(y) : null;
 
                 if (ReferenceEquals(x, y))
                     return BinaryComparer.Instance.Compare(xStream, xStream);
@@ -60,8 +60,8 @@ public class BinaryComparerTest
         => Equals(
             (x, y) =>
             {
-                using Stream? xStream = x != null ? new IncompleteReadStream(x) : null;
-                using Stream? yStream = y != null ? new IncompleteReadStream(y) : null;
+                using Stream? xStream = x is not null ? new IncompleteReadStream(x) : null;
+                using Stream? yStream = y is not null ? new IncompleteReadStream(y) : null;
 
                 if (ReferenceEquals(x, y))
                     return BinaryComparer.Instance.Equals(xStream, xStream);
@@ -84,8 +84,8 @@ public class BinaryComparerTest
     public void GetHashCode_Stream()
         => Equals((x, y) =>
         {
-            using Stream? xStream = x != null ? new IncompleteReadStream(x) : null;
-            using Stream? yStream = y != null ? new IncompleteReadStream(y) : null;
+            using Stream? xStream = x is not null ? new IncompleteReadStream(x) : null;
+            using Stream? yStream = y is not null ? new IncompleteReadStream(y) : null;
 
             return BinaryComparer.Instance.GetHashCode(xStream!) == BinaryComparer.Instance.GetHashCode(yStream!);
         });
