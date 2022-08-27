@@ -120,14 +120,17 @@ public class AsyncLazyTest
 
         await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => executionAndPublication.GetValueAsync(default)).ConfigureAwait(false);
 
-        // Value always available after caching
+        // Even if created, disposal resets the instance
         using AsyncLazy<int> lazy = new AsyncLazy<int>(t => Task.FromResult(10), AsyncLazyThreadSafetyMode.None);
 
         Assert.AreEqual(10, await lazy.GetValueAsync(default).ConfigureAwait(false));
         Assert.IsTrue(lazy.IsValueCreated);
         lazy.Dispose();
 
-        Assert.AreEqual(10, await lazy.GetValueAsync(default).ConfigureAwait(false));
+        await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => lazy.GetValueAsync(default)).ConfigureAwait(false);
+        Assert.IsFalse(lazy.IsValueCreated);
+        Assert.IsFalse(lazy.IsValueFaulted);
+        Assert.AreEqual(default, lazy.ValueForDebugDisplay);
     }
 
     [TestMethod]
