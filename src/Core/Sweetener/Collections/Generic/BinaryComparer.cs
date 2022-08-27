@@ -511,14 +511,14 @@ public sealed class BinaryComparer : IComparer<byte[]>, IComparer<Stream>, IEqua
     private static int FillBuffer(Stream stream, Span<byte> buffer)
     {
         int read = 0;
-        while (read < buffer.Length)
+        while (buffer.Length > 0)
         {
             int next = stream.Read(buffer);
             if (next == 0)
                 break;
 
             read += next;
-            buffer = buffer[read..];
+            buffer = buffer[next..];
         }
 
         return read;
