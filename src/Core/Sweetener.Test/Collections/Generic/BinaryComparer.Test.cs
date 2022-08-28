@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Sweetener.Collections.Generic;
 
@@ -27,8 +29,8 @@ public class BinaryComparerTest
         => Compare(
             (x, y) =>
             {
-                using Stream? xStream = x != null ? new MemoryStream(x) : null;
-                using Stream? yStream = y != null ? new MemoryStream(y) : null;
+                using Stream? xStream = x is not null ? new IncompleteReadStream(x) : null;
+                using Stream? yStream = y is not null ? new IncompleteReadStream(y) : null;
 
                 if (ReferenceEquals(x, y))
                     return BinaryComparer.Instance.Compare(xStream, xStream);
@@ -58,8 +60,8 @@ public class BinaryComparerTest
         => Equals(
             (x, y) =>
             {
-                using Stream? xStream = x != null ? new MemoryStream(x) : null;
-                using Stream? yStream = y != null ? new MemoryStream(y) : null;
+                using Stream? xStream = x is not null ? new IncompleteReadStream(x) : null;
+                using Stream? yStream = y is not null ? new IncompleteReadStream(y) : null;
 
                 if (ReferenceEquals(x, y))
                     return BinaryComparer.Instance.Equals(xStream, xStream);
@@ -82,8 +84,8 @@ public class BinaryComparerTest
     public void GetHashCode_Stream()
         => Equals((x, y) =>
         {
-            using Stream? xStream = x != null ? new MemoryStream(x) : null;
-            using Stream? yStream = y != null ? new MemoryStream(y) : null;
+            using Stream? xStream = x is not null ? new IncompleteReadStream(x) : null;
+            using Stream? yStream = y is not null ? new IncompleteReadStream(y) : null;
 
             return BinaryComparer.Instance.GetHashCode(xStream!) == BinaryComparer.Instance.GetHashCode(yStream!);
         });
@@ -214,5 +216,33 @@ public class BinaryComparerTest
         Skip,
         Include,
         SameAsEmpty,
+    }
+
+    private sealed class IncompleteReadStream : MemoryStream
+    {
+        private const int MaxReadBytes = 2;
+
+        public IncompleteReadStream(byte[] buffer)
+            : base(buffer)
+        { }
+
+        public override int Read(byte[] buffer, int offset, int count)
+            => base.Read(buffer, offset, Math.Min(count, MaxReadBytes));
+
+#if NET6_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+            => base.Read(buffer.Slice(0, Math.Min(buffer.Length, MaxReadBytes)));
+#endif
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => base.ReadAsync(buffer, offset, Math.Min(count, MaxReadBytes), cancellationToken);
+
+#if NET6_0_OR_GREATER
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            => base.ReadAsync(buffer.Slice(0, Math.Min(buffer.Length, MaxReadBytes)), cancellationToken);
+#endif
+
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+            => base.BeginRead(buffer, offset, Math.Min(count, MaxReadBytes), callback!, state);
     }
 }
