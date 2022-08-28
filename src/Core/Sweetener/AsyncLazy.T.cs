@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Sweetener.Threading;
@@ -195,7 +194,6 @@ public sealed class AsyncLazy<T> : IDisposable
         }
     }
 
-    [SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "The _valueTask field is guaranteed to be complete.")]
     private async Task<T> ExecuteAndPublishThreadSafeAsync(CancellationToken cancellationToken)
     {
         Task<T>? valueTask = null;
@@ -216,7 +214,7 @@ public sealed class AsyncLazy<T> : IDisposable
                 return result;
             }
 
-            return _valueTask!.Result;
+            return await _valueTask!.ConfigureAwait(false);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
@@ -230,7 +228,6 @@ public sealed class AsyncLazy<T> : IDisposable
         }
     }
 
-    [SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "The _valueTask field is guaranteed to be complete.")]
     private async Task<T> ExecuteAndOnlyPublishThreadSafeAsync(AsyncFunc<CancellationToken, T> valueFactory, CancellationToken cancellationToken)
     {
         Task<T> valueTask = valueFactory.Invoke(cancellationToken);
@@ -243,7 +240,7 @@ public sealed class AsyncLazy<T> : IDisposable
             return result;
         }
 
-        return previous.Result;
+        return await previous.ConfigureAwait(false);
     }
 }
 

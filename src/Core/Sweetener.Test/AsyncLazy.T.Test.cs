@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -190,45 +192,10 @@ public class AsyncLazyTest
         Assert.IsTrue(success.IsValueCreated);
 
         // Concurrent Success
-        int calls = 0;
-        using ManualResetEventSlim enteredEvent1 = new ManualResetEventSlim(false);
-        using ManualResetEventSlim enteredEvent2 = new ManualResetEventSlim(false);
-        using ManualResetEventSlim completeEvent1 = new ManualResetEventSlim(false);
-        using ManualResetEventSlim completeEvent2 = new ManualResetEventSlim(false);
-        using AsyncLazy<string> concurrentSuccess = new AsyncLazy<string>(
-            t => Task.Run(
-                () =>
-                {
-                    int call = Interlocked.Increment(ref calls);
-                    if (call == 1)
-                    {
-                        enteredEvent1.Set();
-                        completeEvent1.Wait();
-                    }
-                    else
-                    {
-                        enteredEvent2.Set();
-                        completeEvent2.Wait();
-                    }
+        await GetValueAsync_ConcurrentSuccess(tokenSource, AsyncLazyThreadSafetyMode.None).ConfigureAwait(false);
 
-                    return $"concurrent success #{call}";
-                },
-                t),
-            AsyncLazyThreadSafetyMode.None);
-
-        (Task<string> t1, Task<string> t2) = (concurrentSuccess.GetValueAsync(tokenSource.Token), concurrentSuccess.GetValueAsync(tokenSource.Token));
-        enteredEvent1.Wait();
-        enteredEvent2.Wait();
-
-        Assert.IsFalse(concurrentSuccess.IsValueCreated);
-
-        completeEvent1.Set();
-        completeEvent2.Set();
-
-        string[] results = await Task.WhenAll(t1, t2).ConfigureAwait(false);
-        Assert.IsTrue(results.Contains("concurrent success #1", StringComparer.Ordinal));
-        Assert.IsTrue(results.Contains("concurrent success #2", StringComparer.Ordinal));
-        Assert.IsTrue(concurrentSuccess.IsValueCreated);
+        // Concurrent Failure
+        await GetValueAsync_ConcurrentFailure(tokenSource, AsyncLazyThreadSafetyMode.None).ConfigureAwait(false);
 
         // Cancellation
         await GetValueAsync_Cancelled(tokenSource, AsyncLazyThreadSafetyMode.None).ConfigureAwait(false);
@@ -274,44 +241,10 @@ public class AsyncLazyTest
         Assert.IsTrue(success.IsValueCreated);
 
         // Concurrent Success
-        calls = 0;
-        using ManualResetEventSlim enteredEvent1 = new ManualResetEventSlim(false);
-        using ManualResetEventSlim enteredEvent2 = new ManualResetEventSlim(false);
-        using ManualResetEventSlim completeEvent1 = new ManualResetEventSlim(false);
-        using ManualResetEventSlim completeEvent2 = new ManualResetEventSlim(false);
-        using AsyncLazy<string> concurrentSuccess = new AsyncLazy<string>(
-            t => Task.Run(
-                () =>
-                {
-                    int call = Interlocked.Increment(ref calls);
-                    if (call == 1)
-                    {
-                        enteredEvent1.Set();
-                        completeEvent1.Wait();
-                    }
-                    else
-                    {
-                        enteredEvent2.Set();
-                        completeEvent2.Wait();
-                    }
+        await GetValueAsync_ConcurrentSuccess(tokenSource, AsyncLazyThreadSafetyMode.PublicationOnly).ConfigureAwait(false);
 
-                    return $"concurrent success #{call}";
-                },
-                t),
-            AsyncLazyThreadSafetyMode.PublicationOnly);
-
-        (Task<string> t1, Task<string> t2) = (concurrentSuccess.GetValueAsync(tokenSource.Token), concurrentSuccess.GetValueAsync(tokenSource.Token));
-        enteredEvent1.Wait();
-        enteredEvent2.Wait();
-
-        Assert.IsFalse(concurrentSuccess.IsValueCreated);
-
-        completeEvent1.Set();
-        completeEvent2.Set();
-
-        string[] results = await Task.WhenAll(t1, t2).ConfigureAwait(false);
-        Assert.AreSame(results[0], results[1]);
-        Assert.IsTrue(concurrentSuccess.IsValueCreated);
+        // Concurrent Failure
+        await GetValueAsync_ConcurrentFailure(tokenSource, AsyncLazyThreadSafetyMode.PublicationOnly).ConfigureAwait(false);
 
         // Cancellation
         await GetValueAsync_Cancelled(tokenSource, AsyncLazyThreadSafetyMode.PublicationOnly).ConfigureAwait(false);
@@ -351,41 +284,117 @@ public class AsyncLazyTest
         Assert.IsTrue(success.IsValueCreated);
 
         // Concurrent Success
+        await GetValueAsync_ConcurrentSuccess(tokenSource, AsyncLazyThreadSafetyMode.ExecutionAndPublication).ConfigureAwait(false);
+
+        // Concurrent Failure
+        await GetValueAsync_ConcurrentFailure(tokenSource, AsyncLazyThreadSafetyMode.ExecutionAndPublication).ConfigureAwait(false);
+
+        // Cancellation
+        await GetValueAsync_Cancelled(tokenSource, AsyncLazyThreadSafetyMode.ExecutionAndPublication).ConfigureAwait(false);
+    }
+
+    private static async Task GetValueAsync_ConcurrentSuccess(CancellationTokenSource tokenSource, AsyncLazyThreadSafetyMode mode)
+    {
         int calls = 0;
-        using ManualResetEventSlim enteredEvent = new ManualResetEventSlim(false);
-        using ManualResetEventSlim completeEvent = new ManualResetEventSlim(false);
+
+        int executionThreads = mode is AsyncLazyThreadSafetyMode.ExecutionAndPublication ? 1 : 2;
+        using EventCollection enteredEvents = new EventCollection(executionThreads);
+        using EventCollection completeEvents = new EventCollection(executionThreads);
         using AsyncLazy<string> concurrentSuccess = new AsyncLazy<string>(
             t => Task.Run(
                 () =>
                 {
-                    Interlocked.Increment(ref calls);
-                    enteredEvent.Set();
-                    completeEvent.Wait();
-                    return "concurrent success";
+                    int call = Interlocked.Increment(ref calls);
+
+                    int i = Math.Min(call, executionThreads) - 1;
+                    enteredEvents.Set(i);
+                    completeEvents.Wait(i);
+
+                    return $"concurrent success #{call}";
                 },
                 t),
-            AsyncLazyThreadSafetyMode.ExecutionAndPublication);
+            mode);
 
         (Task<string> t1, Task<string> t2) = (concurrentSuccess.GetValueAsync(tokenSource.Token), concurrentSuccess.GetValueAsync(tokenSource.Token));
-        enteredEvent.Wait();
+        enteredEvents.WaitAll();
 
-        Assert.IsFalse(t1.IsCompleted); // Ensure that we did not hit the cache _valueTask
+        Assert.IsFalse(concurrentSuccess.IsValueCreated);
+        Assert.IsFalse(t1.IsCompleted);
         Assert.IsFalse(t2.IsCompleted);
-        Assert.IsFalse(concurrentSuccess.IsValueCreated);
-        Assert.IsFalse(concurrentSuccess.IsValueCreated);
 
-        completeEvent.Set();
+        completeEvents.SetAll();
 
-        string r1 = await t1.ConfigureAwait(false);
-        string r2 = await t2.ConfigureAwait(false);
-
-        Assert.AreEqual("concurrent success", r1);
-        Assert.AreSame(r1, r2);
-        Assert.AreEqual(1, calls);
+        string[] results = await Task.WhenAll(t1, t2).ConfigureAwait(false);
         Assert.IsTrue(concurrentSuccess.IsValueCreated);
 
-        // Cancellation
-        await GetValueAsync_Cancelled(tokenSource, AsyncLazyThreadSafetyMode.ExecutionAndPublication).ConfigureAwait(false);
+        switch (mode)
+        {
+            case AsyncLazyThreadSafetyMode.None:
+                Assert.IsTrue(results.Contains("concurrent success #1", StringComparer.Ordinal));
+                Assert.IsTrue(results.Contains("concurrent success #2", StringComparer.Ordinal));
+                break;
+            case AsyncLazyThreadSafetyMode.PublicationOnly:
+                Assert.IsTrue(results[0] is "concurrent success #1" or "concurrent success #2");
+                Assert.AreSame(results[0], results[1]);
+                break;
+            default:
+                Assert.AreEqual("concurrent success #1", results[0]);
+                Assert.AreSame(results[0], results[1]);
+                break;
+        }
+    }
+
+    private static async Task GetValueAsync_ConcurrentFailure(CancellationTokenSource tokenSource, AsyncLazyThreadSafetyMode mode)
+    {
+        int calls = 0;
+
+        int executionThreads = mode is AsyncLazyThreadSafetyMode.ExecutionAndPublication ? 1 : 2;
+        using EventCollection enteredEvents = new EventCollection(executionThreads);
+        using EventCollection completeEvents = new EventCollection(executionThreads);
+        using AsyncLazy<string> concurrentFailure = new AsyncLazy<string>(
+            t => Task.Run((Func<string>)
+                (() =>
+                {
+                    int call = Interlocked.Increment(ref calls);
+
+                    int i = Math.Min(call, executionThreads) - 1;
+                    enteredEvents.Set(i);
+                    completeEvents.Wait(i);
+
+                    throw new ArgumentOutOfRangeException(null, call, null);
+                }),
+                t),
+            mode);
+
+        (Task<string> t1, Task<string> t2) = (concurrentFailure.GetValueAsync(tokenSource.Token), concurrentFailure.GetValueAsync(tokenSource.Token));
+        enteredEvents.WaitAll();
+
+        Assert.IsFalse(concurrentFailure.IsValueCreated);
+        Assert.IsFalse(concurrentFailure.IsValueFaulted);
+        Assert.IsFalse(t1.IsCompleted);
+        Assert.IsFalse(t2.IsCompleted);
+
+        completeEvents.SetAll();
+
+        ArgumentOutOfRangeException e1 = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => t1).ConfigureAwait(false);
+        ArgumentOutOfRangeException e2 = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => t2).ConfigureAwait(false);
+        Assert.IsFalse(concurrentFailure.IsValueCreated);
+        Assert.AreEqual(mode != AsyncLazyThreadSafetyMode.PublicationOnly, concurrentFailure.IsValueFaulted);
+
+        switch (mode)
+        {
+            case AsyncLazyThreadSafetyMode.None or AsyncLazyThreadSafetyMode.PublicationOnly when e1.ActualValue!.Equals(1):
+                Assert.AreEqual(2, e2.ActualValue);
+                break;
+            case AsyncLazyThreadSafetyMode.None or AsyncLazyThreadSafetyMode.PublicationOnly:
+                Assert.AreEqual(2, e1.ActualValue);
+                Assert.AreEqual(1, e2.ActualValue);
+                break;
+            default:
+                Assert.AreEqual(1, e1.ActualValue);
+                Assert.AreEqual(e1.ActualValue, e2.ActualValue);
+                break;
+        }
     }
 
     private static async Task GetValueAsync_Cancelled(CancellationTokenSource tokenSource, AsyncLazyThreadSafetyMode mode)
@@ -473,5 +482,46 @@ public class AsyncLazyTest
         Assert.IsTrue(errorView.IsValueFaulted);
         Assert.AreEqual(errorView.Mode, AsyncLazyThreadSafetyMode.None);
         Assert.AreEqual(null, errorView.Value);
+    }
+
+    private sealed class EventCollection : IDisposable, IEnumerable<ManualResetEventSlim>
+    {
+        private readonly List<ManualResetEventSlim> _events;
+
+        public EventCollection(int count)
+            => _events = Enumerable
+            .Range(0, count)
+            .Select(x => new ManualResetEventSlim(false))
+            .ToList();
+
+        public void Dispose()
+        {
+            foreach (ManualResetEventSlim e in _events)
+                e.Dispose();
+        }
+
+        public IEnumerator<ManualResetEventSlim> GetEnumerator()
+            => _events.GetEnumerator();
+
+        public void Set(int i)
+            => _events[i].Set();
+
+        public void SetAll()
+        {
+            foreach (ManualResetEventSlim e in _events)
+                e.Set();
+        }
+
+        public void Wait(int i)
+            => _events[i].Wait();
+
+        public void WaitAll()
+        {
+            foreach (ManualResetEventSlim e in _events)
+                e.Wait();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
     }
 }
