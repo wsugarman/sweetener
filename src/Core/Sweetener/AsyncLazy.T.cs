@@ -145,6 +145,9 @@ public sealed class AsyncLazy<T> : IDisposable
         if (valueFactory is null)
             return _valueTask!;
 
+        // Note: We preserve the value of the _valueFactory for the non-thread-safe execution paths.
+        // This way there are no errors like NullReferenceException when concurrently executing GetValueAsync for
+        // an instance with AsyncLazyThreadSafetyMode.None. The values may be unexpected, but it won't crash!
         return Mode switch
         {
             AsyncLazyThreadSafetyMode.None            => ExecuteAndPublishAsync              (valueFactory, cancellationToken),
