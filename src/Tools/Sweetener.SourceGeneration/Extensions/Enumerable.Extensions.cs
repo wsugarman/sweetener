@@ -27,11 +27,11 @@ internal static class EnumerableExtensions
 
         return bracketType switch
         {
-            BracketType.None           => value,
-            BracketType.CurlyBraces    => "{" + value + "}",
-            BracketType.AngleBrackets  => "<" + value + ">",
+            BracketType.None => value,
+            BracketType.CurlyBraces => "{" + value + "}",
+            BracketType.AngleBrackets => "<" + value + ">",
             BracketType.SquareBrackets => "[" + value + "]",
-            BracketType.Parentheses    => "(" + value + ")",
+            BracketType.Parentheses => "(" + value + ")",
             _ => throw new ArgumentOutOfRangeException(nameof(bracketType)),
         };
     }

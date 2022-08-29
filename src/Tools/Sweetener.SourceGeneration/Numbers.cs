@@ -30,7 +30,7 @@ internal static class Numbers
             18 => "eighteenth",
             19 => "nineteenth",
             20 => "twentieth",
-            _  => throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}"),
+            _ => throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}"),
         };
 
     public static string GetWord(int i)
@@ -57,6 +57,6 @@ internal static class Numbers
             18 => "eighteen",
             19 => "nineteen",
             20 => "twenty",
-            _  => throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}"),
+            _ => throw new ArgumentOutOfRangeException(nameof(i), $"No word configured for {i}"),
         };
 }

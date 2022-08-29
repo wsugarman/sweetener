@@ -321,7 +321,7 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
         if (duration < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(end), SR.EndBeforeStartMessage);
 
-        Start    = duration == TimeSpan.Zero ? DateTime.MinValue : start;
+        Start = duration == TimeSpan.Zero ? DateTime.MinValue : start;
         Duration = duration;
     }
 
@@ -351,7 +351,7 @@ internal readonly struct DateSpan : IComparable, IComparable<DateSpan>, IEquatab
         if (start.Ticks + duration.Ticks > DateTime.MaxValue.Ticks)
             throw new ArgumentOutOfRangeException(nameof(duration), SR.InvalidDateSpanRangeMessage);
 
-        Start    = duration == TimeSpan.Zero ? DateTime.MinValue : start;
+        Start = duration == TimeSpan.Zero ? DateTime.MinValue : start;
         Duration = duration;
     }
 

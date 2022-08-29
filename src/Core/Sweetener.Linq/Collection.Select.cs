@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Sweetener.Linq;
 
-partial class Collection
+public static partial class Collection
 {
     /// <summary>
     /// Projects each element of a collection into a new form.

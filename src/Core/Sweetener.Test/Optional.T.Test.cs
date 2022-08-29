@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -103,71 +103,71 @@ public class OptionalTest
 
         #region Has Value
 
-            optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
+        optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
 
-            Assert.IsTrue (optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(10, 11, 12)))); // Match
-            Assert.IsTrue (optionalTime.Equals(                       new TimeSpan(10, 11, 12 ))); // Match underlying
-            Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
-            Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(                        ))); // No match (no value)
-            Assert.IsFalse(optionalTime.Equals(new Optional<float>(16.1718F)));                    // No match (wrong type)
-            Assert.IsFalse(optionalTime.Equals(new object()));                                     // No match (wrong type again)
-            Assert.IsFalse(optionalTime.Equals(null));                                             // No match (null)
+        Assert.IsTrue(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(10, 11, 12))));  // Match
+        Assert.IsTrue(optionalTime.Equals(new TimeSpan(10, 11, 12))); // Match underlying
+        Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
+        Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>()));                         // No match (no value)
+        Assert.IsFalse(optionalTime.Equals(new Optional<float>(16.1718F)));                    // No match (wrong type)
+        Assert.IsFalse(optionalTime.Equals(new object()));                                     // No match (wrong type again)
+        Assert.IsFalse(optionalTime.Equals(null));                                             // No match (null)
 
-            optionalString = new Optional<string?>("Hello World");
+        optionalString = new Optional<string?>("Hello World");
 
-            Assert.IsTrue (optionalString.Equals(new Optional<string>("Hello World"  ))); // Match
-            Assert.IsTrue (optionalString.Equals(                     "Hello World"   )); // Match underlying
-            Assert.IsFalse(optionalString.Equals(new Optional<string>("Goodbye World"))); // No match
-            Assert.IsFalse(optionalString.Equals(new Optional<string>(               ))); // No match (no value)
-            Assert.IsFalse(optionalString.Equals(new Optional<Guid>  (Guid.NewGuid() ))); // No match (wrong type)
-            Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
-            Assert.IsFalse(optionalString.Equals(null));                                  // No match (null)
+        Assert.IsTrue(optionalString.Equals(new Optional<string>("Hello World")));    // Match
+        Assert.IsTrue(optionalString.Equals("Hello World"));                          // Match underlying
+        Assert.IsFalse(optionalString.Equals(new Optional<string>("Goodbye World"))); // No match
+        Assert.IsFalse(optionalString.Equals(new Optional<string>()));                // No match (no value)
+        Assert.IsFalse(optionalString.Equals(new Optional<Guid>(Guid.NewGuid())));    // No match (wrong type)
+        Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
+        Assert.IsFalse(optionalString.Equals(null));                                  // No match (null)
 
-            #endregion
+        #endregion
 
         #region Has (Default) Value
 
-            optionalTime = new Optional<TimeSpan>(default);
+        optionalTime = new Optional<TimeSpan>(default);
 
-            Assert.IsTrue (optionalTime.Equals(new Optional<TimeSpan>(default)));                  // Match
-            Assert.IsTrue (optionalTime.Equals(new TimeSpan()));                                   // Match underlying
-            Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
-            Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>()));                         // No match (no value)
-            Assert.IsFalse(optionalTime.Equals(new Optional<float>()));                            // No match (wrong type)
-            Assert.IsFalse(optionalTime.Equals(new object()));                                     // No match (wrong type again)
-            Assert.IsFalse(optionalTime.Equals(null));                                             // No match (null)
+        Assert.IsTrue(optionalTime.Equals(new Optional<TimeSpan>(default)));                   // Match
+        Assert.IsTrue(optionalTime.Equals(new TimeSpan()));                                    // Match underlying
+        Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
+        Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>()));                         // No match (no value)
+        Assert.IsFalse(optionalTime.Equals(new Optional<float>()));                            // No match (wrong type)
+        Assert.IsFalse(optionalTime.Equals(new object()));                                     // No match (wrong type again)
+        Assert.IsFalse(optionalTime.Equals(null));                                             // No match (null)
 
-            optionalString = new Optional<string?>(default);
+        optionalString = new Optional<string?>(default);
 
-            Assert.IsTrue (optionalString.Equals(new Optional<string?>(default)));        // Match
-            Assert.IsTrue (optionalString.Equals(null));                                  // Match underlying
-            Assert.IsFalse(optionalString.Equals(new Optional<string>("Goodbye World"))); // No match
-            Assert.IsFalse(optionalString.Equals(new Optional<string>()));                // No match (no value)
-            Assert.IsFalse(optionalString.Equals(new Optional<Guid>(Guid.NewGuid())));    // No match (wrong type)
-            Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
+        Assert.IsTrue(optionalString.Equals(new Optional<string?>(default)));         // Match
+        Assert.IsTrue(optionalString.Equals(null));                                   // Match underlying
+        Assert.IsFalse(optionalString.Equals(new Optional<string>("Goodbye World"))); // No match
+        Assert.IsFalse(optionalString.Equals(new Optional<string>()));                // No match (no value)
+        Assert.IsFalse(optionalString.Equals(new Optional<Guid>(Guid.NewGuid())));    // No match (wrong type)
+        Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
 
-            #endregion
+        #endregion
 
         #region Does Not Have Value
 
-            optionalTime = default;
+        optionalTime = default;
 
-            Assert.IsTrue (optionalTime.Equals(new Optional<TimeSpan>()));                         // Match
-            Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
-            Assert.IsFalse(optionalTime.Equals(new TimeSpan()));                                   // No match (despite matching value)
-            Assert.IsFalse(optionalTime.Equals(new Optional<float>()));                            // No match (wrong type)
-            Assert.IsFalse(optionalTime.Equals(new object()));                                     // No match (wrong type again)
-            Assert.IsFalse(optionalTime.Equals(null));                                             // No match (null)
+        Assert.IsTrue(optionalTime.Equals(new Optional<TimeSpan>()));                          // Match
+        Assert.IsFalse(optionalTime.Equals(new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
+        Assert.IsFalse(optionalTime.Equals(new TimeSpan()));                                   // No match (despite matching value)
+        Assert.IsFalse(optionalTime.Equals(new Optional<float>()));                            // No match (wrong type)
+        Assert.IsFalse(optionalTime.Equals(new object()));                                     // No match (wrong type again)
+        Assert.IsFalse(optionalTime.Equals(null));                                             // No match (null)
 
-            optionalString = default;
+        optionalString = default;
 
-            Assert.IsTrue (optionalString.Equals(new Optional<string>()));                // Match
-            Assert.IsFalse(optionalString.Equals(new Optional<string>("Goodbye World"))); // No match
-            Assert.IsFalse(optionalString.Equals(null));                                  // No match (despite matching value)
-            Assert.IsFalse(optionalString.Equals(new Optional<Guid>(Guid.NewGuid())));    // No match (wrong type)
-            Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
+        Assert.IsTrue(optionalString.Equals(new Optional<string>()));                 // Match
+        Assert.IsFalse(optionalString.Equals(new Optional<string>("Goodbye World"))); // No match
+        Assert.IsFalse(optionalString.Equals(null));                                  // No match (despite matching value)
+        Assert.IsFalse(optionalString.Equals(new Optional<Guid>(Guid.NewGuid())));    // No match (wrong type)
+        Assert.IsFalse(optionalString.Equals(new object()));                          // No match (wrong type again)
 
-            #endregion
+        #endregion
     }
 
     [TestMethod]
@@ -178,36 +178,36 @@ public class OptionalTest
 
         #region Has Value
 
-            optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
-            Assert.AreEqual(new TimeSpan(10, 11, 12).GetHashCode(), optionalTime.GetHashCode());
+        optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
+        Assert.AreEqual(new TimeSpan(10, 11, 12).GetHashCode(), optionalTime.GetHashCode());
 
-            optionalString = new Optional<string?>("Hello World");
+        optionalString = new Optional<string?>("Hello World");
 #pragma warning disable CA1307 // Use GetHashCode() to match implementation
-            Assert.AreEqual("Hello World".GetHashCode(), optionalString.GetHashCode());
+        Assert.AreEqual("Hello World".GetHashCode(), optionalString.GetHashCode());
 #pragma warning restore CA1307
 
-            #endregion
+        #endregion
 
         #region Has (Default) Value
 
-            // It happens that default(TimeSpan).GetHashCode() == 0
-            optionalTime = new Optional<TimeSpan>(default);
-            Assert.AreEqual(new TimeSpan().GetHashCode(), optionalTime.GetHashCode());
+        // It happens that default(TimeSpan).GetHashCode() == 0
+        optionalTime = new Optional<TimeSpan>(default);
+        Assert.AreEqual(new TimeSpan().GetHashCode(), optionalTime.GetHashCode());
 
-            optionalString = new Optional<string?>(default);
-            Assert.AreEqual(0, optionalString.GetHashCode());
+        optionalString = new Optional<string?>(default);
+        Assert.AreEqual(0, optionalString.GetHashCode());
 
-            #endregion
+        #endregion
 
         #region Does Not Have Value
 
-            optionalTime = default;
-            Assert.AreEqual(0, optionalTime.GetHashCode());
+        optionalTime = default;
+        Assert.AreEqual(0, optionalTime.GetHashCode());
 
-            optionalString = default;
-            Assert.AreEqual(0, optionalString.GetHashCode());
+        optionalString = default;
+        Assert.AreEqual(0, optionalString.GetHashCode());
 
-            #endregion
+        #endregion
     }
 
     [TestMethod]
@@ -218,33 +218,33 @@ public class OptionalTest
 
         #region Has Value
 
-            optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
-            Assert.AreEqual(new TimeSpan(10, 11, 12).ToString(), optionalTime.ToString());
+        optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
+        Assert.AreEqual(new TimeSpan(10, 11, 12).ToString(), optionalTime.ToString());
 
-            optionalString = new Optional<string?>("Hello World");
-            Assert.AreEqual("Hello World", optionalString.ToString());
+        optionalString = new Optional<string?>("Hello World");
+        Assert.AreEqual("Hello World", optionalString.ToString());
 
-            #endregion
+        #endregion
 
         #region Has (Default) Value
 
-            optionalTime = new Optional<TimeSpan>(default);
-            Assert.AreEqual(new TimeSpan().ToString(), optionalTime.ToString());
+        optionalTime = new Optional<TimeSpan>(default);
+        Assert.AreEqual(new TimeSpan().ToString(), optionalTime.ToString());
 
-            optionalString = new Optional<string?>(default);
-            Assert.AreEqual(string.Empty, optionalString.ToString());
+        optionalString = new Optional<string?>(default);
+        Assert.AreEqual(string.Empty, optionalString.ToString());
 
-            #endregion
+        #endregion
 
         #region Does Not Have Value
 
-            optionalTime = default;
-            Assert.AreEqual(string.Empty, optionalTime.ToString());
+        optionalTime = default;
+        Assert.AreEqual(string.Empty, optionalTime.ToString());
 
-            optionalString = default;
-            Assert.AreEqual(string.Empty, optionalString.ToString());
+        optionalString = default;
+        Assert.AreEqual(string.Empty, optionalString.ToString());
 
-            #endregion
+        #endregion
     }
 
     [TestMethod]
@@ -253,7 +253,7 @@ public class OptionalTest
         Optional<int> optionalNumber = 42;
 
         Assert.AreEqual(true, optionalNumber.HasValue);
-        Assert.AreEqual(42  , optionalNumber.Value   );
+        Assert.AreEqual(42, optionalNumber.Value);
     }
 
     [TestMethod]
@@ -278,51 +278,51 @@ public class OptionalTest
 
         #region Has Value
 
-            optionalTime = new Optional<TimeSpan>(new TimeSpan(1, 2, 3));
+        optionalTime = new Optional<TimeSpan>(new TimeSpan(1, 2, 3));
 
-            Assert.AreEqual( 0, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 3)))); // Value Compare
-            Assert.AreEqual(-1, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 4)))); // Value Compare
-            Assert.AreEqual( 1, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 2)))); // Value Compare
-            Assert.AreEqual( 1, Optional.Compare(optionalTime, Optional.None<TimeSpan>()                    )); // HasValue Compare
+        Assert.AreEqual(0, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 3))));  // Value Compare
+        Assert.AreEqual(-1, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 4)))); // Value Compare
+        Assert.AreEqual(1, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 2))));  // Value Compare
+        Assert.AreEqual(1, Optional.Compare(optionalTime, Optional.None<TimeSpan>()));                      // HasValue Compare
 
-            optionalString = new Optional<string?>("BBB");
+        optionalString = new Optional<string?>("BBB");
 
-            Assert.AreEqual( 0, Optional.Compare(optionalString, new Optional<string?>("BBB"  ))); // Value Compare
-            Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>("CCC"  ))); // Value Compare
-            Assert.AreEqual( 1, Optional.Compare(optionalString, new Optional<string?>("AAA"  ))); // Value Compare
-            Assert.AreEqual( 1, Optional.Compare(optionalString, Optional.None<string?>()      )); // HasValue Compare
+        Assert.AreEqual(0, Optional.Compare(optionalString, new Optional<string?>("BBB")));  // Value Compare
+        Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>("CCC"))); // Value Compare
+        Assert.AreEqual(1, Optional.Compare(optionalString, new Optional<string?>("AAA")));  // Value Compare
+        Assert.AreEqual(1, Optional.Compare(optionalString, Optional.None<string?>()));      // HasValue Compare
 
-            #endregion
+        #endregion
 
         #region Has (Default) Value
 
-            optionalTime = new Optional<TimeSpan>(default);
+        optionalTime = new Optional<TimeSpan>(default);
 
-            Assert.AreEqual( 0, Optional.Compare(optionalTime, new Optional<TimeSpan>(default              ))); // Value Compare
-            Assert.AreEqual(-1, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 3)))); // Value Compare
-            Assert.AreEqual( 1, Optional.Compare(optionalTime, Optional.None<TimeSpan>()                    )); // HasValue Compare
+        Assert.AreEqual(0, Optional.Compare(optionalTime, new Optional<TimeSpan>(default)));                // Value Compare
+        Assert.AreEqual(-1, Optional.Compare(optionalTime, new Optional<TimeSpan>(new TimeSpan(1, 2, 3)))); // Value Compare
+        Assert.AreEqual(1, Optional.Compare(optionalTime, Optional.None<TimeSpan>()));                      // HasValue Compare
 
-            optionalString = new Optional<string?>(default);
+        optionalString = new Optional<string?>(default);
 
-            Assert.AreEqual( 0, Optional.Compare(optionalString, new Optional<string?>(default))); // Value Compare
-            Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>("AAA"  ))); // Value Compare
-            Assert.AreEqual( 1, Optional.Compare(optionalString, Optional.None<string?>()      )); // HasValue Compare
+        Assert.AreEqual(0, Optional.Compare(optionalString, new Optional<string?>(default))); // Value Compare
+        Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>("AAA")));  // Value Compare
+        Assert.AreEqual(1, Optional.Compare(optionalString, Optional.None<string?>()));       // HasValue Compare
 
-            #endregion
+        #endregion
 
         #region Does Not Have Value
 
-            optionalTime = default;
+        optionalTime = default;
 
-            Assert.AreEqual( 0, Optional.Compare(optionalTime, Optional.None<TimeSpan>()));       // HasValue Compare
-            Assert.AreEqual(-1, Optional.Compare(optionalTime, new Optional<TimeSpan>(default))); // HasValue Compare
+        Assert.AreEqual(0, Optional.Compare(optionalTime, Optional.None<TimeSpan>()));        // HasValue Compare
+        Assert.AreEqual(-1, Optional.Compare(optionalTime, new Optional<TimeSpan>(default))); // HasValue Compare
 
-            optionalString = default;
+        optionalString = default;
 
-            Assert.AreEqual( 0, Optional.Compare(optionalString, Optional.None<string?>()));       // HasValue Compare
-            Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>(default))); // HasValue Compare
+        Assert.AreEqual(0, Optional.Compare(optionalString, Optional.None<string?>()));        // HasValue Compare
+        Assert.AreEqual(-1, Optional.Compare(optionalString, new Optional<string?>(default))); // HasValue Compare
 
-            #endregion
+        #endregion
     }
 
     [TestMethod]
@@ -333,51 +333,51 @@ public class OptionalTest
 
         #region Has Value
 
-            optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
+        optionalTime = new Optional<TimeSpan>(new TimeSpan(10, 11, 12));
 
-            Assert.IsTrue (Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(10, 11, 12)))); // Match
-            Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
-            Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(                        ))); // No match (no value)
+        Assert.IsTrue(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(10, 11, 12))));  // Match
+        Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
+        Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>()));                         // No match (no value)
 
-            optionalString = new Optional<string?>("Hello World");
+        optionalString = new Optional<string?>("Hello World");
 
-            Assert.IsTrue (Optional.Equals(optionalString, new Optional<string?>("Hello World"  ))); // Match
-            Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>("Goodbye World"))); // No match
-            Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>(               ))); // No match (no value)
+        Assert.IsTrue(Optional.Equals(optionalString, new Optional<string?>("Hello World")));    // Match
+        Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>("Goodbye World"))); // No match
+        Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>()));                // No match (no value)
 
-            #endregion
+        #endregion
 
         #region Has (Default) Value
 
-            optionalTime = new Optional<TimeSpan>(default);
+        optionalTime = new Optional<TimeSpan>(default);
 
-            Assert.IsTrue (Optional.Equals(optionalTime, new Optional<TimeSpan>(default)));                  // Match
-            Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
-            Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>()));                         // No match (no value)
+        Assert.IsTrue(Optional.Equals(optionalTime, new Optional<TimeSpan>(default)));                   // Match
+        Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
+        Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>()));                         // No match (no value)
 
-            optionalString = new Optional<string?>(default);
+        optionalString = new Optional<string?>(default);
 
-            Assert.IsTrue (Optional.Equals(optionalString, new Optional<string?>(default        ))); // Match
-            Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>("Goodbye World"))); // No match
-            Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>(               ))); // No match (no value)
+        Assert.IsTrue(Optional.Equals(optionalString, new Optional<string?>(default)));          // Match
+        Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>("Goodbye World"))); // No match
+        Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>()));                // No match (no value)
 
-            #endregion
+        #endregion
 
         #region Does Not Have Value
 
-            optionalTime = default;
+        optionalTime = default;
 
-            Assert.IsTrue (Optional.Equals(optionalTime, new Optional<TimeSpan>()                        )); // Match
-            Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
-            Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(default                 ))); // No match (despite matching value)
+        Assert.IsTrue(Optional.Equals(optionalTime, new Optional<TimeSpan>()));                          // Match
+        Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(new TimeSpan(13, 14, 15)))); // No match
+        Assert.IsFalse(Optional.Equals(optionalTime, new Optional<TimeSpan>(default)));                  // No match (despite matching value)
 
-            optionalString = default;
+        optionalString = default;
 
-            Assert.IsTrue (Optional.Equals(optionalString, new Optional<string?>(               ))); // Match
-            Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>("Goodbye World"))); // No match
-            Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>(default        ))); // No match (despite matching value)
+        Assert.IsTrue(Optional.Equals(optionalString, new Optional<string?>()));                 // Match
+        Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>("Goodbye World"))); // No match
+        Assert.IsFalse(Optional.Equals(optionalString, new Optional<string?>(default)));         // No match (despite matching value)
 
-            #endregion
+        #endregion
     }
 
     [TestMethod]

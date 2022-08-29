@@ -1,11 +1,9 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -72,9 +70,9 @@ public sealed class SegmentedStreamTest : IDisposable
     public void Read_ByteArray()
     {
         Assert.ThrowsException<ArgumentNullException>(() => _stream.Read(null!, 0, 10));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _stream.Read(new byte[4], -1,  3));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _stream.Read(new byte[4],  1, -2));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _stream.Read(new byte[4],  1,  5));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _stream.Read(new byte[4], -1, 3));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _stream.Read(new byte[4], 1, -2));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _stream.Read(new byte[4], 1, 5));
 
         Read((s, b, o, c) => s.Read(b, o, c));
     }

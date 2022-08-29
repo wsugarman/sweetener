@@ -15,7 +15,7 @@ internal static class AssertExtensions
     public static void AreSequencesEqual<T>(this Assert assert, IEnumerable<T> expected, IEnumerable<T> actual)
     {
         IEnumerator<T> f = expected.GetEnumerator();
-        IEnumerator<T> s = actual  .GetEnumerator();
+        IEnumerator<T> s = actual.GetEnumerator();
 
         while (f.MoveNext())
         {
@@ -32,7 +32,7 @@ internal static class AssertExtensions
     public static void AreSequencesEqual(this Assert assert, IEnumerable expected, IEnumerable actual)
     {
         IEnumerator f = expected.GetEnumerator();
-        IEnumerator s = actual  .GetEnumerator();
+        IEnumerator s = actual.GetEnumerator();
 
         while (f.MoveNext())
         {

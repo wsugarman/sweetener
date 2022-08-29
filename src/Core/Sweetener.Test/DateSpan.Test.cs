@@ -13,10 +13,10 @@ public class DateSpanTest
     [TestMethod]
     public void Empty()
     {
-        Assert.AreEqual(DateTime.MinValue       , DateSpan.Empty.Start   );
-        Assert.AreEqual(DateTime.MinValue       , DateSpan.Empty.End     );
-        Assert.AreEqual(TimeSpan.Zero           , DateSpan.Empty.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, DateSpan.Empty.Kind    );
+        Assert.AreEqual(DateTime.MinValue, DateSpan.Empty.Start);
+        Assert.AreEqual(DateTime.MinValue, DateSpan.Empty.End);
+        Assert.AreEqual(TimeSpan.Zero, DateSpan.Empty.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, DateSpan.Empty.Kind);
 
         Assert.AreEqual(default, DateSpan.Empty);
     }
@@ -35,17 +35,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
     }
 
     [TestMethod]
@@ -62,17 +62,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, DateTimeKind.Local, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local       , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Local, actual.Kind);
     }
 
     [TestMethod]
@@ -86,17 +86,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
     }
 
     [TestMethod]
@@ -113,17 +113,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
     }
 
     [TestMethod]
@@ -140,17 +140,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc, TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(2020, 1, 2, 10, 25, 10, 36, DateTimeKind.Utc, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc         , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
     }
 
     [TestMethod]
@@ -163,24 +163,24 @@ public class DateSpanTest
         Assert.ThrowsException<ArgumentException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), (DateTimeKind)100, TimeSpan.FromHours(4)));
 
         // Negative Duration
-        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, - TimeSpan.FromHours(4)));
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, -TimeSpan.FromHours(4)));
 
         DateSpan actual;
         DateTime expectedStart = new DateTime(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc);
 
         // Empty
         actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), DateTimeKind.Utc, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc         , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
     }
 
     [TestMethod]
@@ -189,7 +189,7 @@ public class DateSpanTest
         // DateTimeKind Mismatch
         Assert.ThrowsException<ArgumentException>(
             () => new DateSpan(
-                new DateTime( 12345, DateTimeKind.Unspecified),
+                new DateTime(12345, DateTimeKind.Unspecified),
                 new DateTime(678910, DateTimeKind.Local)));
 
         // Wrong Argument Order
@@ -201,17 +201,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(expectedStart, expectedStart);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(expectedStart, expectedStart.AddDays(5));
-        Assert.AreEqual(expectedStart           , actual.Start   );
-        Assert.AreEqual(expectedStart.AddDays(5), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(5)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc        , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(5), actual.End);
+        Assert.AreEqual(TimeSpan.FromDays(5), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
     }
 
     [TestMethod]
@@ -230,17 +230,17 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(expectedStart, TimeSpan.Zero);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(expectedStart, TimeSpan.FromDays(5));
-        Assert.AreEqual(expectedStart           , actual.Start   );
-        Assert.AreEqual(expectedStart.AddDays(5), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(5)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc        , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(5), actual.End);
+        Assert.AreEqual(TimeSpan.FromDays(5), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
     }
 
     [TestMethod]
@@ -257,20 +257,20 @@ public class DateSpanTest
 
         // Empty
         actual = new DateSpan(expectedStart, 0L);
-        Assert.AreEqual(DateTime.MinValue       , actual.Start   );
-        Assert.AreEqual(DateTime.MinValue       , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind    );
+        Assert.AreEqual(DateTime.MinValue, actual.Start);
+        Assert.AreEqual(DateTime.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(DateTimeKind.Unspecified, actual.Kind);
 
         // Normal Use-Case
         actual = new DateSpan(expectedStart, 10000);
-        Assert.AreEqual(expectedStart                , actual.Start   );
-        Assert.AreEqual(expectedStart.AddTicks(10000), actual.End     );
-        Assert.AreEqual(TimeSpan.FromTicks(10000)    , actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc             , actual.Kind    );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddTicks(10000), actual.End);
+        Assert.AreEqual(TimeSpan.FromTicks(10000), actual.Duration);
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
     }
 
-[TestMethod]
+    [TestMethod]
     public void CompareTo_Object()
     {
         // Wrong Type
@@ -302,11 +302,11 @@ public class DateSpanTest
 
         // Less Than
         Assert.AreEqual(lessThan, compareTo(new DateSpan(utcNow, 100), new DateSpan(localNow.AddTicks(10), 100)));
-        Assert.AreEqual(lessThan, compareTo(new DateSpan(utcNow, 100), new DateSpan(localNow             , 150)));
+        Assert.AreEqual(lessThan, compareTo(new DateSpan(utcNow, 100), new DateSpan(localNow, 150)));
 
         // Greater Than
         Assert.AreEqual(greaterThan, compareTo(new DateSpan(utcNow.AddTicks(3), 100), new DateSpan(localNow, 100)));
-        Assert.AreEqual(greaterThan, compareTo(new DateSpan(utcNow            , 125), new DateSpan(localNow, 100)));
+        Assert.AreEqual(greaterThan, compareTo(new DateSpan(utcNow, 125), new DateSpan(localNow, 100)));
     }
 
     [TestMethod]
@@ -317,8 +317,8 @@ public class DateSpanTest
         // False
         Assert.IsFalse(DateSpan.Empty.Contains(DateTime.UtcNow));
         Assert.IsFalse(interval.Contains(DateTime.MinValue));
-        Assert.IsFalse(interval.Contains(new DateTime( 900, 4, 16, 0, 0, 0, DateTimeKind.Utc  )));
-        Assert.IsFalse(interval.Contains(new DateTime(2000, 3,  4, 5, 6, 7, DateTimeKind.Local)));
+        Assert.IsFalse(interval.Contains(new DateTime(900, 4, 16, 0, 0, 0, DateTimeKind.Utc)));
+        Assert.IsFalse(interval.Contains(new DateTime(2000, 3, 4, 5, 6, 7, DateTimeKind.Local)));
         Assert.IsFalse(interval.Contains(DateTime.MaxValue));
 
         // True
@@ -331,7 +331,7 @@ public class DateSpanTest
     public void Contains_DateSpan()
     {
         // Empty Instance
-        Assert.IsTrue (DateSpan.Empty.Contains(DateSpan.Empty));
+        Assert.IsTrue(DateSpan.Empty.Contains(DateSpan.Empty));
         Assert.IsFalse(DateSpan.Empty.Contains(DateSpan.FromYear(2022)));
 
         // Non-Empty Instance
@@ -343,7 +343,7 @@ public class DateSpanTest
         // Moving around the interval
         Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddYears(-1), interval.Duration)));
         Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddDays(-15), interval.Duration)));
-        Assert.IsTrue (interval.Contains(interval));
+        Assert.IsTrue(interval.Contains(interval));
         Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddDays(15), interval.Duration)));
         Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddYears(1), interval.Duration)));
 
@@ -352,8 +352,8 @@ public class DateSpanTest
 
         // Larger interval
         Assert.IsFalse(interval.Contains(DateSpan.FromYear(2000, DateTimeKind.Utc)));
-        Assert.IsFalse(interval.Contains(new DateSpan(interval.Start              , interval.End.AddMonths( 1))));
-        Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddMonths(-1), interval.End              )));
+        Assert.IsFalse(interval.Contains(new DateSpan(interval.Start, interval.End.AddMonths(1))));
+        Assert.IsFalse(interval.Contains(new DateSpan(interval.Start.AddMonths(-1), interval.End)));
     }
 
     [TestMethod]
@@ -380,8 +380,8 @@ public class DateSpanTest
         Assert.IsTrue(equals(DateSpan.FromDateTime(utcNow), DateSpan.FromDateTime(localNow)));
 
         // Not Equal
-        Assert.IsFalse(equals(new DateSpan(utcNow            , 123), new DateSpan(utcNow.AddSeconds(4) , 123)));
-        Assert.IsFalse(equals(new DateSpan(localNow          , 123), new DateSpan(utcNow               , 456)));
+        Assert.IsFalse(equals(new DateSpan(utcNow, 123), new DateSpan(utcNow.AddSeconds(4), 123)));
+        Assert.IsFalse(equals(new DateSpan(localNow, 123), new DateSpan(utcNow, 456)));
         Assert.IsFalse(equals(new DateSpan(utcNow.AddHours(1), 123), new DateSpan(localNow.AddDays(-10), 456)));
     }
 
@@ -443,15 +443,15 @@ public class DateSpanTest
             new DateSpan(new DateTime(2010, 11, 12), TimeSpan.FromHours(36)));
 
         // Complex Intersection
-        DateSpan d1       = DateSpan.FromDay(1456, 7, 8);
-        DateSpan d2       = new DateSpan(new DateTime(1456, 7, 8, 9, 0, 0), TimeSpan.FromDays(2));
+        DateSpan d1 = DateSpan.FromDay(1456, 7, 8);
+        DateSpan d2 = new DateSpan(new DateTime(1456, 7, 8, 9, 0, 0), TimeSpan.FromDays(2));
         DateSpan expected = new DateSpan(new DateTime(1456, 7, 8, 9, 0, 0), TimeSpan.FromHours(15));
         AssertSymmetric(expected, d1, d2);
 
         void AssertSymmetric(DateSpan expected, DateSpan first, DateSpan second)
         {
-            Assert.AreEqual(getExpected(expected), getActual(first , second));
-            Assert.AreEqual(getExpected(expected), getActual(second, first ));
+            Assert.AreEqual(getExpected(expected), getActual(first, second));
+            Assert.AreEqual(getExpected(expected), getActual(second, first));
         }
     }
 
@@ -470,17 +470,17 @@ public class DateSpanTest
 
         DateTime utcNow = DateTime.UtcNow;
         actual = (DateSpan)utcNow;
-        Assert.AreEqual(utcNow               , actual.Start   );
-        Assert.AreEqual(utcNow.AddTicks(1)   , actual.End     );
+        Assert.AreEqual(utcNow, actual.Start);
+        Assert.AreEqual(utcNow.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc     , actual.Kind    );
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
 
         DateTime now = DateTime.Now;
         actual = (DateSpan)now;
-        Assert.AreEqual(now                  , actual.Start   );
-        Assert.AreEqual(now.AddTicks(1)      , actual.End     );
+        Assert.AreEqual(now, actual.Start);
+        Assert.AreEqual(now.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local   , actual.Kind    );
+        Assert.AreEqual(DateTimeKind.Local, actual.Kind);
     }
 
     [TestMethod]
@@ -490,17 +490,17 @@ public class DateSpanTest
 
         DateTime utcNow = DateTime.UtcNow;
         actual = DateSpan.FromDateTime(utcNow);
-        Assert.AreEqual(utcNow               , actual.Start   );
-        Assert.AreEqual(utcNow.AddTicks(1)   , actual.End     );
+        Assert.AreEqual(utcNow, actual.Start);
+        Assert.AreEqual(utcNow.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(DateTimeKind.Utc     , actual.Kind    );
+        Assert.AreEqual(DateTimeKind.Utc, actual.Kind);
 
         DateTime now = DateTime.Now;
         actual = DateSpan.FromDateTime(now);
-        Assert.AreEqual(now                  , actual.Start   );
-        Assert.AreEqual(now.AddTicks(1)      , actual.End     );
+        Assert.AreEqual(now, actual.Start);
+        Assert.AreEqual(now.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(DateTimeKind.Local   , actual.Kind    );
+        Assert.AreEqual(DateTimeKind.Local, actual.Kind);
     }
 
     [TestMethod]
@@ -535,9 +535,9 @@ public class DateSpanTest
         DateSpan actual = fromDay(year, month, day);
         DateTime expectedStart = new DateTime(year, month, day, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), kind);
 
-        Assert.AreEqual(expectedStart           , actual.Start);
-        Assert.AreEqual(expectedStart.AddDays(1), actual.End  );
-        Assert.AreEqual(kind                    , actual.Kind );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(1), actual.End);
+        Assert.AreEqual(kind, actual.Kind);
     }
 
     [TestMethod]
@@ -571,9 +571,9 @@ public class DateSpanTest
         DateSpan actual = fromMonth(year, month);
         DateTime expectedStart = new DateTime(year, month, 01, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), kind);
 
-        Assert.AreEqual(expectedStart             , actual.Start);
-        Assert.AreEqual(expectedStart.AddMonths(1), actual.End  );
-        Assert.AreEqual(kind                      , actual.Kind );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddMonths(1), actual.End);
+        Assert.AreEqual(kind, actual.Kind);
     }
 
     [TestMethod]
@@ -602,9 +602,9 @@ public class DateSpanTest
         DateSpan actual = fromYear(year);
         DateTime expectedStart = new DateTime(year, 01, 01, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), kind);
 
-        Assert.AreEqual(expectedStart            , actual.Start);
-        Assert.AreEqual(expectedStart.AddYears(1), actual.End  );
-        Assert.AreEqual(kind                     , actual.Kind );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddYears(1), actual.End);
+        Assert.AreEqual(kind, actual.Kind);
     }
 
     [TestMethod]
@@ -616,9 +616,9 @@ public class DateSpanTest
         DateSpan before = DateSpan.FromDateTime(utcNow);
         DateSpan after = DateSpan.SpecifyKind(before, DateTimeKind.Local);
 
-        Assert.AreEqual(before.Start      , after.Start   );
-        Assert.AreEqual(before.End        , after.End     );
-        Assert.AreEqual(before.Duration   , after.Duration);
-        Assert.AreEqual(DateTimeKind.Local, after.Kind    );
+        Assert.AreEqual(before.Start, after.Start);
+        Assert.AreEqual(before.End, after.End);
+        Assert.AreEqual(before.Duration, after.Duration);
+        Assert.AreEqual(DateTimeKind.Local, after.Kind);
     }
 }

@@ -20,10 +20,10 @@ namespace Sweetener;
 /// <typeparam name="T">The underlying value type of the <see cref="Optional{T}"/> generic type.</typeparam>
 [Serializable]
 [DebuggerDisplay("{HasValue ? \"Some(\" + Value + \")\" : \"None\",nq}")]
-[SuppressMessage("Design"     , "CA1066:Type {0} should implement IEquatable<T> because it overrides Equals", Justification = "Equals method forwards calls to the underlying type where applicable")]
-[SuppressMessage("Naming"     , "CA1716:Identifiers should not match keywords"                              , Justification = "Generic class should avoid ambiguity with Visual Basic optional parameter keyword")]
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types"                 , Justification = "Underlying value type may not implement IEquatable<T>")]
-[SuppressMessage("Usage"      , "CA2231:Overload operator equals on overriding value type Equals"           , Justification = "Underlying value type may not implement IEquatable<T>")]
+[SuppressMessage("Design", "CA1066:Type {0} should implement IEquatable<T> because it overrides Equals", Justification = "Equals method forwards calls to the underlying type where applicable")]
+[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Generic class should avoid ambiguity with Visual Basic optional parameter keyword")]
+[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Underlying value type may not implement IEquatable<T>")]
+[SuppressMessage("Usage", "CA2231:Overload operator equals on overriding value type Equals", Justification = "Underlying value type may not implement IEquatable<T>")]
 public readonly struct Optional<T>
 {
     /// <summary>
@@ -68,7 +68,7 @@ public readonly struct Optional<T>
     public Optional(T value)
     {
         HasValue = true;
-        _value   = value;
+        _value = value;
     }
 
     /// <summary>

@@ -91,9 +91,9 @@ public sealed class AsyncLazy<T> : IDisposable
         if (!Enum.IsDefined(typeof(AsyncLazyThreadSafetyMode), mode))
             throw new ArgumentOutOfRangeException(nameof(mode));
 
-        Mode          = mode;
+        Mode = mode;
         _valueFactory = valueFactory;
-        _semaphore    = mode == AsyncLazyThreadSafetyMode.ExecutionAndPublication ? new SemaphoreSlim(1, 1) : null;
+        _semaphore = mode == AsyncLazyThreadSafetyMode.ExecutionAndPublication ? new SemaphoreSlim(1, 1) : null;
     }
 
     /// <summary>
@@ -110,8 +110,8 @@ public sealed class AsyncLazy<T> : IDisposable
         {
             _semaphore?.Dispose();
             _valueTask?.Dispose();
-            _semaphore    = null;
-            _valueTask    = DisposedTask;
+            _semaphore = null;
+            _valueTask = DisposedTask;
             _valueFactory = null; // Volatile field must be last
 
             GC.SuppressFinalize(this);
@@ -149,9 +149,9 @@ public sealed class AsyncLazy<T> : IDisposable
         // an instance with AsyncLazyThreadSafetyMode.None. The values may be unexpected, but it won't crash!
         return Mode switch
         {
-            AsyncLazyThreadSafetyMode.None            => ExecuteAndPublishAsync              (valueFactory, cancellationToken),
+            AsyncLazyThreadSafetyMode.None => ExecuteAndPublishAsync(valueFactory, cancellationToken),
             AsyncLazyThreadSafetyMode.PublicationOnly => ExecuteAndOnlyPublishThreadSafeAsync(valueFactory, cancellationToken),
-            _                                         => ExecuteAndPublishThreadSafeAsync    (              cancellationToken),
+            _ => ExecuteAndPublishThreadSafeAsync(cancellationToken),
         };
     }
 
@@ -182,13 +182,13 @@ public sealed class AsyncLazy<T> : IDisposable
             valueTask = valueFactory.Invoke(cancellationToken);
             T result = await valueTask.ConfigureAwait(false);
 
-            _valueTask    = valueTask;
+            _valueTask = valueTask;
             _valueFactory = null; // Volatile field must be last
             return result;
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
-            _valueTask    = valueTask ?? Task.FromException<T>(e);
+            _valueTask = valueTask ?? Task.FromException<T>(e);
             _valueFactory = null; // Volatile field must be last
             throw;
         }
@@ -209,7 +209,7 @@ public sealed class AsyncLazy<T> : IDisposable
                 valueTask = valueFactory.Invoke(cancellationToken);
                 T result = await valueTask.ConfigureAwait(false);
 
-                _valueTask    = valueTask;
+                _valueTask = valueTask;
                 _valueFactory = null; // Volatile field must be last
                 return result;
             }
@@ -218,7 +218,7 @@ public sealed class AsyncLazy<T> : IDisposable
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
-            _valueTask    = valueTask ?? Task.FromException<T>(e);
+            _valueTask = valueTask ?? Task.FromException<T>(e);
             _valueFactory = null; // Volatile field must be last
             throw;
         }

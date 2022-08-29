@@ -16,9 +16,9 @@ public class ArgumentEmptyExceptionTest
     {
         ArgumentEmptyException exception = new ArgumentEmptyException();
 
-        Assert.AreEqual(null                   , exception.InnerException);
-        Assert.AreEqual(SR.ArgumentEmptyMessage, exception.Message       );
-        Assert.AreEqual(null                   , exception.ParamName     );
+        Assert.AreEqual(null, exception.InnerException);
+        Assert.AreEqual(SR.ArgumentEmptyMessage, exception.Message);
+        Assert.AreEqual(null, exception.ParamName);
     }
 
     [TestMethod]
@@ -26,8 +26,8 @@ public class ArgumentEmptyExceptionTest
     {
         ArgumentEmptyException exception = new ArgumentEmptyException("parameter1");
 
-        Assert.AreEqual(null        , exception.InnerException);
-        Assert.AreEqual("parameter1", exception.ParamName     );
+        Assert.AreEqual(null, exception.InnerException);
+        Assert.AreEqual("parameter1", exception.ParamName);
 
         // There will be an additional line concerning the parameter name
         Assert.IsTrue(exception.Message.StartsWith(SR.ArgumentEmptyMessage, StringComparison.Ordinal));
@@ -39,9 +39,9 @@ public class ArgumentEmptyExceptionTest
         Exception innerException = new FormatException();
         ArgumentEmptyException exception = new ArgumentEmptyException("Hello World", innerException);
 
-        Assert.AreSame (innerException, exception.InnerException);
-        Assert.AreEqual("Hello World" , exception.Message       );
-        Assert.AreEqual(null          , exception.ParamName     );
+        Assert.AreSame(innerException, exception.InnerException);
+        Assert.AreEqual("Hello World", exception.Message);
+        Assert.AreEqual(null, exception.ParamName);
     }
 
     [TestMethod]
@@ -49,12 +49,12 @@ public class ArgumentEmptyExceptionTest
     {
         ArgumentEmptyException exception = new ArgumentEmptyException("parameter1", "Hello World");
 
-        Assert.AreEqual(null        , exception.InnerException);
-        Assert.AreEqual("parameter1", exception.ParamName     );
+        Assert.AreEqual(null, exception.InnerException);
+        Assert.AreEqual("parameter1", exception.ParamName);
 
         // Message will contain both the value from the ctor and a statement about the parameter
         Assert.IsTrue(exception.Message.StartsWith("Hello World", StringComparison.Ordinal));
-        Assert.IsTrue(exception.Message.Contains  ("parameter1" , StringComparison.Ordinal));
+        Assert.IsTrue(exception.Message.Contains("parameter1", StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -78,11 +78,11 @@ public class ArgumentEmptyExceptionTest
         }
 
         Assert.IsNotNull(after);
-        Assert.AreEqual(null        , after.InnerException);
-        Assert.AreEqual("parameter1", after.ParamName     );
+        Assert.AreEqual(null, after.InnerException);
+        Assert.AreEqual("parameter1", after.ParamName);
 
         // Message will contain the value from the ctor, a statement about the parameter, and the actual value
         Assert.IsTrue(after.Message.StartsWith("Hello World", StringComparison.Ordinal));
-        Assert.IsTrue(after.Message.Contains  ("parameter1" , StringComparison.Ordinal));
+        Assert.IsTrue(after.Message.Contains("parameter1", StringComparison.Ordinal));
     }
 }

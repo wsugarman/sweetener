@@ -84,13 +84,13 @@ public sealed class MemoryConfigurationTest : IDisposable
                 { "Section:Section1:Section2:Key5", "Value5" },
             });
 
-        List<KeyValuePair<string, string>> expected = _config    .ToList();
-        List<KeyValuePair<string, string>> actual   = alternative.ToList();
+        List<KeyValuePair<string, string>> expected = _config.ToList();
+        List<KeyValuePair<string, string>> actual = alternative.ToList();
 
         Assert.AreEqual(expected.Count, actual.Count);
         for (int i = 0; i < expected.Count; i++)
         {
-            Assert.AreEqual(expected[i].Key  , actual[i].Key  );
+            Assert.AreEqual(expected[i].Key, actual[i].Key);
             Assert.AreEqual(expected[i].Value, actual[i].Value);
         }
     }
@@ -158,23 +158,23 @@ public sealed class MemoryConfigurationTest : IDisposable
     {
         IConfiguration config = getConfig(_config);
 
-        Assert.AreEqual("Value1", config["Key1"    ]);
-        Assert.AreEqual("Value2", config["Key2"    ]);
-        Assert.AreEqual(null    , config["Key3"    ]);
-        Assert.AreEqual(null    , config["Key4"    ]);
-        Assert.AreEqual(null    , config["Section1"]);
+        Assert.AreEqual("Value1", config["Key1"]);
+        Assert.AreEqual("Value2", config["Key2"]);
+        Assert.AreEqual(null, config["Key3"]);
+        Assert.AreEqual(null, config["Key4"]);
+        Assert.AreEqual(null, config["Section1"]);
 
-        Assert.AreEqual("Value3", config["Section1:Key1"    ]);
-        Assert.AreEqual("Value4", config["Section1:Key2"    ]);
-        Assert.AreEqual(null    , config["Section1:Key3"    ]);
-        Assert.AreEqual(null    , config["Section1:Key4"    ]);
-        Assert.AreEqual(null    , config["Section1:Section2"]);
+        Assert.AreEqual("Value3", config["Section1:Key1"]);
+        Assert.AreEqual("Value4", config["Section1:Key2"]);
+        Assert.AreEqual(null, config["Section1:Key3"]);
+        Assert.AreEqual(null, config["Section1:Key4"]);
+        Assert.AreEqual(null, config["Section1:Section2"]);
     }
 
     private void GetChildren(Func<IConfiguration, IConfiguration> getConfig)
     {
         List<IConfigurationSection> expectedChildren = getConfig(_expected).GetChildren().ToList();
-        List<IConfigurationSection> actualChildren   = getConfig(_config  ).GetChildren().ToList();
+        List<IConfigurationSection> actualChildren = getConfig(_config).GetChildren().ToList();
 
         Assert.AreEqual(expectedChildren.Count, actualChildren.Count);
         for (int i = 0; i < expectedChildren.Count; i++)
@@ -185,30 +185,30 @@ public sealed class MemoryConfigurationTest : IDisposable
     {
         IConfiguration config = getConfig(_config);
 
-        Func<string, string> getPath = k => path == null ? k : path + ":" + k;
+        Func<string, string> getPath = k => path is null ? k : path + ":" + k;
 
-        AssertSection("Key1"    , "Value1", getPath("Key1"    ), 0, config.GetSection("Key1"    ));
-        AssertSection("Key2"    , "Value2", getPath("Key2"    ), 0, config.GetSection("Key2"    ));
-        AssertSection("Key3"    , null    , getPath("Key3"    ), 0, config.GetSection("Key3"    ));
-        AssertSection("Key4"    , null    , getPath("Key4"    ), 0, config.GetSection("Key4"    ));
-        AssertSection("Section1", null    , getPath("Section1"), 4, config.GetSection("Section1"));
+        AssertSection("Key1", "Value1", getPath("Key1"), 0, config.GetSection("Key1"));
+        AssertSection("Key2", "Value2", getPath("Key2"), 0, config.GetSection("Key2"));
+        AssertSection("Key3", null, getPath("Key3"), 0, config.GetSection("Key3"));
+        AssertSection("Key4", null, getPath("Key4"), 0, config.GetSection("Key4"));
+        AssertSection("Section1", null, getPath("Section1"), 4, config.GetSection("Section1"));
 
-        AssertSection("Key1"    , "Value3", getPath("Section1:Key1"    ), 0, config.GetSection("Section1:Key1"    ));
-        AssertSection("Key2"    , "Value4", getPath("Section1:Key2"    ), 0, config.GetSection("Section1:Key2"    ));
-        AssertSection("Key3"    , null    , getPath("Section1:Key3"    ), 0, config.GetSection("Section1:Key3"    ));
-        AssertSection("Key4"    , null    , getPath("Section1:Key4"    ), 0, config.GetSection("Section1:Key4"    ));
-        AssertSection("Section2", null    , getPath("Section1:Section2"), 1, config.GetSection("Section1:Section2"));
+        AssertSection("Key1", "Value3", getPath("Section1:Key1"), 0, config.GetSection("Section1:Key1"));
+        AssertSection("Key2", "Value4", getPath("Section1:Key2"), 0, config.GetSection("Section1:Key2"));
+        AssertSection("Key3", null, getPath("Section1:Key3"), 0, config.GetSection("Section1:Key3"));
+        AssertSection("Key4", null, getPath("Section1:Key4"), 0, config.GetSection("Section1:Key4"));
+        AssertSection("Section2", null, getPath("Section1:Section2"), 1, config.GetSection("Section1:Section2"));
     }
 
     private void GetEnumerator(Func<MemoryConfiguration, IEnumerable<KeyValuePair<string, string>>> getEnumerator)
     {
         List<KeyValuePair<string, string>> expected = _expected.AsEnumerable().ToList();
-        List<KeyValuePair<string, string>> actual   = getEnumerator(_config)  .ToList();
+        List<KeyValuePair<string, string>> actual = getEnumerator(_config).ToList();
 
         Assert.AreEqual(expected.Count, actual.Count);
         for (int i = 0; i < expected.Count; i++)
         {
-            Assert.AreEqual(expected[i].Key  , actual[i].Key  );
+            Assert.AreEqual(expected[i].Key, actual[i].Key);
             Assert.AreEqual(expected[i].Value, actual[i].Value);
         }
     }
@@ -257,9 +257,9 @@ public sealed class MemoryConfigurationTest : IDisposable
 
     private static void AssertSection(string key, string? value, string path, int children, IConfigurationSection actual)
     {
-        Assert.AreEqual(key     , actual.Key  );
-        Assert.AreEqual(value   , actual.Value);
-        Assert.AreEqual(path    , actual.Path );
+        Assert.AreEqual(key, actual.Key);
+        Assert.AreEqual(value, actual.Value);
+        Assert.AreEqual(path, actual.Path);
         Assert.AreEqual(children, actual.GetChildren().Count());
     }
 

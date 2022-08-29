@@ -30,6 +30,7 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
 #if NETSTANDARD2_0
 #nullable disable
     public string this[string key]
+#nullable enable
 #else
     public string? this[string key]
 #endif
@@ -37,10 +38,6 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
         get => _provider.TryGet(key, out string value) ? value : null;
         set => _provider.Set(key, value);
     }
-
-#if NETSTANDARD2_0
-#nullable enable
-#endif
 
     private readonly ConfigurationProvider _provider;
 
@@ -101,7 +98,6 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
     public IConfigurationSection GetSection(string key)
         => new ConfigurationSection(this, key);
 
-    // TODO: Should this expose IConfigurationSection instead?
     IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
         => ConfigurationExtensions.AsEnumerable(this).GetEnumerator();
 
@@ -144,7 +140,7 @@ public sealed class MemoryConfiguration : IConfiguration, IEnumerable<KeyValuePa
         public ConfigurationSection(MemoryConfiguration root, string path)
         {
             _root = root ?? throw new ArgumentNullException(nameof(root));
-            Path  = path ?? throw new ArgumentNullException(nameof(path));
+            Path = path ?? throw new ArgumentNullException(nameof(path));
         }
 
         public IEnumerable<IConfigurationSection> GetChildren()

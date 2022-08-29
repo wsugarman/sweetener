@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -71,7 +71,7 @@ public static partial class Collection
 
         public GeneratedDecoratorCollection(IEnumerable<T> elements, int count)
         {
-            Count    = count;
+            Count = count;
             Enumerable = elements;
         }
     }
@@ -85,7 +85,7 @@ public static partial class Collection
         protected DecoratorTransformationCollection(IReadOnlyCollection<TSource> source, IEnumerable<TResult> result)
         {
             Enumerable = result;
-            Source   = source;
+            Source = source;
         }
     }
 
@@ -105,10 +105,10 @@ public static partial class Collection
         { }
 
         public IReadOnlyCollection<TResult2> Select<TResult2>(Func<TResult, TResult2> selector)
-            => new FixedDecoratorTransformationCollection<TSource, TResult2>(Source, Collection.EnumerableDecorator.Select(this, selector));
+            => new FixedDecoratorTransformationCollection<TSource, TResult2>(Source, EnumerableDecorator.Select(this, selector));
 
         public IReadOnlyCollection<TResult2> Select<TResult2>(Func<TResult, int, TResult2> selector)
-            => new FixedDecoratorTransformationCollection<TSource, TResult2>(Source, Collection.EnumerableDecorator.Select(this, selector));
+            => new FixedDecoratorTransformationCollection<TSource, TResult2>(Source, EnumerableDecorator.Select(this, selector));
     }
 
     private class FixedDecoratorTransformationCollection<T> : FixedDecoratorTransformationCollection<T, T>
