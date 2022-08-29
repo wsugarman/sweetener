@@ -47,10 +47,10 @@ public class DateSpanOffsetTest
     [TestMethod]
     public void Empty()
     {
-        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.Empty.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.Empty.End     );
-        Assert.AreEqual(TimeSpan.Zero          , DateSpanOffset.Empty.Duration);
-        Assert.AreEqual(TimeSpan.Zero          , DateSpanOffset.Empty.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.Empty.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, DateSpanOffset.Empty.End);
+        Assert.AreEqual(TimeSpan.Zero, DateSpanOffset.Empty.Duration);
+        Assert.AreEqual(TimeSpan.Zero, DateSpanOffset.Empty.Offset);
 
         Assert.AreEqual(default, DateSpanOffset.Empty);
     }
@@ -68,19 +68,19 @@ public class DateSpanOffsetTest
         expected = new DateSpan(DateTime.Now, TimeSpan.FromDays(1));
 
         actual = new DateSpanOffset(expected);
-        Assert.AreEqual(expected.Start           , actual.Start   );
-        Assert.AreEqual(expected.End             , actual.End     );
-        Assert.AreEqual(expected.Duration        , actual.Duration);
-        Assert.AreEqual(DateTimeOffset.Now.Offset, actual.Offset  );
+        Assert.AreEqual(expected.Start, actual.Start);
+        Assert.AreEqual(expected.End, actual.End);
+        Assert.AreEqual(expected.Duration, actual.Duration);
+        Assert.AreEqual(DateTimeOffset.Now.Offset, actual.Offset);
 
         // Utc
         expected = new DateSpan(DateTime.UtcNow, TimeSpan.FromDays(1));
 
         actual = new DateSpanOffset(expected);
-        Assert.AreEqual(expected.Start   , actual.Start   );
-        Assert.AreEqual(expected.End     , actual.End     );
+        Assert.AreEqual(expected.Start, actual.Start);
+        Assert.AreEqual(expected.End, actual.End);
         Assert.AreEqual(expected.Duration, actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero    , actual.Offset  );
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
     }
 
     [TestMethod]
@@ -99,19 +99,19 @@ public class DateSpanOffsetTest
         expected = DateSpan.SpecifyKind(new DateSpan(DateTime.Now, TimeSpan.FromDays(1)), DateTimeKind.Unspecified);
 
         actual = new DateSpanOffset(expected, TimeSpan.FromHours(6));
-        Assert.AreEqual(new DateTimeOffset(expected.Start, TimeSpan.FromHours(6)), actual.Start   );
-        Assert.AreEqual(new DateTimeOffset(expected.End  , TimeSpan.FromHours(6)), actual.End     );
-        Assert.AreEqual(expected.Duration                                        , actual.Duration);
-        Assert.AreEqual(TimeSpan.FromHours(6)                                    , actual.Offset  );
+        Assert.AreEqual(new DateTimeOffset(expected.Start, TimeSpan.FromHours(6)), actual.Start);
+        Assert.AreEqual(new DateTimeOffset(expected.End, TimeSpan.FromHours(6)), actual.End);
+        Assert.AreEqual(expected.Duration, actual.Duration);
+        Assert.AreEqual(TimeSpan.FromHours(6), actual.Offset);
 
         // Utc
         expected = new DateSpan(DateTime.UtcNow, TimeSpan.FromDays(1));
 
         actual = new DateSpanOffset(expected, TimeSpan.Zero);
-        Assert.AreEqual(expected.Start   , actual.Start   );
-        Assert.AreEqual(expected.End     , actual.End     );
+        Assert.AreEqual(expected.Start, actual.Start);
+        Assert.AreEqual(expected.End, actual.End);
         Assert.AreEqual(expected.Duration, actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero    , actual.Offset  );
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
     }
 
     [TestMethod]
@@ -127,17 +127,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, expectedStart);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(2020, 1, 2, 10, 25, 10, offset, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(offset                   , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     [TestMethod]
@@ -153,17 +153,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, expectedStart);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(2020, 1, 2, 10, 25, 10, 36, offset, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(offset                   , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     [TestMethod]
@@ -173,7 +173,7 @@ public class DateSpanOffsetTest
         Assert.ThrowsException<ArgumentNullException>(() => new DateSpanOffset(5782, 4, 29, 10, 25, 10, 36, null!, TimeSpan.Zero, TimeSpan.FromHours(4)));
 
         // Negative Duration
-        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpanOffset(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.Zero , - TimeSpan.FromHours(4)));
+        Assert.ThrowsException<ArgumentNegativeException>(() => new DateSpanOffset(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), TimeSpan.Zero, -TimeSpan.FromHours(4)));
 
         DateSpanOffset actual;
         TimeSpan offset = TimeSpan.FromHours(-8);
@@ -181,17 +181,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, expectedStart);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(5782, 4, 29, 10, 25, 10, 36, new HebrewCalendar(), offset, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(offset                   , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     [TestMethod]
@@ -213,17 +213,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, expectedStart);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(new DateTime(2010, 11, 12), offset, TimeSpan.FromHours(4));
-        Assert.AreEqual(expectedStart            , actual.Start   );
-        Assert.AreEqual(expectedStart.AddHours(4), actual.End     );
-        Assert.AreEqual(TimeSpan.FromHours(4)    , actual.Duration);
-        Assert.AreEqual(offset                   , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddHours(4), actual.End);
+        Assert.AreEqual(TimeSpan.FromHours(4), actual.Duration);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     [TestMethod]
@@ -238,17 +238,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, expectedStart);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(expectedStart, expectedStart.AddDays(5));
-        Assert.AreEqual(expectedStart           , actual.Start   );
-        Assert.AreEqual(expectedStart.AddDays(5), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(5)    , actual.Duration);
-        Assert.AreEqual(expectedStart.Offset    , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(5), actual.End);
+        Assert.AreEqual(TimeSpan.FromDays(5), actual.Duration);
+        Assert.AreEqual(expectedStart.Offset, actual.Offset);
     }
 
     [TestMethod]
@@ -267,17 +267,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, TimeSpan.Zero);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(expectedStart, TimeSpan.FromDays(5));
-        Assert.AreEqual(expectedStart           , actual.Start   );
-        Assert.AreEqual(expectedStart.AddDays(5), actual.End     );
-        Assert.AreEqual(TimeSpan.FromDays(5)    , actual.Duration);
-        Assert.AreEqual(expectedStart.Offset    , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(5), actual.End);
+        Assert.AreEqual(TimeSpan.FromDays(5), actual.Duration);
+        Assert.AreEqual(expectedStart.Offset, actual.Offset);
     }
 
     [TestMethod]
@@ -294,17 +294,17 @@ public class DateSpanOffsetTest
 
         // Empty
         actual = new DateSpanOffset(expectedStart, 0L);
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.Start   );
-        Assert.AreEqual(DateTimeOffset.MinValue , actual.End     );
-        Assert.AreEqual(TimeSpan.Zero           , actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero           , actual.Offset  );
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.Start);
+        Assert.AreEqual(DateTimeOffset.MinValue, actual.End);
+        Assert.AreEqual(TimeSpan.Zero, actual.Duration);
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         // Normal Use-Case
         actual = new DateSpanOffset(expectedStart, 10000);
-        Assert.AreEqual(expectedStart                , actual.Start   );
-        Assert.AreEqual(expectedStart.AddTicks(10000), actual.End     );
-        Assert.AreEqual(TimeSpan.FromTicks(10000)    , actual.Duration);
-        Assert.AreEqual(expectedStart.Offset         , actual.Offset  );
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddTicks(10000), actual.End);
+        Assert.AreEqual(TimeSpan.FromTicks(10000), actual.Duration);
+        Assert.AreEqual(expectedStart.Offset, actual.Offset);
     }
 
     [TestMethod]
@@ -339,11 +339,11 @@ public class DateSpanOffsetTest
 
         // Less Than
         Assert.AreEqual(lessThan, compareTo(new DateSpanOffset(utcNow, 100), new DateSpanOffset(localNow.AddTicks(10), 100)));
-        Assert.AreEqual(lessThan, compareTo(new DateSpanOffset(utcNow, 100), new DateSpanOffset(localNow             , 150)));
+        Assert.AreEqual(lessThan, compareTo(new DateSpanOffset(utcNow, 100), new DateSpanOffset(localNow, 150)));
 
         // Greater Than
         Assert.AreEqual(greaterThan, compareTo(new DateSpanOffset(utcNow.AddTicks(3), 100), new DateSpanOffset(localNow, 100)));
-        Assert.AreEqual(greaterThan, compareTo(new DateSpanOffset(utcNow            , 125), new DateSpanOffset(localNow, 100)));
+        Assert.AreEqual(greaterThan, compareTo(new DateSpanOffset(utcNow, 125), new DateSpanOffset(localNow, 100)));
     }
 
     [TestMethod]
@@ -354,23 +354,23 @@ public class DateSpanOffsetTest
         // False
         Assert.IsFalse(DateSpanOffset.Empty.Contains(DateTimeOffset.UtcNow));
         Assert.IsFalse(interval.Contains(DateTimeOffset.MinValue));
-        Assert.IsFalse(interval.Contains(new DateTimeOffset( 900,  4, 16, 0, 0, 0, TimeSpan.FromHours( 1))));
-        Assert.IsFalse(interval.Contains(new DateTimeOffset(1000, 10,  1, 0, 0, 0, TimeSpan.FromHours( 1))));
-        Assert.IsFalse(interval.Contains(new DateTimeOffset(2000,  3,  4, 5, 6, 7, TimeSpan.FromHours(-8))));
+        Assert.IsFalse(interval.Contains(new DateTimeOffset(900, 4, 16, 0, 0, 0, TimeSpan.FromHours(1))));
+        Assert.IsFalse(interval.Contains(new DateTimeOffset(1000, 10, 1, 0, 0, 0, TimeSpan.FromHours(1))));
+        Assert.IsFalse(interval.Contains(new DateTimeOffset(2000, 3, 4, 5, 6, 7, TimeSpan.FromHours(-8))));
         Assert.IsFalse(interval.Contains(DateTimeOffset.MaxValue));
 
         // True
-        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000,  9, 30, 23, 0, 0, TimeSpan.FromHours(-1))));
-        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 10,  1,  0, 0, 0, TimeSpan.Zero)));
-        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 10,  9,  8, 7, 6, TimeSpan.FromHours(3))));
-        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 11,  1,  0, 0, 0, TimeSpan.Zero).AddTicks(-1)));
+        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 9, 30, 23, 0, 0, TimeSpan.FromHours(-1))));
+        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 10, 1, 0, 0, 0, TimeSpan.Zero)));
+        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 10, 9, 8, 7, 6, TimeSpan.FromHours(3))));
+        Assert.IsTrue(interval.Contains(new DateTimeOffset(1000, 11, 1, 0, 0, 0, TimeSpan.Zero).AddTicks(-1)));
     }
 
     [TestMethod]
     public void Contains_DateSpan()
     {
         // Empty Instance
-        Assert.IsTrue (DateSpanOffset.Empty.Contains(DateSpanOffset.Empty));
+        Assert.IsTrue(DateSpanOffset.Empty.Contains(DateSpanOffset.Empty));
         Assert.IsFalse(DateSpanOffset.Empty.Contains(DateSpanOffset.FromYear(2022, TimeSpan.Zero)));
 
         // Non-Empty Instance
@@ -383,7 +383,7 @@ public class DateSpanOffsetTest
         Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddYears(-1), interval.Duration)));
         Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddDays(-15), interval.Duration)));
         Assert.IsFalse(interval.Contains(DateSpanOffset.FromMonth(2000, 06, TimeSpan.FromHours(5))));
-        Assert.IsTrue (interval.Contains(interval));
+        Assert.IsTrue(interval.Contains(interval));
         Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddDays(15), interval.Duration)));
         Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddYears(1), interval.Duration)));
 
@@ -392,8 +392,8 @@ public class DateSpanOffsetTest
 
         // Larger interval
         Assert.IsFalse(interval.Contains(DateSpanOffset.FromYear(2000, TimeSpan.FromHours(2))));
-        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start              , interval.End.AddMonths( 1))));
-        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddMonths(-1), interval.End              )));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start, interval.End.AddMonths(1))));
+        Assert.IsFalse(interval.Contains(new DateSpanOffset(interval.Start.AddMonths(-1), interval.End)));
     }
 
     [TestMethod]
@@ -420,11 +420,11 @@ public class DateSpanOffsetTest
         Assert.IsTrue(equals(DateSpanOffset.FromDateTimeOffset(utcNow), DateSpanOffset.FromDateTimeOffset(localNow)));
 
         // Not Equal
-        Assert.IsFalse(equals(new DateSpanOffset(utcNow            , 123), new DateSpanOffset(utcNow.AddSeconds(4) , 123)));
-        Assert.IsFalse(equals(new DateSpanOffset(localNow          , 123), new DateSpanOffset(utcNow               , 456)));
+        Assert.IsFalse(equals(new DateSpanOffset(utcNow, 123), new DateSpanOffset(utcNow.AddSeconds(4), 123)));
+        Assert.IsFalse(equals(new DateSpanOffset(localNow, 123), new DateSpanOffset(utcNow, 456)));
         Assert.IsFalse(equals(new DateSpanOffset(utcNow.AddHours(1), 123), new DateSpanOffset(localNow.AddDays(-10), 456)));
         Assert.IsFalse(equals(
-            new DateSpanOffset(2000, 1, 2, 3, 4, 5, 6, TimeSpan.Zero        , TimeSpan.FromHours(1)),
+            new DateSpanOffset(2000, 1, 2, 3, 4, 5, 6, TimeSpan.Zero, TimeSpan.FromHours(1)),
             new DateSpanOffset(2000, 1, 2, 3, 4, 5, 6, TimeSpan.FromHours(1), TimeSpan.FromHours(1))));
     }
 
@@ -489,15 +489,15 @@ public class DateSpanOffsetTest
             new DateSpanOffset(new DateTime(2010, 11, 12), TimeSpan.FromHours(1), TimeSpan.FromHours(36)));
 
         // Complex Intersection
-        DateSpanOffset d1       = DateSpanOffset.FromDay(1456, 7, 8, TimeSpan.FromHours(2));
-        DateSpanOffset d2       = new DateSpanOffset(1456, 7, 8, 9, 0, 0, TimeSpan.FromHours(2), TimeSpan.FromDays(2));
+        DateSpanOffset d1 = DateSpanOffset.FromDay(1456, 7, 8, TimeSpan.FromHours(2));
+        DateSpanOffset d2 = new DateSpanOffset(1456, 7, 8, 9, 0, 0, TimeSpan.FromHours(2), TimeSpan.FromDays(2));
         DateSpanOffset expected = new DateSpanOffset(1456, 7, 8, 9, 0, 0, TimeSpan.FromHours(2), TimeSpan.FromHours(15));
         AssertSymmetric(expected, d1, d2);
 
         void AssertSymmetric(DateSpanOffset expected, DateSpanOffset first, DateSpanOffset second)
         {
-            Assert.AreEqual(getExpected(expected), getActual(first , second));
-            Assert.AreEqual(getExpected(expected), getActual(second, first ));
+            Assert.AreEqual(getExpected(expected), getActual(first, second));
+            Assert.AreEqual(getExpected(expected), getActual(second, first));
         }
     }
 
@@ -519,19 +519,19 @@ public class DateSpanOffsetTest
         expected = new DateSpan(DateTime.Now, TimeSpan.FromDays(1));
 
         actual = expected;
-        Assert.AreEqual(expected.Start           , actual.Start   );
-        Assert.AreEqual(expected.End             , actual.End     );
-        Assert.AreEqual(expected.Duration        , actual.Duration);
-        Assert.AreEqual(DateTimeOffset.Now.Offset, actual.Offset  );
+        Assert.AreEqual(expected.Start, actual.Start);
+        Assert.AreEqual(expected.End, actual.End);
+        Assert.AreEqual(expected.Duration, actual.Duration);
+        Assert.AreEqual(DateTimeOffset.Now.Offset, actual.Offset);
 
         // Utc
         expected = new DateSpan(DateTime.UtcNow, TimeSpan.FromDays(1));
 
         actual = expected;
-        Assert.AreEqual(expected.Start   , actual.Start   );
-        Assert.AreEqual(expected.End     , actual.End     );
+        Assert.AreEqual(expected.Start, actual.Start);
+        Assert.AreEqual(expected.End, actual.End);
         Assert.AreEqual(expected.Duration, actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero    , actual.Offset  );
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
     }
 
     [TestMethod]
@@ -541,17 +541,17 @@ public class DateSpanOffsetTest
 
         DateTimeOffset utcNow = DateTimeOffset.UtcNow;
         actual = (DateSpanOffset)utcNow;
-        Assert.AreEqual(utcNow               , actual.Start   );
-        Assert.AreEqual(utcNow.AddTicks(1)   , actual.End     );
+        Assert.AreEqual(utcNow, actual.Start);
+        Assert.AreEqual(utcNow.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero        , actual.Offset  );
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         DateTimeOffset now = DateTimeOffset.Now;
         actual = (DateSpanOffset)now;
-        Assert.AreEqual(now                  , actual.Start   );
-        Assert.AreEqual(now.AddTicks(1)      , actual.End     );
+        Assert.AreEqual(now, actual.Start);
+        Assert.AreEqual(now.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(now.Offset           , actual.Offset  );
+        Assert.AreEqual(now.Offset, actual.Offset);
     }
 
     [TestMethod]
@@ -561,17 +561,17 @@ public class DateSpanOffsetTest
 
         DateTimeOffset utcNow = DateTimeOffset.UtcNow;
         actual = DateSpanOffset.FromDateTimeOffset(utcNow);
-        Assert.AreEqual(utcNow               , actual.Start   );
-        Assert.AreEqual(utcNow.AddTicks(1)   , actual.End     );
+        Assert.AreEqual(utcNow, actual.Start);
+        Assert.AreEqual(utcNow.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(TimeSpan.Zero        , actual.Offset  );
+        Assert.AreEqual(TimeSpan.Zero, actual.Offset);
 
         DateTimeOffset now = DateTimeOffset.Now;
         actual = DateSpanOffset.FromDateTimeOffset(now);
-        Assert.AreEqual(now                  , actual.Start   );
-        Assert.AreEqual(now.AddTicks(1)      , actual.End     );
+        Assert.AreEqual(now, actual.Start);
+        Assert.AreEqual(now.AddTicks(1), actual.End);
         Assert.AreEqual(TimeSpan.FromTicks(1), actual.Duration);
-        Assert.AreEqual(now.Offset           , actual.Offset  );
+        Assert.AreEqual(now.Offset, actual.Offset);
     }
 
     [TestMethod]
@@ -597,9 +597,9 @@ public class DateSpanOffsetTest
         DateSpanOffset actual = fromDay(year, month, day, offset);
         DateTimeOffset expectedStart = new DateTimeOffset(year, month, day, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), offset);
 
-        Assert.AreEqual(expectedStart           , actual.Start );
-        Assert.AreEqual(expectedStart.AddDays(1), actual.End   );
-        Assert.AreEqual(offset                  , actual.Offset);
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddDays(1), actual.End);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     [TestMethod]
@@ -620,9 +620,9 @@ public class DateSpanOffsetTest
         DateSpanOffset actual = fromMonth(year, month, offset);
         DateTimeOffset expectedStart = new DateTimeOffset(year, month, 01, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), offset);
 
-        Assert.AreEqual(expectedStart             , actual.Start );
-        Assert.AreEqual(expectedStart.AddMonths(1), actual.End   );
-        Assert.AreEqual(offset                    , actual.Offset);
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddMonths(1), actual.End);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     [TestMethod]
@@ -643,9 +643,9 @@ public class DateSpanOffsetTest
         DateSpanOffset actual = fromYear(year, offset);
         DateTimeOffset expectedStart = new DateTimeOffset(year, 01, 01, 0, 0, 0, 0, calendar ?? new GregorianCalendar(), offset);
 
-        Assert.AreEqual(expectedStart            , actual.Start );
-        Assert.AreEqual(expectedStart.AddYears(1), actual.End   );
-        Assert.AreEqual(offset                   , actual.Offset);
+        Assert.AreEqual(expectedStart, actual.Start);
+        Assert.AreEqual(expectedStart.AddYears(1), actual.End);
+        Assert.AreEqual(offset, actual.Offset);
     }
 
     private static TimeSpan GetNonLocalOffset()

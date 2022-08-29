@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -10,8 +10,12 @@ namespace Sweetener.Linq;
 /// <summary>
 /// Represents a sorted read-only collection of elements.
 /// </summary>
-/// <typeparam name="TElement">The type of the elements.</typeparam> // TODO: In .NET Core, T should be covariant
+/// <typeparam name="TElement">The type of the elements.</typeparam>
+#if NETCOREAPP2_0_OR_GREATER
+public interface IOrderedReadOnlyCollection<out TElement> : IOrderedEnumerable<TElement>, IReadOnlyCollection<TElement>
+#else
 public interface IOrderedReadOnlyCollection<TElement> : IOrderedEnumerable<TElement>, IReadOnlyCollection<TElement>
+#endif
 {
     /// <summary>
     /// Performs a subsequent ordering on the elements of an <see cref="IOrderedReadOnlyCollection{TElement}"/>

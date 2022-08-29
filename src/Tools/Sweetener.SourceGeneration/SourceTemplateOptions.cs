@@ -22,7 +22,7 @@ internal sealed class SourceTemplateOptions
     public SourceTemplateOptions(GeneratorExecutionContext context)
     {
         AnalyzerConfigOptions assemblyOptions = context.AnalyzerConfigOptions.GetOptions(context.Compilation.SyntaxTrees.FirstOrDefault());
-        AnalyzerConfigOptions globalOptions   = context.AnalyzerConfigOptions.GlobalOptions;
+        AnalyzerConfigOptions globalOptions = context.AnalyzerConfigOptions.GlobalOptions;
 
         if (!globalOptions.TryGetValue("build_property.RootNamespace", out string? rootNamespace))
             throw new ArgumentException("Cannot find 'RootNamespace' property.");
@@ -33,10 +33,10 @@ internal sealed class SourceTemplateOptions
         if (!assemblyOptions.TryGetValue("generated_file_header_template", out string? generated))
             throw new ArgumentException("Cannot find 'generated_file_header_template' key in .editorconfig.");
 
-        RootNamespace   = rootNamespace;
-        FileHeader      = SplitLines(header);
+        RootNamespace = rootNamespace;
+        FileHeader = SplitLines(header);
         GeneratedHeader = SplitLines(generated);
-        IsUnitTest      = (context.Compilation.AssemblyName?.EndsWith(".Test", StringComparison.InvariantCulture)).GetValueOrDefault();
+        IsUnitTest = (context.Compilation.AssemblyName?.EndsWith(".Test", StringComparison.InvariantCulture)).GetValueOrDefault();
     }
 
     private static string[] SplitLines(string value)

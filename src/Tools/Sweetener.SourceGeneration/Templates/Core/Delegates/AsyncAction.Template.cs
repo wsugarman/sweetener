@@ -20,7 +20,7 @@ internal sealed class AsyncActionTemplate : DelegateSourceTemplate
 
     protected override void WriteDelegate(IndentedTextWriter sourceWriter, int i)
     {
-        sourceWriter.WriteXmlSummary($"Encapsulates an asynchronous method that has {Numbers.GetWord(i)} parameter{ (i == 1 ? string.Empty : "s") } and does not return a value.");
+        sourceWriter.WriteXmlSummary($"Encapsulates an asynchronous method that has {Numbers.GetWord(i)} parameter{(i == 1 ? string.Empty : "s")} and does not return a value.");
         sourceWriter.WriteXmlRemarks(
             "The <see cref=\"Task\"/> returned by the encapsulated method is expected to have been started.",
             "Otherwise, callers will not be able to properly <see langword=\"await\"/> the results of the operation.");

@@ -383,7 +383,7 @@ internal readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffse
         if (duration < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(end), SR.EndBeforeStartMessage);
 
-        Start    = duration == TimeSpan.Zero ? DateTimeOffset.MinValue : start;
+        Start = duration == TimeSpan.Zero ? DateTimeOffset.MinValue : start;
         Duration = duration;
     }
 
@@ -413,7 +413,7 @@ internal readonly struct DateSpanOffset : IComparable, IComparable<DateSpanOffse
         if (start.UtcDateTime.Ticks + duration.Ticks > DateTime.MaxValue.Ticks)
             throw new ArgumentOutOfRangeException(nameof(duration), SR.InvalidDateSpanRangeMessage);
 
-        Start    = duration == TimeSpan.Zero ? DateTimeOffset.MinValue : start;
+        Start = duration == TimeSpan.Zero ? DateTimeOffset.MinValue : start;
         Duration = duration;
     }
 

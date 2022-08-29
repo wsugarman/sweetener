@@ -17,8 +17,8 @@ namespace System;
 
 [ExcludeFromCodeCoverage]
 [EditorBrowsable(EditorBrowsableState.Never)]
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types"      , Justification = "BCL does not overwrite operator.")]
-[SuppressMessage("Usage"      , "CA2231:Overload operator equals on overriding value type Equals", Justification = "BCL does not overwrite operator.")]
+[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "BCL does not overwrite operator.")]
+[SuppressMessage("Usage", "CA2231:Overload operator equals on overriding value type Equals", Justification = "BCL does not overwrite operator.")]
 internal readonly struct Index : IEquatable<Index>
 {
     public int Value => _value < 0 ? ~_value : _value;

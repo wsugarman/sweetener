@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Sweetener.Linq;
 
-static partial class Collection
+public static partial class Collection
 {
     // The Enumerable class provides optimized calls to the BCL's corresponding methods
     private static class EnumerableDecorator
@@ -20,7 +20,7 @@ static partial class Collection
 
         public static IEnumerable<TSource> Concat<TSource>(IReadOnlyCollection<TSource> first, IReadOnlyCollection<TSource> second)
             => Enumerable.Concat(
-                first  is DecoratorCollection<TSource> d1 ? d1.Enumerable : first,
+                first is DecoratorCollection<TSource> d1 ? d1.Enumerable : first,
                 second is DecoratorCollection<TSource> d2 ? d2.Enumerable : second);
 
         public static System.Linq.IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(IReadOnlyCollection<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)

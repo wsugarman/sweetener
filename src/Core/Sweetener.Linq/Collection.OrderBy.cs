@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Sweetener.Linq;
 
-partial class Collection
+public static partial class Collection
 {
     /// <summary>
     /// Sorts the elements of a collection in ascending order according to a key.
@@ -178,7 +178,7 @@ partial class Collection
         public OrderedCollection(IReadOnlyCollection<T> source, IOrderedEnumerable<T> ordered)
         {
             _ordered = ordered;
-            _source  = source;
+            _source = source;
         }
 
         public IOrderedReadOnlyCollection<T> CreateOrderedCollection<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)

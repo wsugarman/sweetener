@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -39,7 +39,7 @@ public static class EnumerableExtensions
         if (selectorPredicate is null)
             throw new ArgumentNullException(nameof(selectorPredicate));
 
-        return source is Enumerable<TSource> existing
+        return source is IInternalEnumerable<TSource> existing
             ? existing.SelectWhere(selectorPredicate)
             : new SelectWhereEnumerable<TSource, TResult>(source, selectorPredicate);
     }
@@ -89,16 +89,16 @@ public static class EnumerableExtensions
         }
     }
 
-    // Note: This class is meant to represent our own Enumerables defined in Sweetener to help optimize
+    // Note: This class is meant to represent our own Enumerables defined in Sweetener to help optimize.
     // TODO: It may be advantageous to mirror the internal Iterator<TSource> class in the BCL
     [SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "Class is not a collection.")]
-    private interface Enumerable<TSource> : IEnumerable<TSource>
+    private interface IInternalEnumerable<TSource> : IEnumerable<TSource>
     {
         IEnumerable<TResult> SelectWhere<TResult>(TryFunc<TSource, TResult> selectorPredicate);
     }
 
     [SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "Class is not a collection.")]
-    private sealed class SelectWhereEnumerable<TSource, TResult> : Enumerable<TResult>
+    private sealed class SelectWhereEnumerable<TSource, TResult> : IInternalEnumerable<TResult>
     {
         private readonly IEnumerable<TSource> _source;
         private readonly TryFunc<TSource, TResult> _selectorPredicate;

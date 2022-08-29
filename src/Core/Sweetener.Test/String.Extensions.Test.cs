@@ -14,10 +14,10 @@ public class StringExtensionsTest
     {
         Assert.ThrowsException<ArgumentNullException>(() => StringExtensions.IsWhiteSpace(null!));
 
-        Assert.IsFalse("foo"    .IsWhiteSpace());
-        Assert.IsFalse(" bar "  .IsWhiteSpace());
-        Assert.IsTrue (""       .IsWhiteSpace());
-        Assert.IsTrue (" "      .IsWhiteSpace());
-        Assert.IsTrue ("\t\r\n ".IsWhiteSpace());
+        Assert.IsFalse("foo".IsWhiteSpace());
+        Assert.IsFalse(" bar ".IsWhiteSpace());
+        Assert.IsTrue("".IsWhiteSpace());
+        Assert.IsTrue(" ".IsWhiteSpace());
+        Assert.IsTrue("\t\r\n ".IsWhiteSpace());
     }
 }

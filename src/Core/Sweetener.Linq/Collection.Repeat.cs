@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Sweetener.Linq;
 
-static partial class Collection
+public static partial class Collection
 {
     /// <summary>
     /// Generates a collection that contains one repeated value.

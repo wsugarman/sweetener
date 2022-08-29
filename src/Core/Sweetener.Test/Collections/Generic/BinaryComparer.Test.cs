@@ -130,21 +130,21 @@ public class BinaryComparerTest
         }
 
         // Less Than
-        Assert.IsTrue(compare(aligned1           , aligned2) < 0); // Same length
-        Assert.IsTrue(compare(extra1             , extra2  ) < 0); // Same length (unaligned)
-        Assert.IsTrue(compare(aligned1           , extra1  ) < 0); // Different length
+        Assert.IsTrue(compare(aligned1, aligned2) < 0); // Same length
+        Assert.IsTrue(compare(extra1, extra2) < 0); // Same length (unaligned)
+        Assert.IsTrue(compare(aligned1, extra1) < 0); // Different length
         Assert.IsTrue(compare(Array.Empty<byte>(), aligned1) < 0); // Different length (empty)
 
         // Equal
-        Assert.AreEqual(0, compare(aligned1   , aligned1                )); // Same reference
-        Assert.AreEqual(0, compare(aligned1   , (byte[])aligned1.Clone())); // Aligned
-        Assert.AreEqual(0, compare(extra1     , (byte[])extra1  .Clone())); // Unaligned
-        Assert.AreEqual(0, compare(new byte[0], new byte[0]             )); // Empty
+        Assert.AreEqual(0, compare(aligned1, aligned1)); // Same reference
+        Assert.AreEqual(0, compare(aligned1, (byte[])aligned1.Clone())); // Aligned
+        Assert.AreEqual(0, compare(extra1, (byte[])extra1.Clone())); // Unaligned
+        Assert.AreEqual(0, compare(new byte[0], new byte[0])); // Empty
 
         // Greater Than
-        Assert.IsTrue(compare(aligned2, aligned1           ) > 0); // Same length
-        Assert.IsTrue(compare(extra2  , extra1             ) > 0); // Same length (difference not in word)
-        Assert.IsTrue(compare(extra1  , aligned1           ) > 0); // Different length
+        Assert.IsTrue(compare(aligned2, aligned1) > 0); // Same length
+        Assert.IsTrue(compare(extra2, extra1) > 0); // Same length (difference not in word)
+        Assert.IsTrue(compare(extra1, aligned1) > 0); // Different length
         Assert.IsTrue(compare(aligned1, Array.Empty<byte>()) > 0); // Different length (empty)
     }
 
@@ -188,18 +188,18 @@ public class BinaryComparerTest
         }
 
         // Equal
-        Assert.IsTrue(equals(aligned1                , aligned1                ));
-        Assert.IsTrue(equals(aligned1                , (byte[])aligned1.Clone()));
-        Assert.IsTrue(equals((byte[])aligned1.Clone(), aligned1                ));
+        Assert.IsTrue(equals(aligned1, aligned1));
+        Assert.IsTrue(equals(aligned1, (byte[])aligned1.Clone()));
+        Assert.IsTrue(equals((byte[])aligned1.Clone(), aligned1));
 
-        Assert.IsTrue(equals(extra1                , (byte[])extra1.Clone()));
-        Assert.IsTrue(equals((byte[])extra1.Clone(), extra1                ));
+        Assert.IsTrue(equals(extra1, (byte[])extra1.Clone()));
+        Assert.IsTrue(equals((byte[])extra1.Clone(), extra1));
 
         Assert.IsTrue(equals(new byte[0], new byte[0]));
 
         // Not Equal
-        Assert.IsFalse(equals(aligned1           , Array.Empty<byte>()));
-        Assert.IsFalse(equals(Array.Empty<byte>(), aligned1           ));
+        Assert.IsFalse(equals(aligned1, Array.Empty<byte>()));
+        Assert.IsFalse(equals(Array.Empty<byte>(), aligned1));
 
         Assert.IsFalse(equals(aligned1, extra1));
         Assert.IsFalse(equals(aligned2, extra1));

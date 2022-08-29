@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Sweetener.Linq;
 
-static partial class Collection
+public static partial class Collection
 {
     /// <summary>
     /// Bypasses a specified number of elements in a collection and then returns the remaining elements.

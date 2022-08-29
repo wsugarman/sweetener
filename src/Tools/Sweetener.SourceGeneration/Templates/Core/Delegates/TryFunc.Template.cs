@@ -20,7 +20,7 @@ internal sealed class TryFuncTemplate : DelegateSourceTemplate
 
     protected override void WriteDelegate(IndentedTextWriter sourceWriter, int i)
     {
-        sourceWriter.WriteXmlSummary($"Encapsulates a method that has {Numbers.GetWord(i)} parameter{ (i == 1 ? string.Empty : "s") } and returns a value indicating whether or not it succeeded.");
+        sourceWriter.WriteXmlSummary($"Encapsulates a method that has {Numbers.GetWord(i)} parameter{(i == 1 ? string.Empty : "s")} and returns a value indicating whether or not it succeeded.");
         sourceWriter.WriteXmlTypeParams(i);
         sourceWriter.WriteXmlTypeParam("TResult", "The type of the parameter assigned by the method if successful.");
         sourceWriter.WriteXmlParams(i);

@@ -1,4 +1,4 @@
-﻿// Copyright © William Sugarman.
+// Copyright © William Sugarman.
 // Licensed under the MIT License.
 
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Sweetener.Linq;
 
-static partial class Collection
+public static partial class Collection
 {
     /// <summary>
     /// Appends a value to the end of the collection.
@@ -19,7 +19,7 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Append<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
         => source is AdditionalCollection<TSource> decorator
             ? new AdditionalCollection<TSource>(decorator, EnumerableDecorator.Append(decorator, element))
-            : new AdditionalCollection<TSource>(source   , EnumerableDecorator.Append(source   , element));
+            : new AdditionalCollection<TSource>(source, EnumerableDecorator.Append(source, element));
 
     /// <summary>
     /// Adds a value to the beginning of the collection.
@@ -32,7 +32,7 @@ static partial class Collection
     public static IReadOnlyCollection<TSource> Prepend<TSource>(this IReadOnlyCollection<TSource> source, TSource element)
         => source is AdditionalCollection<TSource> decorator
             ? new AdditionalCollection<TSource>(decorator, EnumerableDecorator.Prepend(decorator, element))
-            : new AdditionalCollection<TSource>(source   , EnumerableDecorator.Prepend(source   , element));
+            : new AdditionalCollection<TSource>(source, EnumerableDecorator.Prepend(source, element));
 
     private sealed class AdditionalCollection<T> : DecoratorTransformationCollection<T>
     {

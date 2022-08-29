@@ -21,7 +21,7 @@ internal sealed class AsyncFuncTemplate : DelegateSourceTemplate
     protected override void WriteDelegate(IndentedTextWriter sourceWriter, int i)
     {
         sourceWriter.WriteXmlSummary(
-            $"Encapsulates an asynchronous method that has {Numbers.GetWord(i)} parameter{ (i == 1 ? string.Empty : "s") } and returns a value",
+            $"Encapsulates an asynchronous method that has {Numbers.GetWord(i)} parameter{(i == 1 ? string.Empty : "s")} and returns a value",
             "of the type specified by the <typeparamref name=\"TResult\"/> parameter.");
         sourceWriter.WriteXmlRemarks(
             "The <see cref=\"Task\"/> returned by the encapsulated method is expected to have been started.",
