@@ -28,10 +28,10 @@ jobs:
         languages: 'csharp'
 
     - name: Setup SDK
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v3
 
     - name: Setup Previous LTS SDK
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '3.1.x'
 
